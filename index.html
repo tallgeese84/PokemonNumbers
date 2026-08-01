@@ -236,6 +236,24 @@
   #catch img{ width:150px; height:150px; object-fit:contain; }
   #catch .newname{ font-size:24px; font-weight:bold; margin-top:6px; }
   #catch .hint{ font-size:15px; margin-top:4px; }
+  #parentPanel{
+    position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+    background:rgba(24,26,64,.6); z-index:80; padding:16px;
+  }
+  #parentPanel .ppbox{
+    background:linear-gradient(180deg,#FFFDF4,#FBF3DF); border:5px solid var(--ink);
+    border-radius:28px; padding:18px; max-width:420px; width:100%;
+    box-shadow:0 10px 0 rgba(30,32,70,.55);
+  }
+  #parentPanel textarea{
+    width:100%; font-family:monospace; font-size:12px; border:3px solid var(--ink);
+    border-radius:12px; padding:8px; resize:none; background:#fff;
+  }
+  #parentPanel .pprow{ display:flex; gap:10px; justify-content:center; margin:8px 0; }
+  .syinput{
+    width:100%; font-family:inherit; font-size:14px; border:3px solid var(--ink);
+    border-radius:12px; padding:8px 10px; background:#fff;
+  }
 
   /* ---- Wild Catch (pop-up meadow) ---- */
   #zapField{
@@ -426,6 +444,7 @@
     <button class="btn icon" id="backBtn" style="visibility:hidden">⬅️</button>
     <div class="pill">⭐ <span id="starCount">0</span></div>
     <div class="pill" id="ballPill"><svg viewBox="0 0 30 30" width="22" height="22" aria-hidden="true"><circle cx="15" cy="15" r="13" fill="#fff" stroke="#2B2E5C" stroke-width="2.5"/><path d="M2.5 15 A12.5 12.5 0 0 1 27.5 15 L2.5 15 Z" fill="#E0503F" stroke="#2B2E5C" stroke-width="2.5"/><line x1="2.5" y1="15" x2="27.5" y2="15" stroke="#2B2E5C" stroke-width="2.5"/><circle cx="15" cy="15" r="4.5" fill="#fff" stroke="#2B2E5C" stroke-width="2.5"/></svg> <span id="ballCount">0/6</span></div>
+    <button class="btn icon" id="cloudBtn" title="Grown-ups: backup & sync">☁️</button>
     <button class="btn icon" id="soundBtn">🔊</button>
   </div>
 
@@ -509,6 +528,36 @@
 <div id="fx"></div>
 <div id="bigcheer"><span id="cheerText">Great job! ⭐</span></div>
 <div id="catch"><div class="box" id="catchBox"></div></div>
+<div id="parentPanel">
+  <div class="ppbox">
+    <div style="font-weight:bold;font-size:20px;margin-bottom:6px">Grown-ups: progress backup</div>
+    <div style="font-size:14px;margin-bottom:8px">Copy this code somewhere safe (notes, email). Paste it back here on any device to restore all stars and Pokémon.</div>
+    <textarea id="ppCode" readonly rows="3"></textarea>
+    <div class="pprow">
+      <button class="btn" id="ppCopy">📋 Copy code</button>
+    </div>
+    <textarea id="ppIn" rows="3" placeholder="Paste a backup code here to restore..."></textarea>
+    <div class="pprow">
+      <button class="btn" id="ppRestore">♻️ Restore</button>
+      <button class="btn" id="ppClose">Close</button>
+    </div>
+    <div class="speech" id="ppMsg" style="min-height:22px"></div>
+    <hr style="border:none;border-top:3px dashed #E4C05A;margin:10px 0">
+    <div style="font-weight:bold;font-size:18px;margin-bottom:4px">☁️ Sync across tablets</div>
+    <div style="font-size:13px;margin-bottom:6px">Enter the same database link and family code on every tablet. Works with the same database and code as the Chinese app.</div>
+    <input class="syinput" id="syUrl" placeholder="Database URL (https://…firebasedatabase.app)">
+    <div class="pprow" style="margin:6px 0">
+      <input class="syinput" id="syCode" placeholder="Family code" style="flex:1">
+      <button class="btn" id="syGen">🎲</button>
+    </div>
+    <div class="speech" id="syStatus" style="min-height:20px;font-size:15px;margin:2px 0 6px">not connected</div>
+    <div class="pprow">
+      <button class="btn" id="sySave">☁️ Save &amp; sync now</button>
+      <button class="btn" id="syOff">Disconnect</button>
+    </div>
+    <div style="font-size:12px;margin-top:6px">Merges safely: caught Pokémon combine, level progress takes the highest, and the newest play session wins for stars. The family code is the password — keep it private.</div>
+  </div>
+</div>
 
 <script>
 'use strict';
@@ -585,11 +634,13 @@ async function loadStars(){
   if (pkBuddy && !caught.includes(pkBuddy)) pkBuddy = caught.length ? caught[0] : 0;
   ballStars = parseInt(await store.get('cubs_ball') || '0', 10) || 0;
   renderBuddyHome(); updateBallPill();
+  if (await getSyncCfg()) syncNow(false);
 }
 function addStar(n){
   stars += n; starEl.textContent = stars;
   store.set('cubs_stars', stars);
   sndStar();
+  schedulePush();
   if (caught.length < GEN1.length){
     ballStars += n;
     if (ballStars >= BALL_NEED){
@@ -605,6 +656,7 @@ function loseStar(){
   store.set('cubs_stars', stars);
   const pill = starEl.closest('.pill');
   pill.classList.remove('shake'); void pill.offsetWidth; pill.classList.add('shake');
+  schedulePush();
   const r = pill.getBoundingClientRect();
   const fl = document.createElement('span');
   fl.className = 'starloss'; fl.textContent = '−1 ⭐';
@@ -675,6 +727,7 @@ function pkState(){
   store.set('cubs_caught', caught.join(','));
   store.set('cubs_pbuddy', pkBuddy);
   store.set('cubs_ball', ballStars);
+  schedulePush();
 }
 function updateBallPill(){
   const pill = document.getElementById('ballPill');
@@ -758,6 +811,7 @@ document.getElementById('soundBtn').addEventListener('click', function(){
   soundOn = !soundOn;
   this.textContent = soundOn ? '🔊' : '🔇';
   store.set('cubs_sound', soundOn ? 'on' : 'off');
+  schedulePush();
   if (soundOn) sndTap();
 });
 document.querySelectorAll('.mode').forEach(btn => {
@@ -1097,7 +1151,7 @@ document.getElementById('showMe').addEventListener('click', () => {
 const THINGS = ['🚀','⭐','🪐','🛸','🌟','☄️','👽','🌙'];
 const q = { a: 0, b: 0, ans: 0, tries: 0 };
 const progress = { count: 0, add: 0, sub: 0, zap: 0, tower: 0 };
-function saveProg(){ store.set('cubs_prog', JSON.stringify(progress)); }
+function saveProg(){ store.set('cubs_prog', JSON.stringify(progress)); schedulePush(); }
 let padLocked = false;
 
 function levelMax(m){
@@ -1128,6 +1182,9 @@ function objSpan(monId, emoji, cls, px){
   return s;
 }
 
+document.getElementById('qtext').addEventListener('click', () => { if (q.phrase) say(q.phrase); });
+document.getElementById('eqline').addEventListener('click', () => { if (q.phrase) say(q.phrase); });
+
 function newQuestion(){
   padLocked = false;
   q.tries = 0;
@@ -1143,6 +1200,7 @@ function newQuestion(){
   if (mode === 'count'){
     q.ans = 1 + rnd(max);
     qt.textContent = 'How many ' + monName(monId) + 's?';
+    q.phrase = 'How many ' + monName(monId) + 's can you count?';
     const b = document.createElement('div'); b.className = 'bubble'; b.style.maxWidth = '360px';
     const czi = objSizeFor(q.ans);
     for (let i = 0; i < q.ans; i++) b.appendChild(objSpan(monId, emoji, '', czi));
@@ -1152,6 +1210,7 @@ function newQuestion(){
     q.ans = 2 + rnd(max - 1);
     q.a = 1 + rnd(q.ans - 1); q.b = q.ans - q.a;
     qt.textContent = 'Add them together!';
+    q.phrase = 'What is ' + NUM_WORDS[q.a] + ' plus ' + NUM_WORDS[q.b] + '?';
     const b1 = document.createElement('div'); b1.className = 'bubble';
     const azi = objSizeFor(q.a + q.b);
     for (let i = 0; i < q.a; i++) b1.appendChild(objSpan(monId, emoji, '', azi));
@@ -1166,12 +1225,14 @@ function newQuestion(){
     q.b = 1 + rnd(q.a - 1);
     q.ans = q.a - q.b;
     qt.textContent = 'Take some away!';
+    q.phrase = 'What is ' + NUM_WORDS[q.a] + ' take away ' + NUM_WORDS[q.b] + '?';
     const b = document.createElement('div'); b.className = 'bubble'; b.style.maxWidth = '360px';
     const szi = objSizeFor(q.a);
     for (let i = 0; i < q.a; i++) b.appendChild(objSpan(monId, emoji, i >= q.a - q.b ? 'gone' : '', szi));
     bub.appendChild(b);
     eq.innerHTML = q.a + ' − ' + q.b + ' = <span class="blank" id="blank">?</span>';
   }
+  say(q.phrase);
   buildPad();
 }
 
@@ -1258,10 +1319,12 @@ function zapQuestion(){
     const t = 2 + rnd(max - 1), a = 1 + rnd(t - 1);
     zap.ans = t;
     document.getElementById('zapQ').textContent = a + ' + ' + (t - a) + ' = ?';
+    say('What is ' + NUM_WORDS[a] + ' plus ' + NUM_WORDS[t - a] + '?');
   } else {
     const a = 2 + rnd(max - 1), b = 1 + rnd(a - 1);
     zap.ans = a - b;
     document.getElementById('zapQ').textContent = a + ' − ' + b + ' = ?';
+    say('What is ' + NUM_WORDS[a] + ' take away ' + NUM_WORDS[b] + '?');
   }
   zap.cands = [zap.ans];
   while (zap.cands.length < 3){
@@ -1475,6 +1538,184 @@ function towerTap(n, el){
       (lost ? 'A star flew away! ' : '') + 'Find ' + race.next + ' first!';
   }
 }
+
+/* ============================================================
+   CLOUD SYNC — Firebase Realtime Database, shared family code
+   Data lives at {url}/fam/{code}/pokemath.json
+   Merge rules: caught = union · progress = per-key max ·
+   stars/ball/buddy/sound = newest play session wins
+   ============================================================ */
+let syncTimer = null, syncBusy = false;
+
+async function getSyncCfg(){
+  try{
+    const raw = await store.get('cubs_sync');
+    if (!raw) return null;
+    const c = JSON.parse(raw);
+    return (c && c.url && c.code) ? c : null;
+  }catch(e){ return null; }
+}
+function syncEndpoint(c){
+  return c.url.replace(/\/+$/, '') + '/fam/' + encodeURIComponent(c.code) + '/pokemath.json';
+}
+async function touch(){
+  await store.set('cubs_at', Date.now());
+}
+async function localPayload(){
+  return {
+    at: parseInt(await store.get('cubs_at') || '0', 10) || 0,
+    stars: stars,
+    ball: ballStars,
+    buddy: pkBuddy,
+    sound: soundOn ? 'on' : 'off',
+    prog: Object.assign({}, progress),
+    caught: caught.slice()
+  };
+}
+function mergeStates(a, b){
+  // caught: union, keeping a's order then b's extras (a catch is never lost)
+  const caughtU = a.caught.slice();
+  (b.caught || []).forEach(id => { if (!caughtU.includes(id)) caughtU.push(id); });
+  // progress: per-key max (counters only grow)
+  const progU = {};
+  const keys = new Set([...Object.keys(a.prog || {}), ...Object.keys(b.prog || {})]);
+  keys.forEach(k => { progU[k] = Math.max(a.prog?.[k] || 0, b.prog?.[k] || 0); });
+  // newest session wins for the rest; deterministic tiebreak on equal clocks
+  function rankOf(x){ return [(x.at || 0), (x.stars || 0), (x.caught || []).length]; }
+  const ra = rankOf(a), rb = rankOf(b);
+  let newer = a;
+  for (let i = 0; i < 3; i++){
+    if (rb[i] > ra[i]){ newer = b; break; }
+    if (ra[i] > rb[i]){ newer = a; break; }
+  }
+  const out = {
+    at: Math.max(a.at || 0, b.at || 0),
+    stars: newer.stars || 0,
+    ball: newer.ball || 0,
+    buddy: newer.buddy || 0,
+    sound: newer.sound || 'on',
+    prog: progU,
+    caught: caughtU
+  };
+  if (out.buddy && !out.caught.includes(out.buddy)) out.buddy = out.caught.length ? out.caught[0] : 0;
+  return out;
+}
+async function applyState(m){
+  await store.set('cubs_stars', m.stars);
+  await store.set('cubs_ball', m.ball);
+  await store.set('cubs_pbuddy', m.buddy);
+  await store.set('cubs_sound', m.sound);
+  await store.set('cubs_prog', JSON.stringify(m.prog));
+  await store.set('cubs_caught', m.caught.join(','));
+  await store.set('cubs_at', m.at);
+  stars = m.stars; starEl.textContent = stars;
+  ballStars = m.ball; pkBuddy = m.buddy;
+  soundOn = m.sound !== 'off';
+  document.getElementById('soundBtn').textContent = soundOn ? '🔊' : '🔇';
+  for (const k in progress) progress[k] = m.prog[k] || 0;
+  caught = m.caught.slice();
+  renderBuddyHome(); updateBallPill();
+}
+async function syncNow(manual){
+  const cfg = await getSyncCfg();
+  const st = document.getElementById('syStatus');
+  if (!cfg){ if (manual && st) st.textContent = 'not connected'; return false; }
+  if (syncBusy) return false;
+  syncBusy = true;
+  try{
+    const url = syncEndpoint(cfg);
+    const local = await localPayload();
+    let remote = null;
+    const g = await fetch(url);
+    if (g.ok){ try{ remote = await g.json(); }catch(e){} }
+    const merged = remote ? mergeStates(local, remote) : local;
+    await applyState(merged);
+    const p = await fetch(url, { method: 'PUT', body: JSON.stringify(merged) });
+    if (!p.ok) throw new Error('write ' + p.status);
+    if (st) st.textContent = '✓ synced ' + new Date().toLocaleTimeString();
+    syncBusy = false;
+    return true;
+  }catch(e){
+    if (st) st.textContent = 'offline — will sync when connected';
+    syncBusy = false;
+    return false;
+  }
+}
+function schedulePush(){
+  touch();
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => syncNow(false), 4000);
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden'){ clearTimeout(syncTimer); syncNow(false); }
+});
+
+/* ---------- parent backup panel (triple-tap the title) ---------- */
+(function parentPanel(){
+  const panel = document.getElementById('parentPanel');
+  let taps = [], KEYS = ['cubs_stars','cubs_prog','cubs_caught','cubs_pbuddy','cubs_ball','cubs_sound'];
+  document.querySelector('h1').addEventListener('click', () => {
+    const now = Date.now();
+    taps = taps.filter(t => now - t < 1200); taps.push(now);
+    if (taps.length >= 3){ taps = []; openPanel(); }
+  });
+  document.getElementById('cloudBtn').addEventListener('click', openPanel);
+  async function openPanel(){
+    const data = {};
+    for (const k of KEYS) data[k] = await store.get(k);
+    document.getElementById('ppCode').value = 'PKM1.' + btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+    document.getElementById('ppIn').value = '';
+    document.getElementById('ppMsg').textContent = '';
+    const cfg = await getSyncCfg();
+    document.getElementById('syUrl').value = cfg ? cfg.url : '';
+    document.getElementById('syCode').value = cfg ? cfg.code : '';
+    document.getElementById('syStatus').textContent = cfg ? 'connected — syncs automatically' : 'not connected';
+    panel.style.display = 'flex';
+  }
+  document.getElementById('syGen').addEventListener('click', () => {
+    const abc = 'abcdefghjkmnpqrstuvwxyz23456789';
+    let code = '';
+    for (let i = 0; i < 10; i++) code += abc[Math.floor(Math.random() * abc.length)];
+    document.getElementById('syCode').value = code;
+  });
+  document.getElementById('sySave').addEventListener('click', async () => {
+    const url = document.getElementById('syUrl').value.trim();
+    const code = document.getElementById('syCode').value.trim();
+    const st = document.getElementById('syStatus');
+    if (!/^https:\/\/.+firebasedatabase\.app\/?$/.test(url)){ st.textContent = 'That URL doesn\u2019t look like a Firebase database link.'; return; }
+    if (code.length < 6){ st.textContent = 'Family code needs at least 6 characters.'; return; }
+    await store.set('cubs_sync', JSON.stringify({ url, code }));
+    await touch();
+    st.textContent = 'connecting…';
+    const ok = await syncNow(true);
+    if (ok) st.textContent = '✓ synced — this tablet is connected';
+  });
+  document.getElementById('syOff').addEventListener('click', async () => {
+    await store.set('cubs_sync', '');
+    document.getElementById('syStatus').textContent = 'disconnected — progress stays on this tablet';
+  });
+  document.getElementById('ppClose').addEventListener('click', () => { panel.style.display = 'none'; });
+  document.getElementById('ppCopy').addEventListener('click', async () => {
+    const ta = document.getElementById('ppCode');
+    ta.select(); ta.setSelectionRange(0, 999999);
+    try{ await navigator.clipboard.writeText(ta.value); }catch(e){ try{ document.execCommand('copy'); }catch(e2){} }
+    document.getElementById('ppMsg').textContent = 'Copied! Keep it somewhere safe.';
+  });
+  document.getElementById('ppRestore').addEventListener('click', async () => {
+    const raw = document.getElementById('ppIn').value.trim();
+    const msg = document.getElementById('ppMsg');
+    if (!raw.startsWith('PKM1.')){ msg.textContent = 'That doesn\u2019t look like a backup code.'; return; }
+    try{
+      const data = JSON.parse(decodeURIComponent(escape(atob(raw.slice(5)))));
+      for (const k of KEYS) if (data[k] !== null && data[k] !== undefined) await store.set(k, data[k]);
+      await loadStars();
+      renderBuddyHome(); updateBallPill();
+      msg.textContent = 'Restored! ' + caught.length + ' Pok\u00e9mon and ' + stars + ' stars are back.';
+    }catch(e){
+      msg.textContent = 'Sorry, that code couldn\u2019t be read.';
+    }
+  });
+})();
 
 /* ---------- boot ---------- */
 if ('serviceWorker' in navigator){
