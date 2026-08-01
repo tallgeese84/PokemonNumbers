@@ -250,6 +250,9 @@
     border-radius:12px; padding:8px; resize:none; background:#fff;
   }
   #parentPanel .pprow{ display:flex; gap:10px; justify-content:center; margin:8px 0; }
+  #syStatus{ font-size:16px !important; }
+  #syStatus.ok{ color:#1E8A63; }
+  #syStatus.err{ color:#C43D2E; }
   .syinput{
     width:100%; font-family:inherit; font-size:14px; border:3px solid var(--ink);
     border-radius:12px; padding:8px 10px; background:#fff;
@@ -1616,27 +1619,41 @@ async function applyState(m){
   caught = m.caught.slice();
   renderBuddyHome(); updateBallPill();
 }
+function setSyncStatus(kind, text){
+  const st = document.getElementById('syStatus');
+  if (st){ st.className = 'speech ' + (kind === 'ok' ? 'ok' : kind === 'err' ? 'err' : ''); st.textContent = text; }
+  const cb = document.getElementById('cloudBtn');
+  if (cb) cb.textContent = kind === 'ok' ? '☁️✓' : kind === 'err' ? '☁️⚠️' : '☁️';
+}
 async function syncNow(manual){
   const cfg = await getSyncCfg();
-  const st = document.getElementById('syStatus');
-  if (!cfg){ if (manual && st) st.textContent = 'not connected'; return false; }
+  if (!cfg){ if (manual) setSyncStatus('', 'not connected'); return false; }
   if (syncBusy) return false;
   syncBusy = true;
   try{
     const url = syncEndpoint(cfg);
     const local = await localPayload();
-    let remote = null;
     const g = await fetch(url);
+    if (g.status === 401 || g.status === 403){
+      setSyncStatus('err', '✗ The database refused access. Check the Rules step: the rules must allow fam/$code, and the family code must match exactly.');
+      syncBusy = false; return false;
+    }
+    let remote = null;
     if (g.ok){ try{ remote = await g.json(); }catch(e){} }
     const merged = remote ? mergeStates(local, remote) : local;
     await applyState(merged);
     const p = await fetch(url, { method: 'PUT', body: JSON.stringify(merged) });
+    if (p.status === 401 || p.status === 403){
+      setSyncStatus('err', '✗ The database refused the write. Re-check the Rules and the URL.');
+      syncBusy = false; return false;
+    }
     if (!p.ok) throw new Error('write ' + p.status);
-    if (st) st.textContent = '✓ synced ' + new Date().toLocaleTimeString();
+    await store.set('cubs_lastsync', Date.now());
+    setSyncStatus('ok', '✓ Synced at ' + new Date().toLocaleTimeString() + ' — ' + caught.length + ' Pokémon, ' + stars + ' stars');
     syncBusy = false;
     return true;
   }catch(e){
-    if (st) st.textContent = 'offline — will sync when connected';
+    setSyncStatus('err', '✗ Couldn\u2019t reach the database — check the internet connection and URL.');
     syncBusy = false;
     return false;
   }
@@ -1669,7 +1686,10 @@ document.addEventListener('visibilitychange', () => {
     const cfg = await getSyncCfg();
     document.getElementById('syUrl').value = cfg ? cfg.url : '';
     document.getElementById('syCode').value = cfg ? cfg.code : '';
-    document.getElementById('syStatus').textContent = cfg ? 'connected — syncs automatically' : 'not connected';
+    const last = parseInt(await store.get('cubs_lastsync') || '0', 10) || 0;
+    if (cfg && last) setSyncStatus('ok', '✓ Connected — last synced ' + new Date(last).toLocaleString());
+    else if (cfg) setSyncStatus('', 'connected — hasn\u2019t synced yet, tap Save & sync now');
+    else setSyncStatus('', 'not connected');
     panel.style.display = 'flex';
   }
   document.getElementById('syGen').addEventListener('click', () => {
@@ -1682,17 +1702,18 @@ document.addEventListener('visibilitychange', () => {
     const url = document.getElementById('syUrl').value.trim();
     const code = document.getElementById('syCode').value.trim();
     const st = document.getElementById('syStatus');
-    if (!/^https:\/\/.+firebasedatabase\.app\/?$/.test(url)){ st.textContent = 'That URL doesn\u2019t look like a Firebase database link.'; return; }
+    if (!/^https:\/\/[a-z0-9-]+(\.[a-z0-9-]+)*\.(firebasedatabase\.app|firebaseio\.com)\/?$/i.test(url)){
+      st.className = 'speech err'; st.textContent = '\u2717 That doesn\u2019t look like a Firebase database URL. It should end in firebasedatabase.app or firebaseio.com with nothing after it.'; return; }
     if (code.length < 6){ st.textContent = 'Family code needs at least 6 characters.'; return; }
     await store.set('cubs_sync', JSON.stringify({ url, code }));
     await touch();
-    st.textContent = 'connecting…';
-    const ok = await syncNow(true);
-    if (ok) st.textContent = '✓ synced — this tablet is connected';
+    st.className = 'speech'; st.textContent = 'connecting…';
+    await syncNow(true);
   });
   document.getElementById('syOff').addEventListener('click', async () => {
     await store.set('cubs_sync', '');
-    document.getElementById('syStatus').textContent = 'disconnected — progress stays on this tablet';
+    await store.set('cubs_lastsync', '');
+    setSyncStatus('', 'disconnected — progress stays on this tablet');
   });
   document.getElementById('ppClose').addEventListener('click', () => { panel.style.display = 'none'; });
   document.getElementById('ppCopy').addEventListener('click', async () => {
