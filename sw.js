@@ -1,5 +1,5 @@
 // PokéMath Adventure — offline cache
-const CACHE = 'pokemath-v4';
+const CACHE = 'pokemath-v5';
 const ART = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/';
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
@@ -26,7 +26,21 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+  const isPage = e.request.mode === 'navigate' ||
+    new URL(e.request.url).pathname.endsWith('index.html');
   e.respondWith((async () => {
+    if (isPage){
+      // page: network-first so a repo update shows on the next online visit
+      try{
+        const r = await fetch(e.request);
+        const c = await caches.open(CACHE);
+        c.put(e.request, r.clone());
+        return r;
+      }catch(err){
+        return (await caches.match(e.request, { ignoreSearch: true })) || Response.error();
+      }
+    }
+    // everything else (sprites, icons): cache-first for instant offline
     const hit = await caches.match(e.request, { ignoreSearch: true });
     if (hit) return hit;
     try{
@@ -37,7 +51,7 @@ self.addEventListener('fetch', e => {
       }
       return r;
     }catch(err){
-      return hit || Response.error();
+      return Response.error();
     }
   })());
 });
