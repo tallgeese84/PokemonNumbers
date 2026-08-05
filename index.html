@@ -161,6 +161,24 @@
   .obj.gone::after{ content:"✖"; position:absolute; left:50%; top:50%; transform:translate(-50%,-55%); color:var(--coral); font-size:.8em; opacity:1; }
   .obj.hintpop{ animation:hintpop .45s ease; }
   @keyframes hintpop{ 0%{transform:scale(1)} 50%{transform:scale(1.6)} 100%{transform:scale(1)} }
+  .tfwrap{ position:relative; display:flex; flex-direction:column; gap:8px; align-items:center; }
+  .tenframe{
+    display:grid; grid-template-columns:repeat(5, 52px); grid-auto-rows:52px;
+    border:3px solid var(--ink); border-radius:10px; overflow:hidden; background:#fff;
+  }
+  .tfcell{ border:1.5px solid #D6CFEF; display:flex; align-items:center; justify-content:center; }
+  .tfcell.pa{ background:#E6FAF1; }
+  .tfcell.pb{ background:#FFF0EC; }
+  .tfcell .pkspr{ width:44px; height:44px; }
+  .tfcover{
+    position:absolute; inset:-6px; z-index:4; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:4px;
+    background:linear-gradient(180deg,#8FD470,#57B45A); border:3px solid var(--ink); border-radius:16px;
+    font-size:34px; animation:pop .3s ease;
+  }
+  .tfcover .covertxt{ font-size:16px; font-weight:bold; color:#fff; text-shadow:0 1px 0 rgba(0,0,0,.3); }
+  .pad.locked button{ opacity:.45; }
+  .pad button:disabled{ opacity:.25; text-decoration:line-through; }
   .eq{ text-align:center; font-size:38px; font-weight:bold; margin-top:10px; letter-spacing:2px; }
   .eq .blank{ display:inline-block; min-width:56px; border-bottom:5px dotted var(--ink); }
 
@@ -1200,27 +1218,39 @@ function newQuestion(){
   bub.innerHTML = ''; eq.innerHTML = '';
   const max = levelMax(mode);
 
+  // ten-frame layout: 5x2 structure builds subitizing instead of one-by-one counting
+  function buildFrames(total, cellFn){
+    const wrap = document.createElement('div'); wrap.className = 'tfwrap';
+    const nFrames = total > 10 ? 2 : 1;
+    for (let f = 0; f < nFrames; f++){
+      const fr = document.createElement('div'); fr.className = 'tenframe';
+      for (let c = 0; c < 10; c++){
+        const idx = f * 10 + c;
+        const cell = document.createElement('div'); cell.className = 'tfcell';
+        if (idx < total) cellFn(cell, idx);
+        fr.appendChild(cell);
+      }
+      wrap.appendChild(fr);
+    }
+    return wrap;
+  }
   if (mode === 'count'){
     q.ans = 1 + rnd(max);
     qt.textContent = 'How many ' + monName(monId) + 's?';
     q.phrase = 'How many ' + monName(monId) + 's can you count?';
-    const b = document.createElement('div'); b.className = 'bubble'; b.style.maxWidth = '360px';
-    const czi = objSizeFor(q.ans);
-    for (let i = 0; i < q.ans; i++) b.appendChild(objSpan(monId, emoji, '', czi));
-    bub.appendChild(b);
+    bub.appendChild(buildFrames(q.ans, (cell) => {
+      cell.appendChild(objSpan(monId, emoji, '', 44));
+    }));
   }
   else if (mode === 'add'){
     q.ans = 2 + rnd(max - 1);
     q.a = 1 + rnd(q.ans - 1); q.b = q.ans - q.a;
     qt.textContent = 'Add them together!';
     q.phrase = 'What is ' + NUM_WORDS[q.a] + ' plus ' + NUM_WORDS[q.b] + '?';
-    const b1 = document.createElement('div'); b1.className = 'bubble';
-    const azi = objSizeFor(q.a + q.b);
-    for (let i = 0; i < q.a; i++) b1.appendChild(objSpan(monId, emoji, '', azi));
-    const plus = document.createElement('div'); plus.className = 'opsign'; plus.textContent = '+';
-    const b2 = document.createElement('div'); b2.className = 'bubble';
-    for (let i = 0; i < q.b; i++) b2.appendChild(objSpan(monId, emoji, '', azi));
-    bub.append(b1, plus, b2);
+    bub.appendChild(buildFrames(q.ans, (cell, i) => {
+      cell.classList.add(i < q.a ? 'pa' : 'pb');
+      cell.appendChild(objSpan(monId, emoji, i < q.a ? 'grpA' : 'grpB', 44));
+    }));
     eq.innerHTML = q.a + ' + ' + q.b + ' = <span class="blank" id="blank">?</span>';
   }
   else { // sub
@@ -1229,14 +1259,40 @@ function newQuestion(){
     q.ans = q.a - q.b;
     qt.textContent = 'Take some away!';
     q.phrase = 'What is ' + NUM_WORDS[q.a] + ' take away ' + NUM_WORDS[q.b] + '?';
-    const b = document.createElement('div'); b.className = 'bubble'; b.style.maxWidth = '360px';
-    const szi = objSizeFor(q.a);
-    for (let i = 0; i < q.a; i++) b.appendChild(objSpan(monId, emoji, i >= q.a - q.b ? 'gone' : '', szi));
-    bub.appendChild(b);
+    bub.appendChild(buildFrames(q.a, (cell, i) => {
+      cell.appendChild(objSpan(monId, emoji, i >= q.a - q.b ? 'gone' : '', 44));
+    }));
     eq.innerHTML = q.a + ' − ' + q.b + ' = <span class="blank" id="blank">?</span>';
+  }
+  // flash-and-cover: past the basics, see it briefly, then hold it in your head
+  q.covered = false;
+  if ((mode === 'add' || mode === 'sub') && levelMax(mode) >= 10){
+    q.coverTimer = setTimeout(() => {
+      if (padLocked || q.tries > 0) return;
+      const wrap = bub.querySelector('.tfwrap');
+      if (!wrap) return;
+      const cov = document.createElement('div');
+      cov.className = 'tfcover';
+      cov.id = 'tfcover';
+      cov.innerHTML = '🌳🌳🌳<div class="covertxt">Can you see them in your head?</div>' +
+        '<button class="btn" id="peekBtn" style="font-size:16px;padding:6px 14px">👀 Peek</button>';
+      wrap.appendChild(cov);
+      q.covered = true;
+      document.getElementById('peekBtn').addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        cov.style.display = 'none';
+        setTimeout(() => { if (q.covered) cov.style.display = 'flex'; }, 1200);
+      });
+    }, 3000);
   }
   say(q.phrase);
   buildPad();
+}
+function uncover(){
+  q.covered = false;
+  clearTimeout(q.coverTimer);
+  const cov = document.getElementById('tfcover');
+  if (cov) cov.remove();
 }
 
 function buildPad(){
@@ -1257,42 +1313,73 @@ function answer(n, btn){
   audio();
   if (n === q.ans){
     padLocked = true;
+    uncover();
     btn.classList.add('right');
     const blank = document.getElementById('blank');
     if (blank) blank.textContent = n;
     progress[mode]++; saveProg();
-    sndGood(); burst(btn, 8); bigCheer();
-    addStar(1);
-    setTimeout(() => speakNumber(n), 380);
+    sndGood(); burst(btn, q.tries === 0 ? 10 : 8); bigCheer(q.tries === 0 ? 'Perfect! Double stars! ⭐⭐' : undefined);
+    addStar(q.tries === 0 ? 2 : 1);   // accuracy is the fast path to catches
+    const fact = mode === 'add' ? NUM_WORDS[q.a] + ' plus ' + NUM_WORDS[q.b] + ' equals ' + NUM_WORDS[q.ans] + '!'
+               : mode === 'sub' ? NUM_WORDS[q.a] + ' take away ' + NUM_WORDS[q.b] + ' equals ' + NUM_WORDS[q.ans] + '!'
+               : NUM_WORDS[q.ans] + '!';
+    setTimeout(() => say(fact), 420);
     document.getElementById('quizSpeech').textContent = CHEERS[rnd(CHEERS.length)];
-    setTimeout(newQuestion, 1600);
+    setTimeout(newQuestion, 1900);
   } else {
     q.tries++;
     btn.classList.add('wrong'); sndOops();
-    setTimeout(() => btn.classList.remove('wrong'), 500);
+    setTimeout(() => { btn.classList.remove('wrong'); btn.disabled = true; }, 500);   // guessing burns options
     const lost = loseStar();
-    // brief lockout so pressing every button quickly doesn't work
+    // escalating lockout: guessing becomes the SLOW way to play
+    const lockMs = Math.min(5000, 1000 + 1200 * (q.tries - 1));
     padLocked = true;
+    const pad = document.getElementById('pad');
+    pad.classList.add('locked');
     if (q.tries === 1){
+      if (q.covered) uncover();
       document.getElementById('quizSpeech').textContent =
-        (lost ? 'Oh no, a star flew away! ' : '') + 'Count them one by one, then answer.';
-      setTimeout(() => { padLocked = false; }, 900);
+        (lost ? 'Oh no, a star flew away! ' : '') + 'Slow down — look carefully first.';
+      setTimeout(() => { padLocked = false; pad.classList.remove('locked'); }, lockMs);
     } else {
+      uncover();
       document.getElementById('quizSpeech').textContent = 'Let\u2019s count together!';
-      countHint();
+      setTimeout(() => { pad.classList.remove('locked'); countHint(); }, lockMs);
     }
   }
 }
 
 function countHint(){
   padLocked = true;
+  const sp = document.getElementById('quizSpeech');
+  if (mode === 'add'){
+    // counting ON, not counting all: "you have A! ...A+1, A+2"
+    const grpA = Array.from(document.querySelectorAll('#bubbles .grpA'));
+    const grpB = Array.from(document.querySelectorAll('#bubbles .grpB'));
+    grpA.forEach(o => { o.classList.remove('hintpop'); void o.offsetWidth; o.classList.add('hintpop'); });
+    blip(392, 0, .2);
+    sp.textContent = 'You already have ' + q.a + '!';
+    say('You already have ' + NUM_WORDS[q.a] + '! Count on!');
+    grpB.forEach((o, i) => {
+      setTimeout(() => {
+        o.classList.remove('hintpop'); void o.offsetWidth; o.classList.add('hintpop');
+        blip(520 + i * 45, 0, .12);
+        const upto = q.a + i + 1;
+        sp.textContent = q.a + '... ' + Array.from({length: i + 1}, (_, k) => q.a + k + 1).join(' \u2022 ');
+        speakNumber(upto);
+        if (i === grpB.length - 1){
+          setTimeout(() => { padLocked = false; sp.textContent = 'Now you try!'; }, 600);
+        }
+      }, 900 * i + 1400);
+    });
+    return;
+  }
   const objs = Array.from(document.querySelectorAll('#bubbles .obj'))
     .filter(o => !o.classList.contains('gone'));
   objs.forEach((o, i) => {
     setTimeout(() => {
       o.classList.remove('hintpop'); void o.offsetWidth; o.classList.add('hintpop');
       blip(440 + i * 40, 0, .12);
-      const sp = document.getElementById('quizSpeech');
       sp.textContent = 'Let\u2019s count together!  ' + Array.from({length: i + 1}, (_, k) => k + 1).join(' \u2022 ');
       if (i === objs.length - 1){
         setTimeout(() => { padLocked = false; sp.textContent = 'Now you try!'; }, 500);
@@ -1304,7 +1391,7 @@ function countHint(){
 /* ============================================================
    WILD CATCH — pop-up Pokémon, tap the right one before it hides
    ============================================================ */
-const zap = { ans: 0, cands: [], locked: false, popTimer: null, tos: [], sinceAns: 9 };
+const zap = { ans: 0, cands: [], locked: false, popTimer: null, tos: [], sinceAns: 9, wrongs: 0 };
 const zapField = document.getElementById('zapField');
 const PATCH_POS = [[4, 22], [36, 8], [66, 22], [18, 50], [52, 50]];   // [left%, top%]
 let patches = [];
@@ -1312,6 +1399,7 @@ let patches = [];
 function zapQuestion(){
   zap.locked = false;
   zap.sinceAns = 9;
+  zap.wrongs = 0;
   const max = levelMax('zap');
   const kind = progress.zap < 3 ? 0 : rnd(3);
   if (kind === 0){
@@ -1408,8 +1496,9 @@ function wildTap(n, p, el){
     el.classList.remove('wrongwob'); void el.offsetWidth; el.classList.add('wrongwob');
     sndOops();
     const lost = loseStar();
+    zap.wrongs++;
     zap.locked = true;
-    zap.tos.push(setTimeout(() => { zap.locked = false; }, 900));
+    zap.tos.push(setTimeout(() => { zap.locked = false; }, Math.min(4000, 900 + 900 * (zap.wrongs - 1))));
     document.getElementById('zapSpeech').textContent =
       (lost ? 'A star flew away! ' : '') + 'Look carefully for ' +
       (progress.zap < 3 ? zap.ans : 'the answer') + '!';
@@ -1456,14 +1545,17 @@ function stopRace(){ clearInterval(race.timer); race.timer = null; }
 
 function startTower(){
   stopRace();
-  if (progress.tower >= 2){ race.from = 11; race.to = 20; race.secs = 95; }
-  else { race.from = 1; race.to = 10; race.secs = 75; }
-  race.next = race.from;
+  const wins = progress.tower;
+  if (wins >= 2){ race.from = 11; race.to = 20; race.secs = Math.max(60, 95 - (wins - 2) * 4); }
+  else { race.from = 1; race.to = 10; race.secs = Math.max(50, 75 - wins * 4); }
+  race.dir = (wins >= 4 && wins % 2 === 0) ? -1 : 1;   // from level 5: alternate countdown races
+  race.next = race.dir === 1 ? race.from : race.to;
   race.prog = 0; race.rival = 0; race.locked = false;
   towerField.querySelectorAll('.tbub').forEach(e => e.remove());
   document.getElementById('racerBuddy').src = imgArt(pkBuddy || 25);
   document.getElementById('racerRival').src = imgArt(RIVAL_ID);
-  document.getElementById('towerQ').textContent = 'Race ' + monName(RIVAL_ID) + ' to the flag! Tap the numbers in order.';
+  document.getElementById('towerQ').textContent = 'Race level ' + (wins + 1) + ' — ' +
+    (race.dir === 1 ? 'tap the numbers in order!' : 'count DOWN — biggest first!');
   const nums = [];
   for (let n = race.from; n <= race.to; n++) nums.push(n);
   for (let i = nums.length - 1; i > 0; i--){ const j = rnd(i + 1); [nums[i], nums[j]] = [nums[j], nums[i]]; }
@@ -1511,13 +1603,14 @@ function towerTap(n, el){
   if (race.locked || mode !== 'tower') return;
   audio();
   if (n === race.next){
-    blip(392 + (n - race.from) * 45, 0, .14);
+    blip(392 + (race.dir === 1 ? (n - race.from) : (race.to - n)) * 45, 0, .14);
     el.remove();
     race.prog++;
     const buddy = document.getElementById('racerBuddy');
     buddy.classList.remove('hop'); void buddy.offsetWidth; buddy.classList.add('hop');
     positionRacers();
-    if (race.next === race.to){
+    const doneAt = race.dir === 1 ? race.to : race.from;
+    if (race.next === doneAt){
       stopRace();
       race.locked = true;
       progress.tower++; saveProg();
@@ -1528,7 +1621,7 @@ function towerTap(n, el){
       document.getElementById('towerSpeech').textContent = 'You beat ' + monName(RIVAL_ID) + '! 🏁';
       setTimeout(() => { if (mode === 'tower') startTower(); }, 2500);
     } else {
-      race.next++;
+      race.next += race.dir;
       setTarget();
     }
   } else {
