@@ -1,5 +1,5 @@
 // PokéMath Adventure — offline cache
-const CACHE = 'pokemath-v11';
+const CACHE = 'pokemath-v13';
 const ART = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/';
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
@@ -8,7 +8,11 @@ self.addEventListener('install', e => {
     const c = await caches.open(CACHE);
     await c.addAll(CORE);
     // precache every artwork; tolerate individual failures
-    for (let i = 1; i <= 151; i++){
+    const LEGEND_IDS = [243,244,245,249,250,251,377,378,379,380,381,382,383,384,385,386,480,481,482,483,484,485,486,487,488,489,490,491,492,493,494,638,639,640,641,642,643,644,645,646,647,648,649,716,717,718,719,720,721,785,786,787,788,789,790,791,792,800,801,802,807,808,809,888,889,890,894,895,896,897,898,905,1007,1008,1017,1024,1025];
+    const all = [];
+    for (let i = 1; i <= 151; i++) all.push(i);
+    LEGEND_IDS.forEach(i => all.push(i));
+    for (const i of all){
       try{
         const r = await fetch(ART + i + '.png', { mode: 'no-cors' });
         await c.put(ART + i + '.png', r);

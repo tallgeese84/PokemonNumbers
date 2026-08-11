@@ -256,6 +256,20 @@
   #catch .ballwob{ animation:ballwob .5s ease-in-out infinite; display:inline-block; }
   @keyframes ballwob{ 0%,100%{ transform:rotate(-14deg) } 50%{ transform:rotate(14deg) } }
   #catch img{ width:150px; height:150px; object-fit:contain; }
+  #catch .box.legendary{
+    background:linear-gradient(180deg,#FFF6D8,#FFE9A8);
+    border-color:#C79A16; box-shadow:0 10px 0 rgba(30,32,70,.55), 0 0 40px rgba(255,201,60,.85);
+  }
+  #catch .legbanner{
+    font-size:20px; font-weight:bold; letter-spacing:2px; color:#B8860B;
+    text-shadow:0 1px 0 #fff; margin-bottom:2px; animation:hintpop .6s ease;
+  }
+  .tcard.legend{
+    background:linear-gradient(180deg,#FFF6D8,#FFE39A);
+    border-color:#C79A16;
+    box-shadow:0 5px 0 rgba(30,32,70,.4), 0 0 14px rgba(255,201,60,.7);
+  }
+  .tcard.legend::before{ content:"✨"; display:block; font-size:12px; margin-top:-4px; }
   #catch .newname{ font-size:24px; font-weight:bold; margin-top:6px; }
   #catch .hint{ font-size:15px; margin-top:4px; }
   #parentPanel{
@@ -289,7 +303,7 @@
 
   /* ---- Wild Catch (pop-up meadow) ---- */
   #zapField{
-    position:relative; height:360px; overflow:hidden;
+    position:relative; height:440px; overflow:hidden;
     background:
       radial-gradient(circle at 20% 12%, rgba(255,255,255,.5), transparent 26%),
       radial-gradient(circle at 70% 8%, rgba(255,255,255,.4), transparent 22%),
@@ -297,31 +311,31 @@
     border:4px solid var(--ink);
     border-radius:24px; box-shadow:inset 0 6px 18px rgba(0,0,0,.18);
   }
-  .patch{ position:absolute; width:104px; height:100px; }
+  .patch{ position:absolute; width:132px; height:124px; }
   .patch .mound{
-    position:absolute; bottom:0; left:0; width:100%; height:36px; z-index:2;
+    position:absolute; bottom:0; left:0; width:100%; height:44px; z-index:2;
     background:linear-gradient(180deg,#7ED96B,#3E9E4C);
     border:3px solid var(--ink);
     border-radius:46% 46% 34% 34% / 74% 74% 40% 40%;
     box-shadow:inset 0 4px 0 rgba(255,255,255,.3);
   }
-  .patch .blades{ position:absolute; bottom:24px; left:8px; z-index:3; font-size:16px; }
+  .patch .blades{ position:absolute; bottom:30px; left:8px; z-index:3; font-size:19px; }
   .popwrap{
-    position:absolute; bottom:26px; left:50%; transform:translateX(-50%);
-    width:82px; height:96px; overflow:hidden; z-index:1;
+    position:absolute; bottom:32px; left:50%; transform:translateX(-50%);
+    width:118px; height:132px; overflow:hidden; z-index:1;
   }
   .wildpk{
-    position:absolute; left:50%; transform:translateX(-50%); bottom:-100px;
-    width:80px; border:none; background:none; padding:0; text-align:center;
+    position:absolute; left:50%; transform:translateX(-50%); bottom:-140px;
+    width:116px; border:none; background:none; padding:0; text-align:center;
     transition:bottom .26s cubic-bezier(.34,1.4,.64,1);
     filter:drop-shadow(0 4px 3px rgba(0,0,0,.28));
   }
   .wildpk.up{ bottom:0; }
-  .wildpk img{ width:58px; height:58px; object-fit:contain; }
+  .wildpk img{ width:88px; height:88px; object-fit:contain; }
   .wildpk .numbadge{
-    display:inline-block; min-width:34px; background:linear-gradient(180deg,#FFFDF4,#F3E9CF);
-    border:3px solid var(--ink); border-radius:999px; font-size:19px; font-weight:bold;
-    padding:1px 8px; margin-top:-6px; box-shadow:0 3px 0 rgba(0,0,0,.3);
+    display:inline-block; min-width:42px; background:linear-gradient(180deg,#FFFDF4,#F3E9CF);
+    border:3px solid var(--ink); border-radius:999px; font-size:24px; font-weight:bold;
+    padding:2px 12px; margin-top:-8px; box-shadow:0 3px 0 rgba(0,0,0,.3);
   }
   .wildpk.wrongwob{ animation:wob .4s; }
   #zapRocket{ position:absolute; bottom:4px; left:50%; transform:translateX(-50%); z-index:3; }
@@ -330,7 +344,7 @@
 
   /* ---- Number Race ---- */
   #towerField{
-    position:relative; height:352px; overflow:hidden;
+    position:relative; height:430px; overflow:hidden;
     background:
       radial-gradient(circle at 76% 14%, rgba(255,255,255,.45), transparent 24%),
       linear-gradient(180deg,#9ADCF7 0%,#BDEBFA 40%, #8FD470 42%, #57B45A 100%);
@@ -338,15 +352,15 @@
     border-radius:24px; box-shadow:inset 0 6px 18px rgba(0,0,0,.18);
   }
   .tbub{
-    position:absolute; width:56px; height:56px; border-radius:50%;
+    position:absolute; width:74px; height:74px; border-radius:50%;
     border:3px solid var(--ink); background:linear-gradient(180deg,#FFFDF4,#EDE2C4);
-    font-size:22px; font-weight:bold; padding:0;
+    font-size:30px; font-weight:bold; padding:0;
     box-shadow:0 4px 0 rgba(0,0,0,.3);
     animation:floaty 5s ease-in-out infinite;
   }
   .tbub.wrongwob{ animation:wob .4s; }
   #raceTrack{
-    position:absolute; left:6px; right:6px; bottom:6px; height:96px;
+    position:absolute; left:6px; right:6px; bottom:6px; height:132px;
     background:linear-gradient(180deg,#D9B98C,#B08A58);
     border:3px solid var(--ink); border-radius:16px;
     box-shadow:inset 0 3px 0 rgba(255,255,255,.3);
@@ -356,14 +370,14 @@
     border-top:3px dashed rgba(255,255,255,.55);
   }
   .racer{
-    position:absolute; width:46px; height:46px; object-fit:contain; left:4px;
+    position:absolute; width:66px; height:66px; object-fit:contain; left:4px;
     transition:left .3s ease; filter:drop-shadow(0 3px 2px rgba(0,0,0,.3));
   }
   #racerBuddy{ top:2px; }
   #racerRival{ bottom:2px; transition:left .12s linear; }
   .racer.hop{ animation:hop .35s ease; }
   @keyframes hop{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-14px) } }
-  #raceFlag{ position:absolute; right:6px; top:50%; transform:translateY(-58%); font-size:36px; z-index:2; }
+  #raceFlag{ position:absolute; right:6px; top:50%; transform:translateY(-58%); font-size:46px; z-index:2; }
 
   /* ---- Number Snake ---- */
   #snCanvas{
@@ -584,6 +598,7 @@
       <div class="qtext" id="snQ"></div>
       <canvas id="snCanvas"></canvas>
       <div class="speech" id="snSpeech"></div>
+      <div style="text-align:center;font-size:14px;margin-top:2px">Swipe anywhere to turn — or use the arrows</div>
       <div id="snPad">
         <button class="btn dpad" id="snUp">▲</button>
         <div class="drow">
@@ -727,7 +742,7 @@ function addStar(n){
   store.set('cubs_stars', stars);
   sndStar();
   schedulePush();
-  if (caught.length < GEN1.length){
+  if (caught.length < DEX_TOTAL){
     ballStars += n;
     if (ballStars >= BALL_NEED){
       ballStars = 0;
@@ -792,7 +807,12 @@ function bigCheer(text){
    Personal, non-commercial family app; artwork © Nintendo/Game Freak.
    ============================================================ */
 const GEN1 = ["Bulbasaur","Ivysaur","Venusaur","Charmander","Charmeleon","Charizard","Squirtle","Wartortle","Blastoise","Caterpie","Metapod","Butterfree","Weedle","Kakuna","Beedrill","Pidgey","Pidgeotto","Pidgeot","Rattata","Raticate","Spearow","Fearow","Ekans","Arbok","Pikachu","Raichu","Sandshrew","Sandslash","Nidoran","Nidorina","Nidoqueen","Nidoran","Nidorino","Nidoking","Clefairy","Clefable","Vulpix","Ninetales","Jigglypuff","Wigglytuff","Zubat","Golbat","Oddish","Gloom","Vileplume","Paras","Parasect","Venonat","Venomoth","Diglett","Dugtrio","Meowth","Persian","Psyduck","Golduck","Mankey","Primeape","Growlithe","Arcanine","Poliwag","Poliwhirl","Poliwrath","Abra","Kadabra","Alakazam","Machop","Machoke","Machamp","Bellsprout","Weepinbell","Victreebel","Tentacool","Tentacruel","Geodude","Graveler","Golem","Ponyta","Rapidash","Slowpoke","Slowbro","Magnemite","Magneton","Farfetch'd","Doduo","Dodrio","Seel","Dewgong","Grimer","Muk","Shellder","Cloyster","Gastly","Haunter","Gengar","Onix","Drowzee","Hypno","Krabby","Kingler","Voltorb","Electrode","Exeggcute","Exeggutor","Cubone","Marowak","Hitmonlee","Hitmonchan","Lickitung","Koffing","Weezing","Rhyhorn","Rhydon","Chansey","Tangela","Kangaskhan","Horsea","Seadra","Goldeen","Seaking","Staryu","Starmie","Mr. Mime","Scyther","Jynx","Electabuzz","Magmar","Pinsir","Tauros","Magikarp","Gyarados","Lapras","Ditto","Eevee","Vaporeon","Jolteon","Flareon","Porygon","Omanyte","Omastar","Kabuto","Kabutops","Aerodactyl","Snorlax","Articuno","Zapdos","Moltres","Dratini","Dragonair","Dragonite","Mewtwo","Mew"];
-const monName = id => GEN1[id - 1] || ('#' + id);
+// Legendary & mythical Pokémon from every generation — rare catches
+const LEGENDS = {243:"Raikou",244:"Entei",245:"Suicune",249:"Lugia",250:"Ho-Oh",251:"Celebi",377:"Regirock",378:"Regice",379:"Registeel",380:"Latias",381:"Latios",382:"Kyogre",383:"Groudon",384:"Rayquaza",385:"Jirachi",386:"Deoxys",480:"Uxie",481:"Mesprit",482:"Azelf",483:"Dialga",484:"Palkia",485:"Heatran",486:"Regigigas",487:"Giratina",488:"Cresselia",489:"Phione",490:"Manaphy",491:"Darkrai",492:"Shaymin",493:"Arceus",494:"Victini",638:"Cobalion",639:"Terrakion",640:"Virizion",641:"Tornadus",642:"Thundurus",643:"Reshiram",644:"Zekrom",645:"Landorus",646:"Kyurem",647:"Keldeo",648:"Meloetta",649:"Genesect",716:"Xerneas",717:"Yveltal",718:"Zygarde",719:"Diancie",720:"Hoopa",721:"Volcanion",785:"Tapu Koko",786:"Tapu Lele",787:"Tapu Bulu",788:"Tapu Fini",789:"Cosmog",790:"Cosmoem",791:"Solgaleo",792:"Lunala",800:"Necrozma",801:"Magearna",802:"Marshadow",807:"Zeraora",808:"Meltan",809:"Melmetal",888:"Zacian",889:"Zamazenta",890:"Eternatus",894:"Regieleki",895:"Regidrago",896:"Glastrier",897:"Spectrier",898:"Calyrex",905:"Enamorus",1007:"Koraidon",1008:"Miraidon",1017:"Ogerpon",1024:"Terapagos",1025:"Pecharunt"};
+const LEGEND_IDS = Object.keys(LEGENDS).map(Number);
+const isLegend = id => !!LEGENDS[id];
+const monName = id => LEGENDS[id] || GEN1[id - 1] || ('#' + id);
+const DEX_TOTAL = 151 + LEGEND_IDS.length;
 const SPR = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/';
 const imgSmall = id => SPR + id + '.png';
 const imgArt = id => SPR + 'other/official-artwork/' + id + '.png';
@@ -817,12 +837,12 @@ function pkState(){
 }
 function updateBallPill(){
   const pill = document.getElementById('ballPill');
-  if (caught.length >= GEN1.length){ pill.style.display = 'none'; return; }
+  if (caught.length >= DEX_TOTAL){ pill.style.display = 'none'; return; }
   document.getElementById('ballCount').textContent = ballStars + '/' + BALL_NEED;
 }
 function renderBuddyHome(){
   const box = document.getElementById('buddyBox');
-  document.getElementById('teamTally').textContent = '(' + caught.length + '/' + GEN1.length + ')';
+  document.getElementById('teamTally').textContent = '(' + caught.length + '/' + DEX_TOTAL + ')';
   if (!pkBuddy){
     box.innerHTML = '<div class="bname">Win ' + (BALL_NEED - ballStars) + ' more ⭐ to meet your first Pokémon!</div>';
     return;
@@ -832,12 +852,14 @@ function renderBuddyHome(){
     '<div><span class="bname">' + monName(pkBuddy) + '</span></div>';
 }
 function renderTeam(){
-  document.getElementById('teamHead').textContent = 'Caught ' + caught.length + ' of ' + GEN1.length + '!';
+  const legCount = caught.filter(isLegend).length;
+  document.getElementById('teamHead').textContent = 'Caught ' + caught.length + ' of ' + DEX_TOTAL +
+    (legCount ? '  ·  ✨ ' + legCount + ' legendary' : '');
   const grid = document.getElementById('tgrid');
   grid.innerHTML = '';
   caught.forEach(id => {
     const card = document.createElement('button');
-    card.className = 'tcard' + (id === pkBuddy ? ' buddy' : '');
+    card.className = 'tcard' + (id === pkBuddy ? ' buddy' : '') + (isLegend(id) ? ' legend' : '');
     card.innerHTML = '<img src="' + imgArt(id) + '" alt="" onerror="this.style.display=\'none\'">' +
       '<div>' + monName(id) + '</div>';
     card.addEventListener('click', () => {
@@ -855,28 +877,45 @@ function renderTeam(){
   grid.appendChild(mystery);
 }
 function catchMon(){
-  const remaining = [];
-  for (let i = 1; i <= GEN1.length; i++) if (!caught.includes(i)) remaining.push(i);
-  if (!remaining.length) return;
-  const id = caught.length === 0 ? 25 : remaining[rnd(remaining.length)];   // first catch: Pikachu
+  const normal = [];
+  for (let i = 1; i <= GEN1.length; i++) if (!caught.includes(i)) normal.push(i);
+  const legends = LEGEND_IDS.filter(i => !caught.includes(i));
+  if (!normal.length && !legends.length) return;
+  let id;
+  if (caught.length === 0){
+    id = 25;                                        // first catch is always Pikachu
+  } else {
+    // legendaries stay rare and only appear once he has a real collection going
+    const canLegend = legends.length && caught.length >= 12;
+    const wantLegend = canLegend && (Math.random() < 0.10 || !normal.length);
+    id = wantLegend ? legends[rnd(legends.length)] : normal[rnd(normal.length)];
+  }
   caught.push(id);
   if (!pkBuddy) pkBuddy = id;
   pkState();
   const box = document.getElementById('catchBox');
   const ov = document.getElementById('catch');
+  const leg = isLegend(id);
+  box.className = 'box' + (leg ? ' legendary' : '');
   box.innerHTML = '<span class="ballwob">' + BALL_SVG.replace('width="26" height="26"','width="86" height="86"') + '</span>' +
-    '<div class="newname">Something is in the ball!</div>';
+    '<div class="newname">' + (leg ? 'Whoa! This one is STRONG!' : 'Something is in the ball!') + '</div>';
   ov.style.display = 'flex';
-  blip(392,0,.15); blip(440,.3,.15); blip(494,.6,.15);
+  if (leg){
+    blip(330,0,.2); blip(392,.25,.2); blip(494,.5,.2); blip(587,.75,.25); blip(784,1.05,.4);
+  } else {
+    blip(392,0,.15); blip(440,.3,.15); blip(494,.6,.15);
+  }
   setTimeout(() => {
-    box.innerHTML = '<img src="' + imgArt(id) + '" alt="" onerror="this.replaceWith(Object.assign(document.createElement(\'div\'),{textContent:\'🎉\',style:\'font-size:80px\'}))">' +
+    box.innerHTML = (leg ? '<div class="legbanner">✨ LEGENDARY ✨</div>' : '') +
+      '<img src="' + imgArt(id) + '" alt="" onerror="this.replaceWith(Object.assign(document.createElement(\'div\'),{textContent:\'🎉\',style:\'font-size:80px\'}))">' +
       '<div class="newname">You caught ' + monName(id) + '! 🎉</div>' +
       '<div class="hint">Find them in My Pokémon</div>';
-    sndGood(); burst(document.getElementById('catchBox'), 12);
-    say('You caught ' + monName(id) + '!');
+    sndGood(); burst(document.getElementById('catchBox'), leg ? 24 : 12);
+    if (leg){ setTimeout(() => burst(document.getElementById('catchBox'), 20), 350); }
+    say(leg ? 'Wow! A legendary ' + monName(id) + '!' : 'You caught ' + monName(id) + '!');
     renderBuddyHome(); updateBallPill();
-    setTimeout(() => { ov.style.display = 'none'; }, 2800);
-  }, 1800);
+    setTimeout(() => { ov.style.display = 'none'; box.className = 'box'; }, leg ? 4000 : 2800);
+  }, leg ? 2600 : 1800);
 }
 
 /* ---------- screens ---------- */
@@ -1510,7 +1549,7 @@ function countHint(){
    ============================================================ */
 const zap = { ans: 0, cands: [], locked: false, popTimer: null, tos: [], sinceAns: 9, wrongs: 0 };
 const zapField = document.getElementById('zapField');
-const PATCH_POS = [[4, 22], [36, 8], [66, 22], [18, 50], [52, 50]];   // [left%, top%]
+const PATCH_POS = [[2, 16], [34, 4], [64, 16], [12, 48], [50, 50]];   // [left%, top%]
 let patches = [];
 
 function zapQuestion(){
@@ -1654,7 +1693,7 @@ const towerField = document.getElementById('towerField');
 const raceTrack = document.getElementById('raceTrack');
 
 function racerX(frac){
-  return 4 + frac * Math.max(0, raceTrack.clientWidth - 62);
+  return 4 + frac * Math.max(0, raceTrack.clientWidth - 84);
 }
 function positionRacers(){
   document.getElementById('racerBuddy').style.left = racerX(race.prog / (race.to - race.from + 1)) + 'px';
@@ -1689,8 +1728,8 @@ function startTower(){
     const b = document.createElement('button');
     b.className = 'tbub';
     b.textContent = n;
-    b.style.left = (10 + c * ((fw - 76) / (cols - 1)) + rnd(8)) + 'px';
-    b.style.top = (12 + r * 92 + rnd(16)) + 'px';
+    b.style.left = (8 + c * ((fw - 92) / (cols - 1)) + rnd(6)) + 'px';
+    b.style.top = (12 + r * 110 + rnd(14)) + 'px';
     b.style.animationDelay = (Math.random() * 2) + 's';
     b.addEventListener('click', () => towerTap(n, b));
     towerField.appendChild(b);
@@ -1758,8 +1797,13 @@ function towerTap(n, el){
 /* ============================================================
    NUMBER SNAKE — steer, solve, eat the right block
    ============================================================ */
+const EKANS_ID = 23;
+const ekansImg = new Image();
+let ekansReady = false;
+ekansImg.onload = () => { ekansReady = true; };
+ekansImg.onerror = () => { ekansReady = false; };
 const SN = {
-  cols: 13, rows: 13, cell: 24,
+  cols: 11, rows: 11, cell: 24,
   body: [], dir: [1, 0], nextDir: [1, 0],
   blocks: [], ans: 0, phrase: '',
   timer: null, stepMs: 420, grow: 0, alive: false, solved: 0, wrongs: 0
@@ -1768,7 +1812,7 @@ const snCanvas = document.getElementById('snCanvas');
 const snCtx = snCanvas.getContext('2d');
 
 function snSize(){
-  const avail = Math.min(360, document.getElementById('app').clientWidth - 60);
+  const avail = Math.min(460, document.getElementById('app').clientWidth - 44);
   SN.cell = Math.floor(avail / SN.cols);
   const px = SN.cell * SN.cols;
   const dpr = window.devicePixelRatio || 1;
@@ -1844,35 +1888,51 @@ function snDraw(){
     snCtx.roundRect(x + p, y + p, SN.cell - p * 2, SN.cell - p * 2, 6);
     snCtx.fill(); snCtx.stroke();
     snCtx.fillStyle = '#22254E';
-    snCtx.font = 'bold ' + Math.round(SN.cell * 0.5) + 'px system-ui, sans-serif';
+    snCtx.font = 'bold ' + Math.round(SN.cell * 0.56) + 'px system-ui, sans-serif';
     snCtx.textAlign = 'center'; snCtx.textBaseline = 'middle';
     snCtx.fillText(String(b.n), x + SN.cell / 2, y + SN.cell / 2 + 1);
   });
-  // snake
-  SN.body.forEach((seg, i) => {
-    const x = seg[0] * SN.cell, y = seg[1] * SN.cell, p = 2;
-    snCtx.fillStyle = i === 0 ? '#3E9E4C' : (i % 2 ? '#69C36A' : '#57B45A');
-    snCtx.strokeStyle = '#22254E'; snCtx.lineWidth = 2;
-    snCtx.beginPath();
-    snCtx.roundRect(x + p, y + p, SN.cell - p * 2, SN.cell - p * 2, i === 0 ? 8 : 5);
-    snCtx.fill(); snCtx.stroke();
-    if (i === 0){
-      snCtx.fillStyle = '#fff';
-      const ex = x + SN.cell / 2, ey = y + SN.cell / 2;
-      const ox = SN.dir[0] * SN.cell * 0.16, oy = SN.dir[1] * SN.cell * 0.16;
-      [[-0.18, -0.12], [0.18, -0.12]].forEach(([dx, dy]) => {
-        snCtx.beginPath();
-        snCtx.arc(ex + dx * SN.cell + ox, ey + dy * SN.cell + oy, SN.cell * 0.11, 0, Math.PI * 2);
-        snCtx.fill();
-      });
-      snCtx.fillStyle = '#22254E';
-      [[-0.18, -0.12], [0.18, -0.12]].forEach(([dx, dy]) => {
-        snCtx.beginPath();
-        snCtx.arc(ex + dx * SN.cell + ox * 1.5, ey + dy * SN.cell + oy * 1.5, SN.cell * 0.055, 0, Math.PI * 2);
-        snCtx.fill();
-      });
+  // Ekans! body drawn tail-first so the head sits on top
+  for (let i = SN.body.length - 1; i >= 1; i--){
+    const seg = SN.body[i];
+    const x = seg[0] * SN.cell, y = seg[1] * SN.cell;
+    const cx = x + SN.cell / 2, cy = y + SN.cell / 2;
+    const taper = 0.30 - 0.10 * (i / SN.body.length);      // thins toward the tail
+    const r = SN.cell * taper + SN.cell * 0.12;
+    snCtx.fillStyle = (i % 2) ? '#A867C8' : '#9457B8';     // Ekans purple
+    snCtx.strokeStyle = '#3B2350'; snCtx.lineWidth = 2.5;
+    snCtx.beginPath(); snCtx.arc(cx, cy, r, 0, Math.PI * 2); snCtx.fill(); snCtx.stroke();
+    // pale belly band
+    snCtx.fillStyle = 'rgba(255, 226, 168, .85)';
+    snCtx.beginPath(); snCtx.ellipse(cx, cy + r * 0.25, r * 0.62, r * 0.34, 0, 0, Math.PI * 2); snCtx.fill();
+    // rattle tip
+    if (i === SN.body.length - 1){
+      snCtx.fillStyle = '#F5D76E'; snCtx.strokeStyle = '#3B2350'; snCtx.lineWidth = 2;
+      snCtx.beginPath(); snCtx.arc(cx, cy, r * 0.55, 0, Math.PI * 2); snCtx.fill(); snCtx.stroke();
     }
-  });
+  }
+  // head: the real Ekans artwork, turned to face the way it's going
+  {
+    const seg = SN.body[0];
+    const cx = seg[0] * SN.cell + SN.cell / 2, cy = seg[1] * SN.cell + SN.cell / 2;
+    const hs = SN.cell * 1.9;
+    snCtx.save();
+    snCtx.translate(cx, cy);
+    if (SN.dir[0] < 0) snCtx.scale(-1, 1);                 // face left by mirroring
+    if (ekansReady){
+      snCtx.drawImage(ekansImg, -hs / 2, -hs / 2, hs, hs);
+    } else {
+      snCtx.fillStyle = '#A867C8'; snCtx.strokeStyle = '#3B2350'; snCtx.lineWidth = 3;
+      snCtx.beginPath(); snCtx.arc(0, 0, SN.cell * 0.46, 0, Math.PI * 2); snCtx.fill(); snCtx.stroke();
+      snCtx.fillStyle = '#fff';
+      snCtx.beginPath(); snCtx.arc(-SN.cell * 0.14, -SN.cell * 0.1, SN.cell * 0.12, 0, Math.PI * 2); snCtx.fill();
+      snCtx.beginPath(); snCtx.arc(SN.cell * 0.14, -SN.cell * 0.1, SN.cell * 0.12, 0, Math.PI * 2); snCtx.fill();
+      snCtx.fillStyle = '#22254E';
+      snCtx.beginPath(); snCtx.arc(-SN.cell * 0.12, -SN.cell * 0.09, SN.cell * 0.06, 0, Math.PI * 2); snCtx.fill();
+      snCtx.beginPath(); snCtx.arc(SN.cell * 0.16, -SN.cell * 0.09, SN.cell * 0.06, 0, Math.PI * 2); snCtx.fill();
+    }
+    snCtx.restore();
+  }
 }
 
 function snStep(){
@@ -1935,6 +1995,7 @@ function snTurn(d){
 }
 function startSnake(){
   stopSnake();
+  if (!ekansImg.src) ekansImg.src = imgArt(EKANS_ID);
   snSize();
   const midR = Math.floor(SN.rows / 2);
   SN.body = [[3, midR], [2, midR], [1, midR]];
@@ -1958,15 +2019,42 @@ document.addEventListener('keydown', e => {
   const k = { ArrowUp: [0,-1], ArrowDown: [0,1], ArrowLeft: [-1,0], ArrowRight: [1,0] }[e.key];
   if (k){ e.preventDefault(); snTurn(k); }
 });
-// swipe anywhere on the board
+// swipe steering: works anywhere on the game screen, turns as soon as the
+// gesture is clear (no need to lift the finger), and a tap steers toward the tap
 (function(){
-  let sx = 0, sy = 0;
-  snCanvas.addEventListener('pointerdown', e => { sx = e.clientX; sy = e.clientY; });
-  snCanvas.addEventListener('pointerup', e => {
-    const dx = e.clientX - sx, dy = e.clientY - sy;
-    if (Math.abs(dx) < 18 && Math.abs(dy) < 18) return;
+  const area = document.getElementById('scr-snake');
+  let sx = 0, sy = 0, tracking = false, turned = false;
+  const THRESH = 16;
+  function start(x, y){ sx = x; sy = y; tracking = true; turned = false; }
+  function move(x, y){
+    if (!tracking || turned) return;
+    const dx = x - sx, dy = y - sy;
+    if (Math.abs(dx) < THRESH && Math.abs(dy) < THRESH) return;
     snTurn(Math.abs(dx) > Math.abs(dy) ? [Math.sign(dx), 0] : [0, Math.sign(dy)]);
-  });
+    turned = true;                                  // one turn per swipe
+    sndTap();
+  }
+  function end(x, y){
+    if (tracking && !turned){
+      // a tap: steer toward where he tapped, relative to the head
+      const r = snCanvas.getBoundingClientRect();
+      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom && SN.body.length){
+        const hx = r.left + (SN.body[0][0] + 0.5) * SN.cell;
+        const hy = r.top + (SN.body[0][1] + 0.5) * SN.cell;
+        const dx = x - hx, dy = y - hy;
+        if (Math.abs(dx) > 8 || Math.abs(dy) > 8){
+          snTurn(Math.abs(dx) > Math.abs(dy) ? [Math.sign(dx), 0] : [0, Math.sign(dy)]);
+        }
+      }
+    }
+    tracking = false;
+  }
+  area.addEventListener('touchstart', e => { const t = e.touches[0]; start(t.clientX, t.clientY); }, { passive: true });
+  area.addEventListener('touchmove', e => { const t = e.touches[0]; move(t.clientX, t.clientY); }, { passive: true });
+  area.addEventListener('touchend', e => { const t = e.changedTouches[0]; end(t.clientX, t.clientY); }, { passive: true });
+  area.addEventListener('pointerdown', e => { if (e.pointerType !== 'touch') start(e.clientX, e.clientY); });
+  area.addEventListener('pointermove', e => { if (e.pointerType !== 'touch') move(e.clientX, e.clientY); });
+  area.addEventListener('pointerup', e => { if (e.pointerType !== 'touch') end(e.clientX, e.clientY); });
 })();
 
 /* ============================================================
