@@ -567,6 +567,7 @@
     <div id="buddyBox"></div>
     <h1>PokéMath Adventure</h1>
     <p class="sub">Play with numbers to catch them all!</p>
+    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v21</div>
     <div class="modes">
       <button class="mode trace" data-go="trace"><span class="big"><img class="mico" data-mon="133" alt=""><span class="micoalt">✏️</span></span>Write<br>Numbers</button>
       <button class="mode count" data-go="count"><span class="big"><img class="mico" data-mon="102" alt=""><span class="micoalt">🔢</span></span>Counting</button>
@@ -671,7 +672,9 @@
     <textarea id="ppCode" readonly rows="3"></textarea>
     <div class="pprow">
       <button class="btn" id="ppCopy">📋 Copy code</button>
+      <button class="btn" id="ppTest">🔎 Check build</button>
     </div>
+    <div class="speech" id="ppVer" style="min-height:20px;font-size:14px"></div>
     <textarea id="ppIn" rows="3" placeholder="Paste a backup code here to restore..."></textarea>
     <div class="pprow">
       <button class="btn" id="ppRestore">♻️ Restore</button>
@@ -2457,6 +2460,19 @@ document.addEventListener('visibilitychange', () => {
     setSyncStatus('', 'disconnected — progress stays on this tablet');
   });
   document.getElementById('ppClose').addEventListener('click', () => { panel.style.display = 'none'; });
+  document.getElementById('ppTest').addEventListener('click', () => {
+    const checks = [
+      ['praise voice', typeof praiseLine === 'function'],
+      ['praise sign', !!document.getElementById('rightPraise')],
+      ['wrong sign', !!document.getElementById('wrongWarn')],
+      ['streak legendaries', typeof streakNeed === 'function'],
+      ['numbers to 30', TRACE_MAX === 30]
+    ];
+    document.getElementById('ppVer').textContent =
+      'build v21 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
+    showPraise(praiseLine(true));
+    say(praiseLine(true));
+  });
   document.getElementById('ppCopy').addEventListener('click', async () => {
     const ta = document.getElementById('ppCode');
     ta.select(); ta.setSelectionRange(0, 999999);
