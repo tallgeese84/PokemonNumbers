@@ -126,7 +126,6 @@
   .mode.sub{ background:linear-gradient(180deg,#FF9184,#E0503F); color:#fff; }
   .mode.zap{ background:linear-gradient(180deg,#FFDD70,#F0A81E); }
   .mode.tower{ background:linear-gradient(180deg,#FFB6D4,#EE7BA8); }
-  .mode.snake{ background:linear-gradient(180deg,#A8E88F,#4FA84F); }
 
   .card{
     position:relative;
@@ -351,12 +350,42 @@
   /* ---- Wild Catch (pop-up meadow) ---- */
   #zapField{
     position:relative; height:440px; overflow:hidden;
-    background:
-      radial-gradient(circle at 20% 12%, rgba(255,255,255,.5), transparent 26%),
-      radial-gradient(circle at 70% 8%, rgba(255,255,255,.4), transparent 22%),
-      linear-gradient(180deg,#9ADCF7 0%,#BDEBFA 34%, #8FD470 36%, #57B45A 100%);
+    background:linear-gradient(180deg,#8FD2F5 0%,#BEEAFB 30%, #CFF0C4 33%, #8FD470 42%, #4FA84F 100%);
     border:4px solid var(--ink);
-    border-radius:24px; box-shadow:inset 0 6px 18px rgba(0,0,0,.18);
+    border-radius:24px; box-shadow:inset 0 8px 22px rgba(0,0,0,.2);
+  }
+  #zapField .scenery{ position:absolute; inset:0; pointer-events:none; }
+  #zapField .zsun{
+    position:absolute; left:8%; top:5%; width:54px; height:54px; border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, #FFF3A6, #FFC93C);
+    box-shadow:0 0 26px rgba(255,201,60,.85); animation:twinkle 5s ease-in-out infinite;
+  }
+  #zapField .zcloud{
+    position:absolute; background:#fff; border-radius:999px; opacity:.95;
+    box-shadow:26px 6px 0 -4px #fff, 52px 0 0 -8px #fff;
+    animation:drift 30s ease-in-out infinite alternate;
+  }
+  #zapField .ztree{ position:absolute; font-size:30px; filter:drop-shadow(0 3px 2px rgba(0,0,0,.25)); }
+  #zapField .zfence{
+    position:absolute; left:0; right:0; top:31%; height:14px;
+    background:repeating-linear-gradient(90deg,#C9A87C 0 8px, transparent 8px 26px);
+    border-top:3px solid #A07E52; border-bottom:3px solid #A07E52; opacity:.65;
+  }
+  .patch .shadow{
+    position:absolute; bottom:34px; left:50%; transform:translateX(-50%);
+    width:74px; height:14px; border-radius:50%; background:rgba(20,40,20,.28); z-index:0;
+  }
+  .patch .mound{
+    position:absolute; bottom:0; left:0; width:100%; height:44px; z-index:2;
+    background:linear-gradient(180deg,#8FE07A 0%,#5FBF5C 55%,#3E9E4C 100%);
+    border:3px solid var(--ink);
+    border-radius:46% 46% 34% 34% / 74% 74% 40% 40%;
+    box-shadow:inset 0 5px 0 rgba(255,255,255,.35), 0 4px 0 rgba(20,60,20,.25);
+  }
+  .patch .tuft{
+    position:absolute; bottom:32px; z-index:3; width:0; height:0;
+    border-left:7px solid transparent; border-right:7px solid transparent;
+    border-bottom:22px solid #4FA84F; filter:drop-shadow(0 -1px 0 #2F7F3A);
   }
   .patch{ position:absolute; width:132px; height:124px; }
   .patch .mound{
@@ -392,11 +421,63 @@
   /* ---- Number Race ---- */
   #towerField{
     position:relative; height:430px; overflow:hidden;
-    background:
-      radial-gradient(circle at 76% 14%, rgba(255,255,255,.45), transparent 24%),
-      linear-gradient(180deg,#9ADCF7 0%,#BDEBFA 40%, #8FD470 42%, #57B45A 100%);
+    background:linear-gradient(180deg,#8FD2F5 0%,#C4ECFB 26%, #CFF0C4 30%, #8FD470 40%, #4FA84F 100%);
     border:4px solid var(--ink);
-    border-radius:24px; box-shadow:inset 0 6px 18px rgba(0,0,0,.18);
+    border-radius:24px; box-shadow:inset 0 8px 22px rgba(0,0,0,.2);
+  }
+  #towerField .rscene{ position:absolute; inset:0; pointer-events:none; }
+  #towerField .rsun{
+    position:absolute; right:8%; top:4%; width:48px; height:48px; border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, #FFF3A6, #FFC93C);
+    box-shadow:0 0 24px rgba(255,201,60,.8);
+  }
+  #towerField .rcloud{
+    position:absolute; background:#fff; border-radius:999px; opacity:.95;
+    box-shadow:24px 5px 0 -4px #fff, 46px 0 0 -8px #fff;
+    animation:drift 28s ease-in-out infinite alternate;
+  }
+  #towerField .rbunting{
+    position:absolute; left:0; right:0; top:2px; height:20px;
+    background:repeating-linear-gradient(90deg,
+      #FF6F61 0 14px, transparent 14px 16px, #FFC93C 16px 30px, transparent 30px 32px,
+      #4ECDA5 32px 46px, transparent 46px 48px, #5AB8F5 48px 62px, transparent 62px 64px);
+    -webkit-mask-image:linear-gradient(180deg,#000 0 55%, transparent 55%);
+    mask-image:linear-gradient(180deg,#000 0 55%, transparent 55%);
+    opacity:.9;
+  }
+  #towerField .rcrowd{ position:absolute; font-size:22px; filter:drop-shadow(0 2px 1px rgba(0,0,0,.2)); }
+  #raceTrack{
+    position:absolute; left:6px; right:6px; bottom:6px; height:132px;
+    background:linear-gradient(180deg,#E4C79A 0%,#D9B98C 40%,#B08A58 100%);
+    border:3px solid var(--ink); border-radius:16px;
+    box-shadow:inset 0 4px 0 rgba(255,255,255,.35), inset 0 -6px 12px rgba(0,0,0,.15);
+  }
+  #raceTrack::before{
+    content:""; position:absolute; left:8px; right:8px; top:50%; height:0;
+    border-top:4px dashed rgba(255,255,255,.7);
+  }
+  #raceTrack::after{
+    content:""; position:absolute; right:52px; top:6px; bottom:6px; width:14px;
+    background:
+      repeating-conic-gradient(#fff 0% 25%, #2B2E5C 0% 50%) 0 0 / 14px 14px;
+    border:2px solid var(--ink); border-radius:3px; opacity:.95;
+  }
+  .racer{
+    position:absolute; width:66px; height:66px; object-fit:contain; left:4px;
+    transition:left .3s ease; filter:drop-shadow(0 4px 3px rgba(0,0,0,.35));
+    z-index:2;
+  }
+  .lanelabel{
+    position:absolute; left:6px; font-size:11px; font-weight:bold; color:#5A3E1E;
+    background:rgba(255,255,255,.7); border-radius:6px; padding:0 5px; z-index:1;
+  }
+  .dust{
+    position:absolute; width:22px; height:22px; border-radius:50%;
+    background:rgba(255,255,255,.75); pointer-events:none; z-index:1;
+    animation:dustpuff .6s ease-out forwards;
+  }
+  @keyframes dustpuff{
+    0%{ transform:scale(.4); opacity:.9 } 100%{ transform:scale(1.6) translateX(-18px); opacity:0 }
   }
   .tbub{
     position:absolute; width:74px; height:74px; border-radius:50%;
@@ -425,20 +506,6 @@
   .racer.hop{ animation:hop .35s ease; }
   @keyframes hop{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-14px) } }
   #raceFlag{ position:absolute; right:6px; top:50%; transform:translateY(-58%); font-size:46px; z-index:2; }
-
-  /* ---- Number Snake ---- */
-  #snCanvas{
-    display:block; margin:0 auto; touch-action:none;
-    border:4px solid var(--ink); border-radius:20px;
-    background:#DFF6D0; box-shadow:inset 0 4px 14px rgba(0,0,0,.15);
-    max-width:100%;
-  }
-  #snPad{ display:flex; flex-direction:column; align-items:center; gap:8px; margin-top:10px; }
-  #snPad .drow{ display:flex; gap:8px; }
-  .dpad{
-    width:64px; height:52px; font-size:22px; padding:0;
-    background:linear-gradient(180deg,#FFFDF4,#EDE2C4);
-  }
 
   /* celebration */
   #fx{ position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:50; }
@@ -567,7 +634,7 @@
     <div id="buddyBox"></div>
     <h1>PokéMath Adventure</h1>
     <p class="sub">Play with numbers to catch them all!</p>
-    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v24</div>
+    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v25</div>
     <div class="modes">
       <button class="mode trace" data-go="trace"><span class="big"><img class="mico" data-mon="133" alt=""><span class="micoalt">✏️</span></span>Write<br>Numbers</button>
       <button class="mode count" data-go="count"><span class="big"><img class="mico" data-mon="102" alt=""><span class="micoalt">🔢</span></span>Counting</button>
@@ -575,7 +642,6 @@
       <button class="mode sub" data-go="sub"><span class="big"><img class="mico" data-mon="92" alt=""><span class="micoalt">➖</span></span>Taking<br>Away</button>
       <button class="mode zap" data-go="zap"><span class="big grasspeek"><img class="mico" data-mon="25" alt=""><span class="micoalt">🌿</span><span class="grassfront">🌿</span></span>Wild<br>Catch</button>
       <button class="mode tower" data-go="tower"><span class="big"><img class="mico" data-mon="78" alt=""><span class="micoalt">🏁</span></span>Number<br>Race</button>
-      <button class="mode snake" data-go="snake"><span class="big"><img class="mico" data-mon="23" alt=""><span class="micoalt">🐍</span></span>Number<br>Snake</button>
     </div>
     <button class="widebtn" id="teamBtn">My Pokémon <span id="teamTally"></span></button>
   </div>
@@ -630,7 +696,18 @@
     <div class="card">
       <div class="qtext" id="towerQ"></div>
       <div id="towerField">
+        <div class="rscene">
+          <div class="rsun"></div>
+          <div class="rcloud" style="left:12%;top:8%;width:40px;height:16px"></div>
+          <div class="rcloud" style="left:46%;top:4%;width:32px;height:13px;animation-delay:7s"></div>
+          <div class="rbunting"></div>
+          <span class="rcrowd" style="left:6%;top:26%">🌳</span>
+          <span class="rcrowd" style="left:86%;top:24%">🌲</span>
+          <span class="rcrowd" style="left:30%;top:28%;font-size:16px">🎪</span>
+        </div>
         <div id="raceTrack">
+          <span class="lanelabel" style="top:2px">YOU</span>
+          <span class="lanelabel" style="bottom:2px">RIVAL</span>
           <span id="raceFlag">🏁</span>
           <img id="racerBuddy" class="racer" alt="">
           <img id="racerRival" class="racer rival" alt="">
@@ -641,23 +718,6 @@
   </div>
 </div>
 
-  <!-- NUMBER SNAKE -->
-  <div class="screen" id="scr-snake">
-    <div class="card">
-      <div class="qtext" id="snQ"></div>
-      <canvas id="snCanvas"></canvas>
-      <div class="speech" id="snSpeech"></div>
-      <div style="text-align:center;font-size:14px;margin-top:2px">Swipe anywhere to turn — or use the arrows</div>
-      <div id="snPad">
-        <button class="btn dpad" id="snUp">▲</button>
-        <div class="drow">
-          <button class="btn dpad" id="snLeft">◀</button>
-          <button class="btn dpad" id="snDown">▼</button>
-          <button class="btn dpad" id="snRight">▶</button>
-        </div>
-      </div>
-    </div>
-  </div>
 </div>
 
 <div id="fx"></div>
@@ -917,13 +977,13 @@ function bigCheer(text){
    POKÉMON LAYER — sprites served at runtime by PokeAPI (pokeapi.co)
    Personal, non-commercial family app; artwork © Nintendo/Game Freak.
    ============================================================ */
-const GEN1 = ["Bulbasaur","Ivysaur","Venusaur","Charmander","Charmeleon","Charizard","Squirtle","Wartortle","Blastoise","Caterpie","Metapod","Butterfree","Weedle","Kakuna","Beedrill","Pidgey","Pidgeotto","Pidgeot","Rattata","Raticate","Spearow","Fearow","Ekans","Arbok","Pikachu","Raichu","Sandshrew","Sandslash","Nidoran","Nidorina","Nidoqueen","Nidoran","Nidorino","Nidoking","Clefairy","Clefable","Vulpix","Ninetales","Jigglypuff","Wigglytuff","Zubat","Golbat","Oddish","Gloom","Vileplume","Paras","Parasect","Venonat","Venomoth","Diglett","Dugtrio","Meowth","Persian","Psyduck","Golduck","Mankey","Primeape","Growlithe","Arcanine","Poliwag","Poliwhirl","Poliwrath","Abra","Kadabra","Alakazam","Machop","Machoke","Machamp","Bellsprout","Weepinbell","Victreebel","Tentacool","Tentacruel","Geodude","Graveler","Golem","Ponyta","Rapidash","Slowpoke","Slowbro","Magnemite","Magneton","Farfetch'd","Doduo","Dodrio","Seel","Dewgong","Grimer","Muk","Shellder","Cloyster","Gastly","Haunter","Gengar","Onix","Drowzee","Hypno","Krabby","Kingler","Voltorb","Electrode","Exeggcute","Exeggutor","Cubone","Marowak","Hitmonlee","Hitmonchan","Lickitung","Koffing","Weezing","Rhyhorn","Rhydon","Chansey","Tangela","Kangaskhan","Horsea","Seadra","Goldeen","Seaking","Staryu","Starmie","Mr. Mime","Scyther","Jynx","Electabuzz","Magmar","Pinsir","Tauros","Magikarp","Gyarados","Lapras","Ditto","Eevee","Vaporeon","Jolteon","Flareon","Porygon","Omanyte","Omastar","Kabuto","Kabutops","Aerodactyl","Snorlax","Articuno","Zapdos","Moltres","Dratini","Dragonair","Dragonite","Mewtwo","Mew"];
+const DEX = ["Bulbasaur","Ivysaur","Venusaur","Charmander","Charmeleon","Charizard","Squirtle","Wartortle","Blastoise","Caterpie","Metapod","Butterfree","Weedle","Kakuna","Beedrill","Pidgey","Pidgeotto","Pidgeot","Rattata","Raticate","Spearow","Fearow","Ekans","Arbok","Pikachu","Raichu","Sandshrew","Sandslash","Nidoran♀","Nidorina","Nidoqueen","Nidoran♂","Nidorino","Nidoking","Clefairy","Clefable","Vulpix","Ninetales","Jigglypuff","Wigglytuff","Zubat","Golbat","Oddish","Gloom","Vileplume","Paras","Parasect","Venonat","Venomoth","Diglett","Dugtrio","Meowth","Persian","Psyduck","Golduck","Mankey","Primeape","Growlithe","Arcanine","Poliwag","Poliwhirl","Poliwrath","Abra","Kadabra","Alakazam","Machop","Machoke","Machamp","Bellsprout","Weepinbell","Victreebel","Tentacool","Tentacruel","Geodude","Graveler","Golem","Ponyta","Rapidash","Slowpoke","Slowbro","Magnemite","Magneton","Farfetch’d","Doduo","Dodrio","Seel","Dewgong","Grimer","Muk","Shellder","Cloyster","Gastly","Haunter","Gengar","Onix","Drowzee","Hypno","Krabby","Kingler","Voltorb","Electrode","Exeggcute","Exeggutor","Cubone","Marowak","Hitmonlee","Hitmonchan","Lickitung","Koffing","Weezing","Rhyhorn","Rhydon","Chansey","Tangela","Kangaskhan","Horsea","Seadra","Goldeen","Seaking","Staryu","Starmie","Mr. Mime","Scyther","Jynx","Electabuzz","Magmar","Pinsir","Tauros","Magikarp","Gyarados","Lapras","Ditto","Eevee","Vaporeon","Jolteon","Flareon","Porygon","Omanyte","Omastar","Kabuto","Kabutops","Aerodactyl","Snorlax","Articuno","Zapdos","Moltres","Dratini","Dragonair","Dragonite","Mewtwo","Mew","Chikorita","Bayleef","Meganium","Cyndaquil","Quilava","Typhlosion","Totodile","Croconaw","Feraligatr","Sentret","Furret","Hoothoot","Noctowl","Ledyba","Ledian","Spinarak","Ariados","Crobat","Chinchou","Lanturn","Pichu","Cleffa","Igglybuff","Togepi","Togetic","Natu","Xatu","Mareep","Flaaffy","Ampharos","Bellossom","Marill","Azumarill","Sudowoodo","Politoed","Hoppip","Skiploom","Jumpluff","Aipom","Sunkern","Sunflora","Yanma","Wooper","Quagsire","Espeon","Umbreon","Murkrow","Slowking","Misdreavus","Unown","Wobbuffet","Girafarig","Pineco","Forretress","Dunsparce","Gligar","Steelix","Snubbull","Granbull","Qwilfish","Scizor","Shuckle","Heracross","Sneasel","Teddiursa","Ursaring","Slugma","Magcargo","Swinub","Piloswine","Corsola","Remoraid","Octillery","Delibird","Mantine","Skarmory","Houndour","Houndoom","Kingdra","Phanpy","Donphan","Porygon2","Stantler","Smeargle","Tyrogue","Hitmontop","Smoochum","Elekid","Magby","Miltank","Blissey","Raikou","Entei","Suicune","Larvitar","Pupitar","Tyranitar","Lugia","Ho-Oh","Celebi","Treecko","Grovyle","Sceptile","Torchic","Combusken","Blaziken","Mudkip","Marshtomp","Swampert","Poochyena","Mightyena","Zigzagoon","Linoone","Wurmple","Silcoon","Beautifly","Cascoon","Dustox","Lotad","Lombre","Ludicolo","Seedot","Nuzleaf","Shiftry","Taillow","Swellow","Wingull","Pelipper","Ralts","Kirlia","Gardevoir","Surskit","Masquerain","Shroomish","Breloom","Slakoth","Vigoroth","Slaking","Nincada","Ninjask","Shedinja","Whismur","Loudred","Exploud","Makuhita","Hariyama","Azurill","Nosepass","Skitty","Delcatty","Sableye","Mawile","Aron","Lairon","Aggron","Meditite","Medicham","Electrike","Manectric","Plusle","Minun","Volbeat","Illumise","Roselia","Gulpin","Swalot","Carvanha","Sharpedo","Wailmer","Wailord","Numel","Camerupt","Torkoal","Spoink","Grumpig","Spinda","Trapinch","Vibrava","Flygon","Cacnea","Cacturne","Swablu","Altaria","Zangoose","Seviper","Lunatone","Solrock","Barboach","Whiscash","Corphish","Crawdaunt","Baltoy","Claydol","Lileep","Cradily","Anorith","Armaldo","Feebas","Milotic","Castform","Kecleon","Shuppet","Banette","Duskull","Dusclops","Tropius","Chimecho","Absol","Wynaut","Snorunt","Glalie","Spheal","Sealeo","Walrein","Clamperl","Huntail","Gorebyss","Relicanth","Luvdisc","Bagon","Shelgon","Salamence","Beldum","Metang","Metagross","Regirock","Regice","Registeel","Latias","Latios","Kyogre","Groudon","Rayquaza","Jirachi","Deoxys","Turtwig","Grotle","Torterra","Chimchar","Monferno","Infernape","Piplup","Prinplup","Empoleon","Starly","Staravia","Staraptor","Bidoof","Bibarel","Kricketot","Kricketune","Shinx","Luxio","Luxray","Budew","Roserade","Cranidos","Rampardos","Shieldon","Bastiodon","Burmy","Wormadam","Mothim","Combee","Vespiquen","Pachirisu","Buizel","Floatzel","Cherubi","Cherrim","Shellos","Gastrodon","Ambipom","Drifloon","Drifblim","Buneary","Lopunny","Mismagius","Honchkrow","Glameow","Purugly","Chingling","Stunky","Skuntank","Bronzor","Bronzong","Bonsly","Mime Jr.","Happiny","Chatot","Spiritomb","Gible","Gabite","Garchomp","Munchlax","Riolu","Lucario","Hippopotas","Hippowdon","Skorupi","Drapion","Croagunk","Toxicroak","Carnivine","Finneon","Lumineon","Mantyke","Snover","Abomasnow","Weavile","Magnezone","Lickilicky","Rhyperior","Tangrowth","Electivire","Magmortar","Togekiss","Yanmega","Leafeon","Glaceon","Gliscor","Mamoswine","Porygon-Z","Gallade","Probopass","Dusknoir","Froslass","Rotom","Uxie","Mesprit","Azelf","Dialga","Palkia","Heatran","Regigigas","Giratina","Cresselia","Phione","Manaphy","Darkrai","Shaymin","Arceus","Victini","Snivy","Servine","Serperior","Tepig","Pignite","Emboar","Oshawott","Dewott","Samurott","Patrat","Watchog","Lillipup","Herdier","Stoutland","Purrloin","Liepard","Pansage","Simisage","Pansear","Simisear","Panpour","Simipour","Munna","Musharna","Pidove","Tranquill","Unfezant","Blitzle","Zebstrika","Roggenrola","Boldore","Gigalith","Woobat","Swoobat","Drilbur","Excadrill","Audino","Timburr","Gurdurr","Conkeldurr","Tympole","Palpitoad","Seismitoad","Throh","Sawk","Sewaddle","Swadloon","Leavanny","Venipede","Whirlipede","Scolipede","Cottonee","Whimsicott","Petilil","Lilligant","Basculin","Sandile","Krokorok","Krookodile","Darumaka","Darmanitan","Maractus","Dwebble","Crustle","Scraggy","Scrafty","Sigilyph","Yamask","Cofagrigus","Tirtouga","Carracosta","Archen","Archeops","Trubbish","Garbodor","Zorua","Zoroark","Minccino","Cinccino","Gothita","Gothorita","Gothitelle","Solosis","Duosion","Reuniclus","Ducklett","Swanna","Vanillite","Vanillish","Vanilluxe","Deerling","Sawsbuck","Emolga","Karrablast","Escavalier","Foongus","Amoonguss","Frillish","Jellicent","Alomomola","Joltik","Galvantula","Ferroseed","Ferrothorn","Klink","Klang","Klinklang","Tynamo","Eelektrik","Eelektross","Elgyem","Beheeyem","Litwick","Lampent","Chandelure","Axew","Fraxure","Haxorus","Cubchoo","Beartic","Cryogonal","Shelmet","Accelgor","Stunfisk","Mienfoo","Mienshao","Druddigon","Golett","Golurk","Pawniard","Bisharp","Bouffalant","Rufflet","Braviary","Vullaby","Mandibuzz","Heatmor","Durant","Deino","Zweilous","Hydreigon","Larvesta","Volcarona","Cobalion","Terrakion","Virizion","Tornadus","Thundurus","Reshiram","Zekrom","Landorus","Kyurem","Keldeo","Meloetta","Genesect","Chespin","Quilladin","Chesnaught","Fennekin","Braixen","Delphox","Froakie","Frogadier","Greninja","Bunnelby","Diggersby","Fletchling","Fletchinder","Talonflame","Scatterbug","Spewpa","Vivillon","Litleo","Pyroar","Flabébé","Floette","Florges","Skiddo","Gogoat","Pancham","Pangoro","Furfrou","Espurr","Meowstic","Honedge","Doublade","Aegislash","Spritzee","Aromatisse","Swirlix","Slurpuff","Inkay","Malamar","Binacle","Barbaracle","Skrelp","Dragalge","Clauncher","Clawitzer","Helioptile","Heliolisk","Tyrunt","Tyrantrum","Amaura","Aurorus","Sylveon","Hawlucha","Dedenne","Carbink","Goomy","Sliggoo","Goodra","Klefki","Phantump","Trevenant","Pumpkaboo","Gourgeist","Bergmite","Avalugg","Noibat","Noivern","Xerneas","Yveltal","Zygarde","Diancie","Hoopa","Volcanion","Rowlet","Dartrix","Decidueye","Litten","Torracat","Incineroar","Popplio","Brionne","Primarina","Pikipek","Trumbeak","Toucannon","Yungoos","Gumshoos","Grubbin","Charjabug","Vikavolt","Crabrawler","Crabominable","Oricorio","Cutiefly","Ribombee","Rockruff","Lycanroc","Wishiwashi","Mareanie","Toxapex","Mudbray","Mudsdale","Dewpider","Araquanid","Fomantis","Lurantis","Morelull","Shiinotic","Salandit","Salazzle","Stufful","Bewear","Bounsweet","Steenee","Tsareena","Comfey","Oranguru","Passimian","Wimpod","Golisopod","Sandygast","Palossand","Pyukumuku","Type: Null","Silvally","Minior","Komala","Turtonator","Togedemaru","Mimikyu","Bruxish","Drampa","Dhelmise","Jangmo-o","Hakamo-o","Kommo-o","Tapu Koko","Tapu Lele","Tapu Bulu","Tapu Fini","Cosmog","Cosmoem","Solgaleo","Lunala","Nihilego","Buzzwole","Pheromosa","Xurkitree","Celesteela","Kartana","Guzzlord","Necrozma","Magearna","Marshadow","Poipole","Naganadel","Stakataka","Blacephalon","Zeraora","Meltan","Melmetal","Grookey","Thwackey","Rillaboom","Scorbunny","Raboot","Cinderace","Sobble","Drizzile","Inteleon","Skwovet","Greedent","Rookidee","Corvisquire","Corviknight","Blipbug","Dottler","Orbeetle","Nickit","Thievul","Gossifleur","Eldegoss","Wooloo","Dubwool","Chewtle","Drednaw","Yamper","Boltund","Rolycoly","Carkol","Coalossal","Applin","Flapple","Appletun","Silicobra","Sandaconda","Cramorant","Arrokuda","Barraskewda","Toxel","Toxtricity","Sizzlipede","Centiskorch","Clobbopus","Grapploct","Sinistea","Polteageist","Hatenna","Hattrem","Hatterene","Impidimp","Morgrem","Grimmsnarl","Obstagoon","Perrserker","Cursola","Sirfetch’d","Mr. Rime","Runerigus","Milcery","Alcremie","Falinks","Pincurchin","Snom","Frosmoth","Stonjourner","Eiscue","Indeedee","Morpeko","Cufant","Copperajah","Dracozolt","Arctozolt","Dracovish","Arctovish","Duraludon","Dreepy","Drakloak","Dragapult","Zacian","Zamazenta","Eternatus","Kubfu","Urshifu","Zarude","Regieleki","Regidrago","Glastrier","Spectrier","Calyrex","Wyrdeer","Kleavor","Ursaluna","Basculegion","Sneasler","Overqwil","Enamorus","Sprigatito","Floragato","Meowscarada","Fuecoco","Crocalor","Skeledirge","Quaxly","Quaxwell","Quaquaval","Lechonk","Oinkologne","Tarountula","Spidops","Nymble","Lokix","Pawmi","Pawmo","Pawmot","Tandemaus","Maushold","Fidough","Dachsbun","Smoliv","Dolliv","Arboliva","Squawkabilly","Nacli","Naclstack","Garganacl","Charcadet","Armarouge","Ceruledge","Tadbulb","Bellibolt","Wattrel","Kilowattrel","Maschiff","Mabosstiff","Shroodle","Grafaiai","Bramblin","Brambleghast","Toedscool","Toedscruel","Klawf","Capsakid","Scovillain","Rellor","Rabsca","Flittle","Espathra","Tinkatink","Tinkatuff","Tinkaton","Wiglett","Wugtrio","Bombirdier","Finizen","Palafin","Varoom","Revavroom","Cyclizar","Orthworm","Glimmet","Glimmora","Greavard","Houndstone","Flamigo","Cetoddle","Cetitan","Veluza","Dondozo","Tatsugiri","Annihilape","Clodsire","Farigiraf","Dudunsparce","Kingambit","Great Tusk","Scream Tail","Brute Bonnet","Flutter Mane","Slither Wing","Sandy Shocks","Iron Treads","Iron Bundle","Iron Hands","Iron Jugulis","Iron Moth","Iron Thorns","Frigibax","Arctibax","Baxcalibur","Gimmighoul","Gholdengo","Wo-Chien","Chien-Pao","Ting-Lu","Chi-Yu","Roaring Moon","Iron Valiant","Koraidon","Miraidon","Walking Wake","Iron Leaves","Dipplin","Poltchageist","Sinistcha","Okidogi","Munkidori","Fezandipiti","Ogerpon","Archaludon","Hydrapple","Gouging Fire","Raging Bolt","Iron Boulder","Iron Crown","Terapagos","Pecharunt"];
 // Legendary & mythical Pokémon from every generation — rare catches
 const LEGENDS = {243:"Raikou",244:"Entei",245:"Suicune",249:"Lugia",250:"Ho-Oh",251:"Celebi",377:"Regirock",378:"Regice",379:"Registeel",380:"Latias",381:"Latios",382:"Kyogre",383:"Groudon",384:"Rayquaza",385:"Jirachi",386:"Deoxys",480:"Uxie",481:"Mesprit",482:"Azelf",483:"Dialga",484:"Palkia",485:"Heatran",486:"Regigigas",487:"Giratina",488:"Cresselia",489:"Phione",490:"Manaphy",491:"Darkrai",492:"Shaymin",493:"Arceus",494:"Victini",638:"Cobalion",639:"Terrakion",640:"Virizion",641:"Tornadus",642:"Thundurus",643:"Reshiram",644:"Zekrom",645:"Landorus",646:"Kyurem",647:"Keldeo",648:"Meloetta",649:"Genesect",716:"Xerneas",717:"Yveltal",718:"Zygarde",719:"Diancie",720:"Hoopa",721:"Volcanion",785:"Tapu Koko",786:"Tapu Lele",787:"Tapu Bulu",788:"Tapu Fini",789:"Cosmog",790:"Cosmoem",791:"Solgaleo",792:"Lunala",800:"Necrozma",801:"Magearna",802:"Marshadow",807:"Zeraora",808:"Meltan",809:"Melmetal",888:"Zacian",889:"Zamazenta",890:"Eternatus",894:"Regieleki",895:"Regidrago",896:"Glastrier",897:"Spectrier",898:"Calyrex",905:"Enamorus",1007:"Koraidon",1008:"Miraidon",1017:"Ogerpon",1024:"Terapagos",1025:"Pecharunt"};
 const LEGEND_IDS = Object.keys(LEGENDS).map(Number);
 const isLegend = id => !!LEGENDS[id];
-const monName = id => LEGENDS[id] || GEN1[id - 1] || ('#' + id);
-const DEX_TOTAL = 151 + LEGEND_IDS.length;
+const monName = id => DEX[id - 1] || ('#' + id);
+const DEX_TOTAL = DEX.length;                       // every Pokémon from the API
 const SPR = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/';
 const imgSmall = id => SPR + id + '.png';
 const imgArt = id => SPR + 'other/official-artwork/' + id + '.png';
@@ -938,7 +998,7 @@ function noteOffline(){
 // Catching gets harder as the collection grows: 8 stars for the first few,
 // rising to 30 for a big Pokédex.
 function ballNeed(){
-  return Math.min(30, 8 + Math.floor(caught.length / 6) * 2);
+  return Math.min(30, 8 + Math.floor(caught.length / 12) * 2);
 }
 // Legendaries are NOT bought with stars — they are earned by a streak of
 // first-try correct answers, so careful thinking is the only route.
@@ -1001,7 +1061,7 @@ function renderTeam(){
 }
 function catchMon(){
   const normal = [];
-  for (let i = 1; i <= GEN1.length; i++) if (!caught.includes(i)) normal.push(i);
+  for (let i = 1; i <= DEX_TOTAL; i++) if (!caught.includes(i) && !isLegend(i)) normal.push(i);
   const legends = LEGEND_IDS.filter(i => !caught.includes(i));
   if (!normal.length && !legends.length) return;
   let id;
@@ -1045,7 +1105,7 @@ function catchMon(){
 }
 
 /* ---------- screens ---------- */
-const screens = { home:'scr-home', trace:'scr-trace', quiz:'scr-quiz', zap:'scr-zap', tower:'scr-tower', team:'scr-team', snake:'scr-snake' };
+const screens = { home:'scr-home', trace:'scr-trace', quiz:'scr-quiz', zap:'scr-zap', tower:'scr-tower', team:'scr-team' };
 let mode = 'home';
 function show(name){
   Object.values(screens).forEach(id => document.getElementById(id).classList.remove('on'));
@@ -1053,7 +1113,7 @@ function show(name){
   document.getElementById('backBtn').style.display = (name === 'home') ? 'none' : 'block';
 }
 document.getElementById('backBtn').addEventListener('click', () => {
-  sndTap(); shutUp(); stopZap(); stopRace(); stopSnake(); mode = 'home'; renderBuddyHome(); show('home');
+  sndTap(); shutUp(); stopZap(); stopRace(); mode = 'home'; renderBuddyHome(); show('home');
 });
 document.getElementById('teamBtn').addEventListener('click', () => {
   sndTap(); mode = 'team'; renderTeam(); show('team');
@@ -1074,7 +1134,6 @@ document.querySelectorAll('.mode').forEach(btn => {
     if (go === 'trace'){ mode = 'trace'; show('trace'); startTrace(traceIdx); }
     else if (go === 'zap'){ mode = 'zap'; show('zap'); startZap(); }
     else if (go === 'tower'){ mode = 'tower'; show('tower'); startTower(); }
-    else if (go === 'snake'){ mode = 'snake'; show('snake'); startSnake(); }
     else { mode = go; show('quiz'); newQuestion(); }
   });
 });
@@ -1414,7 +1473,7 @@ document.getElementById('showMe').addEventListener('click', () => {
    ============================================================ */
 const THINGS = ['🚀','⭐','🪐','🛸','🌟','☄️','👽','🌙'];
 const q = { a: 0, b: 0, ans: 0, tries: 0 };
-const progress = { count: 0, add: 0, sub: 0, zap: 0, tower: 0, snake: 0 };
+const progress = { count: 0, add: 0, sub: 0, zap: 0, tower: 0 };
 function saveProg(){
   store.set('cubs_prog', JSON.stringify(progress));
   store.set('cubs_caps', JSON.stringify(capOverride));
@@ -1497,17 +1556,17 @@ function sayWrong(){
 /* Pace: 'look' is a deliberate pause where the answer pad is locked so he has
    to study the picture before answering — patience training, not just a delay. */
 const PACE = {
-  calm:   { next: 3200, look: 2200, pop: 3600, snake: 560, hint: 700 },
-  normal: { next: 2200, look: 1200, pop: 2900, snake: 460, hint: 560 },
-  quick:  { next: 1400, look: 500,  pop: 2300, snake: 380, hint: 460 }
+  calm:   { next: 3200, look: 2200, pop: 3600, hint: 700 },
+  normal: { next: 2200, look: 1200, pop: 2900, hint: 560 },
+  quick:  { next: 1400, look: 500,  pop: 2300, hint: 460 }
 };
 let pace = 'calm';
 const P = () => PACE[pace] || PACE.calm;
 
 const FLU_WIN = 10;
-const fluency = { count: [], add: [], sub: [], zap: [], snake: [] };
-const capOverride = { count: 0, add: 0, sub: 0, zap: 0, snake: 0 };   // 0 = auto; else hard cap
-const FAST_MS = { count: 9000, add: 8000, sub: 8000, zap: 12000, snake: 14000 };
+const fluency = { count: [], add: [], sub: [], zap: [] };
+const capOverride = { count: 0, add: 0, sub: 0, zap: 0 };   // 0 = auto; else hard cap
+const FAST_MS = { count: 9000, add: 8000, sub: 8000, zap: 12000 };
 
 function bumpStreak(firstTry){
   if (firstTry){
@@ -1589,7 +1648,6 @@ function objSpan(monId, emoji, cls, px){
 }
 
 document.getElementById('qtext').addEventListener('click', () => { if (q.phrase) say(q.phrase, true); });
-document.getElementById('snQ').addEventListener('click', () => { if (SN.phrase) say(SN.phrase, true); });
 document.getElementById('eqline').addEventListener('click', () => { if (q.phrase) say(q.phrase, true); });
 
 function newQuestion(){
@@ -1931,12 +1989,27 @@ function wildTap(n, p, el){
 
 function startZap(){
   stopZap();
-  zapField.querySelectorAll('.patch, .wildpk, #throwBall, .boomtxt').forEach(e => e.remove());
+  zapField.querySelectorAll('.patch, .wildpk, #throwBall, .boomtxt, .scenery').forEach(e => e.remove());
+  const scene = document.createElement('div');
+  scene.className = 'scenery';
+  scene.innerHTML =
+    '<div class="zsun"></div>' +
+    '<div class="zcloud" style="left:52%;top:6%;width:44px;height:18px"></div>' +
+    '<div class="zcloud" style="left:20%;top:15%;width:34px;height:14px;animation-delay:6s"></div>' +
+    '<div class="zfence"></div>' +
+    '<span class="ztree" style="left:3%;top:24%">🌳</span>' +
+    '<span class="ztree" style="left:88%;top:22%">🌲</span>' +
+    '<span class="ztree" style="left:70%;top:27%;font-size:22px">🌳</span>' +
+    '<span class="ztree" style="left:26%;top:26%;font-size:20px">🌲</span>';
+  zapField.appendChild(scene);
   patches = PATCH_POS.map(([lx, ty]) => {
     const el = document.createElement('div');
     el.className = 'patch';
     el.style.left = lx + '%'; el.style.top = ty + '%';
-    el.innerHTML = '<div class="popwrap"></div><div class="mound"></div><span class="blades">🌼</span>';
+    el.innerHTML = '<div class="shadow"></div><div class="popwrap"></div>' +
+      '<span class="tuft" style="left:12px"></span><span class="tuft" style="left:34px;bottom:36px"></span>' +
+      '<span class="tuft" style="right:14px"></span>' +
+      '<div class="mound"></div><span class="blades">🌼</span>';
     zapField.appendChild(el);
     return { el, wrap: el.querySelector('.popwrap'), pop: null };
   });
@@ -2034,6 +2107,12 @@ function towerTap(n, el){
     race.prog++;
     const buddy = document.getElementById('racerBuddy');
     buddy.classList.remove('hop'); void buddy.offsetWidth; buddy.classList.add('hop');
+    const puff = document.createElement('div');
+    puff.className = 'dust';
+    puff.style.left = buddy.offsetLeft + 'px';
+    puff.style.top = (buddy.offsetTop + 40) + 'px';
+    raceTrack.appendChild(puff);
+    setTimeout(() => puff.remove(), 650);
     positionRacers();
     const doneAt = race.dir === 1 ? race.to : race.from;
     if (race.next === doneAt){
@@ -2061,273 +2140,6 @@ function towerTap(n, el){
       'Almost! Look for ' + race.next + ' — you\u2019ve got this!';
   }
 }
-
-/* ============================================================
-   NUMBER SNAKE — steer, solve, eat the right block
-   ============================================================ */
-const EKANS_ID = 23;
-const ekansImg = new Image();
-let ekansReady = false;
-ekansImg.onload = () => { ekansReady = true; };
-ekansImg.onerror = () => { ekansReady = false; };
-const SN = {
-  cols: 11, rows: 11, cell: 24,
-  body: [], dir: [1, 0], nextDir: [1, 0],
-  blocks: [], ans: 0, phrase: '',
-  timer: null, stepMs: 420, grow: 0, alive: false, solved: 0, wrongs: 0
-};
-const snCanvas = document.getElementById('snCanvas');
-const snCtx = snCanvas.getContext('2d');
-
-function snSize(){
-  const avail = Math.min(460, document.getElementById('app').clientWidth - 44);
-  SN.cell = Math.floor(avail / SN.cols);
-  const px = SN.cell * SN.cols;
-  const dpr = window.devicePixelRatio || 1;
-  snCanvas.style.width = px + 'px'; snCanvas.style.height = px + 'px';
-  snCanvas.width = px * dpr; snCanvas.height = px * dpr;
-  snCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-}
-
-function snFreeCell(){
-  for (let tries = 0; tries < 400; tries++){
-    const c = rnd(SN.cols), r = rnd(SN.rows);
-    if (SN.body.some(b => b[0] === c && b[1] === r)) continue;
-    if (SN.blocks.some(b => b.c === c && b.r === r)) continue;
-    // keep a little clearance from the head
-    if (Math.abs(c - SN.body[0][0]) + Math.abs(r - SN.body[0][1]) < 3) continue;
-    return [c, r];
-  }
-  return null;
-}
-
-function snNewQuestion(){
-  const max = levelMax('snake');
-  const kind = SN.solved < 2 ? 0 : rnd(3);
-  if (kind === 0){
-    SN.ans = 1 + rnd(Math.max(10, max));
-    SN.phrase = 'Eat number ' + NUM_WORDS[SN.ans];
-    document.getElementById('snQ').textContent = 'Eat number ' + SN.ans + '!';
-  } else if (kind === 1){
-    const t = 2 + rnd(max - 1), a = 1 + rnd(t - 1);
-    SN.ans = t;
-    SN.phrase = 'What is ' + NUM_WORDS[a] + ' plus ' + NUM_WORDS[t - a] + '?';
-    document.getElementById('snQ').textContent = a + ' + ' + (t - a) + ' = ?';
-  } else {
-    const a = 2 + rnd(max - 1), b = 1 + rnd(a - 1);
-    SN.ans = a - b;
-    SN.phrase = 'What is ' + NUM_WORDS[a] + ' take away ' + NUM_WORDS[b] + '?';
-    document.getElementById('snQ').textContent = a + ' − ' + b + ' = ?';
-  }
-  say(SN.phrase);
-  SN.asked = Date.now();
-  // three blocks: the answer plus two near-miss distractors
-  const nums = [SN.ans];
-  while (nums.length < 3){
-    const d = SN.ans + (rnd(7) - 3);
-    if (d >= 0 && d <= 30 && !nums.includes(d)) nums.push(d);
-  }
-  for (let i = nums.length - 1; i > 0; i--){ const j = rnd(i + 1); [nums[i], nums[j]] = [nums[j], nums[i]]; }
-  SN.blocks = [];
-  nums.forEach(n => {
-    const pos = snFreeCell();
-    if (pos) SN.blocks.push({ c: pos[0], r: pos[1], n });
-  });
-  if (!SN.blocks.some(b => b.n === SN.ans)){        // guarantee the answer is always present
-    const pos = snFreeCell();
-    if (pos) SN.blocks.push({ c: pos[0], r: pos[1], n: SN.ans });
-  }
-}
-
-function snDraw(){
-  const px = SN.cell * SN.cols;
-  snCtx.clearRect(0, 0, px, px);
-  // grass checker
-  for (let r = 0; r < SN.rows; r++) for (let c = 0; c < SN.cols; c++){
-    snCtx.fillStyle = ((r + c) % 2) ? '#D3F0C2' : '#DFF6D0';
-    snCtx.fillRect(c * SN.cell, r * SN.cell, SN.cell, SN.cell);
-  }
-  // blocks
-  SN.blocks.forEach(b => {
-    const x = b.c * SN.cell, y = b.r * SN.cell, p = 2;
-    snCtx.fillStyle = '#FFFDF4';
-    snCtx.strokeStyle = '#2B2E5C'; snCtx.lineWidth = 2.5;
-    snCtx.beginPath();
-    snCtx.roundRect(x + p, y + p, SN.cell - p * 2, SN.cell - p * 2, 6);
-    snCtx.fill(); snCtx.stroke();
-    snCtx.fillStyle = '#22254E';
-    snCtx.font = 'bold ' + Math.round(SN.cell * 0.56) + 'px system-ui, sans-serif';
-    snCtx.textAlign = 'center'; snCtx.textBaseline = 'middle';
-    snCtx.fillText(String(b.n), x + SN.cell / 2, y + SN.cell / 2 + 1);
-  });
-  // Ekans! body drawn tail-first so the head sits on top
-  for (let i = SN.body.length - 1; i >= 1; i--){
-    const seg = SN.body[i];
-    const x = seg[0] * SN.cell, y = seg[1] * SN.cell;
-    const cx = x + SN.cell / 2, cy = y + SN.cell / 2;
-    const taper = 0.30 - 0.10 * (i / SN.body.length);      // thins toward the tail
-    const r = SN.cell * taper + SN.cell * 0.12;
-    snCtx.fillStyle = (i % 2) ? '#A867C8' : '#9457B8';     // Ekans purple
-    snCtx.strokeStyle = '#3B2350'; snCtx.lineWidth = 2.5;
-    snCtx.beginPath(); snCtx.arc(cx, cy, r, 0, Math.PI * 2); snCtx.fill(); snCtx.stroke();
-    // pale belly band
-    snCtx.fillStyle = 'rgba(255, 226, 168, .85)';
-    snCtx.beginPath(); snCtx.ellipse(cx, cy + r * 0.25, r * 0.62, r * 0.34, 0, 0, Math.PI * 2); snCtx.fill();
-    // rattle tip
-    if (i === SN.body.length - 1){
-      snCtx.fillStyle = '#F5D76E'; snCtx.strokeStyle = '#3B2350'; snCtx.lineWidth = 2;
-      snCtx.beginPath(); snCtx.arc(cx, cy, r * 0.55, 0, Math.PI * 2); snCtx.fill(); snCtx.stroke();
-    }
-  }
-  // head: the real Ekans artwork, turned to face the way it's going
-  {
-    const seg = SN.body[0];
-    const cx = seg[0] * SN.cell + SN.cell / 2, cy = seg[1] * SN.cell + SN.cell / 2;
-    const hs = SN.cell * 1.9;
-    snCtx.save();
-    snCtx.translate(cx, cy);
-    if (SN.dir[0] < 0) snCtx.scale(-1, 1);                 // face left by mirroring
-    if (ekansReady){
-      snCtx.drawImage(ekansImg, -hs / 2, -hs / 2, hs, hs);
-    } else {
-      snCtx.fillStyle = '#A867C8'; snCtx.strokeStyle = '#3B2350'; snCtx.lineWidth = 3;
-      snCtx.beginPath(); snCtx.arc(0, 0, SN.cell * 0.46, 0, Math.PI * 2); snCtx.fill(); snCtx.stroke();
-      snCtx.fillStyle = '#fff';
-      snCtx.beginPath(); snCtx.arc(-SN.cell * 0.14, -SN.cell * 0.1, SN.cell * 0.12, 0, Math.PI * 2); snCtx.fill();
-      snCtx.beginPath(); snCtx.arc(SN.cell * 0.14, -SN.cell * 0.1, SN.cell * 0.12, 0, Math.PI * 2); snCtx.fill();
-      snCtx.fillStyle = '#22254E';
-      snCtx.beginPath(); snCtx.arc(-SN.cell * 0.12, -SN.cell * 0.09, SN.cell * 0.06, 0, Math.PI * 2); snCtx.fill();
-      snCtx.beginPath(); snCtx.arc(SN.cell * 0.16, -SN.cell * 0.09, SN.cell * 0.06, 0, Math.PI * 2); snCtx.fill();
-    }
-    snCtx.restore();
-  }
-}
-
-function snStep(){
-  if (!SN.alive || mode !== 'snake') return;
-  SN.dir = SN.nextDir;
-  const head = SN.body[0];
-  let c = head[0] + SN.dir[0], r = head[1] + SN.dir[1];
-  c = (c + SN.cols) % SN.cols;                    // wrap around: no wall deaths for a 5-year-old
-  r = (r + SN.rows) % SN.rows;
-  // self-collision: shrink back instead of game over
-  const hitSelf = SN.body.findIndex((b, i) => i > 2 && b[0] === c && b[1] === r);
-  if (hitSelf > 0){
-    SN.body = SN.body.slice(0, Math.max(3, hitSelf));
-    sndOops();
-    document.getElementById('snSpeech').textContent = 'Careful! Steer around yourself.';
-    snDraw();
-    return;
-  }
-  SN.body.unshift([c, r]);
-  const bi = SN.blocks.findIndex(b => b.c === c && b.r === r);
-  if (bi >= 0){
-    const blk = SN.blocks[bi];
-    if (blk.n === SN.ans){
-      SN.grow += 2;
-      SN.solved++;
-      progress.snake = (progress.snake || 0) + 1; saveProg();
-      recordAnswer('snake', SN.wrongs === 0, Date.now() - (SN.asked || 0));
-      bumpStreak(SN.wrongs === 0);
-      sndGood();
-      const rect = snCanvas.getBoundingClientRect();
-      burst([rect.left + (c + 0.5) * SN.cell, rect.top + (r + 0.5) * SN.cell], 8);
-      addStar(SN.wrongs === 0 ? 2 : 1);
-      const sPraise = praiseLine(SN.wrongs === 0);
-      showPraise(sPraise);
-      say(sPraise + ' ' + NUM_WORDS[SN.ans] + '!');
-      document.getElementById('snSpeech').textContent = sPraise + ' Length ' + (SN.body.length + SN.grow);
-      SN.wrongs = 0;
-      SN.stepMs = Math.max(220, SN.stepMs - 10);     // speeds up as he improves
-      snNewQuestion();
-      clearInterval(SN.timer);
-      SN.timer = setInterval(snStep, SN.stepMs);
-    } else {
-      SN.blocks.splice(bi, 1);
-      SN.wrongs++;
-      loseStar();
-      bumpStreak(false);
-      sndOops();
-      // wrong block: the snake shrinks — a real, visible cost
-      if (SN.body.length > 3) SN.body = SN.body.slice(0, Math.max(3, SN.body.length - 2));
-      document.getElementById('snSpeech').textContent = 'That one was ' + blk.n + '. Keep going — find ' +
-        (SN.solved < 2 ? SN.ans : 'the answer') + '!';
-      say(SN.phrase);
-    }
-  }
-  if (SN.grow > 0) SN.grow--;
-  else if (SN.body.length > 3) SN.body.pop();      // never shrink below a 3-segment snake
-  snDraw();
-}
-
-function snTurn(d){
-  // no instant reversal
-  if (d[0] === -SN.dir[0] && d[1] === -SN.dir[1]) return;
-  SN.nextDir = d;
-}
-function startSnake(){
-  stopSnake();
-  if (!ekansImg.src) ekansImg.src = imgArt(EKANS_ID);
-  snSize();
-  const midR = Math.floor(SN.rows / 2);
-  SN.body = [[3, midR], [2, midR], [1, midR]];
-  SN.dir = [1, 0]; SN.nextDir = [1, 0];
-  SN.grow = 0; SN.alive = true; SN.solved = 0; SN.wrongs = 0;
-  SN.stepMs = P().snake;
-  SN.blocks = [];
-  snNewQuestion();
-  document.getElementById('snSpeech').textContent = 'Steer with the arrows and eat the right block!';
-  snDraw();
-  SN.timer = setInterval(snStep, SN.stepMs);
-}
-function stopSnake(){ clearInterval(SN.timer); SN.timer = null; SN.alive = false; }
-
-document.getElementById('snUp').addEventListener('click', () => snTurn([0, -1]));
-document.getElementById('snDown').addEventListener('click', () => snTurn([0, 1]));
-document.getElementById('snLeft').addEventListener('click', () => snTurn([-1, 0]));
-document.getElementById('snRight').addEventListener('click', () => snTurn([1, 0]));
-document.addEventListener('keydown', e => {
-  if (mode !== 'snake') return;
-  const k = { ArrowUp: [0,-1], ArrowDown: [0,1], ArrowLeft: [-1,0], ArrowRight: [1,0] }[e.key];
-  if (k){ e.preventDefault(); snTurn(k); }
-});
-// swipe steering: works anywhere on the game screen, turns as soon as the
-// gesture is clear (no need to lift the finger), and a tap steers toward the tap
-(function(){
-  const area = document.getElementById('scr-snake');
-  let sx = 0, sy = 0, tracking = false, turned = false;
-  const THRESH = 16;
-  function start(x, y){ sx = x; sy = y; tracking = true; turned = false; }
-  function move(x, y){
-    if (!tracking || turned) return;
-    const dx = x - sx, dy = y - sy;
-    if (Math.abs(dx) < THRESH && Math.abs(dy) < THRESH) return;
-    snTurn(Math.abs(dx) > Math.abs(dy) ? [Math.sign(dx), 0] : [0, Math.sign(dy)]);
-    turned = true;                                  // one turn per swipe
-    sndTap();
-  }
-  function end(x, y){
-    if (tracking && !turned){
-      // a tap: steer toward where he tapped, relative to the head
-      const r = snCanvas.getBoundingClientRect();
-      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom && SN.body.length){
-        const hx = r.left + (SN.body[0][0] + 0.5) * SN.cell;
-        const hy = r.top + (SN.body[0][1] + 0.5) * SN.cell;
-        const dx = x - hx, dy = y - hy;
-        if (Math.abs(dx) > 8 || Math.abs(dy) > 8){
-          snTurn(Math.abs(dx) > Math.abs(dy) ? [Math.sign(dx), 0] : [0, Math.sign(dy)]);
-        }
-      }
-    }
-    tracking = false;
-  }
-  area.addEventListener('touchstart', e => { const t = e.touches[0]; start(t.clientX, t.clientY); }, { passive: true });
-  area.addEventListener('touchmove', e => { const t = e.touches[0]; move(t.clientX, t.clientY); }, { passive: true });
-  area.addEventListener('touchend', e => { const t = e.changedTouches[0]; end(t.clientX, t.clientY); }, { passive: true });
-  area.addEventListener('pointerdown', e => { if (e.pointerType !== 'touch') start(e.clientX, e.clientY); });
-  area.addEventListener('pointermove', e => { if (e.pointerType !== 'touch') move(e.clientX, e.clientY); });
-  area.addEventListener('pointerup', e => { if (e.pointerType !== 'touch') end(e.clientX, e.clientY); });
-})();
 
 /* ============================================================
    CLOUD SYNC — Firebase Realtime Database, shared family code
@@ -2488,7 +2300,7 @@ document.addEventListener('visibilitychange', () => {
     else setSyncStatus('', 'not connected');
     panel.style.display = 'flex';
   }
-  const CAP_MODES = [['count','Counting'], ['add','Adding'], ['sub','Taking away'], ['zap','Wild Catch'], ['snake','Snake']];
+  const CAP_MODES = [['count','Counting'], ['add','Adding'], ['sub','Taking away'], ['zap','Wild Catch'] ];
   function renderVoice(){
     document.getElementById('wvOn').classList.toggle('on', wrongVoice);
     document.getElementById('wvOff').classList.toggle('on', !wrongVoice);
@@ -2564,7 +2376,7 @@ document.addEventListener('visibilitychange', () => {
       ['numbers to 30', TRACE_MAX === 30]
     ];
     document.getElementById('ppVer').textContent =
-      'build v24 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
+      'build v25 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
     showPraise(praiseLine(true));
     say(praiseLine(true));
   });
