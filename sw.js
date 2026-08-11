@@ -1,5 +1,5 @@
 // PokéMath Adventure — offline cache
-const CACHE = 'pokemath-v14';
+const CACHE = 'pokemath-v18';
 const ART = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/';
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 

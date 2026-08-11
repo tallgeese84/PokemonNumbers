@@ -55,6 +55,10 @@
   .topbar .pill, .topbar .btn.icon{ height:44px; display:flex; align-items:center; justify-content:center; }
   .topbar .btn.icon{ min-width:52px; padding:0 12px; }
   .topbar .pill{ padding:0 14px; }
+  #streakPill.hot{
+    background:linear-gradient(180deg,#FFE9A8,#FFC93C);
+    box-shadow:0 4px 0 rgba(30,32,70,.5), 0 0 14px rgba(255,201,60,.9);
+  }
   .pill{
     background:linear-gradient(180deg,#FFFDF4,#F3E9CF); border:3px solid var(--ink); border-radius:999px;
     padding:6px 14px; font-size:20px; font-weight:bold; display:flex; align-items:center; gap:6px;
@@ -279,6 +283,27 @@
   .tcard.legend::before{ content:"✨"; display:block; font-size:12px; margin-top:-4px; }
   #catch .newname{ font-size:24px; font-weight:bold; margin-top:6px; }
   #catch .hint{ font-size:15px; margin-top:4px; }
+  #wrongWarn{
+    position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+    z-index:75; pointer-events:none;
+  }
+  #wrongWarn.on{ display:flex; }
+  #wrongWarn::before{
+    content:""; position:absolute; inset:0;
+    box-shadow:inset 0 0 0 12px #E0342A, inset 0 0 60px rgba(224,52,42,.55);
+    animation:wwflash .5s ease-in-out 3;
+  }
+  @keyframes wwflash{ 0%,100%{ opacity:.25 } 50%{ opacity:1 } }
+  #wrongWarn .ww{
+    display:flex; align-items:center; gap:12px;
+    background:linear-gradient(180deg,#FF6257,#C4291F);
+    border:5px solid #7A1710; border-radius:26px; padding:14px 28px;
+    box-shadow:0 10px 0 rgba(60,10,6,.5);
+    color:#fff; font-weight:bold; font-size:23px; line-height:1.15; max-width:88vw; text-align:center;
+    animation:cheer .45s ease;
+  }
+  #wrongWarn .wwsign{ font-size:40px; animation:wwshake .35s ease-in-out 4; display:inline-block; }
+  @keyframes wwshake{ 0%,100%{ transform:rotate(-10deg) } 50%{ transform:rotate(10deg) } }
   #parentPanel{
     position:fixed; inset:0; display:none; align-items:center; justify-content:center;
     background:rgba(24,26,64,.6); z-index:80; padding:16px;
@@ -516,6 +541,7 @@
   <div class="topbar">
     <button class="btn icon" id="backBtn" style="display:none">⬅️</button>
     <div class="pill">⭐ <span id="starCount">0</span></div>
+    <div class="pill" id="streakPill" title="Correct in a row — no mistakes">🔥 <span id="streakCount">0/12</span></div>
     <div class="pill" id="ballPill"><svg viewBox="0 0 30 30" width="22" height="22" aria-hidden="true"><circle cx="15" cy="15" r="13" fill="#fff" stroke="#2B2E5C" stroke-width="2.5"/><path d="M2.5 15 A12.5 12.5 0 0 1 27.5 15 L2.5 15 Z" fill="#E0503F" stroke="#2B2E5C" stroke-width="2.5"/><line x1="2.5" y1="15" x2="27.5" y2="15" stroke="#2B2E5C" stroke-width="2.5"/><circle cx="15" cy="15" r="4.5" fill="#fff" stroke="#2B2E5C" stroke-width="2.5"/></svg> <span id="ballCount">0/6</span></div>
     <button class="btn icon" id="cloudBtn" title="Grown-ups: backup & sync">☁️</button>
     <button class="btn icon" id="soundBtn">🔊</button>
@@ -621,6 +647,7 @@
 <div id="fx"></div>
 <div id="bigcheer"><span id="cheerText">Great job! ⭐</span></div>
 <div id="catch"><div class="box" id="catchBox"></div></div>
+<div id="wrongWarn"><div class="ww"><span class="wwsign">⚠️</span><span class="wwtxt">Wrong number!</span></div></div>
 <div id="parentPanel">
   <div class="ppbox">
     <div style="font-weight:bold;font-size:20px;margin-bottom:6px">Grown-ups: progress backup</div>
@@ -639,6 +666,21 @@
     <div style="font-weight:bold;font-size:18px;margin-bottom:4px">🎚️ Number range</div>
     <div style="font-size:13px;margin-bottom:6px">Auto keeps adding and taking away within 10 until answers are quick and first-try, then mixes in bigger numbers now and then.</div>
     <div id="capRows"></div>
+    <div class="caprow" style="margin-top:10px">
+      <span>Say name on wrong answer</span>
+      <button id="wvOn">On</button>
+      <button id="wvOff">Off</button>
+    </div>
+    <div class="caprow">
+      <span>Child's name</span>
+      <input class="syinput" id="wvName" style="flex:0 0 150px" placeholder="Jonah">
+    </div>
+    <div class="caprow">
+      <span>What they call you</span>
+      <input class="syinput" id="wvParent" style="flex:0 0 150px" placeholder="Dar dar">
+      <button id="wvSave">Save</button>
+    </div>
+    <div style="font-size:12px;margin-top:2px">The app calls out to you: "Dar dar! Jonah pushed the wrong number!"</div>
     <div class="speech" id="fluNote" style="min-height:20px;font-size:14px;margin:6px 0"></div>
     <hr style="border:none;border-top:3px dashed #E4C05A;margin:10px 0">
     <div style="font-weight:bold;font-size:18px;margin-bottom:4px">☁️ Sync across tablets</div>
@@ -736,6 +778,17 @@ async function loadStars(){
     const c = JSON.parse(await store.get('cubs_caps') || '{}');
     for (const k in capOverride) if (typeof c[k] === 'number') capOverride[k] = c[k];
   }catch(e){}
+  const nm = await store.get('cubs_name');
+  if (nm !== null && nm !== undefined && nm !== '') childName = nm;
+  const pn = await store.get('cubs_pname');
+  if (pn !== null && pn !== undefined && pn !== '') parentName = pn;
+  const wv = await store.get('cubs_wv');
+  if (wv === 'off') wrongVoice = false;
+  try{
+    const st = JSON.parse(await store.get('cubs_streak') || '{}');
+    streak = st.s || 0; bestStreak = st.b || 0;
+  }catch(e){}
+  updateStreakPill();
   const c = await store.get('cubs_caught');
   caught = c ? c.split(',').filter(x => x !== '').map(Number) : [];
   pkBuddy = parseInt(await store.get('cubs_pbuddy') || '0', 10) || 0;
@@ -751,7 +804,7 @@ function addStar(n){
   schedulePush();
   if (caught.length < DEX_TOTAL){
     ballStars += n;
-    if (ballStars >= BALL_NEED){
+    if (ballStars >= ballNeed()){
       ballStars = 0;
       setTimeout(catchMon, 1100);
     }
@@ -831,7 +884,19 @@ function noteOffline(){
   offlineNoted = true;
   document.getElementById('netNote').style.display = 'block';
 }
-const BALL_NEED = 6;
+// Catching gets harder as the collection grows: 8 stars for the first few,
+// rising to 30 for a big Pokédex.
+function ballNeed(){
+  return Math.min(30, 8 + Math.floor(caught.length / 6) * 2);
+}
+// Legendaries are NOT bought with stars — they are earned by a streak of
+// first-try correct answers, so careful thinking is the only route.
+// Each legendary demands a longer perfect run than the last: 12, 15, 18 ... up to 40.
+function streakNeed(){
+  const have = caught.filter(isLegend).length;
+  return Math.min(40, 12 + have * 3);
+}
+let streak = 0, bestStreak = 0, legendPending = false;
 let caught = [];       // ids in catch order
 let pkBuddy = 0;       // buddy id (0 = none yet)
 let ballStars = 0;
@@ -845,13 +910,13 @@ function pkState(){
 function updateBallPill(){
   const pill = document.getElementById('ballPill');
   if (caught.length >= DEX_TOTAL){ pill.style.display = 'none'; return; }
-  document.getElementById('ballCount').textContent = ballStars + '/' + BALL_NEED;
+  document.getElementById('ballCount').textContent = ballStars + '/' + ballNeed();
 }
 function renderBuddyHome(){
   const box = document.getElementById('buddyBox');
   document.getElementById('teamTally').textContent = '(' + caught.length + '/' + DEX_TOTAL + ')';
   if (!pkBuddy){
-    box.innerHTML = '<div class="bname">Win ' + (BALL_NEED - ballStars) + ' more ⭐ to meet your first Pokémon!</div>';
+    box.innerHTML = '<div class="bname">Win ' + (ballNeed() - ballStars) + ' more ⭐ to meet your first Pokémon!</div>';
     return;
   }
   box.innerHTML = '<img src="' + imgArt(pkBuddy) + '" alt="" ' +
@@ -891,11 +956,14 @@ function catchMon(){
   let id;
   if (caught.length === 0){
     id = 25;                                        // first catch is always Pikachu
+  } else if (legendPending && legends.length){
+    legendPending = false;                          // earned by a perfect streak
+    id = legends[rnd(legends.length)];
+  } else if (!normal.length){
+    if (!legends.length) return;
+    id = legends[rnd(legends.length)];               // only legendaries left
   } else {
-    // legendaries stay rare and only appear once he has a real collection going
-    const canLegend = legends.length && caught.length >= 12;
-    const wantLegend = canLegend && (Math.random() < 0.10 || !normal.length);
-    id = wantLegend ? legends[rnd(legends.length)] : normal[rnd(normal.length)];
+    id = normal[rnd(normal.length)];
   }
   caught.push(id);
   if (!pkBuddy) pkBuddy = id;
@@ -1306,11 +1374,58 @@ let padLocked = false;
    A band unlocks only when answers are mostly FIRST-TRY and QUICK — real
    automaticity, not just repetition. Even then, harder questions appear only
    occasionally, so the consolidating range stays the main practice. */
+let childName = 'Jonah';
+let parentName = 'Dar dar';      // what the child calls the grown-up — the app calls out to them
+let wrongVoice = true;
+let wwTimer = null;
+function showWrongWarn(){
+  const w = document.getElementById('wrongWarn');
+  if (!w) return;
+  w.querySelector('.wwtxt').textContent =
+    (parentName ? parentName + '! ' : '') + (childName || 'Someone') + ' pushed the wrong number!';
+  w.classList.remove('on'); void w.offsetWidth; w.classList.add('on');
+  clearTimeout(wwTimer);
+  wwTimer = setTimeout(() => w.classList.remove('on'), 1600);
+}
+function sayWrong(){
+  showWrongWarn();
+  if (!wrongVoice) return;
+  const p = parentName || '', n = childName || '';
+  const lines = [
+    p + '! ' + n + ' pushed the wrong number!',
+    p + '! ' + n + ' pushed the wrong number again!',
+    p + ', come and see — ' + n + ' pushed the wrong number!'
+  ];
+  say(lines[Math.floor(Math.random() * lines.length)]);
+}
+
 const FLU_WIN = 10;
 const fluency = { count: [], add: [], sub: [], zap: [], snake: [] };
 const capOverride = { count: 0, add: 0, sub: 0, zap: 0, snake: 0 };   // 0 = auto; else hard cap
 const FAST_MS = { count: 9000, add: 8000, sub: 8000, zap: 12000, snake: 14000 };
 
+function bumpStreak(firstTry){
+  if (firstTry){
+    streak++;
+    if (streak > bestStreak) bestStreak = streak;
+    if (streak >= streakNeed() && LEGEND_IDS.some(i => !caught.includes(i)) && caught.length >= 20){
+      streak = 0;
+      legendPending = true;            // claimed at the next catch ceremony
+      setTimeout(() => { if (legendPending) catchMon(); }, 1200);
+    }
+  } else {
+    streak = 0;
+  }
+  updateStreakPill();
+  store.set('cubs_streak', JSON.stringify({ s: streak, b: bestStreak }));
+}
+function updateStreakPill(){
+  const el = document.getElementById('streakCount');
+  if (!el) return;
+  el.textContent = streak + '/' + streakNeed();
+  const pill = document.getElementById('streakPill');
+  pill.classList.toggle('hot', streak >= streakNeed() - 3);
+}
 function recordAnswer(m, firstTry, ms){
   if (!fluency[m]) return;
   fluency[m].push({ first: !!firstTry, fast: ms > 0 && ms <= (FAST_MS[m] || 8000) });
@@ -1481,6 +1596,7 @@ function answer(n, btn){
     if (blank) blank.textContent = n;
     progress[mode]++; saveProg();
     recordAnswer(mode, q.tries === 0, Date.now() - (q.asked || 0));
+    bumpStreak(q.tries === 0);
     sndGood(); burst(btn, q.tries === 0 ? 10 : 8); bigCheer(q.tries === 0 ? 'Perfect! Double stars! ⭐⭐' : undefined);
     addStar(q.tries === 0 ? 2 : 1);   // accuracy is the fast path to catches
     const fact = mode === 'add' ? NUM_WORDS[q.a] + ' plus ' + NUM_WORDS[q.b] + ' equals ' + NUM_WORDS[q.ans] + '!'
@@ -1494,6 +1610,8 @@ function answer(n, btn){
     btn.classList.add('wrong'); sndOops();
     setTimeout(() => { btn.classList.remove('wrong'); btn.disabled = true; }, 500);   // guessing burns options
     const lost = loseStar();
+    bumpStreak(false);
+    if (mode === 'add' || mode === 'sub') sayWrong();
     // escalating lockout: guessing becomes the SLOW way to play
     const lockMs = Math.min(5000, 1000 + 1200 * (q.tries - 1));
     padLocked = true;
@@ -1652,6 +1770,7 @@ function wildTap(n, p, el){
     }, 320));
     progress.zap++; saveProg();
     recordAnswer('zap', zap.wrongs === 0, Date.now() - (zap.asked || 0));
+    bumpStreak(zap.wrongs === 0);
     const fr = zapField.getBoundingClientRect();
     addStar(1); burst([fr.left + tx, fr.top + ty], 8);
     document.getElementById('zapSpeech').textContent = CHEERS[rnd(CHEERS.length)];
@@ -1661,6 +1780,7 @@ function wildTap(n, p, el){
     el.classList.remove('wrongwob'); void el.offsetWidth; el.classList.add('wrongwob');
     sndOops();
     const lost = loseStar();
+    bumpStreak(false);
     zap.wrongs++;
     zap.locked = true;
     zap.tos.push(setTimeout(() => { zap.locked = false; }, Math.min(4000, 900 + 900 * (zap.wrongs - 1))));
@@ -1794,6 +1914,7 @@ function towerTap(n, el){
     el.classList.remove('wrongwob'); void el.offsetWidth; el.classList.add('wrongwob');
     sndOops();
     const lost = loseStar();
+    bumpStreak(false);
     race.locked = true;
     setTimeout(() => { race.locked = false; }, 900);
     document.getElementById('towerSpeech').textContent =
@@ -1967,6 +2088,7 @@ function snStep(){
       SN.solved++;
       progress.snake = (progress.snake || 0) + 1; saveProg();
       recordAnswer('snake', SN.wrongs === 0, Date.now() - (SN.asked || 0));
+      bumpStreak(SN.wrongs === 0);
       sndGood();
       const rect = snCanvas.getBoundingClientRect();
       burst([rect.left + (c + 0.5) * SN.cell, rect.top + (r + 0.5) * SN.cell], 8);
@@ -1982,6 +2104,7 @@ function snStep(){
       SN.blocks.splice(bi, 1);
       SN.wrongs++;
       loseStar();
+      bumpStreak(false);
       sndOops();
       // wrong block: the snake shrinks — a real, visible cost
       if (SN.body.length > 3) SN.body = SN.body.slice(0, Math.max(3, SN.body.length - 2));
@@ -2093,6 +2216,9 @@ async function localPayload(){
     ball: ballStars,
     buddy: pkBuddy,
     sound: soundOn ? 'on' : 'off',
+    name: childName,
+    pname: parentName,
+    wv: wrongVoice ? 'on' : 'off',
     prog: Object.assign({}, progress),
     caught: caught.slice()
   };
@@ -2119,6 +2245,9 @@ function mergeStates(a, b){
     ball: newer.ball || 0,
     buddy: newer.buddy || 0,
     sound: newer.sound || 'on',
+    name: newer.name || 'Jonah',
+    pname: newer.pname || 'Dar dar',
+    wv: newer.wv || 'on',
     prog: progU,
     caught: caughtU
   };
@@ -2130,6 +2259,11 @@ async function applyState(m){
   await store.set('cubs_ball', m.ball);
   await store.set('cubs_pbuddy', m.buddy);
   await store.set('cubs_sound', m.sound);
+  if (m.name) await store.set('cubs_name', m.name);
+  if (m.pname){ await store.set('cubs_pname', m.pname); parentName = m.pname; }
+  await store.set('cubs_wv', m.wv || 'on');
+  if (m.name) childName = m.name;
+  wrongVoice = (m.wv || 'on') !== 'off';
   await store.set('cubs_prog', JSON.stringify(m.prog));
   await store.set('cubs_caught', m.caught.join(','));
   await store.set('cubs_at', m.at);
@@ -2192,7 +2326,7 @@ document.addEventListener('visibilitychange', () => {
 /* ---------- parent backup panel (triple-tap the title) ---------- */
 (function parentPanel(){
   const panel = document.getElementById('parentPanel');
-  let taps = [], KEYS = ['cubs_stars','cubs_prog','cubs_caught','cubs_pbuddy','cubs_ball','cubs_sound'];
+  let taps = [], KEYS = ['cubs_stars','cubs_prog','cubs_caught','cubs_pbuddy','cubs_ball','cubs_sound','cubs_name','cubs_pname','cubs_wv','cubs_caps','cubs_flu'];
   document.querySelector('h1').addEventListener('click', () => {
     const now = Date.now();
     taps = taps.filter(t => now - t < 1200); taps.push(now);
@@ -2208,7 +2342,7 @@ document.addEventListener('visibilitychange', () => {
     const cfg = await getSyncCfg();
     document.getElementById('syUrl').value = cfg ? cfg.url : '';
     document.getElementById('syCode').value = cfg ? cfg.code : '';
-    renderCaps();
+    renderCaps(); renderVoice();
     const last = parseInt(await store.get('cubs_lastsync') || '0', 10) || 0;
     if (cfg && last) setSyncStatus('ok', '✓ Connected — last synced ' + new Date(last).toLocaleString());
     else if (cfg) setSyncStatus('', 'connected — hasn\u2019t synced yet, tap Save & sync now');
@@ -2216,6 +2350,25 @@ document.addEventListener('visibilitychange', () => {
     panel.style.display = 'flex';
   }
   const CAP_MODES = [['count','Counting'], ['add','Adding'], ['sub','Taking away'], ['zap','Wild Catch'], ['snake','Snake']];
+  function renderVoice(){
+    document.getElementById('wvOn').classList.toggle('on', wrongVoice);
+    document.getElementById('wvOff').classList.toggle('on', !wrongVoice);
+    document.getElementById('wvName').value = childName;
+    document.getElementById('wvParent').value = parentName;
+  }
+  document.getElementById('wvOn').addEventListener('click', () => {
+    wrongVoice = true; store.set('cubs_wv', 'on'); schedulePush(); renderVoice(); sayWrong();
+  });
+  document.getElementById('wvOff').addEventListener('click', () => {
+    wrongVoice = false; store.set('cubs_wv', 'off'); schedulePush(); renderVoice();
+  });
+  document.getElementById('wvSave').addEventListener('click', () => {
+    childName = (document.getElementById('wvName').value || '').trim().slice(0, 24);
+    parentName = (document.getElementById('wvParent').value || '').trim().slice(0, 24);
+    store.set('cubs_name', childName);
+    store.set('cubs_pname', parentName);
+    schedulePush(); renderVoice(); sayWrong();
+  });
   function renderCaps(){
     const box = document.getElementById('capRows');
     box.innerHTML = '';
