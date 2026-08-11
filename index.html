@@ -304,6 +304,21 @@
   }
   #wrongWarn .wwsign{ font-size:40px; animation:wwshake .35s ease-in-out 4; display:inline-block; }
   @keyframes wwshake{ 0%,100%{ transform:rotate(-10deg) } 50%{ transform:rotate(10deg) } }
+  #rightPraise{
+    position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+    z-index:74; pointer-events:none;
+  }
+  #rightPraise.on{ display:flex; }
+  #rightPraise .rp{
+    display:flex; align-items:center; gap:12px;
+    background:linear-gradient(180deg,#6FE3B4,#1F9A6E);
+    border:5px solid #12654A; border-radius:26px; padding:14px 28px;
+    box-shadow:0 10px 0 rgba(8,60,42,.5);
+    color:#fff; font-weight:bold; font-size:24px; line-height:1.15;
+    max-width:88vw; text-align:center;
+    animation:cheer .45s ease;
+  }
+  #rightPraise .rpsign{ font-size:38px; display:inline-block; animation:hintpop .6s ease; }
   #parentPanel{
     position:fixed; inset:0; display:none; align-items:center; justify-content:center;
     background:rgba(24,26,64,.6); z-index:80; padding:16px;
@@ -648,6 +663,7 @@
 <div id="bigcheer"><span id="cheerText">Great job! ⭐</span></div>
 <div id="catch"><div class="box" id="catchBox"></div></div>
 <div id="wrongWarn"><div class="ww"><span class="wwsign">⚠️</span><span class="wwtxt">Wrong number!</span></div></div>
+<div id="rightPraise"><div class="rp"><span class="rpsign">🌟</span><span class="rptxt">Well done!</span></div></div>
 <div id="parentPanel">
   <div class="ppbox">
     <div style="font-weight:bold;font-size:20px;margin-bottom:6px">Grown-ups: progress backup</div>
@@ -676,11 +692,10 @@
       <input class="syinput" id="wvName" style="flex:0 0 150px" placeholder="Jonah">
     </div>
     <div class="caprow">
-      <span>What they call you</span>
-      <input class="syinput" id="wvParent" style="flex:0 0 150px" placeholder="Dar dar">
+      <span></span>
       <button id="wvSave">Save</button>
     </div>
-    <div style="font-size:12px;margin-top:2px">The app calls out to you: "Dar dar! Jonah pushed the wrong number!"</div>
+    <div style="font-size:12px;margin-top:2px">Says: "Jonah pushed the wrong number!"</div>
     <div class="speech" id="fluNote" style="min-height:20px;font-size:14px;margin:6px 0"></div>
     <hr style="border:none;border-top:3px dashed #E4C05A;margin:10px 0">
     <div style="font-weight:bold;font-size:18px;margin-bottom:4px">☁️ Sync across tablets</div>
@@ -780,8 +795,6 @@ async function loadStars(){
   }catch(e){}
   const nm = await store.get('cubs_name');
   if (nm !== null && nm !== undefined && nm !== '') childName = nm;
-  const pn = await store.get('cubs_pname');
-  if (pn !== null && pn !== undefined && pn !== '') parentName = pn;
   const wv = await store.get('cubs_wv');
   if (wv === 'off') wrongVoice = false;
   try{
@@ -1375,14 +1388,39 @@ let padLocked = false;
    automaticity, not just repetition. Even then, harder questions appear only
    occasionally, so the consolidating range stays the main practice. */
 let childName = 'Jonah';
-let parentName = 'Dar dar';      // what the child calls the grown-up — the app calls out to them
 let wrongVoice = true;
+let rpTimer = null;
+function praiseLine(firstTry){
+  const n = childName || '';
+  const perfect = [
+    'Wow ' + n + '! Perfect!',
+    'Brilliant ' + n + '!',
+    'Amazing ' + n + '! First try!',
+    'Superb ' + n + '!'
+  ];
+  const good = [
+    'Well done ' + n + '!',
+    'Good job ' + n + '!',
+    'You got it ' + n + '!',
+    'Nice work ' + n + '!'
+  ];
+  const pool = firstTry ? perfect : good;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+function showPraise(text){
+  const w = document.getElementById('rightPraise');
+  if (!w) return;
+  w.querySelector('.rptxt').textContent = text;
+  w.classList.remove('on'); void w.offsetWidth; w.classList.add('on');
+  clearTimeout(rpTimer);
+  rpTimer = setTimeout(() => w.classList.remove('on'), 1500);
+}
 let wwTimer = null;
 function showWrongWarn(){
   const w = document.getElementById('wrongWarn');
   if (!w) return;
   w.querySelector('.wwtxt').textContent =
-    (parentName ? parentName + '! ' : '') + (childName || 'Someone') + ' pushed the wrong number!';
+    (childName || 'Someone') + ' pushed the wrong number!';
   w.classList.remove('on'); void w.offsetWidth; w.classList.add('on');
   clearTimeout(wwTimer);
   wwTimer = setTimeout(() => w.classList.remove('on'), 1600);
@@ -1390,11 +1428,11 @@ function showWrongWarn(){
 function sayWrong(){
   showWrongWarn();
   if (!wrongVoice) return;
-  const p = parentName || '', n = childName || '';
+  const n = childName || '';
   const lines = [
-    p + '! ' + n + ' pushed the wrong number!',
-    p + '! ' + n + ' pushed the wrong number again!',
-    p + ', come and see — ' + n + ' pushed the wrong number!'
+    n + ' pushed the wrong number!',
+    n + ' pushed the wrong number again!',
+    'Oops! ' + n + ' pushed the wrong number!'
   ];
   say(lines[Math.floor(Math.random() * lines.length)]);
 }
@@ -1602,8 +1640,10 @@ function answer(n, btn){
     const fact = mode === 'add' ? NUM_WORDS[q.a] + ' plus ' + NUM_WORDS[q.b] + ' equals ' + NUM_WORDS[q.ans] + '!'
                : mode === 'sub' ? NUM_WORDS[q.a] + ' take away ' + NUM_WORDS[q.b] + ' equals ' + NUM_WORDS[q.ans] + '!'
                : NUM_WORDS[q.ans] + '!';
-    setTimeout(() => say(fact), 420);
-    document.getElementById('quizSpeech').textContent = CHEERS[rnd(CHEERS.length)];
+    const praise = praiseLine(q.tries === 0);
+    showPraise(praise);
+    setTimeout(() => say(praise + ' ' + fact), 420);
+    document.getElementById('quizSpeech').textContent = praise;
     setTimeout(newQuestion, 1900);
   } else {
     q.tries++;
@@ -1773,8 +1813,10 @@ function wildTap(n, p, el){
     bumpStreak(zap.wrongs === 0);
     const fr = zapField.getBoundingClientRect();
     addStar(1); burst([fr.left + tx, fr.top + ty], 8);
-    document.getElementById('zapSpeech').textContent = CHEERS[rnd(CHEERS.length)];
-    setTimeout(() => speakNumber(zap.ans), 300);
+    const zPraise = praiseLine(zap.wrongs === 0);
+    showPraise(zPraise);
+    document.getElementById('zapSpeech').textContent = zPraise;
+    setTimeout(() => say(zPraise + ' ' + NUM_WORDS[zap.ans] + '!'), 300);
     zap.tos.push(setTimeout(() => { if (mode === 'zap') zapQuestion(); }, 1400));
   } else {
     el.classList.remove('wrongwob'); void el.offsetWidth; el.classList.add('wrongwob');
@@ -1903,7 +1945,7 @@ function towerTap(n, el){
       sndGood(); burst(raceTrack, 12);
       bigCheer('You won the race! 🏁');
       addStar(3);
-      say('You won the race!');
+      say(praiseLine(true) + ' You won the race!');
       document.getElementById('towerSpeech').textContent = 'You beat ' + monName(RIVAL_ID) + '! 🏁';
       setTimeout(() => { if (mode === 'tower') startTower(); }, 2500);
     } else {
@@ -2093,8 +2135,10 @@ function snStep(){
       const rect = snCanvas.getBoundingClientRect();
       burst([rect.left + (c + 0.5) * SN.cell, rect.top + (r + 0.5) * SN.cell], 8);
       addStar(SN.wrongs === 0 ? 2 : 1);
-      say(NUM_WORDS[SN.ans] + '!');
-      document.getElementById('snSpeech').textContent = CHEERS[rnd(CHEERS.length)] + ' Length ' + (SN.body.length + SN.grow);
+      const sPraise = praiseLine(SN.wrongs === 0);
+      showPraise(sPraise);
+      say(sPraise + ' ' + NUM_WORDS[SN.ans] + '!');
+      document.getElementById('snSpeech').textContent = sPraise + ' Length ' + (SN.body.length + SN.grow);
       SN.wrongs = 0;
       SN.stepMs = Math.max(200, SN.stepMs - 12);     // speeds up as he improves
       snNewQuestion();
@@ -2217,7 +2261,6 @@ async function localPayload(){
     buddy: pkBuddy,
     sound: soundOn ? 'on' : 'off',
     name: childName,
-    pname: parentName,
     wv: wrongVoice ? 'on' : 'off',
     prog: Object.assign({}, progress),
     caught: caught.slice()
@@ -2246,7 +2289,6 @@ function mergeStates(a, b){
     buddy: newer.buddy || 0,
     sound: newer.sound || 'on',
     name: newer.name || 'Jonah',
-    pname: newer.pname || 'Dar dar',
     wv: newer.wv || 'on',
     prog: progU,
     caught: caughtU
@@ -2260,7 +2302,6 @@ async function applyState(m){
   await store.set('cubs_pbuddy', m.buddy);
   await store.set('cubs_sound', m.sound);
   if (m.name) await store.set('cubs_name', m.name);
-  if (m.pname){ await store.set('cubs_pname', m.pname); parentName = m.pname; }
   await store.set('cubs_wv', m.wv || 'on');
   if (m.name) childName = m.name;
   wrongVoice = (m.wv || 'on') !== 'off';
@@ -2326,7 +2367,7 @@ document.addEventListener('visibilitychange', () => {
 /* ---------- parent backup panel (triple-tap the title) ---------- */
 (function parentPanel(){
   const panel = document.getElementById('parentPanel');
-  let taps = [], KEYS = ['cubs_stars','cubs_prog','cubs_caught','cubs_pbuddy','cubs_ball','cubs_sound','cubs_name','cubs_pname','cubs_wv','cubs_caps','cubs_flu'];
+  let taps = [], KEYS = ['cubs_stars','cubs_prog','cubs_caught','cubs_pbuddy','cubs_ball','cubs_sound','cubs_name','cubs_wv','cubs_caps','cubs_flu'];
   document.querySelector('h1').addEventListener('click', () => {
     const now = Date.now();
     taps = taps.filter(t => now - t < 1200); taps.push(now);
@@ -2354,7 +2395,6 @@ document.addEventListener('visibilitychange', () => {
     document.getElementById('wvOn').classList.toggle('on', wrongVoice);
     document.getElementById('wvOff').classList.toggle('on', !wrongVoice);
     document.getElementById('wvName').value = childName;
-    document.getElementById('wvParent').value = parentName;
   }
   document.getElementById('wvOn').addEventListener('click', () => {
     wrongVoice = true; store.set('cubs_wv', 'on'); schedulePush(); renderVoice(); sayWrong();
@@ -2364,9 +2404,7 @@ document.addEventListener('visibilitychange', () => {
   });
   document.getElementById('wvSave').addEventListener('click', () => {
     childName = (document.getElementById('wvName').value || '').trim().slice(0, 24);
-    parentName = (document.getElementById('wvParent').value || '').trim().slice(0, 24);
     store.set('cubs_name', childName);
-    store.set('cubs_pname', parentName);
     schedulePush(); renderVoice(); sayWrong();
   });
   function renderCaps(){
