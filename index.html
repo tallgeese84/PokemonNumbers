@@ -47,7 +47,14 @@
 
   #app{ position:relative; z-index:1; max-width:560px; margin:0 auto; padding:12px 14px 28px; }
 
-  .topbar{ display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:8px; margin-bottom:10px; min-height:56px; }
+  .topbar{
+    display:flex; align-items:center; justify-content:center; flex-wrap:wrap;
+    gap:8px; margin-bottom:10px; min-height:56px;
+  }
+  .topbar > *{ flex:0 0 auto; }
+  .topbar .pill, .topbar .btn.icon{ height:44px; display:flex; align-items:center; justify-content:center; }
+  .topbar .btn.icon{ min-width:52px; padding:0 12px; }
+  .topbar .pill{ padding:0 14px; }
   .pill{
     background:linear-gradient(180deg,#FFFDF4,#F3E9CF); border:3px solid var(--ink); border-radius:999px;
     padding:6px 14px; font-size:20px; font-weight:bold; display:flex; align-items:center; gap:6px;
@@ -507,7 +514,7 @@
     📶 Connect to the internet to see the Pokémon pictures!
   </div>
   <div class="topbar">
-    <button class="btn icon" id="backBtn" style="visibility:hidden">⬅️</button>
+    <button class="btn icon" id="backBtn" style="display:none">⬅️</button>
     <div class="pill">⭐ <span id="starCount">0</span></div>
     <div class="pill" id="ballPill"><svg viewBox="0 0 30 30" width="22" height="22" aria-hidden="true"><circle cx="15" cy="15" r="13" fill="#fff" stroke="#2B2E5C" stroke-width="2.5"/><path d="M2.5 15 A12.5 12.5 0 0 1 27.5 15 L2.5 15 Z" fill="#E0503F" stroke="#2B2E5C" stroke-width="2.5"/><line x1="2.5" y1="15" x2="27.5" y2="15" stroke="#2B2E5C" stroke-width="2.5"/><circle cx="15" cy="15" r="4.5" fill="#fff" stroke="#2B2E5C" stroke-width="2.5"/></svg> <span id="ballCount">0/6</span></div>
     <button class="btn icon" id="cloudBtn" title="Grown-ups: backup & sync">☁️</button>
@@ -924,7 +931,7 @@ let mode = 'home';
 function show(name){
   Object.values(screens).forEach(id => document.getElementById(id).classList.remove('on'));
   document.getElementById(screens[name]).classList.add('on');
-  document.getElementById('backBtn').style.visibility = (name === 'home') ? 'hidden' : 'visible';
+  document.getElementById('backBtn').style.display = (name === 'home') ? 'none' : 'block';
 }
 document.getElementById('backBtn').addEventListener('click', () => {
   sndTap(); stopZap(); stopRace(); stopSnake(); mode = 'home'; renderBuddyHome(); show('home');
