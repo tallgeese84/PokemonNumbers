@@ -90,7 +90,7 @@
   .sub{ text-align:center; color:#20486E; font-size:17px; font-weight:bold; margin:0 0 12px;
     text-shadow:0 1px 0 rgba(255,255,255,.6); }
 
-  .modes{ display:grid; grid-template-columns:1fr 1fr; grid-template-rows:repeat(3, 128px); gap:12px; }
+  .modes{ display:grid; grid-template-columns:1fr 1fr; grid-auto-rows:128px; gap:12px; }
   .mode{
     border:4px solid var(--ink); border-radius:var(--r); padding:8px 10px;
     width:100%; height:100%;
@@ -115,6 +115,7 @@
   .mode.sub{ background:linear-gradient(180deg,#FF9184,#E0503F); color:#fff; }
   .mode.zap{ background:linear-gradient(180deg,#FFDD70,#F0A81E); }
   .mode.tower{ background:linear-gradient(180deg,#FFB6D4,#EE7BA8); }
+  .mode.snake{ background:linear-gradient(180deg,#A8E88F,#4FA84F); }
 
   .card{
     position:relative;
@@ -271,6 +272,13 @@
   #syStatus{ font-size:16px !important; }
   #syStatus.ok{ color:#1E8A63; }
   #syStatus.err{ color:#C43D2E; }
+  .caprow{ display:flex; align-items:center; gap:8px; margin:6px 0; font-size:15px; font-weight:bold; }
+  .caprow span{ flex:1; }
+  .caprow button{
+    border:3px solid var(--ink); border-radius:12px; background:#fff;
+    font-family:inherit; font-weight:bold; font-size:14px; padding:5px 9px; cursor:pointer;
+  }
+  .caprow button.on{ background:var(--mint); color:#fff; }
   .syinput{
     width:100%; font-family:inherit; font-size:14px; border:3px solid var(--ink);
     border-radius:12px; padding:8px 10px; background:#fff;
@@ -353,6 +361,20 @@
   .racer.hop{ animation:hop .35s ease; }
   @keyframes hop{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-14px) } }
   #raceFlag{ position:absolute; right:6px; top:50%; transform:translateY(-58%); font-size:36px; z-index:2; }
+
+  /* ---- Number Snake ---- */
+  #snCanvas{
+    display:block; margin:0 auto; touch-action:none;
+    border:4px solid var(--ink); border-radius:20px;
+    background:#DFF6D0; box-shadow:inset 0 4px 14px rgba(0,0,0,.15);
+    max-width:100%;
+  }
+  #snPad{ display:flex; flex-direction:column; align-items:center; gap:8px; margin-top:10px; }
+  #snPad .drow{ display:flex; gap:8px; }
+  .dpad{
+    width:64px; height:52px; font-size:22px; padding:0;
+    background:linear-gradient(180deg,#FFFDF4,#EDE2C4);
+  }
 
   /* celebration */
   #fx{ position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:50; }
@@ -481,6 +503,7 @@
       <button class="mode sub" data-go="sub"><span class="big"><img class="mico" data-mon="92" alt=""><span class="micoalt">➖</span></span>Taking<br>Away</button>
       <button class="mode zap" data-go="zap"><span class="big grasspeek"><img class="mico" data-mon="25" alt=""><span class="micoalt">🌿</span><span class="grassfront">🌿</span></span>Wild<br>Catch</button>
       <button class="mode tower" data-go="tower"><span class="big"><img class="mico" data-mon="78" alt=""><span class="micoalt">🏁</span></span>Number<br>Race</button>
+      <button class="mode snake" data-go="snake"><span class="big"><img class="mico" data-mon="23" alt=""><span class="micoalt">🐍</span></span>Number<br>Snake</button>
     </div>
     <button class="widebtn" id="teamBtn">My Pokémon <span id="teamTally"></span></button>
   </div>
@@ -546,6 +569,24 @@
   </div>
 </div>
 
+  <!-- NUMBER SNAKE -->
+  <div class="screen" id="scr-snake">
+    <div class="card">
+      <div class="qtext" id="snQ"></div>
+      <canvas id="snCanvas"></canvas>
+      <div class="speech" id="snSpeech"></div>
+      <div id="snPad">
+        <button class="btn dpad" id="snUp">▲</button>
+        <div class="drow">
+          <button class="btn dpad" id="snLeft">◀</button>
+          <button class="btn dpad" id="snDown">▼</button>
+          <button class="btn dpad" id="snRight">▶</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="fx"></div>
 <div id="bigcheer"><span id="cheerText">Great job! ⭐</span></div>
 <div id="catch"><div class="box" id="catchBox"></div></div>
@@ -563,6 +604,11 @@
       <button class="btn" id="ppClose">Close</button>
     </div>
     <div class="speech" id="ppMsg" style="min-height:22px"></div>
+    <hr style="border:none;border-top:3px dashed #E4C05A;margin:10px 0">
+    <div style="font-weight:bold;font-size:18px;margin-bottom:4px">🎚️ Number range</div>
+    <div style="font-size:13px;margin-bottom:6px">Auto keeps adding and taking away within 10 until answers are quick and first-try, then mixes in bigger numbers now and then.</div>
+    <div id="capRows"></div>
+    <div class="speech" id="fluNote" style="min-height:20px;font-size:14px;margin:6px 0"></div>
     <hr style="border:none;border-top:3px dashed #E4C05A;margin:10px 0">
     <div style="font-weight:bold;font-size:18px;margin-bottom:4px">☁️ Sync across tablets</div>
     <div style="font-size:13px;margin-bottom:6px">Enter the same database link and family code on every tablet. Works with the same database and code as the Chinese app.</div>
@@ -624,7 +670,9 @@ const sndZap   = () => { blip(1200, 0, .08, 'sawtooth', .1); blip(700, .06, .08,
 
 /* ---------- speech ---------- */
 const NUM_WORDS = ['zero','one','two','three','four','five','six','seven','eight','nine','ten',
-  'eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen','twenty'];
+  'eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen','twenty',
+  'twenty one','twenty two','twenty three','twenty four','twenty five','twenty six','twenty seven',
+  'twenty eight','twenty nine','thirty'];
 function say(text){
   if (!soundOn || !('speechSynthesis' in window)) return;
   try{
@@ -648,6 +696,14 @@ async function loadStars(){
   try{
     const p = JSON.parse(await store.get('cubs_prog') || '{}');
     for (const k in progress) if (typeof p[k] === 'number') progress[k] = p[k];
+  }catch(e){}
+  try{
+    const f = JSON.parse(await store.get('cubs_flu') || '{}');
+    for (const k in fluency) if (Array.isArray(f[k])) fluency[k] = f[k].slice(-FLU_WIN);
+  }catch(e){}
+  try{
+    const c = JSON.parse(await store.get('cubs_caps') || '{}');
+    for (const k in capOverride) if (typeof c[k] === 'number') capOverride[k] = c[k];
   }catch(e){}
   const c = await store.get('cubs_caught');
   caught = c ? c.split(',').filter(x => x !== '').map(Number) : [];
@@ -815,7 +871,7 @@ function catchMon(){
 }
 
 /* ---------- screens ---------- */
-const screens = { home:'scr-home', trace:'scr-trace', quiz:'scr-quiz', zap:'scr-zap', tower:'scr-tower', team:'scr-team' };
+const screens = { home:'scr-home', trace:'scr-trace', quiz:'scr-quiz', zap:'scr-zap', tower:'scr-tower', team:'scr-team', snake:'scr-snake' };
 let mode = 'home';
 function show(name){
   Object.values(screens).forEach(id => document.getElementById(id).classList.remove('on'));
@@ -823,7 +879,7 @@ function show(name){
   document.getElementById('backBtn').style.visibility = (name === 'home') ? 'hidden' : 'visible';
 }
 document.getElementById('backBtn').addEventListener('click', () => {
-  sndTap(); stopZap(); stopRace(); mode = 'home'; renderBuddyHome(); show('home');
+  sndTap(); stopZap(); stopRace(); stopSnake(); mode = 'home'; renderBuddyHome(); show('home');
 });
 document.getElementById('teamBtn').addEventListener('click', () => {
   sndTap(); mode = 'team'; renderTeam(); show('team');
@@ -842,6 +898,7 @@ document.querySelectorAll('.mode').forEach(btn => {
     if (go === 'trace'){ mode = 'trace'; show('trace'); startTrace(traceIdx); }
     else if (go === 'zap'){ mode = 'zap'; show('zap'); startZap(); }
     else if (go === 'tower'){ mode = 'tower'; show('tower'); startTower(); }
+    else if (go === 'snake'){ mode = 'snake'; show('snake'); startSnake(); }
     else { mode = go; show('quiz'); newQuestion(); }
   });
 });
@@ -887,14 +944,24 @@ const DIG = (() => {
     6: [ cat(poly([[68, 25], [52, 42], [37, 66]]),
              arc(53, 89, 24, 26, 195, -160, 30)) ],
     7: [ poly([[26, 27], [76, 27], [44, 115]]) ],
-    8: [ cat(arc(50, 46, 22, 21, -30, -270, 22),
-             arc(50, 92, 24, 23, 270, 610, 26)) ],
-    9: [ cat(arc(52, 50, 24, 25, 0, -350, 28),
+    // 8: continuous figure-eight from a lemniscate, traced in school order —
+    // start upper-right, up and left over the top, cross down to the bottom
+    // loop, round it, and climb back to the start.
+    8: [ (() => {
+      const pts = [], N = 90;
+      // parameter runs from the upper-right crossing, up over the top loop first
+      for (let i = 0; i <= N; i++){
+        const t = (Math.PI / 4) + (i / N) * 2 * Math.PI;   // begin at the top-right, like school handwriting
+        // Gerono lemniscate: x follows sin(2t) (crosses at the waist), y follows sin(t)
+        pts.push([50 + 24 * Math.sin(2 * t), 70.5 - 45.5 * Math.sin(t)]);
+      }
+      return pts;
+    })() ],    9: [ cat(arc(52, 50, 24, 25, 0, -350, 28),
              poly([[75.6, 45.7], [70, 80], [64, 114]]).slice(1)) ],
   };
 })();
 
-const TRACE_MAX = 20;
+const TRACE_MAX = 30;
 const canvas = document.getElementById('traceCanvas');
 const ctx = canvas.getContext('2d');
 let SCALE = 3, LW = 100;                   // LW: logical width (100 one digit, 200 two)
@@ -1171,13 +1238,51 @@ document.getElementById('showMe').addEventListener('click', () => {
    ============================================================ */
 const THINGS = ['🚀','⭐','🪐','🛸','🌟','☄️','👽','🌙'];
 const q = { a: 0, b: 0, ans: 0, tries: 0 };
-const progress = { count: 0, add: 0, sub: 0, zap: 0, tower: 0 };
-function saveProg(){ store.set('cubs_prog', JSON.stringify(progress)); schedulePush(); }
+const progress = { count: 0, add: 0, sub: 0, zap: 0, tower: 0, snake: 0 };
+function saveProg(){
+  store.set('cubs_prog', JSON.stringify(progress));
+  store.set('cubs_caps', JSON.stringify(capOverride));
+  schedulePush();
+}
 let padLocked = false;
 
-function levelMax(m){
+/* Fluency-gated difficulty.
+   fluency[mode] = rolling record of the last 10 answers: {fast: n, first: n}
+   A band unlocks only when answers are mostly FIRST-TRY and QUICK — real
+   automaticity, not just repetition. Even then, harder questions appear only
+   occasionally, so the consolidating range stays the main practice. */
+const FLU_WIN = 10;
+const fluency = { count: [], add: [], sub: [], zap: [], snake: [] };
+const capOverride = { count: 0, add: 0, sub: 0, zap: 0, snake: 0 };   // 0 = auto; else hard cap
+const FAST_MS = { count: 9000, add: 8000, sub: 8000, zap: 12000, snake: 14000 };
+
+function recordAnswer(m, firstTry, ms){
+  if (!fluency[m]) return;
+  fluency[m].push({ first: !!firstTry, fast: ms > 0 && ms <= (FAST_MS[m] || 8000) });
+  while (fluency[m].length > FLU_WIN) fluency[m].shift();
+  store.set('cubs_flu', JSON.stringify(fluency));
+}
+function fluent(m){
+  const f = fluency[m] || [];
+  if (f.length < FLU_WIN) return false;
+  const good = f.filter(x => x.first && x.fast).length;
+  return good >= 8;                       // 8 of the last 10: first try AND quick
+}
+function baseMax(m){
   const p = progress[m] || 0;
-  return p < 6 ? 5 : (p < 12 ? 10 : 20);
+  if (p < 6) return 5;
+  return 10;                              // within-10 is the home base at this age
+}
+function levelMax(m){
+  const cap = capOverride[m] || 0;
+  const base = baseMax(m);
+  if (cap) return Math.min(cap, Math.max(base, cap));
+  if (!fluent(m)) return base;            // no stretch until within-10 is automatic
+  // fluent: mostly stay at 10, but stretch sometimes — 20s first, 30s once well past
+  const p = progress[m] || 0;
+  const roll = Math.random();
+  if (roll < 0.75) return base;           // 3 in 4 questions stay in the mastered range
+  return (p >= 40 && roll > 0.93) ? 30 : 20;
 }
 
 function pickMon(){
@@ -1204,11 +1309,13 @@ function objSpan(monId, emoji, cls, px){
 }
 
 document.getElementById('qtext').addEventListener('click', () => { if (q.phrase) say(q.phrase); });
+document.getElementById('snQ').addEventListener('click', () => { if (SN.phrase) say(SN.phrase); });
 document.getElementById('eqline').addEventListener('click', () => { if (q.phrase) say(q.phrase); });
 
 function newQuestion(){
   padLocked = false;
   q.tries = 0;
+  q.asked = Date.now();
   const emoji = THINGS[rnd(THINGS.length)];
   const monId = pickMon();
   const bub = document.getElementById('bubbles');
@@ -1221,7 +1328,7 @@ function newQuestion(){
   // ten-frame layout: 5x2 structure builds subitizing instead of one-by-one counting
   function buildFrames(total, cellFn){
     const wrap = document.createElement('div'); wrap.className = 'tfwrap';
-    const nFrames = total > 10 ? 2 : 1;
+    const nFrames = total > 20 ? 3 : (total > 10 ? 2 : 1);
     for (let f = 0; f < nFrames; f++){
       const fr = document.createElement('div'); fr.className = 'tenframe';
       for (let c = 0; c < 10; c++){
@@ -1299,7 +1406,7 @@ function buildPad(){
   const pad = document.getElementById('pad');
   pad.innerHTML = '';
   const lo = (mode === 'count') ? 1 : 0;
-  const hi = Math.max(10, levelMax(mode));      // pad grows with the child: 0–10 first, 0–20 later
+  const hi = Math.max(10, levelMax(mode));      // pad grows with the child: 10 → 20 → 30
   for (let n = lo; n <= hi; n++){
     const b = document.createElement('button');
     b.textContent = n;
@@ -1318,6 +1425,7 @@ function answer(n, btn){
     const blank = document.getElementById('blank');
     if (blank) blank.textContent = n;
     progress[mode]++; saveProg();
+    recordAnswer(mode, q.tries === 0, Date.now() - (q.asked || 0));
     sndGood(); burst(btn, q.tries === 0 ? 10 : 8); bigCheer(q.tries === 0 ? 'Perfect! Double stars! ⭐⭐' : undefined);
     addStar(q.tries === 0 ? 2 : 1);   // accuracy is the fast path to catches
     const fact = mode === 'add' ? NUM_WORDS[q.a] + ' plus ' + NUM_WORDS[q.b] + ' equals ' + NUM_WORDS[q.ans] + '!'
@@ -1400,6 +1508,7 @@ function zapQuestion(){
   zap.locked = false;
   zap.sinceAns = 9;
   zap.wrongs = 0;
+  zap.asked = Date.now();
   const max = levelMax('zap');
   const kind = progress.zap < 3 ? 0 : rnd(3);
   if (kind === 0){
@@ -1420,7 +1529,7 @@ function zapQuestion(){
   zap.cands = [zap.ans];
   while (zap.cands.length < 3){
     const d = zap.ans + (rnd(7) - 3);
-    if (d >= 0 && d <= 20 && !zap.cands.includes(d)) zap.cands.push(d);
+    if (d >= 0 && d <= 30 && !zap.cands.includes(d)) zap.cands.push(d);
   }
   patches.forEach(hidePop);
 }
@@ -1487,6 +1596,7 @@ function wildTap(n, p, el){
       zap.tos.push(setTimeout(() => boom.remove(), 600));
     }, 320));
     progress.zap++; saveProg();
+    recordAnswer('zap', zap.wrongs === 0, Date.now() - (zap.asked || 0));
     const fr = zapField.getBoundingClientRect();
     addStar(1); burst([fr.left + tx, fr.top + ty], 8);
     document.getElementById('zapSpeech').textContent = CHEERS[rnd(CHEERS.length)];
@@ -1546,7 +1656,8 @@ function stopRace(){ clearInterval(race.timer); race.timer = null; }
 function startTower(){
   stopRace();
   const wins = progress.tower;
-  if (wins >= 2){ race.from = 11; race.to = 20; race.secs = Math.max(60, 95 - (wins - 2) * 4); }
+  if (wins >= 6){ race.from = 21; race.to = 30; race.secs = Math.max(65, 100 - (wins - 6) * 4); }
+  else if (wins >= 2){ race.from = 11; race.to = 20; race.secs = Math.max(60, 95 - (wins - 2) * 4); }
   else { race.from = 1; race.to = 10; race.secs = Math.max(50, 75 - wins * 4); }
   race.dir = (wins >= 4 && wins % 2 === 0) ? -1 : 1;   // from level 5: alternate countdown races
   race.next = race.dir === 1 ? race.from : race.to;
@@ -1634,6 +1745,220 @@ function towerTap(n, el){
       (lost ? 'A star flew away! ' : '') + 'Find ' + race.next + ' first!';
   }
 }
+
+/* ============================================================
+   NUMBER SNAKE — steer, solve, eat the right block
+   ============================================================ */
+const SN = {
+  cols: 13, rows: 13, cell: 24,
+  body: [], dir: [1, 0], nextDir: [1, 0],
+  blocks: [], ans: 0, phrase: '',
+  timer: null, stepMs: 420, grow: 0, alive: false, solved: 0, wrongs: 0
+};
+const snCanvas = document.getElementById('snCanvas');
+const snCtx = snCanvas.getContext('2d');
+
+function snSize(){
+  const avail = Math.min(360, document.getElementById('app').clientWidth - 60);
+  SN.cell = Math.floor(avail / SN.cols);
+  const px = SN.cell * SN.cols;
+  const dpr = window.devicePixelRatio || 1;
+  snCanvas.style.width = px + 'px'; snCanvas.style.height = px + 'px';
+  snCanvas.width = px * dpr; snCanvas.height = px * dpr;
+  snCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function snFreeCell(){
+  for (let tries = 0; tries < 400; tries++){
+    const c = rnd(SN.cols), r = rnd(SN.rows);
+    if (SN.body.some(b => b[0] === c && b[1] === r)) continue;
+    if (SN.blocks.some(b => b.c === c && b.r === r)) continue;
+    // keep a little clearance from the head
+    if (Math.abs(c - SN.body[0][0]) + Math.abs(r - SN.body[0][1]) < 3) continue;
+    return [c, r];
+  }
+  return null;
+}
+
+function snNewQuestion(){
+  const max = levelMax('snake');
+  const kind = SN.solved < 2 ? 0 : rnd(3);
+  if (kind === 0){
+    SN.ans = 1 + rnd(Math.max(10, max));
+    SN.phrase = 'Eat number ' + NUM_WORDS[SN.ans];
+    document.getElementById('snQ').textContent = 'Eat number ' + SN.ans + '!';
+  } else if (kind === 1){
+    const t = 2 + rnd(max - 1), a = 1 + rnd(t - 1);
+    SN.ans = t;
+    SN.phrase = 'What is ' + NUM_WORDS[a] + ' plus ' + NUM_WORDS[t - a] + '?';
+    document.getElementById('snQ').textContent = a + ' + ' + (t - a) + ' = ?';
+  } else {
+    const a = 2 + rnd(max - 1), b = 1 + rnd(a - 1);
+    SN.ans = a - b;
+    SN.phrase = 'What is ' + NUM_WORDS[a] + ' take away ' + NUM_WORDS[b] + '?';
+    document.getElementById('snQ').textContent = a + ' − ' + b + ' = ?';
+  }
+  say(SN.phrase);
+  SN.asked = Date.now();
+  // three blocks: the answer plus two near-miss distractors
+  const nums = [SN.ans];
+  while (nums.length < 3){
+    const d = SN.ans + (rnd(7) - 3);
+    if (d >= 0 && d <= 30 && !nums.includes(d)) nums.push(d);
+  }
+  for (let i = nums.length - 1; i > 0; i--){ const j = rnd(i + 1); [nums[i], nums[j]] = [nums[j], nums[i]]; }
+  SN.blocks = [];
+  nums.forEach(n => {
+    const pos = snFreeCell();
+    if (pos) SN.blocks.push({ c: pos[0], r: pos[1], n });
+  });
+  if (!SN.blocks.some(b => b.n === SN.ans)){        // guarantee the answer is always present
+    const pos = snFreeCell();
+    if (pos) SN.blocks.push({ c: pos[0], r: pos[1], n: SN.ans });
+  }
+}
+
+function snDraw(){
+  const px = SN.cell * SN.cols;
+  snCtx.clearRect(0, 0, px, px);
+  // grass checker
+  for (let r = 0; r < SN.rows; r++) for (let c = 0; c < SN.cols; c++){
+    snCtx.fillStyle = ((r + c) % 2) ? '#D3F0C2' : '#DFF6D0';
+    snCtx.fillRect(c * SN.cell, r * SN.cell, SN.cell, SN.cell);
+  }
+  // blocks
+  SN.blocks.forEach(b => {
+    const x = b.c * SN.cell, y = b.r * SN.cell, p = 2;
+    snCtx.fillStyle = '#FFFDF4';
+    snCtx.strokeStyle = '#2B2E5C'; snCtx.lineWidth = 2.5;
+    snCtx.beginPath();
+    snCtx.roundRect(x + p, y + p, SN.cell - p * 2, SN.cell - p * 2, 6);
+    snCtx.fill(); snCtx.stroke();
+    snCtx.fillStyle = '#22254E';
+    snCtx.font = 'bold ' + Math.round(SN.cell * 0.5) + 'px system-ui, sans-serif';
+    snCtx.textAlign = 'center'; snCtx.textBaseline = 'middle';
+    snCtx.fillText(String(b.n), x + SN.cell / 2, y + SN.cell / 2 + 1);
+  });
+  // snake
+  SN.body.forEach((seg, i) => {
+    const x = seg[0] * SN.cell, y = seg[1] * SN.cell, p = 2;
+    snCtx.fillStyle = i === 0 ? '#3E9E4C' : (i % 2 ? '#69C36A' : '#57B45A');
+    snCtx.strokeStyle = '#22254E'; snCtx.lineWidth = 2;
+    snCtx.beginPath();
+    snCtx.roundRect(x + p, y + p, SN.cell - p * 2, SN.cell - p * 2, i === 0 ? 8 : 5);
+    snCtx.fill(); snCtx.stroke();
+    if (i === 0){
+      snCtx.fillStyle = '#fff';
+      const ex = x + SN.cell / 2, ey = y + SN.cell / 2;
+      const ox = SN.dir[0] * SN.cell * 0.16, oy = SN.dir[1] * SN.cell * 0.16;
+      [[-0.18, -0.12], [0.18, -0.12]].forEach(([dx, dy]) => {
+        snCtx.beginPath();
+        snCtx.arc(ex + dx * SN.cell + ox, ey + dy * SN.cell + oy, SN.cell * 0.11, 0, Math.PI * 2);
+        snCtx.fill();
+      });
+      snCtx.fillStyle = '#22254E';
+      [[-0.18, -0.12], [0.18, -0.12]].forEach(([dx, dy]) => {
+        snCtx.beginPath();
+        snCtx.arc(ex + dx * SN.cell + ox * 1.5, ey + dy * SN.cell + oy * 1.5, SN.cell * 0.055, 0, Math.PI * 2);
+        snCtx.fill();
+      });
+    }
+  });
+}
+
+function snStep(){
+  if (!SN.alive || mode !== 'snake') return;
+  SN.dir = SN.nextDir;
+  const head = SN.body[0];
+  let c = head[0] + SN.dir[0], r = head[1] + SN.dir[1];
+  c = (c + SN.cols) % SN.cols;                    // wrap around: no wall deaths for a 5-year-old
+  r = (r + SN.rows) % SN.rows;
+  // self-collision: shrink back instead of game over
+  const hitSelf = SN.body.findIndex((b, i) => i > 2 && b[0] === c && b[1] === r);
+  if (hitSelf > 0){
+    SN.body = SN.body.slice(0, Math.max(3, hitSelf));
+    sndOops();
+    document.getElementById('snSpeech').textContent = 'Oops, don\u2019t bump yourself!';
+    snDraw();
+    return;
+  }
+  SN.body.unshift([c, r]);
+  const bi = SN.blocks.findIndex(b => b.c === c && b.r === r);
+  if (bi >= 0){
+    const blk = SN.blocks[bi];
+    if (blk.n === SN.ans){
+      SN.grow += 2;
+      SN.solved++;
+      progress.snake = (progress.snake || 0) + 1; saveProg();
+      recordAnswer('snake', SN.wrongs === 0, Date.now() - (SN.asked || 0));
+      sndGood();
+      const rect = snCanvas.getBoundingClientRect();
+      burst([rect.left + (c + 0.5) * SN.cell, rect.top + (r + 0.5) * SN.cell], 8);
+      addStar(SN.wrongs === 0 ? 2 : 1);
+      say(NUM_WORDS[SN.ans] + '!');
+      document.getElementById('snSpeech').textContent = CHEERS[rnd(CHEERS.length)] + ' Length ' + (SN.body.length + SN.grow);
+      SN.wrongs = 0;
+      SN.stepMs = Math.max(200, SN.stepMs - 12);     // speeds up as he improves
+      snNewQuestion();
+      clearInterval(SN.timer);
+      SN.timer = setInterval(snStep, SN.stepMs);
+    } else {
+      SN.blocks.splice(bi, 1);
+      SN.wrongs++;
+      loseStar();
+      sndOops();
+      // wrong block: the snake shrinks — a real, visible cost
+      if (SN.body.length > 3) SN.body = SN.body.slice(0, Math.max(3, SN.body.length - 2));
+      document.getElementById('snSpeech').textContent = 'That was ' + blk.n + ' — you shrank! Find ' +
+        (SN.solved < 2 ? SN.ans : 'the answer') + '.';
+      say(SN.phrase);
+    }
+  }
+  if (SN.grow > 0) SN.grow--;
+  else if (SN.body.length > 3) SN.body.pop();      // never shrink below a 3-segment snake
+  snDraw();
+}
+
+function snTurn(d){
+  // no instant reversal
+  if (d[0] === -SN.dir[0] && d[1] === -SN.dir[1]) return;
+  SN.nextDir = d;
+}
+function startSnake(){
+  stopSnake();
+  snSize();
+  const midR = Math.floor(SN.rows / 2);
+  SN.body = [[3, midR], [2, midR], [1, midR]];
+  SN.dir = [1, 0]; SN.nextDir = [1, 0];
+  SN.grow = 0; SN.alive = true; SN.solved = 0; SN.wrongs = 0;
+  SN.stepMs = 420;
+  SN.blocks = [];
+  snNewQuestion();
+  document.getElementById('snSpeech').textContent = 'Steer with the arrows and eat the right block!';
+  snDraw();
+  SN.timer = setInterval(snStep, SN.stepMs);
+}
+function stopSnake(){ clearInterval(SN.timer); SN.timer = null; SN.alive = false; }
+
+document.getElementById('snUp').addEventListener('click', () => snTurn([0, -1]));
+document.getElementById('snDown').addEventListener('click', () => snTurn([0, 1]));
+document.getElementById('snLeft').addEventListener('click', () => snTurn([-1, 0]));
+document.getElementById('snRight').addEventListener('click', () => snTurn([1, 0]));
+document.addEventListener('keydown', e => {
+  if (mode !== 'snake') return;
+  const k = { ArrowUp: [0,-1], ArrowDown: [0,1], ArrowLeft: [-1,0], ArrowRight: [1,0] }[e.key];
+  if (k){ e.preventDefault(); snTurn(k); }
+});
+// swipe anywhere on the board
+(function(){
+  let sx = 0, sy = 0;
+  snCanvas.addEventListener('pointerdown', e => { sx = e.clientX; sy = e.clientY; });
+  snCanvas.addEventListener('pointerup', e => {
+    const dx = e.clientX - sx, dy = e.clientY - sy;
+    if (Math.abs(dx) < 18 && Math.abs(dy) < 18) return;
+    snTurn(Math.abs(dx) > Math.abs(dy) ? [Math.sign(dx), 0] : [0, Math.sign(dy)]);
+  });
+})();
 
 /* ============================================================
    CLOUD SYNC — Firebase Realtime Database, shared family code
@@ -1779,11 +2104,39 @@ document.addEventListener('visibilitychange', () => {
     const cfg = await getSyncCfg();
     document.getElementById('syUrl').value = cfg ? cfg.url : '';
     document.getElementById('syCode').value = cfg ? cfg.code : '';
+    renderCaps();
     const last = parseInt(await store.get('cubs_lastsync') || '0', 10) || 0;
     if (cfg && last) setSyncStatus('ok', '✓ Connected — last synced ' + new Date(last).toLocaleString());
     else if (cfg) setSyncStatus('', 'connected — hasn\u2019t synced yet, tap Save & sync now');
     else setSyncStatus('', 'not connected');
     panel.style.display = 'flex';
+  }
+  const CAP_MODES = [['count','Counting'], ['add','Adding'], ['sub','Taking away'], ['zap','Wild Catch'], ['snake','Snake']];
+  function renderCaps(){
+    const box = document.getElementById('capRows');
+    box.innerHTML = '';
+    CAP_MODES.forEach(([m, label]) => {
+      const row = document.createElement('div');
+      row.className = 'caprow';
+      const nm = document.createElement('span');
+      nm.textContent = label;
+      row.appendChild(nm);
+      [['Auto', 0], ['10', 10], ['20', 20], ['30', 30]].forEach(([txt, val]) => {
+        const b = document.createElement('button');
+        b.textContent = txt;
+        if ((capOverride[m] || 0) === val) b.classList.add('on');
+        b.addEventListener('click', () => { capOverride[m] = val; saveProg(); renderCaps(); });
+        row.appendChild(b);
+      });
+      box.appendChild(row);
+    });
+    const note = document.getElementById('fluNote');
+    const parts = CAP_MODES.filter(([m]) => ['add','sub'].includes(m)).map(([m, label]) => {
+      const f = fluency[m] || [];
+      const good = f.filter(x => x.first && x.fast).length;
+      return label + ': ' + good + '/' + Math.max(f.length, 1) + (fluent(m) ? ' ✓ fluent' : '');
+    });
+    note.textContent = 'Recent quick first-try answers — ' + parts.join('  ·  ');
   }
   document.getElementById('syGen').addEventListener('click', () => {
     const abc = 'abcdefghjkmnpqrstuvwxyz23456789';
