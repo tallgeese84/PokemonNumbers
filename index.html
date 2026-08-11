@@ -280,6 +280,7 @@
     box-shadow:0 5px 0 rgba(30,32,70,.4), 0 0 14px rgba(255,201,60,.7);
   }
   .tcard.legend::before{ content:"✨"; display:block; font-size:12px; margin-top:-4px; }
+  #teamAll.on, #teamLeg.on{ background:linear-gradient(180deg,#FFF3C8,#FFD86B); }
   #catch .newname{ font-size:24px; font-weight:bold; margin-top:6px; }
   #catch .hint{ font-size:15px; margin-top:4px; }
   #wrongWarn{
@@ -634,7 +635,7 @@
     <div id="buddyBox"></div>
     <h1>PokéMath Adventure</h1>
     <p class="sub">Play with numbers to catch them all!</p>
-    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v25</div>
+    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v27</div>
     <div class="modes">
       <button class="mode trace" data-go="trace"><span class="big"><img class="mico" data-mon="133" alt=""><span class="micoalt">✏️</span></span>Write<br>Numbers</button>
       <button class="mode count" data-go="count"><span class="big"><img class="mico" data-mon="102" alt=""><span class="micoalt">🔢</span></span>Counting</button>
@@ -650,7 +651,11 @@
   <div class="screen" id="scr-team">
     <div class="card">
       <div class="qtext" id="teamHead">My Pokémon</div>
-      <div class="speech" id="teamSpeech" style="margin:0 0 10px">Tap a Pokémon to make it your buddy!</div>
+      <div class="speech" id="teamSpeech" style="margin:0 0 8px">Tap a Pokémon to make it your buddy!</div>
+      <div class="pprow" style="justify-content:center;margin-bottom:10px">
+        <button class="btn" id="teamAll" style="font-size:16px;padding:6px 14px">All</button>
+        <button class="btn" id="teamLeg" style="font-size:16px;padding:6px 14px">✨ Legendary</button>
+      </div>
       <div class="tgrid" id="tgrid"></div>
     </div>
   </div>
@@ -1025,7 +1030,9 @@ function updateBallPill(){
 }
 function renderBuddyHome(){
   const box = document.getElementById('buddyBox');
-  document.getElementById('teamTally').textContent = '(' + caught.length + '/' + DEX_TOTAL + ')';
+  const lc = caught.filter(isLegend).length;
+  document.getElementById('teamTally').textContent =
+    '(' + caught.length + '/' + DEX_TOTAL + (lc ? '  ✨' + lc : '') + ')';
   if (!pkBuddy){
     box.innerHTML = '<div class="bname">Win ' + (ballNeed() - ballStars) + ' more ⭐ to meet your first Pokémon!</div>';
     return;
@@ -1034,13 +1041,25 @@ function renderBuddyHome(){
     'onerror="this.style.display=\'none\'">' +
     '<div><span class="bname">' + monName(pkBuddy) + '</span></div>';
 }
+let teamFilter = 'all';
 function renderTeam(){
   const legCount = caught.filter(isLegend).length;
   document.getElementById('teamHead').textContent = 'Caught ' + caught.length + ' of ' + DEX_TOTAL +
-    (legCount ? '  ·  ✨ ' + legCount + ' legendary' : '');
+    '  ·  ✨ ' + legCount + ' legendary';
+  document.getElementById('teamAll').classList.toggle('on', teamFilter === 'all');
+  document.getElementById('teamLeg').classList.toggle('on', teamFilter === 'legend');
   const grid = document.getElementById('tgrid');
   grid.innerHTML = '';
-  caught.forEach(id => {
+  const list = teamFilter === 'legend' ? caught.filter(isLegend) : caught;
+  if (teamFilter === 'legend' && !list.length){
+    const none = document.createElement('div');
+    none.style.gridColumn = '1 / -1';
+    none.style.fontSize = '15px';
+    none.textContent = 'No legendary Pokémon yet — get ' + streakNeed() +
+      ' answers right in a row to unlock one!';
+    grid.appendChild(none);
+  }
+  list.forEach(id => {
     const card = document.createElement('button');
     card.className = 'tcard' + (id === pkBuddy ? ' buddy' : '') + (isLegend(id) ? ' legend' : '');
     card.innerHTML = '<img src="' + imgArt(id) + '" alt="" onerror="this.style.display=\'none\'">' +
@@ -1053,6 +1072,7 @@ function renderTeam(){
     });
     grid.appendChild(card);
   });
+  if (teamFilter === 'legend') return;
   const mystery = document.createElement('div');
   mystery.className = 'tcard';
   mystery.style.opacity = '.75';
@@ -1115,6 +1135,8 @@ function show(name){
 document.getElementById('backBtn').addEventListener('click', () => {
   sndTap(); shutUp(); stopZap(); stopRace(); mode = 'home'; renderBuddyHome(); show('home');
 });
+document.getElementById('teamAll').addEventListener('click', () => { teamFilter = 'all'; sndTap(); renderTeam(); });
+document.getElementById('teamLeg').addEventListener('click', () => { teamFilter = 'legend'; sndTap(); renderTeam(); });
 document.getElementById('teamBtn').addEventListener('click', () => {
   sndTap(); mode = 'team'; renderTeam(); show('team');
 });
@@ -1575,6 +1597,9 @@ function bumpStreak(firstTry){
     if (streak >= streakNeed() && LEGEND_IDS.some(i => !caught.includes(i)) && caught.length >= 20){
       streak = 0;
       legendPending = true;            // claimed at the next catch ceremony
+      showPraise('✨ LEGENDARY UNLOCKED! ✨');
+      say('Amazing ' + (childName || '') + '! You unlocked a legendary Pokemon!');
+      blip(523,0,.16); blip(659,.18,.16); blip(784,.36,.16); blip(1047,.54,.3);
       setTimeout(function waitClear(){
         if (!legendPending) return;
         if (!speechIdle()){ setTimeout(waitClear, 250); return; }
@@ -1662,6 +1687,7 @@ function newQuestion(){
   document.getElementById('quizSpeech').textContent = '';
   bub.innerHTML = ''; eq.innerHTML = '';
   const max = levelMax(mode);
+  q.max = max;                    // fixed for this question: pad and cover must agree
 
   // ten-frame layout: 5x2 structure builds subitizing instead of one-by-one counting
   function buildFrames(total, cellFn){
@@ -1711,7 +1737,7 @@ function newQuestion(){
   }
   // flash-and-cover: past the basics, see it briefly, then hold it in your head
   q.covered = false;
-  if ((mode === 'add' || mode === 'sub') && levelMax(mode) >= 10){
+  if ((mode === 'add' || mode === 'sub') && q.max >= 10){
     q.coverTimer = setTimeout(() => {
       if (q.tries > 0) return;
       const wrap = bub.querySelector('.tfwrap');
@@ -1763,7 +1789,8 @@ function buildPad(){
   const pad = document.getElementById('pad');
   pad.innerHTML = '';
   const lo = (mode === 'count') ? 1 : 0;
-  const hi = Math.max(10, levelMax(mode));      // pad grows with the child: 10 → 20 → 30
+  // must use THIS question's range, not a fresh roll, or the answer can be off the pad
+  const hi = Math.max(10, q.max || levelMax(mode));
   for (let n = lo; n <= hi; n++){
     const b = document.createElement('button');
     b.textContent = n;
@@ -2376,7 +2403,7 @@ document.addEventListener('visibilitychange', () => {
       ['numbers to 30', TRACE_MAX === 30]
     ];
     document.getElementById('ppVer').textContent =
-      'build v25 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
+      'build v27 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
     showPraise(praiseLine(true));
     say(praiseLine(true));
   });
