@@ -567,7 +567,7 @@
     <div id="buddyBox"></div>
     <h1>PokéMath Adventure</h1>
     <p class="sub">Play with numbers to catch them all!</p>
-    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v21</div>
+    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v23</div>
     <div class="modes">
       <button class="mode trace" data-go="trace"><span class="big"><img class="mico" data-mon="133" alt=""><span class="micoalt">✏️</span></span>Write<br>Numbers</button>
       <button class="mode count" data-go="count"><span class="big"><img class="mico" data-mon="102" alt=""><span class="micoalt">🔢</span></span>Counting</button>
@@ -764,15 +764,46 @@ const NUM_WORDS = ['zero','one','two','three','four','five','six','seven','eight
   'eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen','twenty',
   'twenty one','twenty two','twenty three','twenty four','twenty five','twenty six','twenty seven',
   'twenty eight','twenty nine','thirty'];
-function say(text){
-  if (!soundOn || !('speechSynthesis' in window)) return;
+/* Speech queue — utterances play one after another with a short gap, so a
+   question, a praise line and an answer fact can never talk over each other.
+   say(text, true) jumps the queue (used when the child taps to repeat). */
+const speechQ = [];
+let speaking = false, speechTimer = null;
+function say(text, interrupt){
+  if (!soundOn || !('speechSynthesis' in window) || !text) return;
+  if (interrupt) shutUp();
+  speechQ.push(String(text));
+  while (speechQ.length > 3) speechQ.shift();      // never let a backlog build up
+  pumpSpeech();
+}
+function pumpSpeech(){
+  if (speaking || !speechQ.length) return;
+  const text = speechQ.shift();
+  speaking = true;
   try{
-    speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = 'en'; u.rate = 0.85; u.pitch = 1.15;
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true; speaking = false;
+      clearTimeout(speechTimer);
+      setTimeout(pumpSpeech, 140);                 // small breath between lines
+    };
+    u.onend = finish; u.onerror = finish;
+    // safety net for devices that never fire onend
+    clearTimeout(speechTimer);
+    speechTimer = setTimeout(finish, Math.min(9000, 900 + text.length * 80));
     speechSynthesis.speak(u);
-  }catch(e){}
+  }catch(e){ speaking = false; }
 }
+function shutUp(){
+  speechQ.length = 0;
+  speaking = false;
+  clearTimeout(speechTimer);
+  try{ speechSynthesis.cancel(); }catch(e){}
+}
+function speechIdle(){ return !speaking && !speechQ.length; }
 function speakNumber(n){ say(NUM_WORDS[n] || String(n)); }
 
 /* ---------- stars ---------- */
@@ -1018,13 +1049,14 @@ function show(name){
   document.getElementById('backBtn').style.display = (name === 'home') ? 'none' : 'block';
 }
 document.getElementById('backBtn').addEventListener('click', () => {
-  sndTap(); stopZap(); stopRace(); stopSnake(); mode = 'home'; renderBuddyHome(); show('home');
+  sndTap(); shutUp(); stopZap(); stopRace(); stopSnake(); mode = 'home'; renderBuddyHome(); show('home');
 });
 document.getElementById('teamBtn').addEventListener('click', () => {
   sndTap(); mode = 'team'; renderTeam(); show('team');
 });
 document.getElementById('soundBtn').addEventListener('click', function(){
   soundOn = !soundOn;
+  if (!soundOn) shutUp();
   this.textContent = soundOn ? '🔊' : '🔇';
   store.set('cubs_sound', soundOn ? 'on' : 'off');
   schedulePush();
@@ -1033,6 +1065,7 @@ document.getElementById('soundBtn').addEventListener('click', function(){
 document.querySelectorAll('.mode').forEach(btn => {
   btn.addEventListener('click', () => {
     audio(); sndTap();
+    shutUp();
     const go = btn.dataset.go;
     if (go === 'trace'){ mode = 'trace'; show('trace'); startTrace(traceIdx); }
     else if (go === 'zap'){ mode = 'zap'; show('zap'); startZap(); }
@@ -1519,9 +1552,9 @@ function objSpan(monId, emoji, cls, px){
   return s;
 }
 
-document.getElementById('qtext').addEventListener('click', () => { if (q.phrase) say(q.phrase); });
-document.getElementById('snQ').addEventListener('click', () => { if (SN.phrase) say(SN.phrase); });
-document.getElementById('eqline').addEventListener('click', () => { if (q.phrase) say(q.phrase); });
+document.getElementById('qtext').addEventListener('click', () => { if (q.phrase) say(q.phrase, true); });
+document.getElementById('snQ').addEventListener('click', () => { if (SN.phrase) say(SN.phrase, true); });
+document.getElementById('eqline').addEventListener('click', () => { if (q.phrase) say(q.phrase, true); });
 
 function newQuestion(){
   padLocked = false;
@@ -1638,16 +1671,19 @@ function answer(n, btn){
     progress[mode]++; saveProg();
     recordAnswer(mode, q.tries === 0, Date.now() - (q.asked || 0));
     bumpStreak(q.tries === 0);
-    sndGood(); burst(btn, q.tries === 0 ? 10 : 8); bigCheer(q.tries === 0 ? 'Perfect! Double stars! ⭐⭐' : undefined);
+    sndGood(); burst(btn, q.tries === 0 ? 10 : 8);
     addStar(q.tries === 0 ? 2 : 1);   // accuracy is the fast path to catches
     const fact = mode === 'add' ? NUM_WORDS[q.a] + ' plus ' + NUM_WORDS[q.b] + ' equals ' + NUM_WORDS[q.ans] + '!'
                : mode === 'sub' ? NUM_WORDS[q.a] + ' take away ' + NUM_WORDS[q.b] + ' equals ' + NUM_WORDS[q.ans] + '!'
                : NUM_WORDS[q.ans] + '!';
     const praise = praiseLine(q.tries === 0);
-    showPraise(praise);
+    showPraise(praise + (q.tries === 0 ? '  ⭐⭐' : '  ⭐'));
     setTimeout(() => say(praise + ' ' + fact), 420);
     document.getElementById('quizSpeech').textContent = praise;
-    setTimeout(newQuestion, 1900);
+    setTimeout(function waitQuiet(){
+      if (!speechIdle() && mode !== 'home'){ setTimeout(waitQuiet, 250); return; }
+      newQuestion();
+    }, 1400);
   } else {
     q.tries++;
     btn.classList.add('wrong'); sndOops();
@@ -1690,7 +1726,7 @@ function countHint(){
         blip(520 + i * 45, 0, .12);
         const upto = q.a + i + 1;
         sp.textContent = q.a + '... ' + Array.from({length: i + 1}, (_, k) => q.a + k + 1).join(' \u2022 ');
-        speakNumber(upto);
+        speakNumber(upto);   // queued, so counting never trips over itself
         if (i === grpB.length - 1){
           setTimeout(() => { padLocked = false; sp.textContent = 'Now you try!'; }, 600);
         }
@@ -1820,7 +1856,11 @@ function wildTap(n, p, el){
     showPraise(zPraise);
     document.getElementById('zapSpeech').textContent = zPraise;
     setTimeout(() => say(zPraise + ' ' + NUM_WORDS[zap.ans] + '!'), 300);
-    zap.tos.push(setTimeout(() => { if (mode === 'zap') zapQuestion(); }, 1400));
+    zap.tos.push(setTimeout(function waitQuiet(){
+      if (mode !== 'zap') return;
+      if (!speechIdle()){ zap.tos.push(setTimeout(waitQuiet, 250)); return; }
+      zapQuestion();
+    }, 1200));
   } else {
     el.classList.remove('wrongwob'); void el.offsetWidth; el.classList.add('wrongwob');
     sndOops();
@@ -1946,7 +1986,7 @@ function towerTap(n, el){
       race.locked = true;
       progress.tower++; saveProg();
       sndGood(); burst(raceTrack, 12);
-      bigCheer('You won the race! 🏁');
+      showPraise(praiseLine(true) + ' You won the race! 🏁');
       addStar(3);
       say(praiseLine(true) + ' You won the race!');
       document.getElementById('towerSpeech').textContent = 'You beat ' + monName(RIVAL_ID) + '! 🏁';
@@ -2469,7 +2509,7 @@ document.addEventListener('visibilitychange', () => {
       ['numbers to 30', TRACE_MAX === 30]
     ];
     document.getElementById('ppVer').textContent =
-      'build v21 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
+      'build v23 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
     showPraise(praiseLine(true));
     say(praiseLine(true));
   });
