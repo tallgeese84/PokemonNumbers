@@ -635,7 +635,7 @@
     <div id="buddyBox"></div>
     <h1>PokéMath Adventure</h1>
     <p class="sub">Play with numbers to catch them all!</p>
-    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v27</div>
+    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v28</div>
     <div class="modes">
       <button class="mode trace" data-go="trace"><span class="big"><img class="mico" data-mon="133" alt=""><span class="micoalt">✏️</span></span>Write<br>Numbers</button>
       <button class="mode count" data-go="count"><span class="big"><img class="mico" data-mon="102" alt=""><span class="micoalt">🔢</span></span>Counting</button>
@@ -1009,8 +1009,9 @@ function ballNeed(){
 // first-try correct answers, so careful thinking is the only route.
 // Each legendary demands a longer perfect run than the last: 12, 15, 18 ... up to 40.
 function streakNeed(){
+  // Each legendary asks for a longer perfect run, capped at 20 in a row.
   const have = caught.filter(isLegend).length;
-  return Math.min(40, 12 + have * 3);
+  return Math.min(20, 12 + have * 2);
 }
 let streak = 0, bestStreak = 0, legendPending = false;
 let caught = [];       // ids in catch order
@@ -2403,7 +2404,7 @@ document.addEventListener('visibilitychange', () => {
       ['numbers to 30', TRACE_MAX === 30]
     ];
     document.getElementById('ppVer').textContent =
-      'build v27 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
+      'build v28 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
     showPraise(praiseLine(true));
     say(praiseLine(true));
   });
