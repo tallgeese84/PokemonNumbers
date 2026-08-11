@@ -290,15 +290,15 @@
   #wrongWarn.on{ display:flex; }
   #wrongWarn::before{
     content:""; position:absolute; inset:0;
-    box-shadow:inset 0 0 0 12px #E0342A, inset 0 0 60px rgba(224,52,42,.55);
-    animation:wwflash .5s ease-in-out 3;
+    box-shadow:inset 0 0 0 12px #F0A81E, inset 0 0 60px rgba(240,168,30,.45);
+    animation:wwflash .5s ease-in-out 2;
   }
   @keyframes wwflash{ 0%,100%{ opacity:.25 } 50%{ opacity:1 } }
   #wrongWarn .ww{
     display:flex; align-items:center; gap:12px;
-    background:linear-gradient(180deg,#FF6257,#C4291F);
-    border:5px solid #7A1710; border-radius:26px; padding:14px 28px;
-    box-shadow:0 10px 0 rgba(60,10,6,.5);
+    background:linear-gradient(180deg,#FFC93C,#E08A17);
+    border:5px solid #9A5E0C; border-radius:26px; padding:14px 28px;
+    box-shadow:0 10px 0 rgba(80,48,6,.45);
     color:#fff; font-weight:bold; font-size:23px; line-height:1.15; max-width:88vw; text-align:center;
     animation:cheer .45s ease;
   }
@@ -567,7 +567,7 @@
     <div id="buddyBox"></div>
     <h1>PokéMath Adventure</h1>
     <p class="sub">Play with numbers to catch them all!</p>
-    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v23</div>
+    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v24</div>
     <div class="modes">
       <button class="mode trace" data-go="trace"><span class="big"><img class="mico" data-mon="133" alt=""><span class="micoalt">✏️</span></span>Write<br>Numbers</button>
       <button class="mode count" data-go="count"><span class="big"><img class="mico" data-mon="102" alt=""><span class="micoalt">🔢</span></span>Counting</button>
@@ -686,7 +686,7 @@
     <div style="font-size:13px;margin-bottom:6px">Auto keeps adding and taking away within 10 until answers are quick and first-try, then mixes in bigger numbers now and then.</div>
     <div id="capRows"></div>
     <div class="caprow" style="margin-top:10px">
-      <span>Say name on wrong answer</span>
+      <span>Encourage by name</span>
       <button id="wvOn">On</button>
       <button id="wvOff">Off</button>
     </div>
@@ -698,7 +698,7 @@
       <span></span>
       <button id="wvSave">Save</button>
     </div>
-    <div style="font-size:12px;margin-top:2px">Says: "Jonah pushed the wrong number!"</div>
+    <div style="font-size:12px;margin-top:2px">Encourages by name, e.g. "So close Jonah! Have another go!"</div>
     <div class="speech" id="fluNote" style="min-height:20px;font-size:14px;margin:6px 0"></div>
     <hr style="border:none;border-top:3px dashed #E4C05A;margin:10px 0">
     <div style="font-weight:bold;font-size:18px;margin-bottom:4px">☁️ Sync across tablets</div>
@@ -853,7 +853,11 @@ function addStar(n){
     ballStars += n;
     if (ballStars >= ballNeed()){
       ballStars = 0;
-      setTimeout(catchMon, 1100);
+      setTimeout(function waitClear(){
+        if (!speechIdle()){ setTimeout(waitClear, 250); return; }
+        clearSigns();
+        catchMon();
+      }, 1600);
     }
     pkState(); updateBallPill();
   }
@@ -1443,9 +1447,21 @@ function praiseLine(firstTry){
   const pool = firstTry ? perfect : good;
   return pool[Math.floor(Math.random() * pool.length)];
 }
+function overlayBusy(){
+  const c = document.getElementById('catch');
+  return c && c.style.display === 'flex';
+}
+function clearSigns(){
+  const a = document.getElementById('rightPraise'), b = document.getElementById('wrongWarn');
+  if (a) a.classList.remove('on');
+  if (b) b.classList.remove('on');
+  clearTimeout(rpTimer); clearTimeout(wwTimer);
+}
 function showPraise(text){
   const w = document.getElementById('rightPraise');
-  if (!w) return;
+  if (!w || overlayBusy()) return;          // never sit on top of a catch ceremony
+  const other = document.getElementById('wrongWarn');
+  if (other) other.classList.remove('on');  // and never both signs at once
   w.querySelector('.rptxt').textContent = text;
   w.classList.remove('on'); void w.offsetWidth; w.classList.add('on');
   clearTimeout(rpTimer);
@@ -1454,9 +1470,13 @@ function showPraise(text){
 let wwTimer = null;
 function showWrongWarn(){
   const w = document.getElementById('wrongWarn');
-  if (!w) return;
+  if (!w || overlayBusy()) return;
+  const other = document.getElementById('rightPraise');
+  if (other) other.classList.remove('on');
+  const tries = ['So close, ', 'Nearly there, ', 'Good try, ', 'Almost, '];
   w.querySelector('.wwtxt').textContent =
-    (childName || 'Someone') + ' pushed the wrong number!';
+    tries[Math.floor(Math.random() * tries.length)] + (childName || 'friend') + '! Try again!';
+  w.querySelector('.wwsign').textContent = '💪';
   w.classList.remove('on'); void w.offsetWidth; w.classList.add('on');
   clearTimeout(wwTimer);
   wwTimer = setTimeout(() => w.classList.remove('on'), 1600);
@@ -1466,12 +1486,23 @@ function sayWrong(){
   if (!wrongVoice) return;
   const n = childName || '';
   const lines = [
-    n + ' pushed the wrong number!',
-    n + ' pushed the wrong number again!',
-    'Oops! ' + n + ' pushed the wrong number!'
+    'So close ' + n + '! Have another go!',
+    'Nearly ' + n + '! Take your time!',
+    'Good try ' + n + '! Look again!',
+    'Almost ' + n + '! You can do it!'
   ];
   say(lines[Math.floor(Math.random() * lines.length)]);
 }
+
+/* Pace: 'look' is a deliberate pause where the answer pad is locked so he has
+   to study the picture before answering — patience training, not just a delay. */
+const PACE = {
+  calm:   { next: 3200, look: 2200, pop: 3600, snake: 560, hint: 700 },
+  normal: { next: 2200, look: 1200, pop: 2900, snake: 460, hint: 560 },
+  quick:  { next: 1400, look: 500,  pop: 2300, snake: 380, hint: 460 }
+};
+let pace = 'calm';
+const P = () => PACE[pace] || PACE.calm;
 
 const FLU_WIN = 10;
 const fluency = { count: [], add: [], sub: [], zap: [], snake: [] };
@@ -1485,7 +1516,12 @@ function bumpStreak(firstTry){
     if (streak >= streakNeed() && LEGEND_IDS.some(i => !caught.includes(i)) && caught.length >= 20){
       streak = 0;
       legendPending = true;            // claimed at the next catch ceremony
-      setTimeout(() => { if (legendPending) catchMon(); }, 1200);
+      setTimeout(function waitClear(){
+        if (!legendPending) return;
+        if (!speechIdle()){ setTimeout(waitClear, 250); return; }
+        clearSigns();
+        catchMon();
+      }, 1600);
     }
   } else {
     streak = 0;
@@ -1559,7 +1595,7 @@ document.getElementById('eqline').addEventListener('click', () => { if (q.phrase
 function newQuestion(){
   padLocked = false;
   q.tries = 0;
-  q.asked = Date.now();
+  clearTimeout(q.lookTimer);
   const emoji = THINGS[rnd(THINGS.length)];
   const monId = pickMon();
   const bub = document.getElementById('bubbles');
@@ -1619,7 +1655,7 @@ function newQuestion(){
   q.covered = false;
   if ((mode === 'add' || mode === 'sub') && levelMax(mode) >= 10){
     q.coverTimer = setTimeout(() => {
-      if (padLocked || q.tries > 0) return;
+      if (q.tries > 0) return;
       const wrap = bub.querySelector('.tfwrap');
       if (!wrap) return;
       const cov = document.createElement('div');
@@ -1634,10 +1670,29 @@ function newQuestion(){
         cov.style.display = 'none';
         setTimeout(() => { if (q.covered) cov.style.display = 'flex'; }, 1200);
       });
-    }, 3000);
+    }, P().look + 3000);
   }
   say(q.phrase);
   buildPad();
+  // patience beat: look at the picture before the buttons wake up
+  const lookMs = P().look;
+  const sp = document.getElementById('quizSpeech');
+  if (lookMs > 0){
+    padLocked = true;
+    document.getElementById('pad').classList.add('locked');
+    sp.textContent = '👀 Look carefully...';
+    clearTimeout(q.lookTimer);
+    q.lookTimer = setTimeout(() => {
+      if (mode === 'home') return;
+      padLocked = false;
+      document.getElementById('pad').classList.remove('locked');
+      sp.textContent = 'Now you can answer!';
+      blip(660, 0, .1); blip(880, .09, .12);
+      q.asked = Date.now();               // time him from when he may answer
+    }, lookMs);
+  } else {
+    q.asked = Date.now();
+  }
 }
 function uncover(){
   q.covered = false;
@@ -1683,7 +1738,7 @@ function answer(n, btn){
     setTimeout(function waitQuiet(){
       if (!speechIdle() && mode !== 'home'){ setTimeout(waitQuiet, 250); return; }
       newQuestion();
-    }, 1400);
+    }, P().next);
   } else {
     q.tries++;
     btn.classList.add('wrong'); sndOops();
@@ -1699,11 +1754,11 @@ function answer(n, btn){
     if (q.tries === 1){
       if (q.covered) uncover();
       document.getElementById('quizSpeech').textContent =
-        (lost ? 'Oh no, a star flew away! ' : '') + 'Slow down — look carefully first.';
+        'Take your time — look at the picture again.';
       setTimeout(() => { padLocked = false; pad.classList.remove('locked'); }, lockMs);
     } else {
       uncover();
-      document.getElementById('quizSpeech').textContent = 'Let\u2019s count together!';
+      document.getElementById('quizSpeech').textContent = 'Let\u2019s count together — you\u2019ve got this!';
       setTimeout(() => { pad.classList.remove('locked'); countHint(); }, lockMs);
     }
   }
@@ -1730,7 +1785,7 @@ function countHint(){
         if (i === grpB.length - 1){
           setTimeout(() => { padLocked = false; sp.textContent = 'Now you try!'; }, 600);
         }
-      }, 900 * i + 1400);
+      }, (P().hint + 250) * i + 1500);
     });
     return;
   }
@@ -1744,7 +1799,7 @@ function countHint(){
       if (i === objs.length - 1){
         setTimeout(() => { padLocked = false; sp.textContent = 'Now you try!'; }, 500);
       }
-    }, 480 * i + 300);
+    }, P().hint * i + 400);
   });
 }
 
@@ -1814,7 +1869,7 @@ function popOne(){
   p.wrap.appendChild(el);
   requestAnimationFrame(() => el.classList.add('up'));
   p.pop = el;
-  zap.tos.push(setTimeout(() => { if (p.pop === el) hidePop(p); }, 2600));
+  zap.tos.push(setTimeout(() => { if (p.pop === el) hidePop(p); }, P().pop));
 }
 
 function wildTap(n, p, el){
@@ -1860,7 +1915,7 @@ function wildTap(n, p, el){
       if (mode !== 'zap') return;
       if (!speechIdle()){ zap.tos.push(setTimeout(waitQuiet, 250)); return; }
       zapQuestion();
-    }, 1200));
+    }, Math.round(P().next * 0.7)));
   } else {
     el.classList.remove('wrongwob'); void el.offsetWidth; el.classList.add('wrongwob');
     sndOops();
@@ -1869,9 +1924,8 @@ function wildTap(n, p, el){
     zap.wrongs++;
     zap.locked = true;
     zap.tos.push(setTimeout(() => { zap.locked = false; }, Math.min(4000, 900 + 900 * (zap.wrongs - 1))));
-    document.getElementById('zapSpeech').textContent =
-      (lost ? 'A star flew away! ' : '') + 'Look carefully for ' +
-      (progress.zap < 3 ? zap.ans : 'the answer') + '!';
+    document.getElementById('zapSpeech').textContent = 'Good try! Keep looking for ' +
+      (progress.zap < 3 ? zap.ans : 'the answer') + ' — you can do it!';
   }
 }
 
@@ -1888,7 +1942,7 @@ function startZap(){
   });
   document.getElementById('zapSpeech').textContent = 'Tap the right Pokémon before it hides!';
   zapQuestion();
-  zap.popTimer = setInterval(popOne, 900);
+  zap.popTimer = setInterval(popOne, Math.round(P().pop / 2.6));
   popOne();
 }
 function stopZap(){
@@ -1965,8 +2019,9 @@ function roundLost(){
   stopRace();
   race.locked = true;
   sndOops();
-  document.getElementById('towerSpeech').textContent = monName(RIVAL_ID) + ' got there first! Let\u2019s race again!';
-  say(monName(RIVAL_ID) + ' got there first! Let\u2019s race again!');
+  const again = 'Good effort! ' + monName(RIVAL_ID) + ' was quick that time — let\u2019s race again!';
+  document.getElementById('towerSpeech').textContent = again;
+  say(again);
   setTimeout(() => { if (mode === 'tower') startTower(); }, 2400);
 }
 
@@ -2003,7 +2058,7 @@ function towerTap(n, el){
     race.locked = true;
     setTimeout(() => { race.locked = false; }, 900);
     document.getElementById('towerSpeech').textContent =
-      (lost ? 'A star flew away! ' : '') + 'Find ' + race.next + ' first!';
+      'Almost! Look for ' + race.next + ' — you\u2019ve got this!';
   }
 }
 
@@ -2160,7 +2215,7 @@ function snStep(){
   if (hitSelf > 0){
     SN.body = SN.body.slice(0, Math.max(3, hitSelf));
     sndOops();
-    document.getElementById('snSpeech').textContent = 'Oops, don\u2019t bump yourself!';
+    document.getElementById('snSpeech').textContent = 'Careful! Steer around yourself.';
     snDraw();
     return;
   }
@@ -2183,7 +2238,7 @@ function snStep(){
       say(sPraise + ' ' + NUM_WORDS[SN.ans] + '!');
       document.getElementById('snSpeech').textContent = sPraise + ' Length ' + (SN.body.length + SN.grow);
       SN.wrongs = 0;
-      SN.stepMs = Math.max(200, SN.stepMs - 12);     // speeds up as he improves
+      SN.stepMs = Math.max(220, SN.stepMs - 10);     // speeds up as he improves
       snNewQuestion();
       clearInterval(SN.timer);
       SN.timer = setInterval(snStep, SN.stepMs);
@@ -2195,8 +2250,8 @@ function snStep(){
       sndOops();
       // wrong block: the snake shrinks — a real, visible cost
       if (SN.body.length > 3) SN.body = SN.body.slice(0, Math.max(3, SN.body.length - 2));
-      document.getElementById('snSpeech').textContent = 'That was ' + blk.n + ' — you shrank! Find ' +
-        (SN.solved < 2 ? SN.ans : 'the answer') + '.';
+      document.getElementById('snSpeech').textContent = 'That one was ' + blk.n + '. Keep going — find ' +
+        (SN.solved < 2 ? SN.ans : 'the answer') + '!';
       say(SN.phrase);
     }
   }
@@ -2218,7 +2273,7 @@ function startSnake(){
   SN.body = [[3, midR], [2, midR], [1, midR]];
   SN.dir = [1, 0]; SN.nextDir = [1, 0];
   SN.grow = 0; SN.alive = true; SN.solved = 0; SN.wrongs = 0;
-  SN.stepMs = 420;
+  SN.stepMs = P().snake;
   SN.blocks = [];
   snNewQuestion();
   document.getElementById('snSpeech').textContent = 'Steer with the arrows and eat the right block!';
@@ -2509,7 +2564,7 @@ document.addEventListener('visibilitychange', () => {
       ['numbers to 30', TRACE_MAX === 30]
     ];
     document.getElementById('ppVer').textContent =
-      'build v23 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
+      'build v24 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
     showPraise(praiseLine(true));
     say(praiseLine(true));
   });
