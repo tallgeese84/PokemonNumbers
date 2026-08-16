@@ -740,7 +740,7 @@
     <div id="buddyBox"></div>
     <h1>PokéMath Adventure</h1>
     <p class="sub">Play with numbers to catch them all!</p>
-    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v39</div>
+    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v41</div>
     <div class="modes">
       <button class="mode trace" data-go="trace"><span class="big"><img class="mico" data-mon="133" alt=""><span class="micoalt">✏️</span></span>Write<br>Numbers</button>
       <button class="mode count" data-go="count"><span class="big"><img class="mico" data-mon="102" alt=""><span class="micoalt">🔢</span></span>Counting</button>
@@ -1051,8 +1051,15 @@ async function loadStars(){
   updateStreakPill();
   try{
     const pj = JSON.parse(await store.get('cubs_pending') || '{}');
-    for (const k in pj) pending[k] = pj[k];
+    for (const k in pj){
+      const p = pj[k];
+      // only keep a saved question that is complete and self-consistent
+      const ok = p && typeof p.n === 'number' && typeof p.x === 'number' &&
+                 p.x >= 5 && p.n >= 0 && p.n <= Math.max(10, p.x);
+      if (ok) pending[k] = p;
+    }
   }catch(e){}
+  store.set('cubs_pending', JSON.stringify(pending));
   const cd = await store.get('cubs_cards');
   cards = cd ? cd.split(',').filter(x => x !== '') : [];
   const sh = await store.get('cubs_shiny');
@@ -1078,8 +1085,9 @@ function addStar(n){
     ballStars += n;
     if (ballStars >= ballNeed()){
       ballStars = 0;
+      beginCeremony(20000);
       setTimeout(function waitClear(){
-        if (!speechIdle()){ setTimeout(waitClear, 250); return; }
+        if (!speechIdle() || overlayBusy()){ setTimeout(waitClear, 250); return; }
         clearSigns();
         catchMon();
       }, 1600);
@@ -1422,6 +1430,7 @@ function catchMon(){
   caught.push(id);
   if (!pkBuddy) pkBuddy = id;
   pkState();
+  beginCeremony(20000);
   const box = document.getElementById('catchBox');
   const ov = document.getElementById('catch');
   const leg = isLegend(id);
@@ -1460,8 +1469,11 @@ function catchMon(){
        : 'You caught ' + monName(id) + '!');
     checkBadges();
     renderBuddyHome(); updateBallPill(); renderCardTally();
-    setTimeout(() => { ov.style.display = 'none'; box.className = 'box'; },
-      (leg && shiny) ? 6000 : leg ? 4000 : shiny ? 3600 : 2800);
+    setTimeout(function close(){
+      if (!speechIdle()){ setTimeout(close, 250); return; }   // let the announcement finish
+      ov.style.display = 'none'; box.className = 'box';
+      endCeremony();
+    }, (leg && shiny) ? 6000 : leg ? 4000 : shiny ? 3600 : 2800);
   }, (leg && shiny) ? 3200 : leg ? 2600 : 1800);
 }
 
@@ -1897,6 +1909,25 @@ function praiseLine(firstTry){
   const pool = firstTry ? perfect : good;
   return pool[Math.floor(Math.random() * pool.length)];
 }
+/* True while a card win, legendary unlock or catch ceremony is playing out.
+   Nothing may start the next question until this clears, so a reward is never
+   spoken over. Every setter pairs with a safety timeout so it cannot stick. */
+let ceremonyBusy = false, ceremonyGuard = null;
+function beginCeremony(maxMs){
+  ceremonyBusy = true;
+  clearTimeout(ceremonyGuard);
+  ceremonyGuard = setTimeout(() => { ceremonyBusy = false; }, maxMs || 12000);
+}
+function endCeremony(){
+  ceremonyBusy = false;
+  clearTimeout(ceremonyGuard);
+}
+function rewardPending(){
+  return ceremonyBusy || legendPending || overlayBusy();
+}
+function readyForNext(){
+  return speechIdle() && !rewardPending();
+}
 function overlayBusy(){
   const c = document.getElementById('catch');
   return c && c.style.display === 'flex';
@@ -1967,6 +1998,7 @@ function awardStreakCard(){
   const special = streak >= 12;          // long streaks pull the good cards
   const cid = pickCard(pid, special);
   if (!cid) return;
+  beginCeremony(9000);
   if (!cards.includes(cid)){
     cards.push(cid);
     store.set('cubs_cards', cards.join(','));
@@ -1979,9 +2011,11 @@ function awardStreakCard(){
 function showCardWin(cid){
   const info = cardInfo(cid);
   const ov = document.getElementById('cardWin');
-  if (!ov) return;
-  if (overlayBusy()){                     // never sit on top of a catch ceremony
-    setTimeout(() => showCardWin(cid), 1200);
+  if (!ov){ endCeremony(); return; }
+  // wait for the praise and the answer fact to finish before announcing
+  if (overlayBusy() || !speechIdle()){
+    clearTimeout(showCardWin.w);
+    showCardWin.w = setTimeout(() => showCardWin(cid), 300);
     return;
   }
   clearSigns();
@@ -1994,7 +2028,11 @@ function showCardWin(cid){
   blip(659,0,.12); blip(880,.14,.16); blip(1047,.3,.2);
   say('Four in a row! You won a ' + info.rarity + ' ' + monName(info.pid) + ' card!');
   clearTimeout(showCardWin.t);
-  showCardWin.t = setTimeout(() => ov.classList.remove('on'), 3000);
+  showCardWin.t = setTimeout(function close(){
+    if (!speechIdle()){ showCardWin.t = setTimeout(close, 250); return; }
+    ov.classList.remove('on');
+    if (!legendPending) endCeremony();       // a legendary may still be queued behind this
+  }, 2600);
 }
 
 function bumpStreak(firstTry){
@@ -2005,15 +2043,19 @@ function bumpStreak(firstTry){
     if (streak >= streakNeed() && LEGEND_IDS.some(i => !caught.includes(i)) && caught.length >= 10){
       streak = 0;
       legendPending = true;            // claimed at the next catch ceremony
-      showPraise('✨ LEGENDARY UNLOCKED! ✨');
-      say('Amazing ' + (childName || '') + '! You unlocked a legendary Pokemon!');
-      blip(523,0,.16); blip(659,.18,.16); blip(784,.36,.16); blip(1047,.54,.3);
-      setTimeout(function waitClear(){
-        if (!legendPending) return;
-        if (!speechIdle()){ setTimeout(waitClear, 250); return; }
-        clearSigns();
-        catchMon();
-      }, 1600);
+      beginCeremony(20000);
+      setTimeout(function announce(){
+        if (!speechIdle() || overlayBusy()){ setTimeout(announce, 250); return; }
+        showPraise('✨ LEGENDARY UNLOCKED! ✨');
+        say('Amazing ' + (childName || '') + '! You unlocked a legendary Pokemon!');
+        blip(523,0,.16); blip(659,.18,.16); blip(784,.36,.16); blip(1047,.54,.3);
+        setTimeout(function waitClear(){
+          if (!legendPending) return;
+          if (!speechIdle()){ setTimeout(waitClear, 250); return; }
+          clearSigns();
+          catchMon();
+        }, 900);
+      }, 400);
     }
   } else {
     streak = 0;
@@ -2272,8 +2314,9 @@ function buildPad(){
   const pad = document.getElementById('pad');
   pad.innerHTML = '';
   const lo = (mode === 'count') ? 1 : 0;
-  // must use THIS question's range, not a fresh roll, or the answer can be off the pad
-  const hi = Math.max(10, q.max || levelMax(mode));
+  // Derive from THIS question's range AND its actual answer, so the right
+  // button is always present even if anything upstream is stale or corrupt.
+  const hi = Math.max(10, q.max || 10, q.ans || 0);
   for (let n = lo; n <= hi; n++){
     const b = document.createElement('button');
     b.textContent = n;
@@ -2306,7 +2349,8 @@ function answer(n, btn){
     setTimeout(() => say(praise + ' ' + fact), 420);
     document.getElementById('quizSpeech').textContent = praise;
     setTimeout(function waitQuiet(){
-      if (!speechIdle() && mode !== 'home'){ setTimeout(waitQuiet, 250); return; }
+      if (mode === 'home') return;                 // he left; don't queue a question
+      if (!readyForNext()){ setTimeout(waitQuiet, 250); return; }
       newQuestion();
     }, P().next);
   } else {
@@ -2490,7 +2534,7 @@ function wildTap(n, p, el){
     setTimeout(() => say(zPraise + ' ' + NUM_WORDS[zap.ans] + '!'), 300);
     zap.tos.push(setTimeout(function waitQuiet(){
       if (mode !== 'zap') return;
-      if (!speechIdle()){ zap.tos.push(setTimeout(waitQuiet, 250)); return; }
+      if (!readyForNext()){ zap.tos.push(setTimeout(waitQuiet, 250)); return; }
       zapQuestion();
     }, Math.round(P().next * 0.7)));
   } else {
@@ -2865,7 +2909,7 @@ function lnCheckAnswer(){
     checkBadges();
     setTimeout(function waitQuiet(){
       if (mode !== 'line') return;
-      if (!speechIdle()){ setTimeout(waitQuiet, 250); return; }
+      if (!readyForNext()){ setTimeout(waitQuiet, 250); return; }
       lnNewQuestion();
     }, P().next);
   } else {
@@ -3171,7 +3215,7 @@ document.addEventListener('visibilitychange', () => {
       ['numbers to 30', TRACE_MAX === 30]
     ];
     document.getElementById('ppVer').textContent =
-      'build v39 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
+      'build v41 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
     showPraise(praiseLine(true));
     say(praiseLine(true));
   });
