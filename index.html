@@ -193,6 +193,35 @@
   .tfcover .covertxt{ font-size:16px; font-weight:bold; color:#fff; text-shadow:0 1px 0 rgba(0,0,0,.3); }
   .pad.locked button{ opacity:.45; }
   .pad button:disabled{ opacity:.25; text-decoration:line-through; }
+  .tfcell .obj.leaving{ animation:flyaway .75s ease-in forwards; }
+  @keyframes flyaway{
+    0%{ transform:translateY(0) scale(1); opacity:1 }
+    100%{ transform:translateY(-80px) scale(.35) rotate(30deg); opacity:0 }
+  }
+  .tfcell.emptied{ background:#F1EEF9; }
+  .absq{
+    font-size:56px; font-weight:bold; text-align:center; padding:26px 6px 18px;
+    letter-spacing:4px; line-height:1.2;
+  }
+  .shiny{ filter:hue-rotate(155deg) saturate(1.8) brightness(1.12) drop-shadow(0 0 9px rgba(255,215,0,.95)); }
+  .tcard.shinycard{ background:linear-gradient(180deg,#FFFBEA,#FFE9A8); border-color:#C79A16;
+    box-shadow:0 5px 0 rgba(30,32,70,.4), 0 0 16px rgba(255,215,0,.75); }
+  #catch .box.shinybox{
+    background:linear-gradient(180deg,#FFFBEA,#FFF0C4); border-color:#C79A16;
+    box-shadow:0 10px 0 rgba(30,32,70,.55), 0 0 46px rgba(255,215,0,.95);
+  }
+  #catch .shinybanner{
+    font-size:20px; font-weight:bold; letter-spacing:3px; color:#B8860B;
+    text-shadow:0 1px 0 #fff; animation:hintpop .6s ease;
+  }
+  .badgegrid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .badge{
+    background:linear-gradient(180deg,#FFFFFF,#EFE9FA); border:3px solid var(--ink);
+    border-radius:16px; padding:9px 4px; text-align:center; font-size:12px; font-weight:bold;
+    box-shadow:0 4px 0 rgba(30,32,70,.35);
+  }
+  .badge .bico{ font-size:30px; display:block; line-height:1.2; }
+  .badge.locked{ opacity:.4; filter:grayscale(1); }
   .eq{ text-align:center; font-size:38px; font-weight:bold; margin-top:10px; letter-spacing:2px; }
   .eq .blank{ display:inline-block; min-width:56px; border-bottom:5px dotted var(--ink); }
 
@@ -635,7 +664,7 @@
     <div id="buddyBox"></div>
     <h1>PokéMath Adventure</h1>
     <p class="sub">Play with numbers to catch them all!</p>
-    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v28</div>
+    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v29</div>
     <div class="modes">
       <button class="mode trace" data-go="trace"><span class="big"><img class="mico" data-mon="133" alt=""><span class="micoalt">✏️</span></span>Write<br>Numbers</button>
       <button class="mode count" data-go="count"><span class="big"><img class="mico" data-mon="102" alt=""><span class="micoalt">🔢</span></span>Counting</button>
@@ -645,6 +674,16 @@
       <button class="mode tower" data-go="tower"><span class="big"><img class="mico" data-mon="78" alt=""><span class="micoalt">🏁</span></span>Number<br>Race</button>
     </div>
     <button class="widebtn" id="teamBtn">My Pokémon <span id="teamTally"></span></button>
+    <button class="widebtn" id="badgeBtn" style="background:linear-gradient(180deg,#8CCEF9,#3F9BE0)">🏅 My Badges <span id="badgeTally"></span></button>
+  </div>
+
+  <!-- BADGES -->
+  <div class="screen" id="scr-badges">
+    <div class="card">
+      <div class="qtext" id="badgeHead">My Badges</div>
+      <div class="speech" style="margin:0 0 10px">Earn badges by getting better at numbers!</div>
+      <div class="badgegrid" id="bgrid"></div>
+    </div>
   </div>
 
   <!-- TEAM -->
@@ -652,9 +691,10 @@
     <div class="card">
       <div class="qtext" id="teamHead">My Pokémon</div>
       <div class="speech" id="teamSpeech" style="margin:0 0 8px">Tap a Pokémon to make it your buddy!</div>
-      <div class="pprow" style="justify-content:center;margin-bottom:10px">
+      <div class="pprow" style="justify-content:center;margin-bottom:10px;flex-wrap:wrap">
         <button class="btn" id="teamAll" style="font-size:16px;padding:6px 14px">All</button>
         <button class="btn" id="teamLeg" style="font-size:16px;padding:6px 14px">✨ Legendary</button>
+        <button class="btn" id="teamShiny" style="font-size:16px;padding:6px 14px">💎 Shiny</button>
       </div>
       <div class="tgrid" id="tgrid"></div>
     </div>
@@ -901,12 +941,18 @@ async function loadStars(){
     streak = st.s || 0; bestStreak = st.b || 0;
   }catch(e){}
   updateStreakPill();
+  const sh = await store.get('cubs_shiny');
+  shinies = sh ? sh.split(',').filter(x => x !== '').map(Number) : [];
+  const bd = await store.get('cubs_badges');
+  badges = bd ? bd.split(',').filter(x => x !== '') : [];
+  const tr = await store.get('cubs_traced');
+  traced = tr ? tr.split(',').filter(x => x !== '').map(Number) : [];
   const c = await store.get('cubs_caught');
   caught = c ? c.split(',').filter(x => x !== '').map(Number) : [];
   pkBuddy = parseInt(await store.get('cubs_pbuddy') || '0', 10) || 0;
   if (pkBuddy && !caught.includes(pkBuddy)) pkBuddy = caught.length ? caught[0] : 0;
   ballStars = parseInt(await store.get('cubs_ball') || '0', 10) || 0;
-  renderBuddyHome(); updateBallPill();
+  renderBuddyHome(); updateBallPill(); renderBadgeTally();
   if (await getSyncCfg()) syncNow(false);
 }
 function addStar(n){
@@ -1014,11 +1060,17 @@ function streakNeed(){
   return Math.min(20, 12 + have * 2);
 }
 let streak = 0, bestStreak = 0, legendPending = false;
+let shinies = [];      // ids caught in their rare shiny form
+let badges = [];       // earned badge ids
+let traced = [];       // numbers he has written
+const SHINY_CHANCE = 0.05;   // a rare sparkle on any catch — an endless hunt
+const isShiny = id => shinies.includes(id);
 let caught = [];       // ids in catch order
 let pkBuddy = 0;       // buddy id (0 = none yet)
 let ballStars = 0;
 
 function pkState(){
+  store.set('cubs_shiny', shinies.join(','));
   store.set('cubs_caught', caught.join(','));
   store.set('cubs_pbuddy', pkBuddy);
   store.set('cubs_ball', ballStars);
@@ -1033,12 +1085,13 @@ function renderBuddyHome(){
   const box = document.getElementById('buddyBox');
   const lc = caught.filter(isLegend).length;
   document.getElementById('teamTally').textContent =
-    '(' + caught.length + '/' + DEX_TOTAL + (lc ? '  ✨' + lc : '') + ')';
+    '(' + caught.length + '/' + DEX_TOTAL + (lc ? '  ✨' + lc : '') + (shinies.length ? '  💎' + shinies.length : '') + ')';
+  renderBadgeTally();
   if (!pkBuddy){
     box.innerHTML = '<div class="bname">Win ' + (ballNeed() - ballStars) + ' more ⭐ to meet your first Pokémon!</div>';
     return;
   }
-  box.innerHTML = '<img src="' + imgArt(pkBuddy) + '" alt="" ' +
+  box.innerHTML = '<img class="' + (isShiny(pkBuddy) ? 'shiny' : '') + '" src="' + imgArt(pkBuddy) + '" alt="" ' +
     'onerror="this.style.display=\'none\'">' +
     '<div><span class="bname">' + monName(pkBuddy) + '</span></div>';
 }
@@ -1049,21 +1102,26 @@ function renderTeam(){
     '  ·  ✨ ' + legCount + ' legendary';
   document.getElementById('teamAll').classList.toggle('on', teamFilter === 'all');
   document.getElementById('teamLeg').classList.toggle('on', teamFilter === 'legend');
+  document.getElementById('teamShiny').classList.toggle('on', teamFilter === 'shiny');
   const grid = document.getElementById('tgrid');
   grid.innerHTML = '';
-  const list = teamFilter === 'legend' ? caught.filter(isLegend) : caught;
-  if (teamFilter === 'legend' && !list.length){
+  const list = teamFilter === 'legend' ? caught.filter(isLegend)
+             : teamFilter === 'shiny' ? caught.filter(isShiny)
+             : caught;
+  if (!list.length && teamFilter !== 'all'){
     const none = document.createElement('div');
     none.style.gridColumn = '1 / -1';
     none.style.fontSize = '15px';
-    none.textContent = 'No legendary Pokémon yet — get ' + streakNeed() +
-      ' answers right in a row to unlock one!';
+    none.textContent = teamFilter === 'legend'
+      ? 'No legendary Pokémon yet — get ' + streakNeed() + ' answers right in a row to unlock one!'
+      : 'No shiny Pokémon yet — every catch has a small chance of being shiny. Keep playing!';
     grid.appendChild(none);
   }
   list.forEach(id => {
     const card = document.createElement('button');
-    card.className = 'tcard' + (id === pkBuddy ? ' buddy' : '') + (isLegend(id) ? ' legend' : '');
-    card.innerHTML = '<img src="' + imgArt(id) + '" alt="" onerror="this.style.display=\'none\'">' +
+    card.className = 'tcard' + (id === pkBuddy ? ' buddy' : '') + (isLegend(id) ? ' legend' : '') +
+      (isShiny(id) ? ' shinycard' : '');
+    card.innerHTML = '<img class="' + (isShiny(id) ? 'shiny' : '') + '" src="' + imgArt(id) + '" alt="" onerror="this.style.display=\'none\'">' +
       '<div>' + monName(id) + '</div>';
     card.addEventListener('click', () => {
       pkBuddy = id; pkState(); renderTeam(); renderBuddyHome();
@@ -1073,12 +1131,59 @@ function renderTeam(){
     });
     grid.appendChild(card);
   });
-  if (teamFilter === 'legend') return;
+  if (teamFilter !== 'all') return;
   const mystery = document.createElement('div');
   mystery.className = 'tcard';
   mystery.style.opacity = '.75';
   mystery.innerHTML = '<div style="font-size:52px;line-height:68px">' + BALL_SVG.replace('width="26" height="26"','width="52" height="52"') + '</div><div>Who\u2019s next?</div>';
   grid.appendChild(mystery);
+}
+const BADGES = [
+  { id:'first',    ico:'👟', name:'First catch',     test:() => caught.length >= 1 },
+  { id:'streak10', ico:'🔥', name:'10 in a row',     test:() => bestStreak >= 10 },
+  { id:'streak20', ico:'⚡', name:'20 in a row',     test:() => bestStreak >= 20 },
+  { id:'add50',    ico:'➕', name:'50 adds',         test:() => (progress.add || 0) >= 50 },
+  { id:'sub50',    ico:'➖', name:'50 take aways',   test:() => (progress.sub || 0) >= 50 },
+  { id:'addfast',  ico:'🧠', name:'Quick adder',     test:() => fluent('add') },
+  { id:'subfast',  ico:'💡', name:'Quick taker',     test:() => fluent('sub') },
+  { id:'write30',  ico:'✏️', name:'Wrote 1 to 30',   test:() => traced.length >= 30 },
+  { id:'catch25',  ico:'🔴', name:'25 caught',       test:() => caught.length >= 25 },
+  { id:'catch100', ico:'📕', name:'100 caught',      test:() => caught.length >= 100 },
+  { id:'legend1',  ico:'✨', name:'First legendary', test:() => caught.filter(isLegend).length >= 1 },
+  { id:'shiny1',   ico:'💎', name:'First shiny',     test:() => shinies.length >= 1 }
+];
+function checkBadges(){
+  BADGES.forEach(b => {
+    if (badges.includes(b.id)) return;
+    let ok = false;
+    try{ ok = b.test(); }catch(e){}
+    if (!ok) return;
+    badges.push(b.id);
+    store.set('cubs_badges', badges.join(','));
+    schedulePush();
+    setTimeout(() => {
+      showPraise('🏅 New badge: ' + b.name + '!');
+      say('New badge! ' + b.name + '!');
+      blip(659,0,.14); blip(880,.16,.2);
+    }, 900);
+  });
+  renderBadgeTally();
+}
+function renderBadgeTally(){
+  const el = document.getElementById('badgeTally');
+  if (el) el.textContent = '(' + badges.length + '/' + BADGES.length + ')';
+}
+function renderBadges(){
+  const grid = document.getElementById('bgrid');
+  if (!grid) return;
+  document.getElementById('badgeHead').textContent = 'My Badges — ' + badges.length + ' of ' + BADGES.length;
+  grid.innerHTML = '';
+  BADGES.forEach(b => {
+    const d = document.createElement('div');
+    d.className = 'badge' + (badges.includes(b.id) ? '' : ' locked');
+    d.innerHTML = '<span class="bico">' + b.ico + '</span>' + b.name;
+    grid.appendChild(d);
+  });
 }
 function catchMon(){
   const normal = [];
@@ -1097,13 +1202,15 @@ function catchMon(){
   } else {
     id = normal[rnd(normal.length)];
   }
+  const shiny = !isShiny(id) && Math.random() < SHINY_CHANCE;
+  if (shiny) shinies.push(id);
   caught.push(id);
   if (!pkBuddy) pkBuddy = id;
   pkState();
   const box = document.getElementById('catchBox');
   const ov = document.getElementById('catch');
   const leg = isLegend(id);
-  box.className = 'box' + (leg ? ' legendary' : '');
+  box.className = 'box' + (leg ? ' legendary' : '') + (shiny ? ' shinybox' : '');
   box.innerHTML = '<span class="ballwob">' + BALL_SVG.replace('width="26" height="26"','width="86" height="86"') + '</span>' +
     '<div class="newname">' + (leg ? 'Whoa! This one is STRONG!' : 'Something is in the ball!') + '</div>';
   ov.style.display = 'flex';
@@ -1114,19 +1221,23 @@ function catchMon(){
   }
   setTimeout(() => {
     box.innerHTML = (leg ? '<div class="legbanner">✨ LEGENDARY ✨</div>' : '') +
-      '<img src="' + imgArt(id) + '" alt="" onerror="this.replaceWith(Object.assign(document.createElement(\'div\'),{textContent:\'🎉\',style:\'font-size:80px\'}))">' +
+      (shiny ? '<div class="shinybanner">💎 SHINY! 💎</div>' : '') +
+      '<img class="' + (shiny ? 'shiny' : '') + '" src="' + imgArt(id) + '" alt="" onerror="this.replaceWith(Object.assign(document.createElement(\'div\'),{textContent:\'🎉\',style:\'font-size:80px\'}))">' +
       '<div class="newname">You caught ' + monName(id) + '! 🎉</div>' +
       '<div class="hint">Find them in My Pokémon</div>';
     sndGood(); burst(document.getElementById('catchBox'), leg ? 24 : 12);
     if (leg){ setTimeout(() => burst(document.getElementById('catchBox'), 20), 350); }
-    say(leg ? 'Wow! A legendary ' + monName(id) + '!' : 'You caught ' + monName(id) + '!');
+    say(shiny ? 'Incredible! A shiny ' + monName(id) + '! Those are super rare!'
+       : leg ? 'Wow! A legendary ' + monName(id) + '!'
+       : 'You caught ' + monName(id) + '!');
+    checkBadges();
     renderBuddyHome(); updateBallPill();
     setTimeout(() => { ov.style.display = 'none'; box.className = 'box'; }, leg ? 4000 : 2800);
   }, leg ? 2600 : 1800);
 }
 
 /* ---------- screens ---------- */
-const screens = { home:'scr-home', trace:'scr-trace', quiz:'scr-quiz', zap:'scr-zap', tower:'scr-tower', team:'scr-team' };
+const screens = { home:'scr-home', trace:'scr-trace', quiz:'scr-quiz', zap:'scr-zap', tower:'scr-tower', team:'scr-team', badges:'scr-badges' };
 let mode = 'home';
 function show(name){
   Object.values(screens).forEach(id => document.getElementById(id).classList.remove('on'));
@@ -1138,6 +1249,8 @@ document.getElementById('backBtn').addEventListener('click', () => {
 });
 document.getElementById('teamAll').addEventListener('click', () => { teamFilter = 'all'; sndTap(); renderTeam(); });
 document.getElementById('teamLeg').addEventListener('click', () => { teamFilter = 'legend'; sndTap(); renderTeam(); });
+document.getElementById('teamShiny').addEventListener('click', () => { teamFilter = 'shiny'; sndTap(); renderTeam(); });
+document.getElementById('badgeBtn').addEventListener('click', () => { sndTap(); mode = 'badges'; renderBadges(); show('badges'); });
 document.getElementById('teamBtn').addEventListener('click', () => {
   sndTap(); mode = 'team'; renderTeam(); show('team');
 });
@@ -1432,6 +1545,8 @@ function traceComplete(){
   addStar(1);
   setTimeout(() => speakNumber(traceIdx), 380);
   document.getElementById('traceSpeech').textContent = 'Beautiful ' + traceIdx + '!';
+  if (!traced.includes(traceIdx)){ traced.push(traceIdx); store.set('cubs_traced', traced.join(',')); schedulePush(); }
+  checkBadges();
   const btn = document.querySelector('#numrow button[data-d="' + traceIdx + '"]');
   if (btn) btn.classList.add('done');
   setTimeout(() => { if (mode === 'trace' && finished) startTrace(traceIdx === TRACE_MAX ? 1 : traceIdx + 1); }, 1700);
@@ -1496,6 +1611,18 @@ document.getElementById('showMe').addEventListener('click', () => {
    ============================================================ */
 const THINGS = ['🚀','⭐','🪐','🛸','🌟','☄️','👽','🌙'];
 const q = { a: 0, b: 0, ans: 0, tries: 0 };
+let buildFrames = null;
+function buildFramesFor(monId, emoji){
+  if (mode === 'add'){
+    return buildFrames(q.ans, (cell, i) => {
+      cell.classList.add(i < q.a ? 'pa' : 'pb');
+      cell.appendChild(objSpan(monId, emoji, i < q.a ? 'grpA' : 'grpB', 0));
+    });
+  }
+  return buildFrames(q.a, (cell, i) => {
+    cell.appendChild(objSpan(monId, emoji, i >= q.a - q.b ? 'gone' : '', 0));
+  });
+}
 const progress = { count: 0, add: 0, sub: 0, zap: 0, tower: 0 };
 function saveProg(){
   store.set('cubs_prog', JSON.stringify(progress));
@@ -1633,6 +1760,19 @@ function fluent(m){
   const good = f.filter(x => x.first && x.fast).length;
   return good >= 8;                       // 8 of the last 10: first try AND quick
 }
+/* Concrete -> Pictorial -> Abstract.
+   0: pictures stay on screen (counting is fine, he is still building meaning)
+   1: pictures show briefly, then hide — he must hold them in his head
+   2: no pictures at all, just the number sentence
+   Subtraction ALWAYS animates the taken-away ones off the screen, so the
+   answer can never be found by counting whatever is left un-faded. */
+function cpaStage(m){
+  if (m !== 'add' && m !== 'sub') return 0;
+  const p = progress[m] || 0;
+  if (p < 12) return 0;
+  if (!fluent(m)) return 1;
+  return Math.random() < 0.45 ? 2 : 1;
+}
 function baseMax(m){
   const p = progress[m] || 0;
   if (p < 6) return 5;
@@ -1691,7 +1831,7 @@ function newQuestion(){
   q.max = max;                    // fixed for this question: pad and cover must agree
 
   // ten-frame layout: 5x2 structure builds subitizing instead of one-by-one counting
-  function buildFrames(total, cellFn){
+  buildFrames = function(total, cellFn){
     const wrap = document.createElement('div'); wrap.className = 'tfwrap';
     const nFrames = total > 20 ? 3 : (total > 10 ? 2 : 1);
     for (let f = 0; f < nFrames; f++){
@@ -1705,7 +1845,8 @@ function newQuestion(){
       wrap.appendChild(fr);
     }
     return wrap;
-  }
+  };
+  q.stage = cpaStage(mode);
   if (mode === 'count'){
     q.ans = 1 + rnd(max);
     qt.textContent = 'How many ' + monName(monId) + 's?';
@@ -1732,13 +1873,32 @@ function newQuestion(){
     qt.textContent = 'Take some away!';
     q.phrase = 'What is ' + NUM_WORDS[q.a] + ' take away ' + NUM_WORDS[q.b] + '?';
     bub.appendChild(buildFrames(q.a, (cell, i) => {
-      cell.appendChild(objSpan(monId, emoji, i >= q.a - q.b ? 'gone' : '', 0));
+      cell.appendChild(objSpan(monId, emoji, i >= q.a - q.b ? 'goaway' : '', 0));
     }));
+    // they hop away for real — nothing faded is left behind to count
+    clearTimeout(q.leaveTimer);
+    q.leaveTimer = setTimeout(() => {
+      if (mode !== 'sub') return;
+      const leaving = document.querySelectorAll('#bubbles .goaway');
+      if (!leaving.length) return;
+      say(NUM_WORDS[q.b] + ' hopped away!');
+      leaving.forEach((el, k) => {
+        setTimeout(() => {
+          el.classList.add('leaving');
+          blip(560 - k * 20, 0, .1);
+          setTimeout(() => {
+            const cell = el.parentElement;
+            el.remove();
+            if (cell) cell.classList.add('emptied');
+          }, 750);
+        }, k * 110);
+      });
+    }, 900);
     eq.innerHTML = q.a + ' − ' + q.b + ' = <span class="blank" id="blank">?</span>';
   }
   // flash-and-cover: past the basics, see it briefly, then hold it in your head
   q.covered = false;
-  if ((mode === 'add' || mode === 'sub') && q.max >= 10){
+  if (q.stage === 1){
     q.coverTimer = setTimeout(() => {
       if (q.tries > 0) return;
       const wrap = bub.querySelector('.tfwrap');
@@ -1755,7 +1915,28 @@ function newQuestion(){
         cov.style.display = 'none';
         setTimeout(() => { if (q.covered) cov.style.display = 'flex'; }, 1200);
       });
-    }, P().look + 3000);
+    }, P().look + (mode === 'sub' ? 3400 : 2600));
+  }
+  // stage 2: no pictures at all — this is where real mental arithmetic starts
+  if (q.stage === 2){
+    bub.innerHTML = '';
+    const box = document.createElement('div');
+    box.className = 'absq';
+    box.innerHTML = (mode === 'add')
+      ? q.a + ' + ' + q.b + ' = <span class="blank" id="blank">?</span>'
+      : q.a + ' − ' + q.b + ' = <span class="blank" id="blank">?</span>';
+    bub.appendChild(box);
+    eq.innerHTML = '';
+    const help = document.createElement('button');
+    help.className = 'btn';
+    help.style.cssText = 'display:block;margin:6px auto 0;font-size:15px;padding:6px 14px';
+    help.textContent = '🔍 Show me the pictures';
+    help.addEventListener('click', () => {
+      help.remove();
+      q.stage = 1;
+      showFramesForQuestion(monId, emoji);
+    });
+    bub.appendChild(help);
   }
   say(q.phrase);
   buildPad();
@@ -1778,6 +1959,16 @@ function newQuestion(){
   } else {
     q.asked = Date.now();
   }
+}
+function showFramesForQuestion(monId, emoji){
+  const bub = document.getElementById('bubbles');
+  const abs = bub.querySelector('.absq');
+  if (abs) abs.remove();
+  const frames = buildFramesFor(monId, emoji);
+  bub.insertBefore(frames, bub.firstChild);
+  document.getElementById('eqline').innerHTML = (mode === 'add')
+    ? q.a + ' + ' + q.b + ' = <span class="blank" id="blank">?</span>'
+    : q.a + ' − ' + q.b + ' = <span class="blank" id="blank">?</span>';
 }
 function uncover(){
   q.covered = false;
@@ -1812,6 +2003,7 @@ function answer(n, btn){
     progress[mode]++; saveProg();
     recordAnswer(mode, q.tries === 0, Date.now() - (q.asked || 0));
     bumpStreak(q.tries === 0);
+    checkBadges();
     sndGood(); burst(btn, q.tries === 0 ? 10 : 8);
     addStar(q.tries === 0 ? 2 : 1);   // accuracy is the fast path to catches
     const fact = mode === 'add' ? NUM_WORDS[q.a] + ' plus ' + NUM_WORDS[q.b] + ' equals ' + NUM_WORDS[q.ans] + '!'
@@ -1991,6 +2183,7 @@ function wildTap(n, p, el){
     progress.zap++; saveProg();
     recordAnswer('zap', zap.wrongs === 0, Date.now() - (zap.asked || 0));
     bumpStreak(zap.wrongs === 0);
+    checkBadges();
     const fr = zapField.getBoundingClientRect();
     addStar(1); burst([fr.left + tx, fr.top + ty], 8);
     const zPraise = praiseLine(zap.wrongs === 0);
@@ -2201,7 +2394,10 @@ async function localPayload(){
     name: childName,
     wv: wrongVoice ? 'on' : 'off',
     prog: Object.assign({}, progress),
-    caught: caught.slice()
+    caught: caught.slice(),
+    shiny: shinies.slice(),
+    badges: badges.slice(),
+    traced: traced.slice()
   };
 }
 function mergeStates(a, b){
@@ -2220,7 +2416,11 @@ function mergeStates(a, b){
     if (rb[i] > ra[i]){ newer = b; break; }
     if (ra[i] > rb[i]){ newer = a; break; }
   }
+  const uni = (x, y) => { const o = (x || []).slice(); (y || []).forEach(v => { if (!o.includes(v)) o.push(v); }); return o; };
   const out = {
+    shiny: uni(a.shiny, b.shiny),
+    badges: uni(a.badges, b.badges),
+    traced: uni(a.traced, b.traced),
     at: Math.max(a.at || 0, b.at || 0),
     stars: newer.stars || 0,
     ball: newer.ball || 0,
@@ -2245,6 +2445,10 @@ async function applyState(m){
   wrongVoice = (m.wv || 'on') !== 'off';
   await store.set('cubs_prog', JSON.stringify(m.prog));
   await store.set('cubs_caught', m.caught.join(','));
+  shinies = m.shiny || []; badges = m.badges || []; traced = m.traced || [];
+  await store.set('cubs_shiny', shinies.join(','));
+  await store.set('cubs_badges', badges.join(','));
+  await store.set('cubs_traced', traced.join(','));
   await store.set('cubs_at', m.at);
   stars = m.stars; starEl.textContent = stars;
   ballStars = m.ball; pkBuddy = m.buddy;
@@ -2305,7 +2509,7 @@ document.addEventListener('visibilitychange', () => {
 /* ---------- parent backup panel (triple-tap the title) ---------- */
 (function parentPanel(){
   const panel = document.getElementById('parentPanel');
-  let taps = [], KEYS = ['cubs_stars','cubs_prog','cubs_caught','cubs_pbuddy','cubs_ball','cubs_sound','cubs_name','cubs_wv','cubs_caps','cubs_flu'];
+  let taps = [], KEYS = ['cubs_stars','cubs_prog','cubs_caught','cubs_pbuddy','cubs_ball','cubs_sound','cubs_name','cubs_wv','cubs_caps','cubs_flu','cubs_shiny','cubs_badges','cubs_traced','cubs_streak'];
   document.querySelector('h1').addEventListener('click', () => {
     const now = Date.now();
     taps = taps.filter(t => now - t < 1200); taps.push(now);
@@ -2404,7 +2608,7 @@ document.addEventListener('visibilitychange', () => {
       ['numbers to 30', TRACE_MAX === 30]
     ];
     document.getElementById('ppVer').textContent =
-      'build v28 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
+      'build v29 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
     showPraise(praiseLine(true));
     say(praiseLine(true));
   });
