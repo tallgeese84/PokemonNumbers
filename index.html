@@ -720,7 +720,7 @@
     <div id="buddyBox"></div>
     <h1>PokéMath Adventure</h1>
     <p class="sub">Play with numbers to catch them all!</p>
-    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v35</div>
+    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v36</div>
     <div class="modes">
       <button class="mode trace" data-go="trace"><span class="big"><img class="mico" data-mon="133" alt=""><span class="micoalt">✏️</span></span>Write<br>Numbers</button>
       <button class="mode count" data-go="count"><span class="big"><img class="mico" data-mon="102" alt=""><span class="micoalt">🔢</span></span>Counting</button>
@@ -1027,6 +1027,10 @@ async function loadStars(){
     streak = st.s || 0; bestStreak = st.b || 0;
   }catch(e){}
   updateStreakPill();
+  try{
+    const pj = JSON.parse(await store.get('cubs_pending') || '{}');
+    for (const k in pj) pending[k] = pj[k];
+  }catch(e){}
   const cd = await store.get('cubs_cards');
   cards = cd ? cd.split(',').filter(x => x !== '') : [];
   const sh = await store.get('cubs_shiny');
@@ -1821,6 +1825,11 @@ document.getElementById('showMe').addEventListener('click', () => {
    ============================================================ */
 const THINGS = ['🚀','⭐','🪐','🛸','🌟','☄️','👽','🌙'];
 const q = { a: 0, b: 0, ans: 0, tries: 0 };
+/* A question he walks away from is waiting when he comes back, so leaving
+   the screen can't be used to dodge one he finds hard. */
+const pending = {};
+function savePending(m, obj){ pending[m] = obj; store.set('cubs_pending', JSON.stringify(pending)); }
+function clearPending(m){ delete pending[m]; store.set('cubs_pending', JSON.stringify(pending)); }
 let buildFrames = null;
 function buildFramesFor(monId, emoji){
   if (mode === 'add'){
@@ -2030,14 +2039,15 @@ function newQuestion(){
   padLocked = false;
   q.tries = 0;
   clearTimeout(q.lookTimer);
-  const emoji = THINGS[rnd(THINGS.length)];
-  const monId = pickMon();
+  const pend = pending[mode];
+  const emoji = pend ? pend.e : THINGS[rnd(THINGS.length)];
+  const monId = pend ? pend.m : pickMon();
   const bub = document.getElementById('bubbles');
   const eq = document.getElementById('eqline');
   const qt = document.getElementById('qtext');
   document.getElementById('quizSpeech').textContent = '';
   bub.innerHTML = ''; eq.innerHTML = '';
-  const max = levelMax(mode);
+  const max = pend ? pend.x : levelMax(mode);
   q.max = max;                    // fixed for this question: pad and cover must agree
 
   // ten-frame layout: 5x2 structure builds subitizing instead of one-by-one counting
@@ -2056,9 +2066,17 @@ function newQuestion(){
     }
     return wrap;
   };
-  q.stage = cpaStage(mode);
+  q.stage = pend ? pend.s : cpaStage(mode);
+  if (pend){
+    q.tries = Math.max(1, pend.t || 1);       // already seen: no double stars for it
+    setTimeout(() => {
+      document.getElementById('quizSpeech').textContent = 'Let\u2019s finish this one first!';
+    }, 400);
+  } else {
+    savePending(mode, { a:q.a, b:q.b, n:q.ans, e:emoji, m:monId, x:max, s:q.stage, t:0 });
+  }
   if (mode === 'count'){
-    q.ans = 1 + rnd(max);
+    q.ans = pend ? pend.n : 1 + rnd(max);
     qt.textContent = 'How many ' + monName(monId) + 's?';
     q.phrase = 'How many ' + monName(monId) + 's can you count?';
     bub.appendChild(buildFrames(q.ans, (cell) => {
@@ -2066,8 +2084,9 @@ function newQuestion(){
     }));
   }
   else if (mode === 'add'){
-    q.ans = 2 + rnd(max - 1);
-    q.a = 1 + rnd(q.ans - 1); q.b = q.ans - q.a;
+    q.ans = pend ? pend.n : 2 + rnd(max - 1);
+    if (pend){ q.a = pend.a; q.b = pend.b; }
+    else { q.a = 1 + rnd(q.ans - 1); q.b = q.ans - q.a; }
     qt.textContent = 'Add them together!';
     q.phrase = 'What is ' + NUM_WORDS[q.a] + ' plus ' + NUM_WORDS[q.b] + '?';
     bub.appendChild(buildFrames(q.ans, (cell, i) => {
@@ -2077,8 +2096,8 @@ function newQuestion(){
     eq.innerHTML = q.a + ' + ' + q.b + ' = <span class="blank" id="blank">?</span>';
   }
   else { // sub
-    q.a = 2 + rnd(max - 1);
-    q.b = 1 + rnd(q.a - 1);
+    if (pend){ q.a = pend.a; q.b = pend.b; }
+    else { q.a = 2 + rnd(max - 1); q.b = 1 + rnd(q.a - 1); }
     q.ans = q.a - q.b;
     qt.textContent = 'Take some away!';
     q.phrase = 'What is ' + NUM_WORDS[q.a] + ' take away ' + NUM_WORDS[q.b] + '?';
@@ -2210,6 +2229,7 @@ function answer(n, btn){
     btn.classList.add('right');
     const blank = document.getElementById('blank');
     if (blank) blank.textContent = n;
+    clearPending(mode);
     progress[mode]++; saveProg();
     recordAnswer(mode, q.tries === 0, Date.now() - (q.asked || 0));
     bumpStreak(q.tries === 0);
@@ -2229,6 +2249,7 @@ function answer(n, btn){
     }, P().next);
   } else {
     q.tries++;
+    if (pending[mode]) savePending(mode, Object.assign({}, pending[mode], { t: q.tries }));
     btn.classList.add('wrong'); sndOops();
     setTimeout(() => { btn.classList.remove('wrong'); btn.disabled = true; }, 500);   // guessing burns options
     const lost = loseStar();
@@ -2304,23 +2325,27 @@ function zapQuestion(){
   zap.sinceAns = 9;
   zap.wrongs = 0;
   zap.asked = Date.now();
-  const max = levelMax('zap');
-  const kind = progress.zap < 3 ? 0 : rnd(3);
+  const pz = pending.zap;
+  const max = pz ? pz.x : levelMax('zap');
+  const kind = pz ? pz.k : (progress.zap < 3 ? 0 : rnd(3));
   if (kind === 0){
-    zap.ans = 1 + rnd(Math.max(10, max));
+    zap.ans = pz ? pz.n : 1 + rnd(Math.max(10, max));
     document.getElementById('zapQ').textContent = 'Find number ' + zap.ans + '!';
     say('Find number ' + NUM_WORDS[zap.ans]);
   } else if (kind === 1){
-    const t = 2 + rnd(max - 1), a = 1 + rnd(t - 1);
+    const t = pz ? pz.n : 2 + rnd(max - 1), a = pz ? pz.a : 1 + rnd(t - 1);
+    zap.qa = a; zap.qb = t - a;
     zap.ans = t;
     document.getElementById('zapQ').textContent = a + ' + ' + (t - a) + ' = ?';
     say('What is ' + NUM_WORDS[a] + ' plus ' + NUM_WORDS[t - a] + '?');
   } else {
-    const a = 2 + rnd(max - 1), b = 1 + rnd(a - 1);
+    const a = pz ? pz.a : 2 + rnd(max - 1), b = pz ? pz.b : 1 + rnd(a - 1);
+    zap.qa = a; zap.qb = b;
     zap.ans = a - b;
     document.getElementById('zapQ').textContent = a + ' − ' + b + ' = ?';
     say('What is ' + NUM_WORDS[a] + ' take away ' + NUM_WORDS[b] + '?');
   }
+  if (!pz) savePending('zap', { n:zap.ans, a:zap.qa, b:zap.qb, k:kind, x:max });
   zap.cands = [zap.ans];
   while (zap.cands.length < 3){
     const d = zap.ans + (rnd(7) - 3);
@@ -2390,6 +2415,7 @@ function wildTap(n, p, el){
       hidePop(p);
       zap.tos.push(setTimeout(() => boom.remove(), 600));
     }, 320));
+    clearPending('zap');
     progress.zap++; saveProg();
     recordAnswer('zap', zap.wrongs === 0, Date.now() - (zap.asked || 0));
     bumpStreak(zap.wrongs === 0);
@@ -2681,6 +2707,22 @@ function lnDraw(){
 
 function lnNewQuestion(){
   LN.locked = false; LN.tries = 0;
+  const pend = pending.line;
+  if (pend){
+    LN.span = pend.span; LN.start = pend.start; LN.step = pend.step;
+    LN.ans = pend.ans; LN.op = pend.op; LN.tries = Math.max(1, pend.t || 1);
+    LN.phrase = (LN.op === '+')
+      ? 'Start at ' + NUM_WORDS[LN.start] + '. Hop ' + NUM_WORDS[LN.step] + ' forward. Where do you land?'
+      : 'Start at ' + NUM_WORDS[LN.start] + '. Hop ' + NUM_WORDS[LN.step] + ' back. Where do you land?';
+    document.getElementById('lnQ').textContent = LN.op === '+'
+      ? LN.start + ' + ' + LN.step + ' = ?   Hop forward!'
+      : LN.start + ' − ' + LN.step + ' = ?   Hop back!';
+    LN.cur = LN.start; LN.asked = Date.now();
+    lnSize(); lnDraw();
+    document.getElementById('lnSpeech').textContent = 'Let\u2019s finish this one first!';
+    say(LN.phrase);
+    return;
+  }
   const max = levelMax('line');
   LN.span = Math.max(10, max);
   const addition = Math.random() < 0.5;
@@ -2705,6 +2747,7 @@ function lnNewQuestion(){
   }
   LN.cur = LN.start;
   LN.asked = Date.now();
+  savePending('line', { span:LN.span, start:LN.start, step:LN.step, ans:LN.ans, op:LN.op, t:0 });
   lnSize(); lnDraw();
   document.getElementById('lnSpeech').textContent = 'Drag your Pokémon along the line!';
   say(LN.phrase);
@@ -2725,6 +2768,7 @@ function lnCheckAnswer(){
   audio();
   if (LN.cur === LN.ans){
     LN.locked = true;
+    clearPending('line');
     progress.line = (progress.line || 0) + 1; saveProg();
     recordAnswer('line', LN.tries === 0, Date.now() - (LN.asked || 0));
     bumpStreak(LN.tries === 0);
@@ -2745,6 +2789,7 @@ function lnCheckAnswer(){
     }, P().next);
   } else {
     LN.tries++;
+    if (pending.line) savePending('line', Object.assign({}, pending.line, { t: LN.tries }));
     loseStar();
     bumpStreak(false);
     sndOops();
@@ -3045,7 +3090,7 @@ document.addEventListener('visibilitychange', () => {
       ['numbers to 30', TRACE_MAX === 30]
     ];
     document.getElementById('ppVer').textContent =
-      'build v35 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
+      'build v36 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
     showPraise(praiseLine(true));
     say(praiseLine(true));
   });
