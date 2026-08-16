@@ -126,6 +126,7 @@
   .mode.sub{ background:linear-gradient(180deg,#FF9184,#E0503F); color:#fff; }
   .mode.zap{ background:linear-gradient(180deg,#FFDD70,#F0A81E); }
   .mode.tower{ background:linear-gradient(180deg,#FFB6D4,#EE7BA8); }
+  .mode.line{ background:linear-gradient(180deg,#F7C98B,#D98E33); }
 
   .card{
     position:relative;
@@ -210,9 +211,64 @@
     background:linear-gradient(180deg,#FFFBEA,#FFF0C4); border-color:#C79A16;
     box-shadow:0 10px 0 rgba(30,32,70,.55), 0 0 46px rgba(255,215,0,.95);
   }
+  #catch .box.ultrabox{
+    background:linear-gradient(180deg,#FFFBEA,#FFE9F5 45%,#E9F4FF);
+    border-color:#B8860B;
+    box-shadow:0 10px 0 rgba(30,32,70,.55), 0 0 60px rgba(255,215,0,1);
+    animation:ultraglow 1.1s ease-in-out infinite alternate;
+  }
+  @keyframes ultraglow{
+    from{ box-shadow:0 10px 0 rgba(30,32,70,.55), 0 0 34px rgba(255,215,0,.85) }
+    to{ box-shadow:0 10px 0 rgba(30,32,70,.55), 0 0 70px rgba(255,120,220,.95) }
+  }
+  #catch .ultrabanner{
+    font-size:19px; font-weight:bold; letter-spacing:2px;
+    background:linear-gradient(90deg,#E0A517,#E0503F,#9B7BEF,#3F9BE0,#2FA97F,#E0A517);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    filter:drop-shadow(0 1px 0 rgba(255,255,255,.9));
+    animation:hintpop .7s ease;
+  }
   #catch .shinybanner{
     font-size:20px; font-weight:bold; letter-spacing:3px; color:#B8860B;
     text-shadow:0 1px 0 #fff; animation:hintpop .6s ease;
+  }
+  #lnCanvas{
+    display:block; margin:0 auto; touch-action:none; max-width:100%;
+    background:linear-gradient(180deg,#EAF6FF,#DFF3D6);
+    border:4px solid var(--ink); border-radius:20px;
+    box-shadow:inset 0 4px 14px rgba(0,0,0,.12);
+  }
+  .lnrow{ display:flex; gap:10px; justify-content:center; align-items:center; margin-top:12px; }
+  .lnrow .dpad{ width:70px; height:56px; font-size:26px; padding:0;
+    background:linear-gradient(180deg,#FFFDF4,#EDE2C4); }
+  .lnrow #lnCheck{ font-size:22px; background:linear-gradient(180deg,#79DDBD,#2FA97F); color:#fff; }
+  .cardgrid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .cardslot{
+    position:relative; border:none; background:none; padding:0; cursor:pointer;
+    border-radius:10px; overflow:hidden; box-shadow:0 4px 0 rgba(30,32,70,.35);
+  }
+  .cardslot img{ width:100%; display:block; border-radius:10px; background:#EDE7F8; min-height:110px; }
+  .cardslot.holo{ box-shadow:0 4px 0 rgba(30,32,70,.35), 0 0 14px rgba(255,201,60,.9); }
+  .cardslot .fallback{
+    display:none; padding:14px 6px; font-size:12px; font-weight:bold; text-align:center;
+    background:linear-gradient(180deg,#FFFDF4,#EDE2C4); border:3px solid var(--ink); border-radius:10px;
+  }
+  .cardslot.noimg img{ display:none; }
+  .cardslot.noimg .fallback{ display:block; }
+  .cardwon{ margin-top:8px; }
+  .cardwon img{ width:110px; border-radius:8px; box-shadow:0 4px 10px rgba(0,0,0,.35); }
+  .cardwon.noimg img{ display:none; }
+  .cardwontxt{ font-size:14px; font-weight:bold; margin-top:4px; }
+  #cardView{
+    position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+    background:rgba(24,26,64,.72); z-index:78; padding:18px;
+  }
+  #cardView.on{ display:flex; }
+  #cardView .cvbox{ text-align:center; max-width:340px; }
+  #cardView img{ width:100%; max-width:300px; border-radius:12px; box-shadow:0 10px 28px rgba(0,0,0,.5); }
+  #cardView .cvmeta{
+    margin-top:10px; background:linear-gradient(180deg,#FFFDF4,#F3E9CF); border:3px solid var(--ink);
+    border-radius:16px; padding:8px 14px; font-weight:bold; font-size:15px;
   }
   .badgegrid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
   .badge{
@@ -664,17 +720,46 @@
     <div id="buddyBox"></div>
     <h1>PokéMath Adventure</h1>
     <p class="sub">Play with numbers to catch them all!</p>
-    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v29</div>
+    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v35</div>
     <div class="modes">
       <button class="mode trace" data-go="trace"><span class="big"><img class="mico" data-mon="133" alt=""><span class="micoalt">✏️</span></span>Write<br>Numbers</button>
       <button class="mode count" data-go="count"><span class="big"><img class="mico" data-mon="102" alt=""><span class="micoalt">🔢</span></span>Counting</button>
       <button class="mode add" data-go="add"><span class="big"><img class="mico" data-mon="82" alt=""><span class="micoalt">➕</span></span>Adding</button>
       <button class="mode sub" data-go="sub"><span class="big"><img class="mico" data-mon="92" alt=""><span class="micoalt">➖</span></span>Taking<br>Away</button>
       <button class="mode zap" data-go="zap"><span class="big grasspeek"><img class="mico" data-mon="25" alt=""><span class="micoalt">🌿</span><span class="grassfront">🌿</span></span>Wild<br>Catch</button>
+      <button class="mode line" data-go="line"><span class="big"><img class="mico" data-mon="50" alt=""><span class="micoalt">🧭</span></span>Number<br>Line</button>
       <button class="mode tower" data-go="tower"><span class="big"><img class="mico" data-mon="78" alt=""><span class="micoalt">🏁</span></span>Number<br>Race</button>
     </div>
     <button class="widebtn" id="teamBtn">My Pokémon <span id="teamTally"></span></button>
+    <button class="widebtn" id="cardBtn" style="background:linear-gradient(180deg,#FFD86B,#E0A517)">🃏 My Cards <span id="cardTally"></span></button>
     <button class="widebtn" id="badgeBtn" style="background:linear-gradient(180deg,#8CCEF9,#3F9BE0)">🏅 My Badges <span id="badgeTally"></span></button>
+  </div>
+
+  <!-- NUMBER LINE -->
+  <div class="screen" id="scr-line">
+    <div class="card">
+      <div class="qtext" id="lnQ"></div>
+      <canvas id="lnCanvas"></canvas>
+      <div class="lnrow">
+        <button class="btn dpad" id="lnBack">◀</button>
+        <button class="btn" id="lnCheck">✓ Land here!</button>
+        <button class="btn dpad" id="lnFwd">▶</button>
+      </div>
+      <div class="speech" id="lnSpeech"></div>
+    </div>
+  </div>
+
+  <!-- CARD BINDER -->
+  <div class="screen" id="scr-cards">
+    <div class="card">
+      <div class="qtext" id="cardHead">My Card Binder</div>
+      <div class="speech" style="margin:0 0 8px">Every Pokémon you catch gives you a card. Tap one to see it big!</div>
+      <div class="pprow" style="justify-content:center;margin-bottom:10px;flex-wrap:wrap">
+        <button class="btn" id="cardAll" style="font-size:16px;padding:6px 14px">All</button>
+        <button class="btn" id="cardHolo" style="font-size:16px;padding:6px 14px">🌠 Holo</button>
+      </div>
+      <div class="cardgrid" id="cardgrid"></div>
+    </div>
   </div>
 
   <!-- BADGES -->
@@ -768,6 +853,7 @@
 <div id="fx"></div>
 <div id="bigcheer"><span id="cheerText">Great job! ⭐</span></div>
 <div id="catch"><div class="box" id="catchBox"></div></div>
+<div id="cardView"><div class="cvbox" id="cardViewBox"></div></div>
 <div id="wrongWarn"><div class="ww"><span class="wwsign">⚠️</span><span class="wwtxt">Wrong number!</span></div></div>
 <div id="rightPraise"><div class="rp"><span class="rpsign">🌟</span><span class="rptxt">Well done!</span></div></div>
 <div id="parentPanel">
@@ -941,6 +1027,8 @@ async function loadStars(){
     streak = st.s || 0; bestStreak = st.b || 0;
   }catch(e){}
   updateStreakPill();
+  const cd = await store.get('cubs_cards');
+  cards = cd ? cd.split(',').filter(x => x !== '') : [];
   const sh = await store.get('cubs_shiny');
   shinies = sh ? sh.split(',').filter(x => x !== '').map(Number) : [];
   const bd = await store.get('cubs_badges');
@@ -952,7 +1040,7 @@ async function loadStars(){
   pkBuddy = parseInt(await store.get('cubs_pbuddy') || '0', 10) || 0;
   if (pkBuddy && !caught.includes(pkBuddy)) pkBuddy = caught.length ? caught[0] : 0;
   ballStars = parseInt(await store.get('cubs_ball') || '0', 10) || 0;
-  renderBuddyHome(); updateBallPill(); renderBadgeTally();
+  renderBuddyHome(); updateBallPill(); renderBadgeTally(); renderCardTally();
   if (await getSyncCfg()) syncNow(false);
 }
 function addStar(n){
@@ -1060,10 +1148,12 @@ function streakNeed(){
   return Math.min(20, 12 + have * 2);
 }
 let streak = 0, bestStreak = 0, legendPending = false;
+let cards = [];        // trading cards earned, by card id
 let shinies = [];      // ids caught in their rare shiny form
 let badges = [];       // earned badge ids
 let traced = [];       // numbers he has written
-const SHINY_CHANCE = 0.05;   // a rare sparkle on any catch — an endless hunt
+const SHINY_CHANCE = 0.05;        // any ordinary catch
+const SHINY_CHANCE_LEGEND = 0.16; // legendaries: already earned by a perfect streak
 const isShiny = id => shinies.includes(id);
 let caught = [];       // ids in catch order
 let pkBuddy = 0;       // buddy id (0 = none yet)
@@ -1138,6 +1228,42 @@ function renderTeam(){
   mystery.innerHTML = '<div style="font-size:52px;line-height:68px">' + BALL_SVG.replace('width="26" height="26"','width="52" height="52"') + '</div><div>Who\u2019s next?</div>';
   grid.appendChild(mystery);
 }
+const CARD_ART=["Ken Sugimori","Mitsuhiro Arita","Yuka Morii","Hironobu Yoshida","Atsuko Nishida","Sumiyoshi Kizuki","Kagemaru Himeno","Shin-ichi Yoshida","Tomokazu Komiya","Miki Tanaka","Keiji Kinebuchi","\"Big Mama\" Tagawa, CR CG gangs","Christopher Rush","Benimaru Itoh","Masako Yamashita","Toshinao Aoki","Aya Kusube","Yukiko Baba","Naoyo Kimura","Tomoaki Imakuni","Hiromichi Sugiyama","Hiromichi Sugiyama, CR CG gangs","K. Hoshiba, CR CG gangs","Gakuji Nomoto","Keita Komatsuya, CR CG gangs","Kimiya Masago","Craig Turvey","Kunihiko Yuyama","Hideki Kazama","CR CG gangs","Hajime Kusajima","Etsuya Hattori","Shin-ichi Yoshikawa, CR CG gangs","Jungo Suzuki, CR CG gangs"];
+const CARD_DATA={"65":[["base1-1",3,0],["base4-1",3,0],["base5-1",3,0],["base5-18",2,0],["gym2-16",3,0]],"9":[["base1-2",3,0],["base4-2",3,0],["base5-3",3,1],["base5-20",2,1]],"113":[["base1-3",3,0],["base4-3",3,0],["neo4-31",1,2]],"6":[["base1-4",3,1],["base4-4",3,1],["base5-4",3,0],["base5-21",2,0],["gym2-2",3,0],["neo4-107",5,3]],"35":[["base1-5",3,0],["base4-6",3,0],["gym1-25",2,0],["gym2-40",1,4],["neo1-30",1,5]],"130":[["base1-6",3,1],["base4-7",3,1],["base5-8",3,6],["base5-25",2,6],["gym2-5",3,0],["gym2-13",3,0],["neo3-65",5,0]],"107":[["base1-7",3,0],["base4-8",3,0],["gym1-11",3,0],["neo4-69",0,7]],"68":[["base1-8",3,0],["base5-10",3,1],["base5-27",2,1],["basep-43",4,8],["gym2-6",3,0],["neo4-25",2,9]],"82":[["base1-9",3,10],["base3-11",3,0],["base3-26",2,0],["base4-9",3,10],["base5-11",3,9],["base5-28",2,9],["gym1-8",3,0],["neo3-10",3,11]],"150":[["base1-10",3,0],["base4-10",3,0],["basep-3",4,0],["basep-12",4,12],["basep-14",4,13],["gym2-14",3,7],["neo4-109",5,3]],"34":[["base1-11",3,0],["base4-11",3,0],["gym2-7",3,0]],"38":[["base1-12",3,0],["base4-13",3,0],["gym2-3",3,0],["gym2-21",2,0],["neo4-50",1,14]],"62":[["base1-13",3,0],["base4-15",3,0],["gym1-31",2,0],["neo2-9",3,7],["neo2-28",2,7]],"26":[["base1-14",3,0],["base3-14",3,1],["base3-29",2,1],["base4-16",3,0],["base5-83",6,1],["gym1-28",2,0],["gym2-11",3,0],["neo3-21",2,14],["neo4-111",5,3]],"3":[["base1-15",3,1],["base4-18",3,1],["basep-13",4,0],["gym2-4",3,0]],"145":[["base1-16",3,0],["base3-15",3,1],["base3-30",2,1],["base4-20",3,0],["basep-23",4,15],["gym2-15",3,7]],"15":[["base1-17",2,0],["base4-21",2,0],["gym2-9",3,0],["neo2-18",2,16]],"148":[["base1-18",2,1],["base4-22",2,1],["base5-33",1,6],["gym1-4",3,4],["neo4-22",2,4]],"51":[["base1-19",2,10],["base4-23",2,10],["base5-6",3,6],["base5-23",2,6],["gym2-22",2,0]],"125":[["base1-20",2,0],["base4-24",2,0],["basep-2",4,0],["basep-46",4,9],["gym1-6",3,0],["gym1-27",2,0],["neo1-33",1,7]],"101":[["base1-21",2,10],["base2-2",3,1],["base2-18",2,1],["base4-25",2,10],["base5-34",1,0],["gym2-52",1,0]],"17":[["base1-22",2,0],["base4-28",2,0],["gym2-27",2,0]],"59":[["base1-23",1,0],["base4-33",1,0],["basep-6",4,0],["gym2-1",3,0],["neo4-12",3,4]],"5":[["base1-24",1,1],["base4-35",1,1],["base5-32",1,6],["gym2-31",1,0]],"87":[["base1-25",1,1],["base4-36",1,1],["gym2-54",1,0],["neo4-45",1,14]],"147":[["base1-26",1,0],["base4-38",1,0],["base5-53",0,6],["gym1-42",1,0],["neo4-63",0,2]],"83":[["base1-27",1,0],["base4-40",1,0],["neo3-43",0,9]],"58":[["base1-28",1,0],["base4-42",1,0],["gym1-35",1,0],["gym1-62",0,4],["gym2-62",0,0],["neo4-68",0,4]],"93":[["base1-29",1,10],["base3-6",3,0],["base3-21",2,0],["base4-43",1,10],["gym1-58",1,4],["gym2-55",1,0],["neo4-36",1,16]],"2":[["base1-30",1,0],["base4-44",1,0],["gym2-41",1,0]],"124":[["base1-31",1,0],["base4-45",1,0],["gym1-59",1,0],["gym2-57",1,4],["neo3-31",1,8]],"64":[["base1-32",1,0],["base4-46",1,0],["base5-39",1,6],["gym2-58",1,0]],"14":[["base1-33",1,10],["base4-47",1,10],["gym2-47",1,0],["neo2-41",1,17]],"67":[["base1-34",1,0],["base4-49",1,0],["base5-40",1,1],["gym2-42",1,0],["neo4-49",1,9]],"129":[["base1-35",1,1],["base4-50",1,1],["base5-47",1,6],["gym2-73",0,0],["gym2-88",0,0],["neo3-66",5,0]],"126":[["base1-36",1,0],["base3-39",1,1],["base4-51",1,0],["basep-44",4,4],["gym1-37",1,0],["neo1-40",1,18]],"33":[["base1-37",1,1],["base4-54",1,1],["gym2-45",1,0]],"61":[["base1-38",1,0],["base4-57",1,0],["gym1-53",1,0],["neo2-44",1,6]],"137":[["base1-39",1,19],["base5-48",1,10],["basep-15",4,20],["gym2-98",0,0],["neo4-78",0,21]],"20":[["base1-40",1,0],["base4-58",1,0],["base5-51",0,7],["gym1-51",1,0],["gym2-53",1,0]],"86":[["base1-41",1,0],["base4-61",1,0],["gym1-88",0,4],["gym2-91",0,0],["neo4-81",0,14]],"8":[["base1-42",1,0],["base4-63",1,0],["base5-46",1,6]],"63":[["base1-43",0,1],["base4-65",0,1],["base5-49",0,5],["basep-19",4,4],["gym1-91",0,0],["gym2-93",0,0],["gym2-94",0,0]],"1":[["base1-44",0,1],["base4-67",0,1],["gym2-39",1,0]],"10":[["base1-45",0,0],["base4-68",0,0],["neo2-53",0,2]],"4":[["base1-46",0,1],["base4-69",0,1],["base5-50",0,6],["gym1-61",0,0],["gym2-60",0,0]],"50":[["base1-47",0,10],["base4-71",0,10],["base5-52",0,5],["gym2-67",0,0]],"84":[["base1-48",0,1],["base4-72",0,1],["gym2-61",0,0]],"96":[["base1-49",0,0],["base4-73",0,0],["base5-54",0,6],["gym1-92",0,4],["gym2-95",0,0]],"92":[["base1-50",0,10],["base3-33",1,1],["base4-75",0,10],["gym1-93",0,0],["gym2-96",0,0],["gym2-97",0,4],["neo4-65",0,16]],"109":[["base1-51",0,1],["base5-58",0,5],["gym2-48",1,0],["gym2-79",0,0]],"66":[["base1-52",0,1],["base4-78",0,1],["base5-59",0,0],["gym2-72",0,0],["neo4-73",0,15]],"81":[["base1-53",0,10],["base4-79",0,10],["base5-60",0,9],["gym1-50",1,4],["gym1-80",0,0],["neo2-7",3,22],["neo2-26",2,22]],"11":[["base1-54",0,0],["base4-81",0,0],["neo2-42",1,5]],"32":[["base1-55",0,0],["base4-83",0,0],["gym2-76",0,0]],"95":[["base1-56",0,0],["base4-84",0,0],["gym1-21",2,13],["gym1-69",0,0],["neo1-69",0,1]],"16":[["base1-57",0,0],["base4-86",0,0],["gym2-49",1,4],["gym2-80",0,0]],"25":[["base1-58",0,1],["base2-60",0,0],["base4-87",0,1],["basep-1",4,10],["basep-4",4,0],["basep-24",4,6],["basep-25",4,15],["basep-26",4,23],["basep-27",4,4],["basep-28",4,15],["gym1-81",0,0],["gym2-84",0,4],["neo1-70",0,18]],"60":[["base1-59",0,0],["base4-88",0,0],["gym1-87",0,0],["gym2-89",0,0],["neo2-62",0,16]],"77":[["base1-60",0,0],["base5-64",0,4],["gym1-63",0,0],["gym2-64",0,0]],"19":[["base1-61",0,1],["base4-89",0,1],["base5-66",0,4],["gym1-82",0,0],["gym2-85",0,4]],"27":[["base1-62",0,0],["base4-91",0,0],["gym1-71",0,0],["gym1-72",0,0]],"7":[["base1-63",0,1],["base4-93",0,1],["base5-68",0,4]],"121":[["base1-64",0,10],["base4-94",0,10],["gym1-56",1,0],["neo3-25",2,24]],"120":[["base1-65",0,10],["base4-95",0,10],["gym1-90",0,0],["gym2-92",0,0],["neo3-56",0,1]],"114":[["base1-66",0,1],["base4-96",0,1],["gym1-79",0,0],["gym2-81",0,4]],"100":[["base1-67",0,10],["base4-98",0,10],["base5-69",0,0],["gym1-84",0,0],["gym2-86",0,4]],"37":[["base1-68",0,0],["base4-99",0,0],["gym1-65",0,0],["gym1-73",0,0],["gym2-37",1,0],["gym2-66",0,0],["neo4-91",0,14]],"13":[["base1-69",0,1],["base4-100",0,1],["gym2-82",0,0],["neo2-70",0,9]],"36":[["base2-1",3,1],["base2-17",2,1],["base4-5",3,1],["gym1-3",3,4]],"136":[["base2-3",3,6],["base2-19",2,6],["base5-35",1,1],["neo4-46",1,4]],"135":[["base2-4",3,6],["base2-20",2,6],["base5-38",1,1],["gym2-28",2,0],["neo4-48",1,18]],"115":[["base2-5",3,1],["base2-21",2,1],["base4-26",2,1],["gym1-36",1,0]],"122":[["base2-6",3,0],["base2-22",2,0],["base4-27",2,0],["gym1-94",0,0],["gym2-59",1,0]],"31":[["base2-7",3,0],["base2-23",2,0],["base4-12",3,0],["gym2-23",2,0]],"18":[["base2-8",3,6],["base2-24",2,6],["base4-14",3,6]],"127":[["base2-9",3,6],["base2-25",2,6],["base4-29",2,6],["gym2-24",2,0]],"123":[["base2-10",3,0],["base2-26",2,0],["base4-17",3,0],["basep-45",4,3],["gym1-13",3,0],["neo2-46",1,25],["neo4-55",1,7]],"143":[["base2-11",3,0],["base2-27",2,0],["base4-30",2,0],["basep-49",4,26],["gym1-33",2,7]],"134":[["base2-12",3,6],["base2-28",2,6],["base5-45",1,1],["neo4-52",1,6]],"49":[["base2-13",3,0],["base2-29",2,0],["base4-31",2,0],["gym1-34",2,0],["neo4-53",1,14]],"71":[["base2-14",3,0],["base2-30",2,0],["base4-32",2,0],["gym1-26",2,0]],"45":[["base2-15",3,10],["base2-31",2,10],["base5-13",3,6],["base5-30",2,6],["gym1-5",3,0]],"40":[["base2-16",3,1],["base2-32",2,1],["base4-19",3,1],["neo4-40",1,9],["neo4-54",1,18]],"12":[["base2-33",1,6],["base4-34",1,6],["neo2-19",2,4]],"85":[["base2-34",1,1],["base4-37",1,1],["gym2-32",1,0]],"103":[["base2-35",1,6],["base4-39",1,6],["gym1-44",1,0],["neo4-33",1,15]],"22":[["base2-36",1,1],["base4-41",1,1],["gym1-7",3,0]],"44":[["base2-37",1,10],["base5-36",1,6],["gym1-45",1,0],["gym1-46",1,0],["neo1-36",1,1]],"108":[["base2-38",1,1],["base4-48",1,1],["gym1-41",1,0]],"105":[["base2-39",1,1],["base4-52",1,1]],"30":[["base2-40",1,0],["base4-53",1,0],["gym2-44",1,0]],"47":[["base2-41",1,0],["base4-55",1,0],["neo3-35",1,4]],"53":[["base2-42",1,6],["base4-56",1,6],["base5-42",1,7],["basep-17",4,0],["gym2-8",3,0]],"57":[["base2-43",1,6],["base5-43",1,1],["gym2-35",1,0]],"78":[["base2-44",1,1],["base5-44",1,6],["basep-51",4,1],["gym2-33",1,0]],"112":[["base2-45",1,6],["base4-59",1,6],["gym1-2",3,0]],"119":[["base2-46",1,6],["base4-60",1,6],["gym1-55",1,0],["neo3-37",1,9]],"128":[["base2-47",1,6],["base4-62",1,6],["gym1-64",0,0]],"70":[["base2-48",1,6],["base4-64",1,6],["gym1-48",1,4],["gym1-49",1,0]],"69":[["base2-49",0,6],["base4-66",0,6],["gym1-75",0,4],["gym1-76",0,0],["gym2-38",1,0]],"104":[["base2-50",0,1],["base4-70",0,1]],"133":[["base2-51",0,6],["base5-55",0,4],["basep-11",4,6],["gym2-51",1,0],["neo2-38",1,16]],"102":[["base2-52",0,1],["base4-74",0,1],["gym1-43",1,4],["gym1-77",0,0],["neo4-64",0,15]],"118":[["base2-53",0,6],["base4-76",0,6],["gym1-30",2,0],["gym1-85",0,4],["neo3-45",0,2]],"39":[["base2-54",0,6],["base4-77",0,6],["basep-7",4,10],["gym2-69",0,0],["neo4-44",1,2]],"56":[["base2-55",0,6],["base5-61",0,5],["gym1-67",0,4],["gym1-68",0,0],["gym2-63",0,4]],"52":[["base2-56",0,1],["base4-80",0,1],["base5-62",0,4],["basep-10",4,6],["basep-18",4,27],["gym2-43",1,4],["gym2-74",0,0]],"29":[["base2-57",0,0],["base4-82",0,0],["gym2-75",0,0]],"43":[["base2-58",0,10],["base5-63",0,6],["gym1-47",1,4],["gym1-78",0,0],["gym2-70",0,0],["neo1-68",0,5]],"46":[["base2-59",0,0],["base4-85",0,0],["gym2-71",0,0],["neo3-47",0,6]],"111":[["base2-61",0,1],["base4-90",0,1],["gym1-22",2,0],["gym1-70",0,0],["gym2-65",0,0]],"21":[["base2-62",0,1],["base4-92",0,1],["gym1-52",1,0],["gym1-83",0,4]],"48":[["base2-63",0,1],["base4-97",0,1],["gym1-96",0,0],["neo4-90",0,14]],"142":[["base3-1",3,6],["base3-16",2,6],["neo3-15",2,7]],"144":[["base3-2",3,1],["base3-17",2,1],["basep-22",4,15],["basep-48",4,4]],"132":[["base3-3",3,10],["base3-18",2,10],["gym2-10",3,0]],"149":[["base3-4",3,6],["base3-19",2,6],["base5-5",3,1],["base5-22",2,1],["basep-5",4,15],["neo4-14",3,4]],"94":[["base3-5",3,10],["base3-20",2,10],["gym1-14",3,0],["gym2-29",2,0],["neo4-6",3,16]],"106":[["base3-7",3,0],["base3-22",2,0],["neo4-42",1,17]],"97":[["base3-8",3,0],["base3-23",2,0],["base5-9",3,6],["base5-26",2,6],["gym2-56",1,0]],"141":[["base3-9",3,0],["base3-24",2,0],["neo2-6",3,25],["neo2-25",2,25],["neo4-108",5,3]],"131":[["base3-10",3,0],["base3-25",2,0]],"146":[["base3-12",3,1],["base3-27",2,1],["basep-21",4,15],["gym1-1",3,0],["gym1-12",3,0]],"89":[["base3-13",3,1],["base3-28",2,1],["base5-41",1,6],["gym2-26",2,0]],"24":[["base3-31",1,0],["base5-2",3,1],["base5-19",2,1],["gym2-25",2,0]],"91":[["base3-32",1,6],["gym1-29",2,0]],"42":[["base3-34",1,6],["base5-7",3,1],["base5-24",2,1],["gym1-39",1,0],["gym2-46",1,0],["neo3-29",1,14]],"55":[["base3-35",1,6],["base5-37",1,1],["gym2-12",3,0],["gym2-30",2,0],["neo4-47",1,4]],"76":[["base3-36",1,6],["gym1-20",2,0]],"75":[["base3-37",1,6],["gym1-40",1,0],["gym2-34",1,4],["neo3-30",1,17]],"99":[["base3-38",1,6]],"139":[["base3-40",1,0],["neo2-43",1,7],["neo4-19",2,8]],"28":[["base3-41",1,0],["gym1-23",2,0],["gym2-36",1,4]],"117":[["base3-42",1,0],["gym1-9",3,4],["neo1-48",1,7]],"80":[["base3-43",1,6],["base5-12",3,1],["base5-29",2,1],["gym1-60",1,0],["neo4-51",1,8]],"73":[["base3-44",1,6],["gym1-10",3,0]],"110":[["base3-45",1,1],["base5-14",3,7],["base5-31",2,7],["gym2-50",1,0]],"23":[["base3-46",0,6],["base5-56",0,0],["gym2-77",0,0]],"74":[["base3-47",0,6],["gym1-38",1,4],["gym1-66",0,0],["gym2-68",0,0],["neo3-44",0,14]],"88":[["base3-48",0,1],["base5-57",0,6],["gym2-78",0,0]],"116":[["base3-49",0,1],["gym1-86",0,0],["gym2-87",0,0],["neo1-62",0,9]],"140":[["base3-50",0,0],["neo2-56",0,2]],"98":[["base3-51",0,1]],"138":[["base3-52",0,6],["neo2-60",0,2],["neo4-37",1,8]],"54":[["base3-53",0,6],["base5-65",0,1],["basep-20",4,6],["gym1-54",1,4],["gym2-90",0,0],["gym2-99",0,0],["neo4-79",0,2]],"90":[["base3-54",0,1],["gym1-89",0,0]],"79":[["base3-55",0,9],["base5-67",0,5],["gym1-95",0,0],["neo1-73",0,8]],"72":[["base3-56",0,6],["gym1-32",2,0],["gym1-57",1,0]],"41":[["base3-57",0,6],["base5-70",0,1],["gym1-24",2,0],["gym1-74",0,4],["gym2-83",0,0],["neo3-59",0,17]],"151":[["basep-8",4,0],["basep-9",4,0],["basep-47",4,0]],"183":[["basep-29",4,0],["neo1-66",0,4]],"175":[["basep-30",4,0],["neo1-51",1,18],["neo4-56",1,2]],"173":[["basep-31",4,0],["neo1-20",2,6]],"235":[["basep-32",4,8],["neo2-11",3,3],["neo2-30",2,3]],"212":[["basep-33",4,3],["neo2-10",3,25],["neo2-29",2,25],["neo4-9",3,1]],"244":[["basep-34",4,0],["neo3-6",3,0],["neo3-17",2,18]],"172":[["basep-35",4,0],["neo1-12",3,0]],"174":[["basep-36",4,6],["neo2-40",1,9]],"237":[["basep-37",4,4],["neo2-3",3,5],["neo2-22",2,5]],"201":[["basep-38",4,28],["neo2-14",3,29],["neo2-33",2,29],["neo2-47",1,29],["neo2-48",1,29],["neo2-49",1,29],["neo2-50",1,29],["neo2-51",1,29],["neo2-67",0,29],["neo2-68",0,29],["neo2-69",0,29],["neo3-39",1,29],["neo3-40",1,29],["neo3-58",0,29],["neo4-27",2,29],["neo4-28",2,29],["neo4-29",2,29],["neo4-30",2,29],["neo4-57",1,29],["neo4-58",1,29],["neo4-59",1,29],["neo4-60",1,29],["neo4-86",0,29],["neo4-87",0,29],["neo4-88",0,29],["neo4-89",0,29]],"200":[["basep-39",4,7],["neo3-11",3,0]],"251":[["basep-50",4,30],["neo3-3",3,3],["neo3-16",2,5],["neo4-106",5,3]],"250":[["basep-52",4,1],["neo3-7",3,25],["neo3-18",2,16]],"245":[["basep-53",4,4],["neo3-14",3,0],["neo3-27",2,18]],"181":[["neo1-1",3,0],["neo3-1",3,15],["neo4-1",3,6]],"184":[["neo1-2",3,0],["neo4-13",3,2]],"182":[["neo1-3",3,4]],"160":[["neo1-4",3,0],["neo1-5",3,0],["neo4-5",3,4]],"214":[["neo1-6",3,0],["neo4-41",1,22]],"189":[["neo1-7",3,4],["neo3-9",3,6]],"230":[["neo1-8",3,0],["neo3-19",2,1]],"249":[["neo1-9",3,3],["neo3-20",2,16]],"154":[["neo1-10",3,0],["neo1-11",3,0]],"227":[["neo1-13",3,0],["neo3-23",2,16]],"199":[["neo1-14",3,0],["neo4-20",2,8]],"208":[["neo1-15",3,0],["neo4-112",5,0]],"176":[["neo1-16",3,0],["neo4-15",3,18]],"157":[["neo1-17",3,7],["neo1-18",3,0],["neo4-10",3,1]],"232":[["neo1-21",2,0],["neo4-3",3,7]],"239":[["neo1-22",2,9]],"240":[["neo1-23",2,0]],"198":[["neo1-24",2,7],["neo3-46",0,3]],"215":[["neo1-25",2,0],["neo3-24",2,5]],"190":[["neo1-26",1,3],["neo3-41",0,5]],"168":[["neo1-27",1,0],["neo4-17",2,15]],"153":[["neo1-28",1,0],["neo1-29",1,0]],"159":[["neo1-31",1,0],["neo1-32",1,0],["neo4-32",1,7]],"180":[["neo1-34",1,0],["neo3-28",1,15],["neo4-34",1,6]],"162":[["neo1-35",1,0]],"210":[["neo1-37",1,0]],"171":[["neo1-38",1,0],["neo3-32",1,6],["neo4-23",2,9]],"166":[["neo1-39",1,0],["neo4-24",2,8]],"241":[["neo1-41",1,0]],"164":[["neo1-42",1,0],["neo4-110",5,0]],"231":[["neo1-43",1,0],["neo4-76",0,9]],"221":[["neo1-44",1,0],["neo3-36",1,4],["neo4-26",2,17]],"195":[["neo1-45",1,4],["neo3-48",0,2]],"156":[["neo1-46",1,0],["neo1-47",1,0],["neo4-39",1,1]],"188":[["neo1-49",1,4],["neo3-52",0,1]],"192":[["neo1-50",1,6],["neo4-72",0,15]],"178":[["neo1-52",1,0],["neo2-52",1,5]],"152":[["neo1-53",0,18],["neo1-54",0,0]],"170":[["neo1-55",0,0],["neo3-42",0,4]],"155":[["neo1-56",0,0],["neo1-57",0,7],["neo4-61",0,17]],"203":[["neo1-58",0,0],["neo4-66",0,2]],"207":[["neo1-59",0,3],["neo4-67",0,0]],"163":[["neo1-60",0,5]],"187":[["neo1-61",0,4],["neo2-55",0,6]],"165":[["neo1-63",0,5],["neo4-71",0,8]],"226":[["neo1-64",0,0],["neo4-74",0,17]],"179":[["neo1-65",0,0],["neo2-58",0,4],["neo4-75",0,6]],"177":[["neo1-67",0,0],["neo2-59",0,5]],"161":[["neo1-71",0,0],["neo2-63",0,5]],"213":[["neo1-72",0,0],["neo3-51",0,2]],"209":[["neo1-74",0,1],["neo3-55",0,8]],"167":[["neo1-75",0,0],["neo2-64",0,17]],"234":[["neo1-76",0,0],["neo3-38",1,17]],"185":[["neo1-77",0,0],["neo3-26",2,5]],"191":[["neo1-78",0,6],["neo4-83",0,31]],"220":[["neo1-79",0,0],["neo3-57",0,9],["neo4-84",0,6]],"158":[["neo1-80",0,0],["neo1-81",0,3],["neo4-85",0,9]],"194":[["neo1-82",0,9],["neo2-71",0,17]],"196":[["neo2-1",3,4],["neo2-20",2,18],["neo4-4",3,4]],"205":[["neo2-2",3,29],["neo2-21",2,29],["neo4-35",1,1]],"229":[["neo2-4",3,7],["neo2-23",2,7],["neo3-8",3,1],["neo4-7",3,6]],"228":[["neo2-5",3,16],["neo2-24",2,16],["neo2-39",1,7],["neo4-43",1,17]],"186":[["neo2-8",3,8],["neo2-27",2,8]],"248":[["neo2-12",3,3],["neo2-31",2,3],["neo4-11",3,7],["neo4-113",5,0]],"197":[["neo2-13",3,25],["neo2-32",2,18]],"217":[["neo2-15",3,18],["neo2-34",2,18],["neo4-21",2,1]],"202":[["neo2-16",3,3],["neo2-35",2,3]],"193":[["neo2-17",3,4],["neo2-36",2,4]],"222":[["neo2-37",1,2]],"247":[["neo2-45",1,3],["neo4-38",1,1]],"206":[["neo2-54",0,17]],"246":[["neo2-57",0,3],["neo4-70",0,0]],"204":[["neo2-61",0,8],["neo4-77",0,0]],"216":[["neo2-65",0,9]],"236":[["neo2-66",0,9]],"242":[["neo3-2",3,2]],"169":[["neo3-4",3,7],["neo4-2",3,32]],"225":[["neo3-5",3,8]],"233":[["neo3-12",3,10],["neo4-8",3,32]],"243":[["neo3-13",3,0],["neo3-22",2,18]],"219":[["neo3-33",1,7],["neo4-18",2,15]],"224":[["neo3-34",1,8],["neo4-62",0,7]],"211":[["neo3-49",0,5]],"223":[["neo3-50",0,9],["neo4-80",0,33]],"218":[["neo3-53",0,6],["neo4-82",0,0]],"238":[["neo3-54",0,4]]};
+const RARITY = ['Common','Uncommon','Rare','Rare Holo','Promo','Rare Shining','Rare Secret'];
+const HOLO = [3, 5, 6];                       // the special ones
+const cardSetOf = cid => cid.split('-')[0];
+const cardNumOf = cid => cid.slice(cid.indexOf('-') + 1);
+const cardImg = cid => 'https://images.pokemontcg.io/' + cardSetOf(cid) + '/' + cardNumOf(cid) + '.png';
+function cardsFor(pid){ return CARD_DATA[pid] || []; }
+function cardInfo(cid){
+  for (const pid in CARD_DATA){
+    const hit = CARD_DATA[pid].find(c => c[0] === cid);
+    if (hit) return { id: cid, pid: +pid, rarity: RARITY[hit[1]] || 'Common', rIdx: hit[1],
+                      artist: CARD_ART[hit[2]] || '' };
+  }
+  return { id: cid, pid: 0, rarity: 'Common', rIdx: 0, artist: '' };
+}
+/* Pick a card when a Pokémon is caught. Ordinary catches lean common;
+   legendary or shiny catches pull a holo if that Pokémon has one. */
+function pickCard(pid, special){
+  const list = cardsFor(pid);
+  if (!list.length) return null;
+  const fresh = list.filter(c => !cards.includes(c[0]));
+  const pool = fresh.length ? fresh : list;
+  if (special){
+    const holo = pool.filter(c => HOLO.includes(c[1]));
+    if (holo.length) return holo[rnd(holo.length)][0];
+    const rare = pool.filter(c => c[1] === 2);
+    if (rare.length) return rare[rnd(rare.length)][0];
+  }
+  const weights = pool.map(c => HOLO.includes(c[1]) ? 1 : (c[1] === 2 ? 3 : (c[1] === 1 ? 8 : 14)));
+  let total = weights.reduce((a, b) => a + b, 0), roll = Math.random() * total;
+  for (let i = 0; i < pool.length; i++){ roll -= weights[i]; if (roll <= 0) return pool[i][0]; }
+  return pool[0][0];
+}
+const CARD_TOTAL = Object.values(CARD_DATA).reduce((a, v) => a + v.length, 0);
+
 const BADGES = [
   { id:'first',    ico:'👟', name:'First catch',     test:() => caught.length >= 1 },
   { id:'streak10', ico:'🔥', name:'10 in a row',     test:() => bestStreak >= 10 },
@@ -1150,7 +1276,12 @@ const BADGES = [
   { id:'catch25',  ico:'🔴', name:'25 caught',       test:() => caught.length >= 25 },
   { id:'catch100', ico:'📕', name:'100 caught',      test:() => caught.length >= 100 },
   { id:'legend1',  ico:'✨', name:'First legendary', test:() => caught.filter(isLegend).length >= 1 },
-  { id:'shiny1',   ico:'💎', name:'First shiny',     test:() => shinies.length >= 1 }
+  { id:'shiny1',   ico:'💎', name:'First shiny',     test:() => shinies.length >= 1 },
+  { id:'ultra',    ico:'🌈', name:'Shiny legendary', test:() => caught.some(id => isLegend(id) && isShiny(id)) },
+  { id:'line50',   ico:'🧭', name:'50 hops',        test:() => (progress.line || 0) >= 50 },
+  { id:'card1',    ico:'🃏', name:'First card',     test:() => cards.length >= 1 },
+  { id:'card25',   ico:'📚', name:'25 cards',       test:() => cards.length >= 25 },
+  { id:'holo1',    ico:'🌠', name:'First holo',     test:() => cards.some(c => HOLO.includes(cardInfo(c).rIdx)) }
 ];
 function checkBadges(){
   BADGES.forEach(b => {
@@ -1172,6 +1303,57 @@ function checkBadges(){
 function renderBadgeTally(){
   const el = document.getElementById('badgeTally');
   if (el) el.textContent = '(' + badges.length + '/' + BADGES.length + ')';
+}
+let cardFilter = 'all';
+function renderCardTally(){
+  const el = document.getElementById('cardTally');
+  if (el) el.textContent = '(' + cards.length + '/' + CARD_TOTAL + ')';
+}
+function renderCards(){
+  const grid = document.getElementById('cardgrid');
+  if (!grid) return;
+  const holoCount = cards.filter(c => HOLO.includes(cardInfo(c).rIdx)).length;
+  document.getElementById('cardHead').textContent =
+    'My Card Binder — ' + cards.length + ' of ' + CARD_TOTAL + (holoCount ? '  ·  🌠 ' + holoCount + ' holo' : '');
+  document.getElementById('cardAll').classList.toggle('on', cardFilter === 'all');
+  document.getElementById('cardHolo').classList.toggle('on', cardFilter === 'holo');
+  grid.innerHTML = '';
+  const list = cardFilter === 'holo'
+    ? cards.filter(c => HOLO.includes(cardInfo(c).rIdx))
+    : cards;
+  if (!list.length){
+    const none = document.createElement('div');
+    none.style.cssText = 'grid-column:1/-1;font-size:15px';
+    none.textContent = cardFilter === 'holo'
+      ? 'No holo cards yet — legendary and shiny catches give the best cards!'
+      : 'No cards yet — catch a Pokémon to earn your first card!';
+    grid.appendChild(none);
+    return;
+  }
+  list.forEach(cid => {
+    const info = cardInfo(cid);
+    const b = document.createElement('button');
+    b.className = 'cardslot' + (HOLO.includes(info.rIdx) ? ' holo' : '');
+    b.innerHTML = '<img src="' + cardImg(cid) + '" alt="" loading="lazy" ' +
+      'onerror="this.parentElement.classList.add(\'noimg\')">' +
+      '<div class="fallback">' + monName(info.pid) + '<br><span style="font-size:10px">' +
+      info.rarity + '<br>(needs internet)</span></div>';
+    b.addEventListener('click', () => showCard(cid));
+    grid.appendChild(b);
+  });
+}
+function showCard(cid){
+  const info = cardInfo(cid);
+  const ov = document.getElementById('cardView');
+  document.getElementById('cardViewBox').innerHTML =
+    '<img src="' + cardImg(cid) + '" alt="" onerror="this.replaceWith(Object.assign(document.createElement(\'div\'),' +
+    '{textContent:\'🃏\',style:\'font-size:90px\'}))">' +
+    '<div class="cvmeta">' + monName(info.pid) + ' · ' + info.rarity +
+    (info.artist ? '<br><span style="font-weight:normal;font-size:13px">Art by ' + info.artist + '</span>' : '') +
+    '</div>';
+  ov.classList.add('on');
+  sndTap();
+  say(monName(info.pid) + '. ' + info.rarity + ' card.');
 }
 function renderBadges(){
   const grid = document.getElementById('bgrid');
@@ -1202,7 +1384,14 @@ function catchMon(){
   } else {
     id = normal[rnd(normal.length)];
   }
-  const shiny = !isShiny(id) && Math.random() < SHINY_CHANCE;
+  const legendary = isLegend(id);
+  const shiny = !isShiny(id) &&
+    Math.random() < (legendary ? SHINY_CHANCE_LEGEND : SHINY_CHANCE);
+  const newCard = pickCard(id, legendary || shiny);
+  if (newCard && !cards.includes(newCard)){
+    cards.push(newCard);
+    store.set('cubs_cards', cards.join(','));
+  }
   if (shiny) shinies.push(id);
   caught.push(id);
   if (!pkBuddy) pkBuddy = id;
@@ -1210,9 +1399,10 @@ function catchMon(){
   const box = document.getElementById('catchBox');
   const ov = document.getElementById('catch');
   const leg = isLegend(id);
-  box.className = 'box' + (leg ? ' legendary' : '') + (shiny ? ' shinybox' : '');
+  box.className = 'box' + (leg && shiny ? ' ultrabox' : leg ? ' legendary' : shiny ? ' shinybox' : '');
   box.innerHTML = '<span class="ballwob">' + BALL_SVG.replace('width="26" height="26"','width="86" height="86"') + '</span>' +
-    '<div class="newname">' + (leg ? 'Whoa! This one is STRONG!' : 'Something is in the ball!') + '</div>';
+    '<div class="newname">' + (leg && shiny ? 'The ball is GLOWING!!' :
+       leg ? 'Whoa! This one is STRONG!' : 'Something is in the ball!') + '</div>';
   ov.style.display = 'flex';
   if (leg){
     blip(330,0,.2); blip(392,.25,.2); blip(494,.5,.2); blip(587,.75,.25); blip(784,1.05,.4);
@@ -1220,24 +1410,37 @@ function catchMon(){
     blip(392,0,.15); blip(440,.3,.15); blip(494,.6,.15);
   }
   setTimeout(() => {
-    box.innerHTML = (leg ? '<div class="legbanner">✨ LEGENDARY ✨</div>' : '') +
-      (shiny ? '<div class="shinybanner">💎 SHINY! 💎</div>' : '') +
+    box.innerHTML = (leg && shiny ? '<div class="ultrabanner">💎✨ SHINY LEGENDARY ✨💎</div>'
+                     : leg ? '<div class="legbanner">✨ LEGENDARY ✨</div>'
+                     : shiny ? '<div class="shinybanner">💎 SHINY! 💎</div>' : '') +
       '<img class="' + (shiny ? 'shiny' : '') + '" src="' + imgArt(id) + '" alt="" onerror="this.replaceWith(Object.assign(document.createElement(\'div\'),{textContent:\'🎉\',style:\'font-size:80px\'}))">' +
       '<div class="newname">You caught ' + monName(id) + '! 🎉</div>' +
-      '<div class="hint">Find them in My Pokémon</div>';
-    sndGood(); burst(document.getElementById('catchBox'), leg ? 24 : 12);
-    if (leg){ setTimeout(() => burst(document.getElementById('catchBox'), 20), 350); }
-    say(shiny ? 'Incredible! A shiny ' + monName(id) + '! Those are super rare!'
+      '<div class="hint">Find them in My Pokémon</div>' +
+      (newCard ? '<div class="cardwon"><img src="' + cardImg(newCard) + '" alt="" ' +
+        'onerror="this.parentElement.classList.add(\'noimg\')">' +
+        '<div class="cardwontxt">🃏 New card! ' + cardInfo(newCard).rarity + '</div></div>' : '');
+    sndGood();
+    const bursts = (leg && shiny) ? 30 : leg ? 24 : shiny ? 20 : 12;
+    burst(document.getElementById('catchBox'), bursts);
+    if (leg || shiny){ setTimeout(() => burst(document.getElementById('catchBox'), bursts - 6), 350); }
+    if (leg && shiny){
+      setTimeout(() => burst(document.getElementById('catchBox'), 24), 750);
+      blip(523,0,.18); blip(659,.2,.18); blip(784,.4,.18); blip(1047,.6,.22); blip(1319,.85,.45);
+    }
+    say(leg && shiny ? 'Unbelievable ' + (childName || '') + '! A shiny legendary ' + monName(id) +
+          '! That is the rarest Pokemon in the whole game!'
+       : shiny ? 'Incredible! A shiny ' + monName(id) + '! Those are super rare!'
        : leg ? 'Wow! A legendary ' + monName(id) + '!'
        : 'You caught ' + monName(id) + '!');
     checkBadges();
-    renderBuddyHome(); updateBallPill();
-    setTimeout(() => { ov.style.display = 'none'; box.className = 'box'; }, leg ? 4000 : 2800);
-  }, leg ? 2600 : 1800);
+    renderBuddyHome(); updateBallPill(); renderCardTally();
+    setTimeout(() => { ov.style.display = 'none'; box.className = 'box'; },
+      (leg && shiny) ? 6000 : leg ? 4000 : shiny ? 3600 : 2800);
+  }, (leg && shiny) ? 3200 : leg ? 2600 : 1800);
 }
 
 /* ---------- screens ---------- */
-const screens = { home:'scr-home', trace:'scr-trace', quiz:'scr-quiz', zap:'scr-zap', tower:'scr-tower', team:'scr-team', badges:'scr-badges' };
+const screens = { home:'scr-home', trace:'scr-trace', quiz:'scr-quiz', zap:'scr-zap', tower:'scr-tower', team:'scr-team', badges:'scr-badges', line:'scr-line', cards:'scr-cards' };
 let mode = 'home';
 function show(name){
   Object.values(screens).forEach(id => document.getElementById(id).classList.remove('on'));
@@ -1251,6 +1454,12 @@ document.getElementById('teamAll').addEventListener('click', () => { teamFilter 
 document.getElementById('teamLeg').addEventListener('click', () => { teamFilter = 'legend'; sndTap(); renderTeam(); });
 document.getElementById('teamShiny').addEventListener('click', () => { teamFilter = 'shiny'; sndTap(); renderTeam(); });
 document.getElementById('badgeBtn').addEventListener('click', () => { sndTap(); mode = 'badges'; renderBadges(); show('badges'); });
+document.getElementById('cardBtn').addEventListener('click', () => { sndTap(); mode = 'cards'; renderCards(); show('cards'); });
+document.getElementById('cardAll').addEventListener('click', () => { cardFilter = 'all'; sndTap(); renderCards(); });
+document.getElementById('cardHolo').addEventListener('click', () => { cardFilter = 'holo'; sndTap(); renderCards(); });
+document.getElementById('cardView').addEventListener('click', () => {
+  document.getElementById('cardView').classList.remove('on');
+});
 document.getElementById('teamBtn').addEventListener('click', () => {
   sndTap(); mode = 'team'; renderTeam(); show('team');
 });
@@ -1270,6 +1479,7 @@ document.querySelectorAll('.mode').forEach(btn => {
     if (go === 'trace'){ mode = 'trace'; show('trace'); startTrace(traceIdx); }
     else if (go === 'zap'){ mode = 'zap'; show('zap'); startZap(); }
     else if (go === 'tower'){ mode = 'tower'; show('tower'); startTower(); }
+    else if (go === 'line'){ mode = 'line'; show('line'); startLine(); }
     else { mode = go; show('quiz'); newQuestion(); }
   });
 });
@@ -1623,7 +1833,7 @@ function buildFramesFor(monId, emoji){
     cell.appendChild(objSpan(monId, emoji, i >= q.a - q.b ? 'gone' : '', 0));
   });
 }
-const progress = { count: 0, add: 0, sub: 0, zap: 0, tower: 0 };
+const progress = { count: 0, add: 0, sub: 0, zap: 0, tower: 0, line: 0 };
 function saveProg(){
   store.set('cubs_prog', JSON.stringify(progress));
   store.set('cubs_caps', JSON.stringify(capOverride));
@@ -1714,9 +1924,9 @@ let pace = 'calm';
 const P = () => PACE[pace] || PACE.calm;
 
 const FLU_WIN = 10;
-const fluency = { count: [], add: [], sub: [], zap: [] };
-const capOverride = { count: 0, add: 0, sub: 0, zap: 0 };   // 0 = auto; else hard cap
-const FAST_MS = { count: 9000, add: 8000, sub: 8000, zap: 12000 };
+const fluency = { count: [], add: [], sub: [], zap: [], line: [] };
+const capOverride = { count: 0, add: 0, sub: 0, zap: 0, line: 0 };   // 0 = auto; else hard cap
+const FAST_MS = { count: 9000, add: 8000, sub: 8000, zap: 12000, line: 14000 };
 
 function bumpStreak(firstTry){
   if (firstTry){
@@ -2363,6 +2573,229 @@ function towerTap(n, el){
 }
 
 /* ============================================================
+   NUMBER LINE — drag the marker to hop forwards or backwards.
+   The hops are drawn as numbered arcs, so he SEES the operation
+   instead of counting a pile of objects.
+   ============================================================ */
+const LN = { start: 0, step: 0, ans: 0, cur: 0, span: 10, op: '+', tries: 0,
+             asked: 0, locked: false, phrase: '' };
+const lnCanvas = document.getElementById('lnCanvas');
+const lnCtx = lnCanvas.getContext('2d');
+const lnBuddyImg = new Image();
+let lnBuddyReady = false;
+lnBuddyImg.onload = () => { lnBuddyReady = true; lnDraw(); };
+lnBuddyImg.onerror = () => { lnBuddyReady = false; };
+
+function lnSize(){
+  const w = Math.min(460, document.getElementById('app').clientWidth - 44);
+  const h = 210;
+  const dpr = window.devicePixelRatio || 1;
+  lnCanvas.style.width = w + 'px'; lnCanvas.style.height = h + 'px';
+  lnCanvas.width = Math.round(w * dpr); lnCanvas.height = Math.round(h * dpr);
+  lnCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  LN.w = w; LN.h = h;
+  LN.pad = 26;
+  LN.y = h - 54;
+}
+function lnX(v){
+  return LN.pad + (v / LN.span) * (LN.w - LN.pad * 2);
+}
+function lnValueAt(px){
+  const t = (px - LN.pad) / (LN.w - LN.pad * 2);
+  return Math.max(0, Math.min(LN.span, Math.round(t * LN.span)));
+}
+
+function lnDraw(){
+  if (!LN.w) lnSize();
+  const c = lnCtx;
+  c.clearRect(0, 0, LN.w, LN.h);
+  // axis
+  c.strokeStyle = '#2B2E5C'; c.lineWidth = 4; c.lineCap = 'round';
+  c.beginPath(); c.moveTo(LN.pad - 8, LN.y); c.lineTo(LN.w - LN.pad + 8, LN.y); c.stroke();
+  // ticks and labels
+  const labelEvery = LN.span <= 10 ? 1 : (LN.span <= 20 ? 2 : 5);
+  c.textAlign = 'center'; c.textBaseline = 'top';
+  for (let v = 0; v <= LN.span; v++){
+    const x = lnX(v), major = (v % labelEvery === 0);
+    c.strokeStyle = major ? '#2B2E5C' : '#979FD0';
+    c.lineWidth = major ? 3 : 2;
+    c.beginPath(); c.moveTo(x, LN.y - (major ? 10 : 6)); c.lineTo(x, LN.y + (major ? 10 : 6)); c.stroke();
+    if (major){
+      c.fillStyle = '#2B2E5C';
+      c.font = 'bold ' + (LN.span > 20 ? 13 : 15) + 'px system-ui, sans-serif';
+      c.fillText(String(v), x, LN.y + 14);
+    }
+  }
+  // start flag
+  const sx = lnX(LN.start);
+  c.fillStyle = '#5AB8F5'; c.strokeStyle = '#2B2E5C'; c.lineWidth = 3;
+  c.beginPath(); c.arc(sx, LN.y, 9, 0, Math.PI * 2); c.fill(); c.stroke();
+  c.fillStyle = '#2B2E5C';
+  c.font = 'bold 13px system-ui, sans-serif';
+  c.fillText('start', sx, LN.y - 34);
+  // hop arcs from start to the marker
+  const dir = LN.cur >= LN.start ? 1 : -1;
+  const hops = Math.abs(LN.cur - LN.start);
+  for (let i = 0; i < hops; i++){
+    const from = LN.start + dir * i, to = from + dir;
+    const x1 = lnX(from), x2 = lnX(to);
+    const mid = (x1 + x2) / 2, r = Math.abs(x2 - x1) / 2;
+    c.strokeStyle = dir > 0 ? '#2FA97F' : '#E0503F';
+    c.lineWidth = 3.5;
+    c.beginPath(); c.arc(mid, LN.y - 12, r, Math.PI, 0, false); c.stroke();
+    // little arrow head
+    c.fillStyle = c.strokeStyle;
+    c.beginPath();
+    c.moveTo(x2, LN.y - 12);
+    c.lineTo(x2 - dir * 7, LN.y - 19);
+    c.lineTo(x2 - dir * 7, LN.y - 5);
+    c.closePath(); c.fill();
+    // hop number
+    c.fillStyle = '#2B2E5C';
+    c.font = 'bold 12px system-ui, sans-serif';
+    c.textBaseline = 'bottom';
+    c.fillText(String(i + 1), mid, LN.y - 14 - r);
+    c.textBaseline = 'top';
+  }
+  // the marker: his buddy Pokémon standing on the line
+  const cx = lnX(LN.cur);
+  if (lnBuddyReady){
+    const sz = 54;
+    lnCtx.drawImage(lnBuddyImg, cx - sz / 2, LN.y - sz - 14, sz, sz);
+  } else {
+    c.fillStyle = '#FFC93C'; c.strokeStyle = '#2B2E5C'; c.lineWidth = 3;
+    c.beginPath(); c.arc(cx, LN.y - 34, 18, 0, Math.PI * 2); c.fill(); c.stroke();
+  }
+  // marker post + current value
+  c.strokeStyle = '#E0503F'; c.lineWidth = 4;
+  c.beginPath(); c.moveTo(cx, LN.y - 14); c.lineTo(cx, LN.y + 2); c.stroke();
+  c.fillStyle = '#FFFDF4'; c.strokeStyle = '#2B2E5C'; c.lineWidth = 3;
+  const bw = 46, bh = 30;
+  c.beginPath(); c.roundRect(cx - bw / 2, 6, bw, bh, 10); c.fill(); c.stroke();
+  c.fillStyle = '#2B2E5C';
+  c.font = 'bold 19px system-ui, sans-serif';
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillText(String(LN.cur), cx, 6 + bh / 2 + 1);
+  c.textBaseline = 'top';
+}
+
+function lnNewQuestion(){
+  LN.locked = false; LN.tries = 0;
+  const max = levelMax('line');
+  LN.span = Math.max(10, max);
+  const addition = Math.random() < 0.5;
+  if (addition){
+    LN.start = 1 + rnd(Math.max(1, LN.span - 3));
+    LN.step = 1 + rnd(Math.min(9, LN.span - LN.start));
+    LN.ans = LN.start + LN.step;
+    LN.op = '+';
+    LN.phrase = 'Start at ' + NUM_WORDS[LN.start] + '. Hop ' + NUM_WORDS[LN.step] +
+                ' forward. Where do you land?';
+    document.getElementById('lnQ').textContent =
+      LN.start + ' + ' + LN.step + ' = ?   Hop forward!';
+  } else {
+    LN.start = 3 + rnd(Math.max(1, LN.span - 3));
+    LN.step = 1 + rnd(Math.min(9, LN.start));
+    LN.ans = LN.start - LN.step;
+    LN.op = '-';
+    LN.phrase = 'Start at ' + NUM_WORDS[LN.start] + '. Hop ' + NUM_WORDS[LN.step] +
+                ' back. Where do you land?';
+    document.getElementById('lnQ').textContent =
+      LN.start + ' − ' + LN.step + ' = ?   Hop back!';
+  }
+  LN.cur = LN.start;
+  LN.asked = Date.now();
+  lnSize(); lnDraw();
+  document.getElementById('lnSpeech').textContent = 'Drag your Pokémon along the line!';
+  say(LN.phrase);
+}
+
+function lnMove(v){
+  if (LN.locked) return;
+  const nv = Math.max(0, Math.min(LN.span, v));
+  if (nv === LN.cur) return;
+  const hops = Math.abs(nv - LN.start);
+  LN.cur = nv;
+  blip(380 + hops * 28, 0, .07);
+  lnDraw();
+}
+
+function lnCheckAnswer(){
+  if (LN.locked) return;
+  audio();
+  if (LN.cur === LN.ans){
+    LN.locked = true;
+    progress.line = (progress.line || 0) + 1; saveProg();
+    recordAnswer('line', LN.tries === 0, Date.now() - (LN.asked || 0));
+    bumpStreak(LN.tries === 0);
+    const praise = praiseLine(LN.tries === 0);
+    showPraise(praise + (LN.tries === 0 ? '  ⭐⭐' : '  ⭐'));
+    sndGood(); burst(lnCanvas, LN.tries === 0 ? 10 : 8);
+    addStar(LN.tries === 0 ? 2 : 1);
+    const fact = LN.op === '+'
+      ? NUM_WORDS[LN.start] + ' plus ' + NUM_WORDS[LN.step] + ' equals ' + NUM_WORDS[LN.ans] + '!'
+      : NUM_WORDS[LN.start] + ' take away ' + NUM_WORDS[LN.step] + ' equals ' + NUM_WORDS[LN.ans] + '!';
+    say(praise + ' ' + fact);
+    document.getElementById('lnSpeech').textContent = praise;
+    checkBadges();
+    setTimeout(function waitQuiet(){
+      if (mode !== 'line') return;
+      if (!speechIdle()){ setTimeout(waitQuiet, 250); return; }
+      lnNewQuestion();
+    }, P().next);
+  } else {
+    LN.tries++;
+    loseStar();
+    bumpStreak(false);
+    sndOops();
+    sayWrong();
+    const hint = Math.abs(LN.cur - LN.ans) <= 2
+      ? 'So close! Count your hops again.'
+      : (LN.op === '+' ? 'Count ' + LN.step + ' hops forward from ' + LN.start + '.'
+                       : 'Count ' + LN.step + ' hops back from ' + LN.start + '.');
+    document.getElementById('lnSpeech').textContent = hint;
+    LN.locked = true;
+    setTimeout(() => { LN.locked = false; }, 900);
+  }
+}
+
+(function lnControls(){
+  let dragging = false;
+  function fromEvent(ev){
+    const r = lnCanvas.getBoundingClientRect();
+    return lnValueAt((ev.clientX - r.left) / r.width * LN.w);
+  }
+  lnCanvas.addEventListener('pointerdown', ev => {
+    if (mode !== 'line') return;
+    ev.preventDefault(); audio();
+    dragging = true;
+    lnCanvas.setPointerCapture(ev.pointerId);
+    lnMove(fromEvent(ev));
+  });
+  lnCanvas.addEventListener('pointermove', ev => {
+    if (!dragging || mode !== 'line') return;
+    ev.preventDefault();
+    lnMove(fromEvent(ev));
+  });
+  ['pointerup','pointercancel'].forEach(t =>
+    lnCanvas.addEventListener(t, () => { dragging = false; }));
+  document.getElementById('lnBack').addEventListener('click', () => { audio(); lnMove(LN.cur - 1); });
+  document.getElementById('lnFwd').addEventListener('click', () => { audio(); lnMove(LN.cur + 1); });
+  document.getElementById('lnCheck').addEventListener('click', lnCheckAnswer);
+  document.getElementById('lnQ').addEventListener('click', () => { if (LN.phrase) say(LN.phrase, true); });
+})();
+
+function startLine(){
+  const id = pkBuddy || 25;
+  if (lnBuddyImg.dataset.id !== String(id)){
+    lnBuddyImg.dataset.id = String(id);
+    lnBuddyReady = false;
+    lnBuddyImg.src = imgArt(id);
+  }
+  lnNewQuestion();
+}
+
+/* ============================================================
    CLOUD SYNC — Firebase Realtime Database, shared family code
    Data lives at {url}/fam/{code}/pokemath.json
    Merge rules: caught = union · progress = per-key max ·
@@ -2396,6 +2829,7 @@ async function localPayload(){
     prog: Object.assign({}, progress),
     caught: caught.slice(),
     shiny: shinies.slice(),
+    cards: cards.slice(),
     badges: badges.slice(),
     traced: traced.slice()
   };
@@ -2419,6 +2853,7 @@ function mergeStates(a, b){
   const uni = (x, y) => { const o = (x || []).slice(); (y || []).forEach(v => { if (!o.includes(v)) o.push(v); }); return o; };
   const out = {
     shiny: uni(a.shiny, b.shiny),
+    cards: uni(a.cards, b.cards),
     badges: uni(a.badges, b.badges),
     traced: uni(a.traced, b.traced),
     at: Math.max(a.at || 0, b.at || 0),
@@ -2446,6 +2881,8 @@ async function applyState(m){
   await store.set('cubs_prog', JSON.stringify(m.prog));
   await store.set('cubs_caught', m.caught.join(','));
   shinies = m.shiny || []; badges = m.badges || []; traced = m.traced || [];
+  cards = m.cards || [];
+  await store.set('cubs_cards', cards.join(','));
   await store.set('cubs_shiny', shinies.join(','));
   await store.set('cubs_badges', badges.join(','));
   await store.set('cubs_traced', traced.join(','));
@@ -2509,7 +2946,7 @@ document.addEventListener('visibilitychange', () => {
 /* ---------- parent backup panel (triple-tap the title) ---------- */
 (function parentPanel(){
   const panel = document.getElementById('parentPanel');
-  let taps = [], KEYS = ['cubs_stars','cubs_prog','cubs_caught','cubs_pbuddy','cubs_ball','cubs_sound','cubs_name','cubs_wv','cubs_caps','cubs_flu','cubs_shiny','cubs_badges','cubs_traced','cubs_streak'];
+  let taps = [], KEYS = ['cubs_stars','cubs_prog','cubs_caught','cubs_pbuddy','cubs_ball','cubs_sound','cubs_name','cubs_wv','cubs_caps','cubs_flu','cubs_shiny','cubs_badges','cubs_traced','cubs_streak','cubs_cards'];
   document.querySelector('h1').addEventListener('click', () => {
     const now = Date.now();
     taps = taps.filter(t => now - t < 1200); taps.push(now);
@@ -2532,7 +2969,7 @@ document.addEventListener('visibilitychange', () => {
     else setSyncStatus('', 'not connected');
     panel.style.display = 'flex';
   }
-  const CAP_MODES = [['count','Counting'], ['add','Adding'], ['sub','Taking away'], ['zap','Wild Catch'] ];
+  const CAP_MODES = [['count','Counting'], ['add','Adding'], ['sub','Taking away'], ['zap','Wild Catch'], ['line','Number Line'] ];
   function renderVoice(){
     document.getElementById('wvOn').classList.toggle('on', wrongVoice);
     document.getElementById('wvOff').classList.toggle('on', !wrongVoice);
@@ -2608,7 +3045,7 @@ document.addEventListener('visibilitychange', () => {
       ['numbers to 30', TRACE_MAX === 30]
     ];
     document.getElementById('ppVer').textContent =
-      'build v29 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
+      'build v35 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
     showPraise(praiseLine(true));
     say(praiseLine(true));
   });
@@ -2672,7 +3109,10 @@ if ('serviceWorker' in navigator){
 })();
 buildNumRow();
 loadStars();
-window.addEventListener('resize', () => { if (mode === 'trace'){ sizeCanvas(); drawTrace(); } });
+window.addEventListener('resize', () => {
+  if (mode === 'trace'){ sizeCanvas(); drawTrace(); }
+  if (mode === 'line'){ lnSize(); lnDraw(); }
+});
 </script>
 </body>
 </html>
