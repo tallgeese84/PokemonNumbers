@@ -127,6 +127,7 @@
   .mode.zap{ background:linear-gradient(180deg,#FFDD70,#F0A81E); }
   .mode.tower{ background:linear-gradient(180deg,#FFB6D4,#EE7BA8); }
   .mode.line{ background:linear-gradient(180deg,#F7C98B,#D98E33); }
+  .mode.abacus{ background:linear-gradient(180deg,#C9B3F5,#7E5FD6); color:#fff; }
 
   .card{
     position:relative;
@@ -232,11 +233,15 @@
     font-size:20px; font-weight:bold; letter-spacing:3px; color:#B8860B;
     text-shadow:0 1px 0 #fff; animation:hintpop .6s ease;
   }
+  #abCanvas{
+    display:block; margin:0 auto; touch-action:none; max-width:100%;
+    border:4px solid var(--ink); border-radius:24px;
+    box-shadow:0 6px 0 rgba(30,32,70,.4);
+  }
   #lnCanvas{
     display:block; margin:0 auto; touch-action:none; max-width:100%;
-    background:linear-gradient(180deg,#EAF6FF,#DFF3D6);
-    border:4px solid var(--ink); border-radius:20px;
-    box-shadow:inset 0 4px 14px rgba(0,0,0,.12);
+    border:4px solid var(--ink); border-radius:24px;
+    box-shadow:0 6px 0 rgba(30,32,70,.4);
   }
   .lnrow{ display:flex; gap:12px; justify-content:center; align-items:center; margin-top:12px; }
   .lnrow .dpad{ width:86px; height:62px; font-size:30px; padding:0;
@@ -740,19 +745,35 @@
     <div id="buddyBox"></div>
     <h1>PokéMath Adventure</h1>
     <p class="sub">Play with numbers to catch them all!</p>
-    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v41</div>
+    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v45</div>
     <div class="modes">
       <button class="mode trace" data-go="trace"><span class="big"><img class="mico" data-mon="133" alt=""><span class="micoalt">✏️</span></span>Write<br>Numbers</button>
       <button class="mode count" data-go="count"><span class="big"><img class="mico" data-mon="102" alt=""><span class="micoalt">🔢</span></span>Counting</button>
       <button class="mode add" data-go="add"><span class="big"><img class="mico" data-mon="82" alt=""><span class="micoalt">➕</span></span>Adding</button>
       <button class="mode sub" data-go="sub"><span class="big"><img class="mico" data-mon="92" alt=""><span class="micoalt">➖</span></span>Taking<br>Away</button>
       <button class="mode zap" data-go="zap"><span class="big grasspeek"><img class="mico" data-mon="25" alt=""><span class="micoalt">🌿</span><span class="grassfront">🌿</span></span>Wild<br>Catch</button>
+      <button class="mode abacus" data-go="abacus"><span class="big"><img class="mico" data-mon="63" alt=""><span class="micoalt">🧮</span></span>Bead<br>Counter</button>
       <button class="mode line" data-go="line"><span class="big"><img class="mico" data-mon="50" alt=""><span class="micoalt">🧭</span></span>Number<br>Line</button>
       <button class="mode tower" data-go="tower"><span class="big"><img class="mico" data-mon="78" alt=""><span class="micoalt">🏁</span></span>Number<br>Race</button>
     </div>
     <button class="widebtn" id="teamBtn">My Pokémon <span id="teamTally"></span></button>
     <button class="widebtn" id="cardBtn" style="background:linear-gradient(180deg,#FFD86B,#E0A517)">🃏 My Cards <span id="cardTally"></span></button>
     <button class="widebtn" id="badgeBtn" style="background:linear-gradient(180deg,#8CCEF9,#3F9BE0)">🏅 My Badges <span id="badgeTally"></span></button>
+  </div>
+
+  <!-- ABACUS -->
+  <div class="screen" id="scr-abacus">
+    <div class="card">
+      <div class="qtext" id="abQ"></div>
+      <canvas id="abCanvas"></canvas>
+      <div class="hopcount" id="abCount">0 beads</div>
+      <div class="lnrow">
+        <button class="btn dpad" id="abBack">◀</button>
+        <button class="btn" id="abCheck">✓ That's my answer!</button>
+        <button class="btn dpad" id="abFwd">▶</button>
+      </div>
+      <div class="speech" id="abSpeech"></div>
+    </div>
   </div>
 
   <!-- NUMBER LINE -->
@@ -1311,6 +1332,7 @@ const BADGES = [
   { id:'shiny1',   ico:'💎', name:'First shiny',     test:() => shinies.length >= 1 },
   { id:'ultra',    ico:'🌈', name:'Shiny legendary', test:() => caught.some(id => isLegend(id) && isShiny(id)) },
   { id:'line50',   ico:'🧭', name:'50 hops',        test:() => (progress.line || 0) >= 50 },
+  { id:'abacus50', ico:'🧮', name:'50 bead sums',   test:() => (progress.abacus || 0) >= 50 },
   { id:'card1',    ico:'🃏', name:'First card',     test:() => cards.length >= 1 },
   { id:'card25',   ico:'📚', name:'25 cards',       test:() => cards.length >= 25 },
   { id:'holo1',    ico:'🌠', name:'First holo',     test:() => cards.some(c => HOLO.includes(cardInfo(c).rIdx)) }
@@ -1478,7 +1500,7 @@ function catchMon(){
 }
 
 /* ---------- screens ---------- */
-const screens = { home:'scr-home', trace:'scr-trace', quiz:'scr-quiz', zap:'scr-zap', tower:'scr-tower', team:'scr-team', badges:'scr-badges', line:'scr-line', cards:'scr-cards' };
+const screens = { home:'scr-home', trace:'scr-trace', quiz:'scr-quiz', zap:'scr-zap', tower:'scr-tower', team:'scr-team', badges:'scr-badges', line:'scr-line', cards:'scr-cards', abacus:'scr-abacus' };
 let mode = 'home';
 function show(name){
   Object.values(screens).forEach(id => document.getElementById(id).classList.remove('on'));
@@ -1486,7 +1508,7 @@ function show(name){
   document.getElementById('backBtn').style.display = (name === 'home') ? 'none' : 'block';
 }
 document.getElementById('backBtn').addEventListener('click', () => {
-  sndTap(); shutUp(); stopZap(); stopRace(); mode = 'home'; renderBuddyHome(); show('home');
+  sndTap(); shutUp(); stopZap(); stopRace(); lnStopLoop(); abStopLoop(); mode = 'home'; renderBuddyHome(); show('home');
 });
 document.getElementById('teamAll').addEventListener('click', () => { teamFilter = 'all'; sndTap(); renderTeam(); });
 document.getElementById('teamLeg').addEventListener('click', () => { teamFilter = 'legend'; sndTap(); renderTeam(); });
@@ -1518,6 +1540,7 @@ document.querySelectorAll('.mode').forEach(btn => {
     else if (go === 'zap'){ mode = 'zap'; show('zap'); startZap(); }
     else if (go === 'tower'){ mode = 'tower'; show('tower'); startTower(); }
     else if (go === 'line'){ mode = 'line'; show('line'); startLine(); }
+    else if (go === 'abacus'){ mode = 'abacus'; show('abacus'); startAbacus(); }
     else { mode = go; show('quiz'); newQuestion(); }
   });
 });
@@ -1876,7 +1899,7 @@ function buildFramesFor(monId, emoji){
     cell.appendChild(objSpan(monId, emoji, i >= q.a - q.b ? 'gone' : '', 0));
   });
 }
-const progress = { count: 0, add: 0, sub: 0, zap: 0, tower: 0, line: 0 };
+const progress = { count: 0, add: 0, sub: 0, zap: 0, tower: 0, line: 0, abacus: 0 };
 function saveProg(){
   store.set('cubs_prog', JSON.stringify(progress));
   store.set('cubs_caps', JSON.stringify(capOverride));
@@ -1986,9 +2009,9 @@ let pace = 'calm';
 const P = () => PACE[pace] || PACE.calm;
 
 const FLU_WIN = 10;
-const fluency = { count: [], add: [], sub: [], zap: [], line: [] };
-const capOverride = { count: 0, add: 0, sub: 0, zap: 0, line: 0 };   // 0 = auto; else hard cap
-const FAST_MS = { count: 9000, add: 8000, sub: 8000, zap: 12000, line: 14000 };
+const fluency = { count: [], add: [], sub: [], zap: [], line: [], abacus: [] };
+const capOverride = { count: 0, add: 0, sub: 0, zap: 0, line: 0, abacus: 0 };   // 0 = auto; else hard cap
+const FAST_MS = { count: 9000, add: 8000, sub: 8000, zap: 12000, line: 14000, abacus: 16000 };
 
 const CARD_EVERY = 4;             // four right in a row wins a trading card
 function awardStreakCard(){
@@ -2705,6 +2728,261 @@ function towerTap(n, el){
 }
 
 /* ============================================================
+   BEAD COUNTER — a rekenrek. Ten beads a row, five red then five
+   white, so quantities are SEEN in fives and tens rather than
+   counted one at a time.
+   ============================================================ */
+const AB = { a:0, b:0, op:'+', ans:0, span:20, rows:2, value:0,
+             tries:0, locked:false, asked:0, phrase:'', raf:null, anim:{} };
+const abCanvas = document.getElementById('abCanvas');
+const abCtx = abCanvas.getContext('2d');
+
+function abSize(){
+  const w = Math.min(560, document.getElementById('app').clientWidth - 24);
+  AB.rows = Math.max(1, Math.ceil(AB.span / 10));
+  AB.pad = 24;
+  AB.beadR = Math.min(22, Math.max(13, (w - AB.pad * 2 - 30) / 24));
+  AB.rowH = AB.beadR * 2.6;
+  const h = Math.round(AB.rows * AB.rowH + 46);
+  const dpr = window.devicePixelRatio || 1;
+  abCanvas.style.width = w + 'px'; abCanvas.style.height = h + 'px';
+  abCanvas.width = Math.round(w * dpr); abCanvas.height = Math.round(h * dpr);
+  abCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  AB.w = w; AB.h = h;
+}
+function abRowY(r){ return 26 + r * AB.rowH + AB.rowH / 2 - 8; }
+function abBeadX(r, i, activeInRow){
+  // active beads gather on the left, the rest wait on the right
+  const left = AB.pad + AB.beadR;
+  const right = AB.w - AB.pad - AB.beadR;
+  const gap = AB.beadR * 2.02;
+  if (i < activeInRow) return left + i * gap;
+  const fromRight = 9 - i;
+  return right - fromRight * gap;
+}
+function abDraw(){
+  if (!AB.w) abSize();
+  const c = abCtx, t = performance.now();
+  c.clearRect(0, 0, AB.w, AB.h);
+  const bg = c.createLinearGradient(0, 0, 0, AB.h);
+  bg.addColorStop(0, '#FFF6E4'); bg.addColorStop(1, '#F0E2C8');
+  c.fillStyle = bg; c.fillRect(0, 0, AB.w, AB.h);
+  // wooden frame
+  c.strokeStyle = '#A0723A'; c.lineWidth = 12;
+  c.strokeRect(10, 12, AB.w - 20, AB.h - 24);
+  c.strokeStyle = '#7A5326'; c.lineWidth = 3;
+  c.strokeRect(10, 12, AB.w - 20, AB.h - 24);
+
+  for (let r = 0; r < AB.rows; r++){
+    const y = abRowY(r);
+    // rod
+    c.strokeStyle = '#B9A27C'; c.lineWidth = 5;
+    c.beginPath(); c.moveTo(AB.pad - 4, y); c.lineTo(AB.w - AB.pad + 4, y); c.stroke();
+    const activeInRow = Math.max(0, Math.min(10, AB.value - r * 10));
+    for (let i = 0; i < 10; i++){
+      const key = r + ':' + i;
+      const target = abBeadX(r, i, activeInRow);
+      const cur = AB.anim[key] === undefined ? target : AB.anim[key];
+      const nx = cur + (target - cur) * 0.28;      // beads glide into place
+      AB.anim[key] = Math.abs(nx - target) < 0.4 ? target : nx;
+      const x = AB.anim[key];
+      const on = i < activeInRow;
+      const red = i < 5;
+      const g = c.createRadialGradient(x - AB.beadR * 0.35, y - AB.beadR * 0.4, AB.beadR * 0.2,
+                                       x, y, AB.beadR);
+      if (red){ g.addColorStop(0, '#FF9A8C'); g.addColorStop(1, on ? '#D93B2B' : '#E8A9A2'); }
+      else    { g.addColorStop(0, '#FFFFFF'); g.addColorStop(1, on ? '#C9CBE0' : '#E8E9F2'); }
+      c.fillStyle = g;
+      c.strokeStyle = '#2B2E5C'; c.lineWidth = on ? 3 : 2;
+      c.globalAlpha = on ? 1 : 0.55;
+      c.beginPath(); c.arc(x, y, AB.beadR, 0, Math.PI * 2); c.fill(); c.stroke();
+      c.globalAlpha = 1;
+      if (on && i === activeInRow - 1){          // gentle glow on the last bead moved
+        c.strokeStyle = 'rgba(255,201,60,.9)'; c.lineWidth = 3;
+        c.beginPath(); c.arc(x, y, AB.beadR + 4 + Math.sin(t / 260) * 1.5, 0, Math.PI * 2); c.stroke();
+      }
+    }
+    // how many on this row
+    c.fillStyle = '#7A5326';
+    c.font = 'bold 14px system-ui, sans-serif';
+    c.textAlign = 'left'; c.textBaseline = 'middle';
+    c.fillText(String(activeInRow), 20, y - AB.rowH / 2 + 6);
+  }
+}
+function abLoop(){
+  if (mode !== 'abacus'){ AB.raf = null; return; }
+  abDraw();
+  AB.raf = requestAnimationFrame(abLoop);
+}
+function abStopLoop(){ if (AB.raf) cancelAnimationFrame(AB.raf); AB.raf = null; }
+
+function abSetValue(v){
+  const nv = Math.max(0, Math.min(AB.rows * 10, v));
+  if (nv === AB.value) return;
+  const up = nv > AB.value;
+  AB.value = nv;
+  blip(up ? 420 + (nv % 10) * 26 : 500 - (nv % 10) * 12, 0, .06);
+  const el = document.getElementById('abCount');
+  if (el){
+    el.textContent = AB.value + (AB.value === 1 ? ' bead' : ' beads');
+    el.classList.toggle('ready', AB.value === AB.ans);
+  }
+}
+function abFromPoint(cx, cy){
+  const rect = abCanvas.getBoundingClientRect();
+  const x = (cx - rect.left) / rect.width * AB.w;
+  const y = (cy - rect.top) / rect.height * AB.h;
+  const r = Math.max(0, Math.min(AB.rows - 1, Math.floor((y - 26) / AB.rowH)));
+  const activeInRow = Math.max(0, Math.min(10, AB.value - r * 10));
+  // find the bead his finger is actually on, at its CURRENT position
+  let best = -1, bestD = 1e9;
+  for (let i = 0; i < 10; i++){
+    const px = abBeadX(r, i, activeInRow);
+    const d = Math.abs(px - x);
+    if (d < bestD){ bestD = d; best = i; }
+  }
+  if (best >= 0 && bestD <= AB.beadR * 1.7){
+    // touching an active bead sends it back; touching a waiting bead brings it over
+    const wasActive = best < activeInRow;
+    const n = wasActive ? best : best + 1;
+    return r * 10 + n;
+  }
+  // touched the empty middle: count the slots to the left of the finger
+  let n = 0;
+  for (let i = 0; i < 10; i++){
+    const px = abBeadX(r, i, 10);
+    if (x >= px - AB.beadR) n = i + 1;
+  }
+  return r * 10 + n;
+}
+(function abControls(){
+  let dragging = false, lastVal = -1;
+  function begin(cx, cy){
+    if (mode !== 'abacus' || AB.locked) return;
+    audio();
+    dragging = true; lastVal = -1;
+    apply(cx, cy);
+  }
+  function apply(cx, cy){
+    const v = abFromPoint(cx, cy);
+    if (v === lastVal) return;
+    lastVal = v;
+    abSetValue(v);
+  }
+  function move(cx, cy){
+    if (!dragging || mode !== 'abacus' || AB.locked) return;
+    apply(cx, cy);
+  }
+  function end(){ dragging = false; }
+  // touch first — this is what the tablet actually sends
+  abCanvas.addEventListener('touchstart', ev => {
+    ev.preventDefault();
+    const t = ev.touches[0]; begin(t.clientX, t.clientY);
+  }, { passive: false });
+  abCanvas.addEventListener('touchmove', ev => {
+    ev.preventDefault();
+    const t = ev.touches[0]; move(t.clientX, t.clientY);
+  }, { passive: false });
+  ['touchend','touchcancel'].forEach(t =>
+    abCanvas.addEventListener(t, ev => { ev.preventDefault(); end(); }, { passive: false }));
+  // mouse / stylus
+  abCanvas.addEventListener('pointerdown', ev => {
+    if (ev.pointerType === 'touch') return;
+    ev.preventDefault();
+    abCanvas.setPointerCapture(ev.pointerId);
+    begin(ev.clientX, ev.clientY);
+  });
+  abCanvas.addEventListener('pointermove', ev => {
+    if (ev.pointerType === 'touch') return;
+    move(ev.clientX, ev.clientY);
+  });
+  ['pointerup','pointercancel'].forEach(t =>
+    abCanvas.addEventListener(t, ev => { if (ev.pointerType !== 'touch') end(); }));
+  document.getElementById('abBack').addEventListener('click', () => { audio(); abSetValue(AB.value - 1); });
+  document.getElementById('abFwd').addEventListener('click', () => { audio(); abSetValue(AB.value + 1); });
+  document.getElementById('abCheck').addEventListener('click', abCheckAnswer);
+  document.getElementById('abQ').addEventListener('click', () => { if (AB.phrase) say(AB.phrase, true); });
+})();
+
+function abNewQuestion(){
+  AB.locked = false; AB.tries = 0;
+  const pend = pending.abacus;
+  const max = pend ? pend.x : levelMax('abacus');
+  AB.span = Math.max(10, max);
+  if (pend){
+    AB.a = pend.a; AB.b = pend.b; AB.op = pend.op; AB.ans = pend.n;
+    AB.tries = Math.max(1, pend.t || 1);
+  } else if (Math.random() < 0.5){
+    AB.a = 1 + rnd(Math.max(1, AB.span - 2));
+    AB.b = 1 + rnd(Math.min(9, AB.span - AB.a));
+    AB.ans = AB.a + AB.b; AB.op = '+';
+  } else {
+    AB.a = 3 + rnd(Math.max(1, AB.span - 3));
+    AB.b = 1 + rnd(Math.min(9, AB.a));
+    AB.ans = AB.a - AB.b; AB.op = '-';
+  }
+  AB.phrase = AB.op === '+'
+    ? 'Show ' + NUM_WORDS[AB.a] + ' beads, then ' + NUM_WORDS[AB.b] + ' more. How many altogether?'
+    : 'Show ' + NUM_WORDS[AB.a] + ' beads, then take ' + NUM_WORDS[AB.b] + ' away. How many are left?';
+  document.getElementById('abQ').textContent = AB.op === '+'
+    ? AB.a + ' + ' + AB.b + ' = ?   Slide the beads!'
+    : AB.a + ' − ' + AB.b + ' = ?   Slide the beads!';
+  AB.value = 0; AB.anim = {};
+  if (!pend) savePending('abacus', { a:AB.a, b:AB.b, op:AB.op, n:AB.ans, x:max, t:0 });
+  AB.asked = Date.now();
+  abSize();
+  document.getElementById('abCount').textContent = '0 beads';
+  document.getElementById('abSpeech').textContent = 'Slide beads to the left to count them.';
+  abStopLoop(); abLoop();
+  say(AB.phrase);
+}
+
+function abCheckAnswer(){
+  if (AB.locked || mode !== 'abacus') return;
+  audio();
+  if (AB.value === 0 && AB.ans !== 0){
+    document.getElementById('abSpeech').textContent = 'Slide some beads first!';
+    say('Slide some beads first!');
+    blip(440, 0, .12);
+    return;
+  }
+  if (AB.value === AB.ans){
+    AB.locked = true;
+    clearPending('abacus');
+    progress.abacus = (progress.abacus || 0) + 1; saveProg();
+    recordAnswer('abacus', AB.tries === 0, Date.now() - (AB.asked || 0));
+    if (AB.tries === 0) bumpStreak(true);
+    const praise = praiseLine(AB.tries === 0);
+    showPraise(praise + (AB.tries === 0 ? '  ⭐⭐' : '  ⭐'));
+    sndGood(); burst(abCanvas, AB.tries === 0 ? 10 : 8);
+    addStar(AB.tries === 0 ? 2 : 1);
+    const fact = AB.op === '+'
+      ? NUM_WORDS[AB.a] + ' plus ' + NUM_WORDS[AB.b] + ' equals ' + NUM_WORDS[AB.ans] + '!'
+      : NUM_WORDS[AB.a] + ' take away ' + NUM_WORDS[AB.b] + ' equals ' + NUM_WORDS[AB.ans] + '!';
+    say(praise + ' ' + fact);
+    document.getElementById('abSpeech').textContent = praise;
+    checkBadges();
+    setTimeout(function waitQuiet(){
+      if (mode !== 'abacus') return;
+      if (!readyForNext()){ setTimeout(waitQuiet, 250); return; }
+      abNewQuestion();
+    }, P().next);
+  } else {
+    AB.tries++;
+    if (pending.abacus) savePending('abacus', Object.assign({}, pending.abacus, { t: AB.tries }));
+    loseStar();
+    bumpStreak(false);
+    sndOops();
+    sayWrong();
+    document.getElementById('abSpeech').textContent =
+      'You have ' + AB.value + '. Count the red fives first, then the rest.';
+    AB.locked = true;
+    setTimeout(() => { AB.locked = false; }, 900);
+  }
+}
+function startAbacus(){ abNewQuestion(); }
+
+/* ============================================================
    NUMBER LINE — drag the marker to hop forwards or backwards.
    The hops are drawn as numbered arcs, so he SEES the operation
    instead of counting a pile of objects.
@@ -2719,97 +2997,180 @@ lnBuddyImg.onload = () => { lnBuddyReady = true; lnDraw(); };
 lnBuddyImg.onerror = () => { lnBuddyReady = false; };
 
 function lnSize(){
-  const w = Math.min(460, document.getElementById('app').clientWidth - 44);
-  const h = 210;
+  const w = Math.min(560, document.getElementById('app').clientWidth - 24);
+  const h = Math.round(Math.min(330, Math.max(260, w * 0.62)));
   const dpr = window.devicePixelRatio || 1;
   lnCanvas.style.width = w + 'px'; lnCanvas.style.height = h + 'px';
   lnCanvas.width = Math.round(w * dpr); lnCanvas.height = Math.round(h * dpr);
   lnCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
   LN.w = w; LN.h = h;
-  LN.pad = 26;
-  LN.y = h - 54;
+  LN.pad = Math.max(28, w * 0.07);
+  LN.y = h - 74;                       // the stones sit low, sky above
+  const shown = Math.max(1, (LN.hi === undefined ? LN.span : LN.hi - LN.lo));
+  LN.stoneR = shown <= 10 ? 21 : (shown <= 12 ? 18 : 14);
+  LN.buddySize = shown <= 10 ? 84 : 74;
+}
+/* The line only shows the stretch this question needs (at most 12 stones),
+   so the stepping stones stay big and easy to hit at any number. */
+function lnWindow(){
+  const a = Math.min(LN.start, LN.ans), b = Math.max(LN.start, LN.ans);
+  let lo = Math.max(0, a - 2), hi = Math.min(LN.span, b + 2);
+  while (hi - lo < 10){                      // keep a comfortable span
+    if (lo > 0) lo--;
+    else if (hi < LN.span) hi++;
+    else break;
+  }
+  if (hi - lo > 12){                          // never squeeze more than 12 in
+    lo = Math.max(0, a - 1); hi = Math.min(LN.span, Math.max(b + 1, lo + 12));
+  }
+  LN.lo = lo; LN.hi = hi;
 }
 function lnX(v){
-  return LN.pad + (v / LN.span) * (LN.w - LN.pad * 2);
+  const span = Math.max(1, LN.hi - LN.lo);
+  return LN.pad + ((v - LN.lo) / span) * (LN.w - LN.pad * 2);
 }
 function lnValueAt(px){
+  const span = Math.max(1, LN.hi - LN.lo);
   const t = (px - LN.pad) / (LN.w - LN.pad * 2);
-  return Math.max(0, Math.min(LN.span, Math.round(t * LN.span)));
+  return Math.max(LN.lo, Math.min(LN.hi, Math.round(LN.lo + t * span)));
 }
 
 function lnDraw(){
   if (!LN.w) lnSize();
-  const c = lnCtx;
+  const c = lnCtx, t = performance.now();
   c.clearRect(0, 0, LN.w, LN.h);
-  // axis
-  c.strokeStyle = '#2B2E5C'; c.lineWidth = 4; c.lineCap = 'round';
-  c.beginPath(); c.moveTo(LN.pad - 8, LN.y); c.lineTo(LN.w - LN.pad + 8, LN.y); c.stroke();
-  // ticks and labels
-  const labelEvery = LN.span <= 10 ? 1 : (LN.span <= 20 ? 2 : 5);
-  c.textAlign = 'center'; c.textBaseline = 'top';
-  for (let v = 0; v <= LN.span; v++){
-    const x = lnX(v), major = (v % labelEvery === 0);
-    c.strokeStyle = major ? '#2B2E5C' : '#979FD0';
-    c.lineWidth = major ? 3 : 2;
-    c.beginPath(); c.moveTo(x, LN.y - (major ? 10 : 6)); c.lineTo(x, LN.y + (major ? 10 : 6)); c.stroke();
-    if (major){
-      c.fillStyle = '#2B2E5C';
-      c.font = 'bold ' + (LN.span > 20 ? 13 : 15) + 'px system-ui, sans-serif';
-      c.fillText(String(v), x, LN.y + 14);
-    }
+
+  // --- sky, sun, clouds, hills ---
+  const sky = c.createLinearGradient(0, 0, 0, LN.h);
+  sky.addColorStop(0, '#8FD2F5'); sky.addColorStop(0.55, '#CFEEFB'); sky.addColorStop(1, '#EAF8E4');
+  c.fillStyle = sky; c.fillRect(0, 0, LN.w, LN.h);
+  c.fillStyle = '#FFE066';
+  c.beginPath(); c.arc(LN.w - 46, 44, 24, 0, Math.PI * 2); c.fill();
+  c.strokeStyle = 'rgba(255,201,60,.55)'; c.lineWidth = 4;
+  for (let i = 0; i < 8; i++){
+    const a = t / 2600 + i * Math.PI / 4;
+    c.beginPath();
+    c.moveTo(LN.w - 46 + Math.cos(a) * 30, 44 + Math.sin(a) * 30);
+    c.lineTo(LN.w - 46 + Math.cos(a) * 38, 44 + Math.sin(a) * 38);
+    c.stroke();
   }
-  // start flag
-  const sx = lnX(LN.start);
-  c.fillStyle = '#5AB8F5'; c.strokeStyle = '#2B2E5C'; c.lineWidth = 3;
-  c.beginPath(); c.arc(sx, LN.y, 9, 0, Math.PI * 2); c.fill(); c.stroke();
-  c.fillStyle = '#2B2E5C';
-  c.font = 'bold 13px system-ui, sans-serif';
-  c.fillText('start', sx, LN.y - 34);
-  // hop arcs from start to the marker
+  c.fillStyle = 'rgba(255,255,255,.95)';
+  [[0.16, 40, 1], [0.52, 30, .8]].forEach(([fx, cy, sc], i) => {
+    const dx = ((t / 90 + i * 400) % (LN.w + 160)) - 80;
+    const x = (fx * LN.w + dx * 0.15) % LN.w;
+    c.beginPath();
+    c.ellipse(x, cy, 30 * sc, 13 * sc, 0, 0, Math.PI * 2);
+    c.ellipse(x - 20 * sc, cy + 5, 18 * sc, 9 * sc, 0, 0, Math.PI * 2);
+    c.ellipse(x + 22 * sc, cy + 6, 16 * sc, 8 * sc, 0, 0, Math.PI * 2);
+    c.fill();
+  });
+  c.fillStyle = '#9BDC86';
+  c.beginPath();
+  c.moveTo(0, LN.y + 26);
+  c.quadraticCurveTo(LN.w * 0.3, LN.y - 12, LN.w * 0.6, LN.y + 20);
+  c.quadraticCurveTo(LN.w * 0.85, LN.y + 40, LN.w, LN.y + 8);
+  c.lineTo(LN.w, LN.h); c.lineTo(0, LN.h); c.closePath(); c.fill();
+  c.fillStyle = '#77C86A';
+  c.fillRect(0, LN.y + 30, LN.w, LN.h - LN.y - 30);
+
+  // --- stepping stones, one per number ---
+  for (let v = LN.lo; v <= LN.hi; v++){
+    const here = (v === LN.cur);
+    const x = lnX(v);
+    const r = here ? LN.stoneR * 1.28 : LN.stoneR;
+    // shadow
+    c.fillStyle = 'rgba(30,50,30,.18)';
+    c.beginPath(); c.ellipse(x, LN.y + r * 0.62, r * 1.05, r * 0.42, 0, 0, Math.PI * 2); c.fill();
+    // a soft halo pulses around the number he is standing on
+    if (here){
+      const pulse = 1 + Math.sin(t / 300) * 0.08;
+      c.fillStyle = 'rgba(255,201,60,.30)';
+      c.beginPath(); c.arc(x, LN.y, r * 1.42 * pulse, 0, Math.PI * 2); c.fill();
+      c.strokeStyle = 'rgba(224,138,23,.85)'; c.lineWidth = 4;
+      c.beginPath(); c.arc(x, LN.y, r * 1.16 * pulse, 0, Math.PI * 2); c.stroke();
+    }
+    const g = c.createLinearGradient(x, LN.y - r, x, LN.y + r);
+    if (here){ g.addColorStop(0, '#FFF6C4'); g.addColorStop(1, '#FFC93C'); }
+    else if (v === LN.ans && LN.showGoal){ g.addColorStop(0, '#D6F7E4'); g.addColorStop(1, '#6FD8AE'); }
+    else { g.addColorStop(0, '#FFFDF4'); g.addColorStop(1, '#D9CFB6'); }
+    c.fillStyle = g;
+    c.strokeStyle = '#2B2E5C'; c.lineWidth = here ? 4.5 : 3;
+    c.beginPath(); c.arc(x, LN.y, r, 0, Math.PI * 2); c.fill(); c.stroke();
+    c.fillStyle = '#2B2E5C';
+    c.font = 'bold ' + Math.round(r * (here ? 1.15 : 1.02)) + 'px system-ui, sans-serif';
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText(String(v), x, LN.y + 1);
+  }
+
+  // --- the hops he has made, as a dotted arc trail ---
   const dir = LN.cur >= LN.start ? 1 : -1;
   const hops = Math.abs(LN.cur - LN.start);
   for (let i = 0; i < hops; i++){
     const from = LN.start + dir * i, to = from + dir;
     const x1 = lnX(from), x2 = lnX(to);
-    const mid = (x1 + x2) / 2, r = Math.abs(x2 - x1) / 2;
-    c.strokeStyle = dir > 0 ? '#2FA97F' : '#E0503F';
-    c.lineWidth = 3.5;
-    c.beginPath(); c.arc(mid, LN.y - 12, r, Math.PI, 0, false); c.stroke();
-    // little arrow head
-    c.fillStyle = c.strokeStyle;
-    c.beginPath();
-    c.moveTo(x2, LN.y - 12);
-    c.lineTo(x2 - dir * 7, LN.y - 19);
-    c.lineTo(x2 - dir * 7, LN.y - 5);
-    c.closePath(); c.fill();
-    // hop number
-    c.fillStyle = '#2B2E5C';
-    c.font = 'bold 12px system-ui, sans-serif';
-    c.textBaseline = 'bottom';
-    c.fillText(String(i + 1), mid, LN.y - 14 - r);
-    c.textBaseline = 'top';
+    const mid = (x1 + x2) / 2, rx = Math.abs(x2 - x1) / 2, ry = 30;
+    const baseY = LN.y - LN.stoneR - 8;
+    c.strokeStyle = dir > 0 ? 'rgba(47,169,127,.95)' : 'rgba(224,80,63,.95)';
+    c.lineWidth = 4; c.setLineDash([6, 5]);
+    c.beginPath(); c.ellipse(mid, baseY, rx, ry, 0, Math.PI, 0, false); c.stroke();
+    c.setLineDash([]);
+    c.fillStyle = dir > 0 ? '#2FA97F' : '#E0503F';
+    c.strokeStyle = '#fff'; c.lineWidth = 2;
+    c.beginPath(); c.arc(mid, baseY - ry, 13, 0, Math.PI * 2); c.fill(); c.stroke();
+    c.fillStyle = '#fff';
+    c.font = 'bold 15px system-ui, sans-serif';
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText(String(i + 1), mid, baseY - ry + 1);
   }
-  // the marker: his buddy Pokémon standing on the line
-  const cx = lnX(LN.cur);
+
+  // --- start flag ---
+  const sx = lnX(LN.start);
+  c.strokeStyle = '#8A6A3A'; c.lineWidth = 4;
+  c.beginPath(); c.moveTo(sx, LN.y - LN.stoneR); c.lineTo(sx, LN.y - LN.stoneR - 42); c.stroke();
+  const wave = Math.sin(t / 260) * 3;
+  c.fillStyle = '#5AB8F5'; c.strokeStyle = '#2B2E5C'; c.lineWidth = 2.5;
+  c.beginPath();
+  c.moveTo(sx, LN.y - LN.stoneR - 42);
+  c.quadraticCurveTo(sx + 20, LN.y - LN.stoneR - 38 + wave, sx + 34, LN.y - LN.stoneR - 30);
+  c.lineTo(sx, LN.y - LN.stoneR - 22);
+  c.closePath(); c.fill(); c.stroke();
+
+  // --- his Pokémon, hopping and bobbing ---
+  let px = lnX(LN.pos), lift = 0;
+  if (LN.hopping){
+    const k = Math.min(1, (t - LN.hopT0) / LN.hopDur);
+    const eased = k;
+    LN.pos = LN.hopFrom + (LN.hopTo - LN.hopFrom) * eased;
+    px = lnX(LN.pos);
+    lift = Math.sin(k * Math.PI) * 44;          // the arc of the hop
+    if (k >= 1){ LN.hopping = false; LN.pos = LN.hopTo; }
+  } else {
+    lift = Math.abs(Math.sin(t / 520)) * 7;      // gentle idle bob
+  }
+  const sz = LN.buddySize;
+  // sits clear ABOVE the highlighted number so the numeral is never covered
+  const clearance = LN.stoneR * 1.45 + 18;
+  const by = LN.y - clearance - sz - lift;
   if (lnBuddyReady){
-    const sz = 54;
-    lnCtx.drawImage(lnBuddyImg, cx - sz / 2, LN.y - sz - 14, sz, sz);
+    c.drawImage(lnBuddyImg, px - sz / 2, by, sz, sz);
   } else {
     c.fillStyle = '#FFC93C'; c.strokeStyle = '#2B2E5C'; c.lineWidth = 3;
-    c.beginPath(); c.arc(cx, LN.y - 34, 18, 0, Math.PI * 2); c.fill(); c.stroke();
+    c.beginPath(); c.arc(px, by + sz / 2, sz * 0.3, 0, Math.PI * 2); c.fill(); c.stroke();
   }
-  // marker post + current value
-  c.strokeStyle = '#E0503F'; c.lineWidth = 4;
-  c.beginPath(); c.moveTo(cx, LN.y - 14); c.lineTo(cx, LN.y + 2); c.stroke();
-  c.fillStyle = '#FFFDF4'; c.strokeStyle = '#2B2E5C'; c.lineWidth = 3;
-  const bw = 46, bh = 30;
-  c.beginPath(); c.roundRect(cx - bw / 2, 6, bw, bh, 10); c.fill(); c.stroke();
-  c.fillStyle = '#2B2E5C';
-  c.font = 'bold 19px system-ui, sans-serif';
-  c.textAlign = 'center'; c.textBaseline = 'middle';
-  c.fillText(String(LN.cur), cx, 6 + bh / 2 + 1);
-  c.textBaseline = 'top';
+  // a little pointer connecting him to the number he is on
+  c.strokeStyle = 'rgba(224,138,23,.9)'; c.lineWidth = 3; c.setLineDash([4, 4]);
+  c.beginPath();
+  c.moveTo(px, by + sz - 4);
+  c.lineTo(px, LN.y - LN.stoneR * 1.35 - 6);
+  c.stroke(); c.setLineDash([]);
+
 }
+function lnLoop(){
+  if (mode !== 'line'){ LN.raf = null; return; }
+  lnDraw();
+  LN.raf = requestAnimationFrame(lnLoop);
+}
+function lnStopLoop(){ if (LN.raf) cancelAnimationFrame(LN.raf); LN.raf = null; }
 
 function lnNewQuestion(){
   LN.locked = false; LN.tries = 0;
@@ -2823,8 +3184,10 @@ function lnNewQuestion(){
     document.getElementById('lnQ').textContent = LN.op === '+'
       ? LN.start + ' + ' + LN.step + ' = ?   Hop forward!'
       : LN.start + ' − ' + LN.step + ' = ?   Hop back!';
-    LN.cur = LN.start; LN.asked = Date.now();
-    lnSize(); lnDraw(); lnHopReadout();
+    LN.cur = LN.start; LN.pos = LN.start; LN.hopping = false; LN.showGoal = false;
+    lnWindow();
+    LN.asked = Date.now();
+    lnSize(); lnHopReadout(); lnStopLoop(); lnLoop();
     document.getElementById('lnSpeech').textContent = 'Let\u2019s finish this one first!';
     say(LN.phrase);
     return;
@@ -2851,22 +3214,27 @@ function lnNewQuestion(){
     document.getElementById('lnQ').textContent =
       LN.start + ' − ' + LN.step + ' = ?   Hop back!';
   }
-  LN.cur = LN.start;
+  LN.cur = LN.start; LN.pos = LN.start; LN.hopping = false; LN.showGoal = false;
+  lnWindow();
   LN.asked = Date.now();
   savePending('line', { span:LN.span, start:LN.start, step:LN.step, ans:LN.ans, op:LN.op, t:0 });
-  lnSize(); lnDraw(); lnHopReadout();
+  lnSize(); lnHopReadout(); lnStopLoop(); lnLoop();
   document.getElementById('lnSpeech').textContent = 'Drag your Pokémon along the line!';
   say(LN.phrase);
 }
 
 function lnMove(v){
   if (LN.locked) return;
-  const nv = Math.max(0, Math.min(LN.span, v));
+  const nv = Math.max(LN.lo, Math.min(LN.hi, v));
   if (nv === LN.cur) return;
   const hops = Math.abs(nv - LN.start);
+  LN.hopFrom = (LN.pos === undefined) ? LN.cur : LN.pos;
+  LN.hopTo = nv;
+  LN.hopT0 = performance.now();
+  LN.hopDur = 230;
+  LN.hopping = true;
   LN.cur = nv;
   blip(380 + hops * 28, 0, .07);
-  lnDraw();
   lnHopReadout();
 }
 function lnHopReadout(){
@@ -2899,6 +3267,7 @@ function lnCheckAnswer(){
     if (LN.tries === 0) bumpStreak(true);   // correct answers never reset a streak
     const praise = praiseLine(LN.tries === 0);
     showPraise(praise + (LN.tries === 0 ? '  ⭐⭐' : '  ⭐'));
+    LN.showGoal = true;
     sndGood(); burst(lnCanvas, LN.tries === 0 ? 10 : 8);
     addStar(LN.tries === 0 ? 2 : 1);
     const fact = LN.op === '+'
@@ -2931,24 +3300,36 @@ function lnCheckAnswer(){
 
 (function lnControls(){
   let dragging = false;
-  function fromEvent(ev){
+  function valAt(cx){
     const r = lnCanvas.getBoundingClientRect();
-    return lnValueAt((ev.clientX - r.left) / r.width * LN.w);
+    return lnValueAt((cx - r.left) / r.width * LN.w);
   }
-  lnCanvas.addEventListener('pointerdown', ev => {
+  lnCanvas.addEventListener('touchstart', ev => {
     if (mode !== 'line') return;
     ev.preventDefault(); audio();
     dragging = true;
-    lnCanvas.setPointerCapture(ev.pointerId);
-    lnMove(fromEvent(ev));
-  });
-  lnCanvas.addEventListener('pointermove', ev => {
+    lnMove(valAt(ev.touches[0].clientX));
+  }, { passive: false });
+  lnCanvas.addEventListener('touchmove', ev => {
     if (!dragging || mode !== 'line') return;
     ev.preventDefault();
-    lnMove(fromEvent(ev));
+    lnMove(valAt(ev.touches[0].clientX));
+  }, { passive: false });
+  ['touchend','touchcancel'].forEach(t =>
+    lnCanvas.addEventListener(t, ev => { ev.preventDefault(); dragging = false; }, { passive: false }));
+  lnCanvas.addEventListener('pointerdown', ev => {
+    if (ev.pointerType === 'touch' || mode !== 'line') return;
+    ev.preventDefault(); audio();
+    dragging = true;
+    lnCanvas.setPointerCapture(ev.pointerId);
+    lnMove(valAt(ev.clientX));
+  });
+  lnCanvas.addEventListener('pointermove', ev => {
+    if (ev.pointerType === 'touch' || !dragging || mode !== 'line') return;
+    lnMove(valAt(ev.clientX));
   });
   ['pointerup','pointercancel'].forEach(t =>
-    lnCanvas.addEventListener(t, () => { dragging = false; }));
+    lnCanvas.addEventListener(t, ev => { if (ev.pointerType !== 'touch') dragging = false; }));
   document.getElementById('lnBack').addEventListener('click', () => { audio(); lnMove(LN.cur - 1); });
   document.getElementById('lnFwd').addEventListener('click', () => { audio(); lnMove(LN.cur + 1); });
   document.getElementById('lnCheck').addEventListener('click', lnCheckAnswer);
@@ -3139,7 +3520,7 @@ document.addEventListener('visibilitychange', () => {
     else setSyncStatus('', 'not connected');
     panel.style.display = 'flex';
   }
-  const CAP_MODES = [['count','Counting'], ['add','Adding'], ['sub','Taking away'], ['zap','Wild Catch'], ['line','Number Line'] ];
+  const CAP_MODES = [['count','Counting'], ['add','Adding'], ['sub','Taking away'], ['zap','Wild Catch'], ['line','Number Line'], ['abacus','Bead Counter'] ];
   function renderVoice(){
     document.getElementById('wvOn').classList.toggle('on', wrongVoice);
     document.getElementById('wvOff').classList.toggle('on', !wrongVoice);
@@ -3215,7 +3596,7 @@ document.addEventListener('visibilitychange', () => {
       ['numbers to 30', TRACE_MAX === 30]
     ];
     document.getElementById('ppVer').textContent =
-      'build v41 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
+      'build v45 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
     showPraise(praiseLine(true));
     say(praiseLine(true));
   });
@@ -3281,7 +3662,8 @@ buildNumRow();
 loadStars();
 window.addEventListener('resize', () => {
   if (mode === 'trace'){ sizeCanvas(); drawTrace(); }
-  if (mode === 'line'){ lnSize(); lnDraw(); }
+  if (mode === 'line'){ lnSize(); }
+  if (mode === 'abacus'){ abSize(); }
 });
 </script>
 </body>
