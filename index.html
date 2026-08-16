@@ -265,6 +265,20 @@
   .cardwon img{ width:110px; border-radius:8px; box-shadow:0 4px 10px rgba(0,0,0,.35); }
   .cardwon.noimg img{ display:none; }
   .cardwontxt{ font-size:14px; font-weight:bold; margin-top:4px; }
+  #cardWin{
+    position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+    z-index:76; pointer-events:none;
+  }
+  #cardWin.on{ display:flex; }
+  #cardWin .cwbox{
+    background:linear-gradient(180deg,#FFFDF4,#FFE9A8);
+    border:5px solid var(--ink); border-radius:26px; padding:14px 20px; text-align:center;
+    box-shadow:0 10px 0 rgba(30,32,70,.5), 0 0 30px rgba(255,201,60,.8);
+    animation:cheer .5s ease;
+  }
+  #cardWin img{ width:130px; border-radius:8px; box-shadow:0 5px 14px rgba(0,0,0,.4); }
+  #cardWin .cwtitle{ font-size:19px; font-weight:bold; margin-bottom:6px; }
+  #cardWin .cwmeta{ font-size:14px; font-weight:bold; margin-top:6px; }
   #cardView{
     position:fixed; inset:0; display:none; align-items:center; justify-content:center;
     background:rgba(24,26,64,.72); z-index:78; padding:18px;
@@ -726,7 +740,7 @@
     <div id="buddyBox"></div>
     <h1>PokéMath Adventure</h1>
     <p class="sub">Play with numbers to catch them all!</p>
-    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v37</div>
+    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v39</div>
     <div class="modes">
       <button class="mode trace" data-go="trace"><span class="big"><img class="mico" data-mon="133" alt=""><span class="micoalt">✏️</span></span>Write<br>Numbers</button>
       <button class="mode count" data-go="count"><span class="big"><img class="mico" data-mon="102" alt=""><span class="micoalt">🔢</span></span>Counting</button>
@@ -861,6 +875,7 @@
 <div id="bigcheer"><span id="cheerText">Great job! ⭐</span></div>
 <div id="catch"><div class="box" id="catchBox"></div></div>
 <div id="cardView"><div class="cvbox" id="cardViewBox"></div></div>
+<div id="cardWin"><div class="cwbox" id="cardWinBox"></div></div>
 <div id="wrongWarn"><div class="ww"><span class="wwsign">⚠️</span><span class="wwtxt">Wrong number!</span></div></div>
 <div id="rightPraise"><div class="rp"><span class="rpsign">🌟</span><span class="rptxt">Well done!</span></div></div>
 <div id="parentPanel">
@@ -1154,9 +1169,7 @@ function ballNeed(){
 // first-try correct answers, so careful thinking is the only route.
 // Each legendary demands a longer perfect run than the last: 12, 15, 18 ... up to 40.
 function streakNeed(){
-  // Each legendary asks for a longer perfect run, capped at 20 in a row.
-  const have = caught.filter(isLegend).length;
-  return Math.min(20, 12 + have * 2);
+  return 10;                      // ten correct in a row wins a legendary
 }
 let streak = 0, bestStreak = 0, legendPending = false;
 let cards = [];        // trading cards earned, by card id
@@ -1164,7 +1177,7 @@ let shinies = [];      // ids caught in their rare shiny form
 let badges = [];       // earned badge ids
 let traced = [];       // numbers he has written
 const SHINY_CHANCE = 0.05;        // any ordinary catch
-const SHINY_CHANCE_LEGEND = 0.16; // legendaries: already earned by a perfect streak
+const SHINY_CHANCE_LEGEND = 0.50; // half of all legendaries arrive shiny
 const isShiny = id => shinies.includes(id);
 let caught = [];       // ids in catch order
 let pkBuddy = 0;       // buddy id (0 = none yet)
@@ -1398,7 +1411,9 @@ function catchMon(){
   const legendary = isLegend(id);
   const shiny = !isShiny(id) &&
     Math.random() < (legendary ? SHINY_CHANCE_LEGEND : SHINY_CHANCE);
-  const newCard = pickCard(id, legendary || shiny);
+  // ordinary catches no longer hand out cards — those come from streaks now.
+  // A legendary or shiny catch still earns a bonus holo-leaning card.
+  const newCard = (legendary || shiny) ? pickCard(id, true) : null;
   if (newCard && !cards.includes(newCard)){
     cards.push(newCard);
     store.set('cubs_cards', cards.join(','));
@@ -1429,7 +1444,7 @@ function catchMon(){
       '<div class="hint">Find them in My Pokémon</div>' +
       (newCard ? '<div class="cardwon"><img src="' + cardImg(newCard) + '" alt="" ' +
         'onerror="this.parentElement.classList.add(\'noimg\')">' +
-        '<div class="cardwontxt">🃏 New card! ' + cardInfo(newCard).rarity + '</div></div>' : '');
+        '<div class="cardwontxt">🃏 Bonus card! ' + cardInfo(newCard).rarity + '</div></div>' : '');
     sndGood();
     const bursts = (leg && shiny) ? 30 : leg ? 24 : shiny ? 20 : 12;
     burst(document.getElementById('catchBox'), bursts);
@@ -1944,11 +1959,50 @@ const fluency = { count: [], add: [], sub: [], zap: [], line: [] };
 const capOverride = { count: 0, add: 0, sub: 0, zap: 0, line: 0 };   // 0 = auto; else hard cap
 const FAST_MS = { count: 9000, add: 8000, sub: 8000, zap: 12000, line: 14000 };
 
+const CARD_EVERY = 4;             // four right in a row wins a trading card
+function awardStreakCard(){
+  const owned = caught.filter(id => cardsFor(id).length);
+  const anyId = Object.keys(CARD_DATA);
+  const pid = owned.length ? owned[rnd(owned.length)] : +anyId[rnd(anyId.length)];
+  const special = streak >= 12;          // long streaks pull the good cards
+  const cid = pickCard(pid, special);
+  if (!cid) return;
+  if (!cards.includes(cid)){
+    cards.push(cid);
+    store.set('cubs_cards', cards.join(','));
+    schedulePush();
+  }
+  renderCardTally();
+  showCardWin(cid);
+  checkBadges();
+}
+function showCardWin(cid){
+  const info = cardInfo(cid);
+  const ov = document.getElementById('cardWin');
+  if (!ov) return;
+  if (overlayBusy()){                     // never sit on top of a catch ceremony
+    setTimeout(() => showCardWin(cid), 1200);
+    return;
+  }
+  clearSigns();
+  document.getElementById('cardWinBox').innerHTML =
+    '<div class="cwtitle">🃏 ' + streak + ' in a row — new card!</div>' +
+    '<img src="' + cardImg(cid) + '" alt="" onerror="this.replaceWith(Object.assign(' +
+    'document.createElement(\'div\'),{textContent:\'🃏\',style:\'font-size:70px\'}))">' +
+    '<div class="cwmeta">' + monName(info.pid) + ' · ' + info.rarity + '</div>';
+  ov.classList.add('on');
+  blip(659,0,.12); blip(880,.14,.16); blip(1047,.3,.2);
+  say('Four in a row! You won a ' + info.rarity + ' ' + monName(info.pid) + ' card!');
+  clearTimeout(showCardWin.t);
+  showCardWin.t = setTimeout(() => ov.classList.remove('on'), 3000);
+}
+
 function bumpStreak(firstTry){
   if (firstTry){
     streak++;
     if (streak > bestStreak) bestStreak = streak;
-    if (streak >= streakNeed() && LEGEND_IDS.some(i => !caught.includes(i)) && caught.length >= 20){
+    if (streak % CARD_EVERY === 0) awardStreakCard();
+    if (streak >= streakNeed() && LEGEND_IDS.some(i => !caught.includes(i)) && caught.length >= 10){
       streak = 0;
       legendPending = true;            // claimed at the next catch ceremony
       showPraise('✨ LEGENDARY UNLOCKED! ✨');
@@ -1970,7 +2024,8 @@ function bumpStreak(firstTry){
 function updateStreakPill(){
   const el = document.getElementById('streakCount');
   if (!el) return;
-  el.textContent = streak + '/' + streakNeed();
+  const toCard = CARD_EVERY - (streak % CARD_EVERY);
+  el.textContent = streak + ' (🃏 in ' + toCard + ')';
   const pill = document.getElementById('streakPill');
   pill.classList.toggle('hot', streak >= streakNeed() - 3);
 }
@@ -3116,7 +3171,7 @@ document.addEventListener('visibilitychange', () => {
       ['numbers to 30', TRACE_MAX === 30]
     ];
     document.getElementById('ppVer').textContent =
-      'build v37 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
+      'build v39 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
     showPraise(praiseLine(true));
     say(praiseLine(true));
   });
