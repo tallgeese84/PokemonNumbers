@@ -238,9 +238,15 @@
     border:4px solid var(--ink); border-radius:20px;
     box-shadow:inset 0 4px 14px rgba(0,0,0,.12);
   }
-  .lnrow{ display:flex; gap:10px; justify-content:center; align-items:center; margin-top:12px; }
-  .lnrow .dpad{ width:70px; height:56px; font-size:26px; padding:0;
+  .lnrow{ display:flex; gap:12px; justify-content:center; align-items:center; margin-top:12px; }
+  .lnrow .dpad{ width:86px; height:62px; font-size:30px; padding:0;
     background:linear-gradient(180deg,#FFFDF4,#EDE2C4); }
+  .hopcount{
+    text-align:center; font-size:19px; font-weight:bold; margin-top:10px;
+    background:linear-gradient(180deg,#FFFDF4,#F3E9CF); border:3px solid var(--ink);
+    border-radius:999px; padding:5px 0; max-width:260px; margin-left:auto; margin-right:auto;
+  }
+  .hopcount.ready{ background:linear-gradient(180deg,#B9F0D8,#6FD8AE); }
   .lnrow #lnCheck{ font-size:22px; background:linear-gradient(180deg,#79DDBD,#2FA97F); color:#fff; }
   .cardgrid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
   .cardslot{
@@ -720,7 +726,7 @@
     <div id="buddyBox"></div>
     <h1>PokéMath Adventure</h1>
     <p class="sub">Play with numbers to catch them all!</p>
-    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v36</div>
+    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v37</div>
     <div class="modes">
       <button class="mode trace" data-go="trace"><span class="big"><img class="mico" data-mon="133" alt=""><span class="micoalt">✏️</span></span>Write<br>Numbers</button>
       <button class="mode count" data-go="count"><span class="big"><img class="mico" data-mon="102" alt=""><span class="micoalt">🔢</span></span>Counting</button>
@@ -740,6 +746,7 @@
     <div class="card">
       <div class="qtext" id="lnQ"></div>
       <canvas id="lnCanvas"></canvas>
+      <div class="hopcount" id="lnHops">Hops: 0</div>
       <div class="lnrow">
         <button class="btn dpad" id="lnBack">◀</button>
         <button class="btn" id="lnCheck">✓ Land here!</button>
@@ -2232,7 +2239,7 @@ function answer(n, btn){
     clearPending(mode);
     progress[mode]++; saveProg();
     recordAnswer(mode, q.tries === 0, Date.now() - (q.asked || 0));
-    bumpStreak(q.tries === 0);
+    if (q.tries === 0) bumpStreak(true);
     checkBadges();
     sndGood(); burst(btn, q.tries === 0 ? 10 : 8);
     addStar(q.tries === 0 ? 2 : 1);   // accuracy is the fast path to catches
@@ -2418,7 +2425,7 @@ function wildTap(n, p, el){
     clearPending('zap');
     progress.zap++; saveProg();
     recordAnswer('zap', zap.wrongs === 0, Date.now() - (zap.asked || 0));
-    bumpStreak(zap.wrongs === 0);
+    if (zap.wrongs === 0) bumpStreak(true);
     checkBadges();
     const fr = zapField.getBoundingClientRect();
     addStar(1); burst([fr.left + tx, fr.top + ty], 8);
@@ -2718,7 +2725,7 @@ function lnNewQuestion(){
       ? LN.start + ' + ' + LN.step + ' = ?   Hop forward!'
       : LN.start + ' − ' + LN.step + ' = ?   Hop back!';
     LN.cur = LN.start; LN.asked = Date.now();
-    lnSize(); lnDraw();
+    lnSize(); lnDraw(); lnHopReadout();
     document.getElementById('lnSpeech').textContent = 'Let\u2019s finish this one first!';
     say(LN.phrase);
     return;
@@ -2748,7 +2755,7 @@ function lnNewQuestion(){
   LN.cur = LN.start;
   LN.asked = Date.now();
   savePending('line', { span:LN.span, start:LN.start, step:LN.step, ans:LN.ans, op:LN.op, t:0 });
-  lnSize(); lnDraw();
+  lnSize(); lnDraw(); lnHopReadout();
   document.getElementById('lnSpeech').textContent = 'Drag your Pokémon along the line!';
   say(LN.phrase);
 }
@@ -2761,17 +2768,36 @@ function lnMove(v){
   LN.cur = nv;
   blip(380 + hops * 28, 0, .07);
   lnDraw();
+  lnHopReadout();
+}
+function lnHopReadout(){
+  const el = document.getElementById('lnHops');
+  if (!el) return;
+  const hops = Math.abs(LN.cur - LN.start);
+  const wrongWay = (LN.op === '+' && LN.cur < LN.start) || (LN.op === '-' && LN.cur > LN.start);
+  el.textContent = wrongWay
+    ? 'Wrong way! Hop ' + (LN.op === '+' ? 'forward →' : '← back')
+    : 'Hops: ' + hops + ' of ' + LN.step;
+  el.classList.toggle('ready', !wrongWay && hops === LN.step);
 }
 
 function lnCheckAnswer(){
   if (LN.locked) return;
   audio();
+  if (LN.cur === LN.start && LN.ans !== LN.start){
+    // he hasn't moved yet — just remind him, don't punish
+    document.getElementById('lnSpeech').textContent =
+      'Hop ' + LN.step + (LN.op === '+' ? ' forward' : ' back') + ' first, then land!';
+    say('Hop ' + NUM_WORDS[LN.step] + (LN.op === '+' ? ' forward' : ' back') + ' first!');
+    blip(440, 0, .12);
+    return;
+  }
   if (LN.cur === LN.ans){
     LN.locked = true;
     clearPending('line');
     progress.line = (progress.line || 0) + 1; saveProg();
     recordAnswer('line', LN.tries === 0, Date.now() - (LN.asked || 0));
-    bumpStreak(LN.tries === 0);
+    if (LN.tries === 0) bumpStreak(true);   // correct answers never reset a streak
     const praise = praiseLine(LN.tries === 0);
     showPraise(praise + (LN.tries === 0 ? '  ⭐⭐' : '  ⭐'));
     sndGood(); burst(lnCanvas, LN.tries === 0 ? 10 : 8);
@@ -3090,7 +3116,7 @@ document.addEventListener('visibilitychange', () => {
       ['numbers to 30', TRACE_MAX === 30]
     ];
     document.getElementById('ppVer').textContent =
-      'build v36 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
+      'build v37 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
     showPraise(praiseLine(true));
     say(praiseLine(true));
   });
