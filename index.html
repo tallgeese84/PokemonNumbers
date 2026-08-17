@@ -229,6 +229,28 @@
     filter:drop-shadow(0 1px 0 rgba(255,255,255,.9));
     animation:hintpop .7s ease;
   }
+  #catch .box.megabox{
+    background:linear-gradient(180deg,#F3E8FF,#D9C2FF 55%,#FFE0F2);
+    border-color:#6C3FB5;
+    box-shadow:0 10px 0 rgba(30,32,70,.55), 0 0 52px rgba(155,123,239,.95);
+    animation:megaglow 1s ease-in-out infinite alternate;
+  }
+  @keyframes megaglow{
+    from{ box-shadow:0 10px 0 rgba(30,32,70,.55), 0 0 30px rgba(155,123,239,.85) }
+    to{ box-shadow:0 10px 0 rgba(30,32,70,.55), 0 0 66px rgba(255,120,220,.95) }
+  }
+  #catch .megabanner{
+    font-size:20px; font-weight:bold; letter-spacing:2px;
+    background:linear-gradient(90deg,#7A58D0,#E0503F,#FFC93C,#7A58D0);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    filter:drop-shadow(0 1px 0 rgba(255,255,255,.9));
+    animation:hintpop .7s ease;
+  }
+  .tcard.megacard{
+    background:linear-gradient(180deg,#F3E8FF,#D9C2FF); border-color:#6C3FB5;
+    box-shadow:0 5px 0 rgba(30,32,70,.4), 0 0 16px rgba(155,123,239,.85);
+  }
+  .tcard.megacard::before{ content:"⚡"; display:block; font-size:12px; margin-top:-4px; }
   #catch .shinybanner{
     font-size:20px; font-weight:bold; letter-spacing:3px; color:#B8860B;
     text-shadow:0 1px 0 #fff; animation:hintpop .6s ease;
@@ -745,7 +767,7 @@
     <div id="buddyBox"></div>
     <h1>PokéMath Adventure</h1>
     <p class="sub">Play with numbers to catch them all!</p>
-    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v45</div>
+    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v46</div>
     <div class="modes">
       <button class="mode trace" data-go="trace"><span class="big"><img class="mico" data-mon="133" alt=""><span class="micoalt">✏️</span></span>Write<br>Numbers</button>
       <button class="mode count" data-go="count"><span class="big"><img class="mico" data-mon="102" alt=""><span class="micoalt">🔢</span></span>Counting</button>
@@ -822,6 +844,7 @@
         <button class="btn" id="teamAll" style="font-size:16px;padding:6px 14px">All</button>
         <button class="btn" id="teamLeg" style="font-size:16px;padding:6px 14px">✨ Legendary</button>
         <button class="btn" id="teamShiny" style="font-size:16px;padding:6px 14px">💎 Shiny</button>
+        <button class="btn" id="teamMega" style="font-size:16px;padding:6px 14px">⚡ Mega</button>
       </div>
       <div class="tgrid" id="tgrid"></div>
     </div>
@@ -1176,7 +1199,7 @@ const DEX = ["Bulbasaur","Ivysaur","Venusaur","Charmander","Charmeleon","Chariza
 const LEGENDS = {243:"Raikou",244:"Entei",245:"Suicune",249:"Lugia",250:"Ho-Oh",251:"Celebi",377:"Regirock",378:"Regice",379:"Registeel",380:"Latias",381:"Latios",382:"Kyogre",383:"Groudon",384:"Rayquaza",385:"Jirachi",386:"Deoxys",480:"Uxie",481:"Mesprit",482:"Azelf",483:"Dialga",484:"Palkia",485:"Heatran",486:"Regigigas",487:"Giratina",488:"Cresselia",489:"Phione",490:"Manaphy",491:"Darkrai",492:"Shaymin",493:"Arceus",494:"Victini",638:"Cobalion",639:"Terrakion",640:"Virizion",641:"Tornadus",642:"Thundurus",643:"Reshiram",644:"Zekrom",645:"Landorus",646:"Kyurem",647:"Keldeo",648:"Meloetta",649:"Genesect",716:"Xerneas",717:"Yveltal",718:"Zygarde",719:"Diancie",720:"Hoopa",721:"Volcanion",785:"Tapu Koko",786:"Tapu Lele",787:"Tapu Bulu",788:"Tapu Fini",789:"Cosmog",790:"Cosmoem",791:"Solgaleo",792:"Lunala",800:"Necrozma",801:"Magearna",802:"Marshadow",807:"Zeraora",808:"Meltan",809:"Melmetal",888:"Zacian",889:"Zamazenta",890:"Eternatus",894:"Regieleki",895:"Regidrago",896:"Glastrier",897:"Spectrier",898:"Calyrex",905:"Enamorus",1007:"Koraidon",1008:"Miraidon",1017:"Ogerpon",1024:"Terapagos",1025:"Pecharunt"};
 const LEGEND_IDS = Object.keys(LEGENDS).map(Number);
 const isLegend = id => !!LEGENDS[id];
-const monName = id => DEX[id - 1] || ('#' + id);
+const monName = id => (MEGA[id] ? MEGA[id][0] : DEX[id - 1]) || ('#' + id);
 const DEX_TOTAL = DEX.length;                       // every Pokémon from the API
 const SPR = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/';
 const imgSmall = id => SPR + id + '.png';
@@ -1226,9 +1249,10 @@ function updateBallPill(){
 }
 function renderBuddyHome(){
   const box = document.getElementById('buddyBox');
-  const lc = caught.filter(isLegend).length;
+  const lc = caught.filter(isLegend).length, mc = caught.filter(isMega).length;
   document.getElementById('teamTally').textContent =
-    '(' + caught.length + '/' + DEX_TOTAL + (lc ? '  ✨' + lc : '') + (shinies.length ? '  💎' + shinies.length : '') + ')';
+    '(' + caught.length + '/' + DEX_TOTAL + (lc ? '  ✨' + lc : '') +
+    (mc ? '  ⚡' + mc : '') + (shinies.length ? '  💎' + shinies.length : '') + ')';
   renderBadgeTally();
   if (!pkBuddy){
     box.innerHTML = '<div class="bname">Win ' + (ballNeed() - ballStars) + ' more ⭐ to meet your first Pokémon!</div>';
@@ -1241,15 +1265,18 @@ function renderBuddyHome(){
 let teamFilter = 'all';
 function renderTeam(){
   const legCount = caught.filter(isLegend).length;
+  const megaCount = caught.filter(isMega).length;
   document.getElementById('teamHead').textContent = 'Caught ' + caught.length + ' of ' + DEX_TOTAL +
-    '  ·  ✨ ' + legCount + ' legendary';
+    '  ·  ✨ ' + legCount + ' legendary' + (megaCount ? '  ·  ⚡ ' + megaCount + ' mega' : '');
   document.getElementById('teamAll').classList.toggle('on', teamFilter === 'all');
   document.getElementById('teamLeg').classList.toggle('on', teamFilter === 'legend');
   document.getElementById('teamShiny').classList.toggle('on', teamFilter === 'shiny');
+  document.getElementById('teamMega').classList.toggle('on', teamFilter === 'mega');
   const grid = document.getElementById('tgrid');
   grid.innerHTML = '';
   const list = teamFilter === 'legend' ? caught.filter(isLegend)
              : teamFilter === 'shiny' ? caught.filter(isShiny)
+             : teamFilter === 'mega' ? caught.filter(isMega)
              : caught;
   if (!list.length && teamFilter !== 'all'){
     const none = document.createElement('div');
@@ -1257,12 +1284,15 @@ function renderTeam(){
     none.style.fontSize = '15px';
     none.textContent = teamFilter === 'legend'
       ? 'No legendary Pokémon yet — get ' + streakNeed() + ' answers right in a row to unlock one!'
+      : teamFilter === 'mega'
+      ? 'No Mega or Primal forms yet — keep winning legendaries and one will appear!'
       : 'No shiny Pokémon yet — every catch has a small chance of being shiny. Keep playing!';
     grid.appendChild(none);
   }
   list.forEach(id => {
     const card = document.createElement('button');
-    card.className = 'tcard' + (id === pkBuddy ? ' buddy' : '') + (isLegend(id) ? ' legend' : '') +
+    card.className = 'tcard' + (id === pkBuddy ? ' buddy' : '') +
+      (isMega(id) ? ' megacard' : isLegend(id) ? ' legend' : '') +
       (isShiny(id) ? ' shinycard' : '');
     card.innerHTML = '<img class="' + (isShiny(id) ? 'shiny' : '') + '" src="' + imgArt(id) + '" alt="" onerror="this.style.display=\'none\'">' +
       '<div>' + monName(id) + '</div>';
@@ -1283,12 +1313,20 @@ function renderTeam(){
 }
 const CARD_ART=["Ken Sugimori","Mitsuhiro Arita","Yuka Morii","Hironobu Yoshida","Atsuko Nishida","Sumiyoshi Kizuki","Kagemaru Himeno","Shin-ichi Yoshida","Tomokazu Komiya","Miki Tanaka","Keiji Kinebuchi","\"Big Mama\" Tagawa, CR CG gangs","Christopher Rush","Benimaru Itoh","Masako Yamashita","Toshinao Aoki","Aya Kusube","Yukiko Baba","Naoyo Kimura","Tomoaki Imakuni","Hiromichi Sugiyama","Hiromichi Sugiyama, CR CG gangs","K. Hoshiba, CR CG gangs","Gakuji Nomoto","Keita Komatsuya, CR CG gangs","Kimiya Masago","Craig Turvey","Kunihiko Yuyama","Hideki Kazama","CR CG gangs","Hajime Kusajima","Etsuya Hattori","Shin-ichi Yoshikawa, CR CG gangs","Jungo Suzuki, CR CG gangs"];
 const CARD_DATA={"65":[["base1-1",3,0],["base4-1",3,0],["base5-1",3,0],["base5-18",2,0],["gym2-16",3,0]],"9":[["base1-2",3,0],["base4-2",3,0],["base5-3",3,1],["base5-20",2,1]],"113":[["base1-3",3,0],["base4-3",3,0],["neo4-31",1,2]],"6":[["base1-4",3,1],["base4-4",3,1],["base5-4",3,0],["base5-21",2,0],["gym2-2",3,0],["neo4-107",5,3]],"35":[["base1-5",3,0],["base4-6",3,0],["gym1-25",2,0],["gym2-40",1,4],["neo1-30",1,5]],"130":[["base1-6",3,1],["base4-7",3,1],["base5-8",3,6],["base5-25",2,6],["gym2-5",3,0],["gym2-13",3,0],["neo3-65",5,0]],"107":[["base1-7",3,0],["base4-8",3,0],["gym1-11",3,0],["neo4-69",0,7]],"68":[["base1-8",3,0],["base5-10",3,1],["base5-27",2,1],["basep-43",4,8],["gym2-6",3,0],["neo4-25",2,9]],"82":[["base1-9",3,10],["base3-11",3,0],["base3-26",2,0],["base4-9",3,10],["base5-11",3,9],["base5-28",2,9],["gym1-8",3,0],["neo3-10",3,11]],"150":[["base1-10",3,0],["base4-10",3,0],["basep-3",4,0],["basep-12",4,12],["basep-14",4,13],["gym2-14",3,7],["neo4-109",5,3]],"34":[["base1-11",3,0],["base4-11",3,0],["gym2-7",3,0]],"38":[["base1-12",3,0],["base4-13",3,0],["gym2-3",3,0],["gym2-21",2,0],["neo4-50",1,14]],"62":[["base1-13",3,0],["base4-15",3,0],["gym1-31",2,0],["neo2-9",3,7],["neo2-28",2,7]],"26":[["base1-14",3,0],["base3-14",3,1],["base3-29",2,1],["base4-16",3,0],["base5-83",6,1],["gym1-28",2,0],["gym2-11",3,0],["neo3-21",2,14],["neo4-111",5,3]],"3":[["base1-15",3,1],["base4-18",3,1],["basep-13",4,0],["gym2-4",3,0]],"145":[["base1-16",3,0],["base3-15",3,1],["base3-30",2,1],["base4-20",3,0],["basep-23",4,15],["gym2-15",3,7]],"15":[["base1-17",2,0],["base4-21",2,0],["gym2-9",3,0],["neo2-18",2,16]],"148":[["base1-18",2,1],["base4-22",2,1],["base5-33",1,6],["gym1-4",3,4],["neo4-22",2,4]],"51":[["base1-19",2,10],["base4-23",2,10],["base5-6",3,6],["base5-23",2,6],["gym2-22",2,0]],"125":[["base1-20",2,0],["base4-24",2,0],["basep-2",4,0],["basep-46",4,9],["gym1-6",3,0],["gym1-27",2,0],["neo1-33",1,7]],"101":[["base1-21",2,10],["base2-2",3,1],["base2-18",2,1],["base4-25",2,10],["base5-34",1,0],["gym2-52",1,0]],"17":[["base1-22",2,0],["base4-28",2,0],["gym2-27",2,0]],"59":[["base1-23",1,0],["base4-33",1,0],["basep-6",4,0],["gym2-1",3,0],["neo4-12",3,4]],"5":[["base1-24",1,1],["base4-35",1,1],["base5-32",1,6],["gym2-31",1,0]],"87":[["base1-25",1,1],["base4-36",1,1],["gym2-54",1,0],["neo4-45",1,14]],"147":[["base1-26",1,0],["base4-38",1,0],["base5-53",0,6],["gym1-42",1,0],["neo4-63",0,2]],"83":[["base1-27",1,0],["base4-40",1,0],["neo3-43",0,9]],"58":[["base1-28",1,0],["base4-42",1,0],["gym1-35",1,0],["gym1-62",0,4],["gym2-62",0,0],["neo4-68",0,4]],"93":[["base1-29",1,10],["base3-6",3,0],["base3-21",2,0],["base4-43",1,10],["gym1-58",1,4],["gym2-55",1,0],["neo4-36",1,16]],"2":[["base1-30",1,0],["base4-44",1,0],["gym2-41",1,0]],"124":[["base1-31",1,0],["base4-45",1,0],["gym1-59",1,0],["gym2-57",1,4],["neo3-31",1,8]],"64":[["base1-32",1,0],["base4-46",1,0],["base5-39",1,6],["gym2-58",1,0]],"14":[["base1-33",1,10],["base4-47",1,10],["gym2-47",1,0],["neo2-41",1,17]],"67":[["base1-34",1,0],["base4-49",1,0],["base5-40",1,1],["gym2-42",1,0],["neo4-49",1,9]],"129":[["base1-35",1,1],["base4-50",1,1],["base5-47",1,6],["gym2-73",0,0],["gym2-88",0,0],["neo3-66",5,0]],"126":[["base1-36",1,0],["base3-39",1,1],["base4-51",1,0],["basep-44",4,4],["gym1-37",1,0],["neo1-40",1,18]],"33":[["base1-37",1,1],["base4-54",1,1],["gym2-45",1,0]],"61":[["base1-38",1,0],["base4-57",1,0],["gym1-53",1,0],["neo2-44",1,6]],"137":[["base1-39",1,19],["base5-48",1,10],["basep-15",4,20],["gym2-98",0,0],["neo4-78",0,21]],"20":[["base1-40",1,0],["base4-58",1,0],["base5-51",0,7],["gym1-51",1,0],["gym2-53",1,0]],"86":[["base1-41",1,0],["base4-61",1,0],["gym1-88",0,4],["gym2-91",0,0],["neo4-81",0,14]],"8":[["base1-42",1,0],["base4-63",1,0],["base5-46",1,6]],"63":[["base1-43",0,1],["base4-65",0,1],["base5-49",0,5],["basep-19",4,4],["gym1-91",0,0],["gym2-93",0,0],["gym2-94",0,0]],"1":[["base1-44",0,1],["base4-67",0,1],["gym2-39",1,0]],"10":[["base1-45",0,0],["base4-68",0,0],["neo2-53",0,2]],"4":[["base1-46",0,1],["base4-69",0,1],["base5-50",0,6],["gym1-61",0,0],["gym2-60",0,0]],"50":[["base1-47",0,10],["base4-71",0,10],["base5-52",0,5],["gym2-67",0,0]],"84":[["base1-48",0,1],["base4-72",0,1],["gym2-61",0,0]],"96":[["base1-49",0,0],["base4-73",0,0],["base5-54",0,6],["gym1-92",0,4],["gym2-95",0,0]],"92":[["base1-50",0,10],["base3-33",1,1],["base4-75",0,10],["gym1-93",0,0],["gym2-96",0,0],["gym2-97",0,4],["neo4-65",0,16]],"109":[["base1-51",0,1],["base5-58",0,5],["gym2-48",1,0],["gym2-79",0,0]],"66":[["base1-52",0,1],["base4-78",0,1],["base5-59",0,0],["gym2-72",0,0],["neo4-73",0,15]],"81":[["base1-53",0,10],["base4-79",0,10],["base5-60",0,9],["gym1-50",1,4],["gym1-80",0,0],["neo2-7",3,22],["neo2-26",2,22]],"11":[["base1-54",0,0],["base4-81",0,0],["neo2-42",1,5]],"32":[["base1-55",0,0],["base4-83",0,0],["gym2-76",0,0]],"95":[["base1-56",0,0],["base4-84",0,0],["gym1-21",2,13],["gym1-69",0,0],["neo1-69",0,1]],"16":[["base1-57",0,0],["base4-86",0,0],["gym2-49",1,4],["gym2-80",0,0]],"25":[["base1-58",0,1],["base2-60",0,0],["base4-87",0,1],["basep-1",4,10],["basep-4",4,0],["basep-24",4,6],["basep-25",4,15],["basep-26",4,23],["basep-27",4,4],["basep-28",4,15],["gym1-81",0,0],["gym2-84",0,4],["neo1-70",0,18]],"60":[["base1-59",0,0],["base4-88",0,0],["gym1-87",0,0],["gym2-89",0,0],["neo2-62",0,16]],"77":[["base1-60",0,0],["base5-64",0,4],["gym1-63",0,0],["gym2-64",0,0]],"19":[["base1-61",0,1],["base4-89",0,1],["base5-66",0,4],["gym1-82",0,0],["gym2-85",0,4]],"27":[["base1-62",0,0],["base4-91",0,0],["gym1-71",0,0],["gym1-72",0,0]],"7":[["base1-63",0,1],["base4-93",0,1],["base5-68",0,4]],"121":[["base1-64",0,10],["base4-94",0,10],["gym1-56",1,0],["neo3-25",2,24]],"120":[["base1-65",0,10],["base4-95",0,10],["gym1-90",0,0],["gym2-92",0,0],["neo3-56",0,1]],"114":[["base1-66",0,1],["base4-96",0,1],["gym1-79",0,0],["gym2-81",0,4]],"100":[["base1-67",0,10],["base4-98",0,10],["base5-69",0,0],["gym1-84",0,0],["gym2-86",0,4]],"37":[["base1-68",0,0],["base4-99",0,0],["gym1-65",0,0],["gym1-73",0,0],["gym2-37",1,0],["gym2-66",0,0],["neo4-91",0,14]],"13":[["base1-69",0,1],["base4-100",0,1],["gym2-82",0,0],["neo2-70",0,9]],"36":[["base2-1",3,1],["base2-17",2,1],["base4-5",3,1],["gym1-3",3,4]],"136":[["base2-3",3,6],["base2-19",2,6],["base5-35",1,1],["neo4-46",1,4]],"135":[["base2-4",3,6],["base2-20",2,6],["base5-38",1,1],["gym2-28",2,0],["neo4-48",1,18]],"115":[["base2-5",3,1],["base2-21",2,1],["base4-26",2,1],["gym1-36",1,0]],"122":[["base2-6",3,0],["base2-22",2,0],["base4-27",2,0],["gym1-94",0,0],["gym2-59",1,0]],"31":[["base2-7",3,0],["base2-23",2,0],["base4-12",3,0],["gym2-23",2,0]],"18":[["base2-8",3,6],["base2-24",2,6],["base4-14",3,6]],"127":[["base2-9",3,6],["base2-25",2,6],["base4-29",2,6],["gym2-24",2,0]],"123":[["base2-10",3,0],["base2-26",2,0],["base4-17",3,0],["basep-45",4,3],["gym1-13",3,0],["neo2-46",1,25],["neo4-55",1,7]],"143":[["base2-11",3,0],["base2-27",2,0],["base4-30",2,0],["basep-49",4,26],["gym1-33",2,7]],"134":[["base2-12",3,6],["base2-28",2,6],["base5-45",1,1],["neo4-52",1,6]],"49":[["base2-13",3,0],["base2-29",2,0],["base4-31",2,0],["gym1-34",2,0],["neo4-53",1,14]],"71":[["base2-14",3,0],["base2-30",2,0],["base4-32",2,0],["gym1-26",2,0]],"45":[["base2-15",3,10],["base2-31",2,10],["base5-13",3,6],["base5-30",2,6],["gym1-5",3,0]],"40":[["base2-16",3,1],["base2-32",2,1],["base4-19",3,1],["neo4-40",1,9],["neo4-54",1,18]],"12":[["base2-33",1,6],["base4-34",1,6],["neo2-19",2,4]],"85":[["base2-34",1,1],["base4-37",1,1],["gym2-32",1,0]],"103":[["base2-35",1,6],["base4-39",1,6],["gym1-44",1,0],["neo4-33",1,15]],"22":[["base2-36",1,1],["base4-41",1,1],["gym1-7",3,0]],"44":[["base2-37",1,10],["base5-36",1,6],["gym1-45",1,0],["gym1-46",1,0],["neo1-36",1,1]],"108":[["base2-38",1,1],["base4-48",1,1],["gym1-41",1,0]],"105":[["base2-39",1,1],["base4-52",1,1]],"30":[["base2-40",1,0],["base4-53",1,0],["gym2-44",1,0]],"47":[["base2-41",1,0],["base4-55",1,0],["neo3-35",1,4]],"53":[["base2-42",1,6],["base4-56",1,6],["base5-42",1,7],["basep-17",4,0],["gym2-8",3,0]],"57":[["base2-43",1,6],["base5-43",1,1],["gym2-35",1,0]],"78":[["base2-44",1,1],["base5-44",1,6],["basep-51",4,1],["gym2-33",1,0]],"112":[["base2-45",1,6],["base4-59",1,6],["gym1-2",3,0]],"119":[["base2-46",1,6],["base4-60",1,6],["gym1-55",1,0],["neo3-37",1,9]],"128":[["base2-47",1,6],["base4-62",1,6],["gym1-64",0,0]],"70":[["base2-48",1,6],["base4-64",1,6],["gym1-48",1,4],["gym1-49",1,0]],"69":[["base2-49",0,6],["base4-66",0,6],["gym1-75",0,4],["gym1-76",0,0],["gym2-38",1,0]],"104":[["base2-50",0,1],["base4-70",0,1]],"133":[["base2-51",0,6],["base5-55",0,4],["basep-11",4,6],["gym2-51",1,0],["neo2-38",1,16]],"102":[["base2-52",0,1],["base4-74",0,1],["gym1-43",1,4],["gym1-77",0,0],["neo4-64",0,15]],"118":[["base2-53",0,6],["base4-76",0,6],["gym1-30",2,0],["gym1-85",0,4],["neo3-45",0,2]],"39":[["base2-54",0,6],["base4-77",0,6],["basep-7",4,10],["gym2-69",0,0],["neo4-44",1,2]],"56":[["base2-55",0,6],["base5-61",0,5],["gym1-67",0,4],["gym1-68",0,0],["gym2-63",0,4]],"52":[["base2-56",0,1],["base4-80",0,1],["base5-62",0,4],["basep-10",4,6],["basep-18",4,27],["gym2-43",1,4],["gym2-74",0,0]],"29":[["base2-57",0,0],["base4-82",0,0],["gym2-75",0,0]],"43":[["base2-58",0,10],["base5-63",0,6],["gym1-47",1,4],["gym1-78",0,0],["gym2-70",0,0],["neo1-68",0,5]],"46":[["base2-59",0,0],["base4-85",0,0],["gym2-71",0,0],["neo3-47",0,6]],"111":[["base2-61",0,1],["base4-90",0,1],["gym1-22",2,0],["gym1-70",0,0],["gym2-65",0,0]],"21":[["base2-62",0,1],["base4-92",0,1],["gym1-52",1,0],["gym1-83",0,4]],"48":[["base2-63",0,1],["base4-97",0,1],["gym1-96",0,0],["neo4-90",0,14]],"142":[["base3-1",3,6],["base3-16",2,6],["neo3-15",2,7]],"144":[["base3-2",3,1],["base3-17",2,1],["basep-22",4,15],["basep-48",4,4]],"132":[["base3-3",3,10],["base3-18",2,10],["gym2-10",3,0]],"149":[["base3-4",3,6],["base3-19",2,6],["base5-5",3,1],["base5-22",2,1],["basep-5",4,15],["neo4-14",3,4]],"94":[["base3-5",3,10],["base3-20",2,10],["gym1-14",3,0],["gym2-29",2,0],["neo4-6",3,16]],"106":[["base3-7",3,0],["base3-22",2,0],["neo4-42",1,17]],"97":[["base3-8",3,0],["base3-23",2,0],["base5-9",3,6],["base5-26",2,6],["gym2-56",1,0]],"141":[["base3-9",3,0],["base3-24",2,0],["neo2-6",3,25],["neo2-25",2,25],["neo4-108",5,3]],"131":[["base3-10",3,0],["base3-25",2,0]],"146":[["base3-12",3,1],["base3-27",2,1],["basep-21",4,15],["gym1-1",3,0],["gym1-12",3,0]],"89":[["base3-13",3,1],["base3-28",2,1],["base5-41",1,6],["gym2-26",2,0]],"24":[["base3-31",1,0],["base5-2",3,1],["base5-19",2,1],["gym2-25",2,0]],"91":[["base3-32",1,6],["gym1-29",2,0]],"42":[["base3-34",1,6],["base5-7",3,1],["base5-24",2,1],["gym1-39",1,0],["gym2-46",1,0],["neo3-29",1,14]],"55":[["base3-35",1,6],["base5-37",1,1],["gym2-12",3,0],["gym2-30",2,0],["neo4-47",1,4]],"76":[["base3-36",1,6],["gym1-20",2,0]],"75":[["base3-37",1,6],["gym1-40",1,0],["gym2-34",1,4],["neo3-30",1,17]],"99":[["base3-38",1,6]],"139":[["base3-40",1,0],["neo2-43",1,7],["neo4-19",2,8]],"28":[["base3-41",1,0],["gym1-23",2,0],["gym2-36",1,4]],"117":[["base3-42",1,0],["gym1-9",3,4],["neo1-48",1,7]],"80":[["base3-43",1,6],["base5-12",3,1],["base5-29",2,1],["gym1-60",1,0],["neo4-51",1,8]],"73":[["base3-44",1,6],["gym1-10",3,0]],"110":[["base3-45",1,1],["base5-14",3,7],["base5-31",2,7],["gym2-50",1,0]],"23":[["base3-46",0,6],["base5-56",0,0],["gym2-77",0,0]],"74":[["base3-47",0,6],["gym1-38",1,4],["gym1-66",0,0],["gym2-68",0,0],["neo3-44",0,14]],"88":[["base3-48",0,1],["base5-57",0,6],["gym2-78",0,0]],"116":[["base3-49",0,1],["gym1-86",0,0],["gym2-87",0,0],["neo1-62",0,9]],"140":[["base3-50",0,0],["neo2-56",0,2]],"98":[["base3-51",0,1]],"138":[["base3-52",0,6],["neo2-60",0,2],["neo4-37",1,8]],"54":[["base3-53",0,6],["base5-65",0,1],["basep-20",4,6],["gym1-54",1,4],["gym2-90",0,0],["gym2-99",0,0],["neo4-79",0,2]],"90":[["base3-54",0,1],["gym1-89",0,0]],"79":[["base3-55",0,9],["base5-67",0,5],["gym1-95",0,0],["neo1-73",0,8]],"72":[["base3-56",0,6],["gym1-32",2,0],["gym1-57",1,0]],"41":[["base3-57",0,6],["base5-70",0,1],["gym1-24",2,0],["gym1-74",0,4],["gym2-83",0,0],["neo3-59",0,17]],"151":[["basep-8",4,0],["basep-9",4,0],["basep-47",4,0]],"183":[["basep-29",4,0],["neo1-66",0,4]],"175":[["basep-30",4,0],["neo1-51",1,18],["neo4-56",1,2]],"173":[["basep-31",4,0],["neo1-20",2,6]],"235":[["basep-32",4,8],["neo2-11",3,3],["neo2-30",2,3]],"212":[["basep-33",4,3],["neo2-10",3,25],["neo2-29",2,25],["neo4-9",3,1]],"244":[["basep-34",4,0],["neo3-6",3,0],["neo3-17",2,18]],"172":[["basep-35",4,0],["neo1-12",3,0]],"174":[["basep-36",4,6],["neo2-40",1,9]],"237":[["basep-37",4,4],["neo2-3",3,5],["neo2-22",2,5]],"201":[["basep-38",4,28],["neo2-14",3,29],["neo2-33",2,29],["neo2-47",1,29],["neo2-48",1,29],["neo2-49",1,29],["neo2-50",1,29],["neo2-51",1,29],["neo2-67",0,29],["neo2-68",0,29],["neo2-69",0,29],["neo3-39",1,29],["neo3-40",1,29],["neo3-58",0,29],["neo4-27",2,29],["neo4-28",2,29],["neo4-29",2,29],["neo4-30",2,29],["neo4-57",1,29],["neo4-58",1,29],["neo4-59",1,29],["neo4-60",1,29],["neo4-86",0,29],["neo4-87",0,29],["neo4-88",0,29],["neo4-89",0,29]],"200":[["basep-39",4,7],["neo3-11",3,0]],"251":[["basep-50",4,30],["neo3-3",3,3],["neo3-16",2,5],["neo4-106",5,3]],"250":[["basep-52",4,1],["neo3-7",3,25],["neo3-18",2,16]],"245":[["basep-53",4,4],["neo3-14",3,0],["neo3-27",2,18]],"181":[["neo1-1",3,0],["neo3-1",3,15],["neo4-1",3,6]],"184":[["neo1-2",3,0],["neo4-13",3,2]],"182":[["neo1-3",3,4]],"160":[["neo1-4",3,0],["neo1-5",3,0],["neo4-5",3,4]],"214":[["neo1-6",3,0],["neo4-41",1,22]],"189":[["neo1-7",3,4],["neo3-9",3,6]],"230":[["neo1-8",3,0],["neo3-19",2,1]],"249":[["neo1-9",3,3],["neo3-20",2,16]],"154":[["neo1-10",3,0],["neo1-11",3,0]],"227":[["neo1-13",3,0],["neo3-23",2,16]],"199":[["neo1-14",3,0],["neo4-20",2,8]],"208":[["neo1-15",3,0],["neo4-112",5,0]],"176":[["neo1-16",3,0],["neo4-15",3,18]],"157":[["neo1-17",3,7],["neo1-18",3,0],["neo4-10",3,1]],"232":[["neo1-21",2,0],["neo4-3",3,7]],"239":[["neo1-22",2,9]],"240":[["neo1-23",2,0]],"198":[["neo1-24",2,7],["neo3-46",0,3]],"215":[["neo1-25",2,0],["neo3-24",2,5]],"190":[["neo1-26",1,3],["neo3-41",0,5]],"168":[["neo1-27",1,0],["neo4-17",2,15]],"153":[["neo1-28",1,0],["neo1-29",1,0]],"159":[["neo1-31",1,0],["neo1-32",1,0],["neo4-32",1,7]],"180":[["neo1-34",1,0],["neo3-28",1,15],["neo4-34",1,6]],"162":[["neo1-35",1,0]],"210":[["neo1-37",1,0]],"171":[["neo1-38",1,0],["neo3-32",1,6],["neo4-23",2,9]],"166":[["neo1-39",1,0],["neo4-24",2,8]],"241":[["neo1-41",1,0]],"164":[["neo1-42",1,0],["neo4-110",5,0]],"231":[["neo1-43",1,0],["neo4-76",0,9]],"221":[["neo1-44",1,0],["neo3-36",1,4],["neo4-26",2,17]],"195":[["neo1-45",1,4],["neo3-48",0,2]],"156":[["neo1-46",1,0],["neo1-47",1,0],["neo4-39",1,1]],"188":[["neo1-49",1,4],["neo3-52",0,1]],"192":[["neo1-50",1,6],["neo4-72",0,15]],"178":[["neo1-52",1,0],["neo2-52",1,5]],"152":[["neo1-53",0,18],["neo1-54",0,0]],"170":[["neo1-55",0,0],["neo3-42",0,4]],"155":[["neo1-56",0,0],["neo1-57",0,7],["neo4-61",0,17]],"203":[["neo1-58",0,0],["neo4-66",0,2]],"207":[["neo1-59",0,3],["neo4-67",0,0]],"163":[["neo1-60",0,5]],"187":[["neo1-61",0,4],["neo2-55",0,6]],"165":[["neo1-63",0,5],["neo4-71",0,8]],"226":[["neo1-64",0,0],["neo4-74",0,17]],"179":[["neo1-65",0,0],["neo2-58",0,4],["neo4-75",0,6]],"177":[["neo1-67",0,0],["neo2-59",0,5]],"161":[["neo1-71",0,0],["neo2-63",0,5]],"213":[["neo1-72",0,0],["neo3-51",0,2]],"209":[["neo1-74",0,1],["neo3-55",0,8]],"167":[["neo1-75",0,0],["neo2-64",0,17]],"234":[["neo1-76",0,0],["neo3-38",1,17]],"185":[["neo1-77",0,0],["neo3-26",2,5]],"191":[["neo1-78",0,6],["neo4-83",0,31]],"220":[["neo1-79",0,0],["neo3-57",0,9],["neo4-84",0,6]],"158":[["neo1-80",0,0],["neo1-81",0,3],["neo4-85",0,9]],"194":[["neo1-82",0,9],["neo2-71",0,17]],"196":[["neo2-1",3,4],["neo2-20",2,18],["neo4-4",3,4]],"205":[["neo2-2",3,29],["neo2-21",2,29],["neo4-35",1,1]],"229":[["neo2-4",3,7],["neo2-23",2,7],["neo3-8",3,1],["neo4-7",3,6]],"228":[["neo2-5",3,16],["neo2-24",2,16],["neo2-39",1,7],["neo4-43",1,17]],"186":[["neo2-8",3,8],["neo2-27",2,8]],"248":[["neo2-12",3,3],["neo2-31",2,3],["neo4-11",3,7],["neo4-113",5,0]],"197":[["neo2-13",3,25],["neo2-32",2,18]],"217":[["neo2-15",3,18],["neo2-34",2,18],["neo4-21",2,1]],"202":[["neo2-16",3,3],["neo2-35",2,3]],"193":[["neo2-17",3,4],["neo2-36",2,4]],"222":[["neo2-37",1,2]],"247":[["neo2-45",1,3],["neo4-38",1,1]],"206":[["neo2-54",0,17]],"246":[["neo2-57",0,3],["neo4-70",0,0]],"204":[["neo2-61",0,8],["neo4-77",0,0]],"216":[["neo2-65",0,9]],"236":[["neo2-66",0,9]],"242":[["neo3-2",3,2]],"169":[["neo3-4",3,7],["neo4-2",3,32]],"225":[["neo3-5",3,8]],"233":[["neo3-12",3,10],["neo4-8",3,32]],"243":[["neo3-13",3,0],["neo3-22",2,18]],"219":[["neo3-33",1,7],["neo4-18",2,15]],"224":[["neo3-34",1,8],["neo4-62",0,7]],"211":[["neo3-49",0,5]],"223":[["neo3-50",0,9],["neo4-80",0,33]],"218":[["neo3-53",0,6],["neo4-82",0,0]],"238":[["neo3-54",0,4]]};
+const MEGA={"10033":["Mega Venusaur",3],"10034":["Mega Charizard X",6],"10035":["Mega Charizard Y",6],"10036":["Mega Blastoise",9],"10037":["Mega Alakazam",65],"10038":["Mega Gengar",94],"10039":["Mega Kangaskhan",115],"10040":["Mega Pinsir",127],"10041":["Mega Gyarados",130],"10042":["Mega Aerodactyl",142],"10043":["Mega Mewtwo X",150],"10044":["Mega Mewtwo Y",150],"10045":["Mega Ampharos",181],"10046":["Mega Scizor",212],"10047":["Mega Heracross",214],"10048":["Mega Houndoom",229],"10049":["Mega Tyranitar",248],"10050":["Mega Blaziken",257],"10051":["Mega Gardevoir",282],"10052":["Mega Mawile",303],"10053":["Mega Aggron",306],"10054":["Mega Medicham",308],"10055":["Mega Manectric",310],"10056":["Mega Banette",354],"10057":["Mega Absol",359],"10058":["Mega Garchomp",445],"10059":["Mega Lucario",448],"10060":["Mega Abomasnow",460],"10062":["Mega Latias",380],"10063":["Mega Latios",381],"10064":["Mega Swampert",260],"10065":["Mega Sceptile",254],"10066":["Mega Sableye",302],"10067":["Mega Altaria",334],"10068":["Mega Gallade",475],"10069":["Mega Audino",531],"10070":["Mega Sharpedo",319],"10071":["Mega Slowbro",80],"10072":["Mega Steelix",208],"10073":["Mega Pidgeot",18],"10074":["Mega Glalie",362],"10075":["Mega Diancie",719],"10076":["Mega Metagross",376],"10077":["Primal Kyogre",382],"10078":["Primal Groudon",383],"10079":["Mega Rayquaza",384],"10087":["Mega Camerupt",323],"10088":["Mega Lopunny",428],"10089":["Mega Salamence",373],"10090":["Mega Beedrill",15],"10278":["Mega Clefable",36],"10279":["Mega Victreebel",71],"10280":["Mega Starmie",121],"10281":["Mega Dragonite",149],"10282":["Mega Meganium",154],"10283":["Mega Feraligatr",160],"10284":["Mega Skarmory",227],"10285":["Mega Froslass",478],"10286":["Mega Emboar",500],"10287":["Mega Excadrill",530],"10288":["Mega Scolipede",545],"10289":["Mega Scrafty",560],"10290":["Mega Eelektross",604],"10291":["Mega Chandelure",609],"10292":["Mega Chesnaught",652],"10293":["Mega Delphox",655],"10294":["Mega Greninja",658],"10295":["Mega Pyroar",668],"10296":["Mega Floette",670],"10297":["Mega Malamar",687],"10298":["Mega Barbaracle",689],"10299":["Mega Dragalge",691],"10300":["Mega Hawlucha",701],"10301":["Mega Zygarde",718],"10302":["Mega Drampa",780],"10303":["Mega Falinks",870],"10304":["Mega Raichu X",26],"10305":["Mega Raichu Y",26],"10306":["Mega Chimecho",358],"10307":["Mega Absol",359],"10308":["Mega Staraptor",398],"10309":["Mega Garchomp",445],"10310":["Mega Lucario",448],"10311":["Mega Heatran",485],"10312":["Mega Darkrai",491],"10313":["Mega Golurk",623],"10314":["Mega Meowstic",678],"10315":["Mega Crabominable",740],"10316":["Mega Golisopod",768],"10317":["Mega Magearna",801],"10318":["Mega Magearna",801],"10319":["Mega Zeraora",807],"10320":["Mega Scovillain",952],"10321":["Mega Glimmora",970],"10324":["Mega Tatsugiri",978],"10325":["Mega Baxcalibur",998],"10326":["Mega Meowstic",678]};
+const MEGA_IDS = Object.keys(MEGA).map(Number);
+const isMega = id => !!MEGA[id];
+const isPrimal = id => !!MEGA[id] && MEGA[id][0].indexOf('Primal') === 0;
 const RARITY = ['Common','Uncommon','Rare','Rare Holo','Promo','Rare Shining','Rare Secret'];
 const HOLO = [3, 5, 6];                       // the special ones
 const cardSetOf = cid => cid.split('-')[0];
 const cardNumOf = cid => cid.slice(cid.indexOf('-') + 1);
 const cardImg = cid => 'https://images.pokemontcg.io/' + cardSetOf(cid) + '/' + cardNumOf(cid) + '.png';
-function cardsFor(pid){ return CARD_DATA[pid] || []; }
+function cardsFor(pid){
+  // a Mega form borrows its base Pokémon's cards
+  const key = MEGA[pid] ? MEGA[pid][1] : pid;
+  return CARD_DATA[key] || [];
+}
 function cardInfo(cid){
   for (const pid in CARD_DATA){
     const hit = CARD_DATA[pid].find(c => c[0] === cid);
@@ -1330,6 +1368,8 @@ const BADGES = [
   { id:'catch100', ico:'📕', name:'100 caught',      test:() => caught.length >= 100 },
   { id:'legend1',  ico:'✨', name:'First legendary', test:() => caught.filter(isLegend).length >= 1 },
   { id:'shiny1',   ico:'💎', name:'First shiny',     test:() => shinies.length >= 1 },
+  { id:'mega1',    ico:'⚡', name:'First Mega',      test:() => caught.some(isMega) },
+  { id:'primal1',  ico:'🌋', name:'Primal power',    test:() => caught.some(isPrimal) },
   { id:'ultra',    ico:'🌈', name:'Shiny legendary', test:() => caught.some(id => isLegend(id) && isShiny(id)) },
   { id:'line50',   ico:'🧭', name:'50 hops',        test:() => (progress.line || 0) >= 50 },
   { id:'abacus50', ico:'🧮', name:'50 bead sums',   test:() => (progress.abacus || 0) >= 50 },
@@ -1431,7 +1471,11 @@ function catchMon(){
     id = 25;                                        // first catch is always Pikachu
   } else if (legendPending && legends.length){
     legendPending = false;                          // earned by a perfect streak
-    id = legends[rnd(legends.length)];
+    // once he has a few legendaries, some of those wins arrive as a Mega or Primal form
+    const megaLeft = MEGA_IDS.filter(i => !caught.includes(i));
+    const canMega = megaLeft.length && caught.filter(isLegend).length >= 2;
+    id = (canMega && Math.random() < 0.35) ? megaLeft[rnd(megaLeft.length)]
+                                           : legends[rnd(legends.length)];
   } else if (!normal.length){
     if (!legends.length) return;
     id = legends[rnd(legends.length)];               // only legendaries left
@@ -1455,10 +1499,12 @@ function catchMon(){
   beginCeremony(20000);
   const box = document.getElementById('catchBox');
   const ov = document.getElementById('catch');
-  const leg = isLegend(id);
-  box.className = 'box' + (leg && shiny ? ' ultrabox' : leg ? ' legendary' : shiny ? ' shinybox' : '');
+  const leg = isLegend(id) || isMega(id);
+  const mega = isMega(id);
+  box.className = 'box' + (mega ? ' megabox' : (leg && shiny) ? ' ultrabox' : leg ? ' legendary' : shiny ? ' shinybox' : '');
   box.innerHTML = '<span class="ballwob">' + BALL_SVG.replace('width="26" height="26"','width="86" height="86"') + '</span>' +
-    '<div class="newname">' + (leg && shiny ? 'The ball is GLOWING!!' :
+    '<div class="newname">' + (mega ? 'Something POWERFUL is in the ball!!' :
+       (leg && shiny) ? 'The ball is GLOWING!!' :
        leg ? 'Whoa! This one is STRONG!' : 'Something is in the ball!') + '</div>';
   ov.style.display = 'flex';
   if (leg){
@@ -1467,7 +1513,9 @@ function catchMon(){
     blip(392,0,.15); blip(440,.3,.15); blip(494,.6,.15);
   }
   setTimeout(() => {
-    box.innerHTML = (leg && shiny ? '<div class="ultrabanner">💎✨ SHINY LEGENDARY ✨💎</div>'
+    box.innerHTML = (mega && shiny ? '<div class="ultrabanner">💎 SHINY ' + (isPrimal(id) ? 'PRIMAL' : 'MEGA') + '! 💎</div>'
+                     : mega ? '<div class="megabanner">' + (isPrimal(id) ? '🌋 PRIMAL REVERSION! 🌋' : '⚡ MEGA EVOLUTION! ⚡') + '</div>'
+                     : (leg && shiny) ? '<div class="ultrabanner">💎✨ SHINY LEGENDARY ✨💎</div>'
                      : leg ? '<div class="legbanner">✨ LEGENDARY ✨</div>'
                      : shiny ? '<div class="shinybanner">💎 SHINY! 💎</div>' : '') +
       '<img class="' + (shiny ? 'shiny' : '') + '" src="' + imgArt(id) + '" alt="" onerror="this.replaceWith(Object.assign(document.createElement(\'div\'),{textContent:\'🎉\',style:\'font-size:80px\'}))">' +
@@ -1484,7 +1532,9 @@ function catchMon(){
       setTimeout(() => burst(document.getElementById('catchBox'), 24), 750);
       blip(523,0,.18); blip(659,.2,.18); blip(784,.4,.18); blip(1047,.6,.22); blip(1319,.85,.45);
     }
-    say(leg && shiny ? 'Unbelievable ' + (childName || '') + '! A shiny legendary ' + monName(id) +
+    say(mega ? (isPrimal(id) ? 'Whoa ' + (childName || '') + '! ' + monName(id) + '! Ancient power!'
+                             : 'Incredible ' + (childName || '') + '! ' + monName(id) + '! It mega evolved!')
+       : leg && shiny ? 'Unbelievable ' + (childName || '') + '! A shiny legendary ' + monName(id) +
           '! That is the rarest Pokemon in the whole game!'
        : shiny ? 'Incredible! A shiny ' + monName(id) + '! Those are super rare!'
        : leg ? 'Wow! A legendary ' + monName(id) + '!'
@@ -1513,6 +1563,7 @@ document.getElementById('backBtn').addEventListener('click', () => {
 document.getElementById('teamAll').addEventListener('click', () => { teamFilter = 'all'; sndTap(); renderTeam(); });
 document.getElementById('teamLeg').addEventListener('click', () => { teamFilter = 'legend'; sndTap(); renderTeam(); });
 document.getElementById('teamShiny').addEventListener('click', () => { teamFilter = 'shiny'; sndTap(); renderTeam(); });
+document.getElementById('teamMega').addEventListener('click', () => { teamFilter = 'mega'; sndTap(); renderTeam(); });
 document.getElementById('badgeBtn').addEventListener('click', () => { sndTap(); mode = 'badges'; renderBadges(); show('badges'); });
 document.getElementById('cardBtn').addEventListener('click', () => { sndTap(); mode = 'cards'; renderCards(); show('cards'); });
 document.getElementById('cardAll').addEventListener('click', () => { cardFilter = 'all'; sndTap(); renderCards(); });
@@ -3596,7 +3647,7 @@ document.addEventListener('visibilitychange', () => {
       ['numbers to 30', TRACE_MAX === 30]
     ];
     document.getElementById('ppVer').textContent =
-      'build v45 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
+      'build v46 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
     showPraise(praiseLine(true));
     say(praiseLine(true));
   });
