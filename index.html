@@ -202,8 +202,32 @@
   }
   .tfcell.emptied{ background:#F1EEF9; }
   .absq{
-    font-size:56px; font-weight:bold; text-align:center; padding:26px 6px 18px;
-    letter-spacing:4px; line-height:1.2;
+    font-size:62px; font-weight:bold; text-align:center; padding:30px 6px 20px;
+    letter-spacing:5px; line-height:1.2;
+    background:linear-gradient(180deg,#FFFFFF,#F3EEFC);
+    border:4px dashed var(--grape); border-radius:24px;
+    box-shadow:inset 0 3px 0 rgba(255,255,255,.9);
+  }
+  .absq .blank{ color:var(--grape-d); }
+  .absq.annotated{ padding:16px 8px 14px; letter-spacing:0; }
+  .eqrow{ display:flex; align-items:flex-end; justify-content:center; gap:10px; flex-wrap:nowrap; }
+  .eqrow .term{ display:flex; flex-direction:column; align-items:center; min-width:52px; }
+  .eqrow .minis{
+    display:flex; flex-wrap:wrap; justify-content:center; align-items:flex-end;
+    gap:2px; max-width:104px; min-height:58px;
+  }
+  .eqrow .mini{ width:26px; height:26px; object-fit:contain; font-size:20px; line-height:26px; }
+  .eqrow .num{
+    font-size:52px; font-weight:bold; line-height:1.05; margin-top:4px;
+    border-top:4px solid var(--ink); padding:2px 10px 0; min-width:44px; text-align:center;
+  }
+  .eqrow .num.blank{ color:var(--grape-d); border-top-style:dashed; }
+  .eqrow .opsym{ font-size:44px; font-weight:bold; padding-bottom:8px; }
+  @media (max-width:430px){
+    .eqrow .mini{ width:21px; height:21px; }
+    .eqrow .minis{ max-width:78px; min-height:48px; }
+    .eqrow .num{ font-size:42px; }
+    .eqrow .opsym{ font-size:34px; }
   }
   .shiny{ filter:hue-rotate(155deg) saturate(1.8) brightness(1.12) drop-shadow(0 0 9px rgba(255,215,0,.95)); }
   .tcard.shinycard{ background:linear-gradient(180deg,#FFFBEA,#FFE9A8); border-color:#C79A16;
@@ -355,6 +379,19 @@
     border:3px solid var(--ink); border-radius:999px; padding:3px 16px;
     font-weight:bold; font-size:18px; box-shadow:0 4px 0 rgba(30,32,70,.5);
   }
+  #rankBox{
+    max-width:340px; margin:0 auto 12px; text-align:center;
+    background:linear-gradient(180deg,#FFFDF4,#F3E9CF);
+    border:3px solid var(--ink); border-radius:20px; padding:8px 14px;
+    box-shadow:0 5px 0 rgba(30,32,70,.45);
+  }
+  #rankBox .rankname{ font-size:19px; font-weight:bold; }
+  #rankBox .rankbar{
+    height:14px; border:2px solid var(--ink); border-radius:999px; background:#fff;
+    overflow:hidden; margin:5px 0 3px;
+  }
+  #rankBox .rankbar>div{ height:100%; background:linear-gradient(90deg,#FFC93C,#4ECDA5); transition:width .4s; }
+  #rankBox .ranksub{ font-size:12px; font-weight:bold; }
   .widebtn{
     display:block; width:100%; margin-top:14px;
     background:linear-gradient(180deg,#FF9184,#E0503F); color:#fff;
@@ -765,9 +802,10 @@
   <!-- HOME -->
   <div class="screen on" id="scr-home">
     <div id="buddyBox"></div>
+    <div id="rankBox"></div>
     <h1>PokéMath Adventure</h1>
     <p class="sub">Play with numbers to catch them all!</p>
-    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v46</div>
+    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v49</div>
     <div class="modes">
       <button class="mode trace" data-go="trace"><span class="big"><img class="mico" data-mon="133" alt=""><span class="micoalt">✏️</span></span>Write<br>Numbers</button>
       <button class="mode count" data-go="count"><span class="big"><img class="mico" data-mon="102" alt=""><span class="micoalt">🔢</span></span>Counting</button>
@@ -941,6 +979,15 @@
     <hr style="border:none;border-top:3px dashed #E4C05A;margin:10px 0">
     <div style="font-weight:bold;font-size:18px;margin-bottom:4px">🎚️ Number range</div>
     <div style="font-size:13px;margin-bottom:6px">Auto keeps adding and taking away within 10 until answers are quick and first-try, then mixes in bigger numbers now and then.</div>
+    <div class="caprow" style="margin-bottom:4px">
+      <span>Pictures in Adding / Taking away</span>
+    </div>
+    <div class="caprow" style="margin-top:0">
+      <button id="picAsk">Above the numbers</button>
+      <button id="picAuto">Automatic</button>
+      <button id="picNone">Never</button>
+    </div>
+    <div style="font-size:12px;margin:2px 0 10px">"Above the numbers" shows the sum with Pokémon standing above each number — nothing above the answer, so it can't be counted. Counting, Bead Counter and Number Line always stay visual.</div>
     <div id="capRows"></div>
     <div class="caprow" style="margin-top:10px">
       <span>Encourage by name</span>
@@ -1088,11 +1135,14 @@ async function loadStars(){
   if (nm !== null && nm !== undefined && nm !== '') childName = nm;
   const wv = await store.get('cubs_wv');
   if (wv === 'off') wrongVoice = false;
+  const pm = await store.get('cubs_pic');
+  if (pm === 'above' || pm === 'ask' || pm === 'auto' || pm === 'none') picMode = pm;
   try{
     const st = JSON.parse(await store.get('cubs_streak') || '{}');
     streak = st.s || 0; bestStreak = st.b || 0;
   }catch(e){}
-  updateStreakPill();
+  xp = parseInt(await store.get('cubs_xp') || '0', 10) || 0;
+  updateStreakPill(); renderRank();
   try{
     const pj = JSON.parse(await store.get('cubs_pending') || '{}');
     for (const k in pj){
@@ -1121,6 +1171,7 @@ async function loadStars(){
   if (await getSyncCfg()) syncNow(false);
 }
 function addStar(n){
+  addXp(n * 3);
   stars += n; starEl.textContent = stars;
   store.set('cubs_stars', stars);
   sndStar();
@@ -1368,6 +1419,9 @@ const BADGES = [
   { id:'catch100', ico:'📕', name:'100 caught',      test:() => caught.length >= 100 },
   { id:'legend1',  ico:'✨', name:'First legendary', test:() => caught.filter(isLegend).length >= 1 },
   { id:'shiny1',   ico:'💎', name:'First shiny',     test:() => shinies.length >= 1 },
+  { id:'ace',      ico:'🎖️', name:'Ace Trainer',    test:() => xp >= 650 },
+  { id:'champ',    ico:'🏆', name:'Champion',       test:() => xp >= 1600 },
+  { id:'rec15',    ico:'🔥', name:'15 in a row',    test:() => bestStreak >= 15 },
   { id:'mega1',    ico:'⚡', name:'First Mega',      test:() => caught.some(isMega) },
   { id:'primal1',  ico:'🌋', name:'Primal power',    test:() => caught.some(isPrimal) },
   { id:'ultra',    ico:'🌈', name:'Shiny legendary', test:() => caught.some(id => isLegend(id) && isShiny(id)) },
@@ -1936,6 +1990,10 @@ const q = { a: 0, b: 0, ans: 0, tries: 0 };
 /* A question he walks away from is waiting when he comes back, so leaving
    the screen can't be used to dodge one he finds hard. */
 const pending = {};
+/* After a fact is solved WITH pictures, the very same fact is asked again
+   straight away using numerals only. Counting solves the first one; only
+   understanding solves the second. */
+let echoNext = null;
 function savePending(m, obj){ pending[m] = obj; store.set('cubs_pending', JSON.stringify(pending)); }
 function clearPending(m){ delete pending[m]; store.set('cubs_pending', JSON.stringify(pending)); }
 let buildFrames = null;
@@ -2064,6 +2122,50 @@ const fluency = { count: [], add: [], sub: [], zap: [], line: [], abacus: [] };
 const capOverride = { count: 0, add: 0, sub: 0, zap: 0, line: 0, abacus: 0 };   // 0 = auto; else hard cap
 const FAST_MS = { count: 9000, add: 8000, sub: 8000, zap: 12000, line: 14000, abacus: 16000 };
 
+/* Trainer rank — an endless ladder, so there is always a next goal even
+   after every Pokemon is caught. Ranks come from careful answers, not volume. */
+const RANKS = [
+  [0,'Youngster','🧢'], [40,'Bug Catcher','🐛'], [100,'Hiker','🥾'], [180,'Swimmer','🏊'],
+  [300,'Rocket Grunt','🚀'], [450,'Psychic','🔮'], [650,'Ace Trainer','🎖️'],
+  [900,'Gym Leader','🏛️'], [1200,'Elite Four','👑'], [1600,'Champion','🏆'],
+  [2100,'Master','🌟'], [2700,'Legend','✨']
+];
+let xp = 0;
+function rankOf(x){
+  let r = RANKS[0];
+  for (const row of RANKS) if (x >= row[0]) r = row;
+  return r;
+}
+function nextRank(x){
+  for (const row of RANKS) if (x < row[0]) return row;
+  return null;
+}
+function addXp(n){
+  const before = rankOf(xp);
+  xp += n;
+  store.set('cubs_xp', xp);
+  const after = rankOf(xp);
+  renderRank();
+  if (after[1] !== before[1]){
+    beginCeremony(9000);
+    setTimeout(function announce(){
+      if (!speechIdle() || overlayBusy()){ setTimeout(announce, 300); return; }
+      showPraise(after[2] + ' New rank: ' + after[1] + '!');
+      say('Well done ' + (childName || '') + '! You are now a ' + after[1] + '!');
+      blip(523,0,.14); blip(659,.16,.14); blip(784,.32,.14); blip(1047,.5,.26);
+      setTimeout(endCeremony, 2600);
+    }, 500);
+  }
+}
+function renderRank(){
+  const el = document.getElementById('rankBox');
+  if (!el) return;
+  const r = rankOf(xp), nx = nextRank(xp);
+  const pct = nx ? Math.round((xp - r[0]) / (nx[0] - r[0]) * 100) : 100;
+  el.innerHTML = '<div class="rankname">' + r[2] + ' ' + r[1] + '</div>' +
+    '<div class="rankbar"><div style="width:' + pct + '%"></div></div>' +
+    '<div class="ranksub">' + xp + ' XP' + (nx ? ' · ' + (nx[0] - xp) + ' to ' + nx[1] : ' · top rank!') + '</div>';
+}
 const CARD_EVERY = 4;             // four right in a row wins a trading card
 function awardStreakCard(){
   const owned = caught.filter(id => cardsFor(id).length);
@@ -2112,7 +2214,13 @@ function showCardWin(cid){
 function bumpStreak(firstTry){
   if (firstTry){
     streak++;
-    if (streak > bestStreak) bestStreak = streak;
+    if (streak > bestStreak){
+      bestStreak = streak;
+      if (streak >= 5){
+        showPraise('🔥 New record: ' + streak + ' in a row!');
+        blip(880, 0, .12); blip(1175, .14, .18);
+      }
+    }
     if (streak % CARD_EVERY === 0) awardStreakCard();
     if (streak >= streakNeed() && LEGEND_IDS.some(i => !caught.includes(i)) && caught.length >= 10){
       streak = 0;
@@ -2157,6 +2265,24 @@ function fluent(m){
   const good = f.filter(x => x.first && x.fast).length;
   return good >= 8;                       // 8 of the last 10: first try AND quick
 }
+/* Which shape the question takes. 'result' asks for the answer; the others
+   hide one of the starting numbers, so he has to think about what the
+   operation MEANS instead of counting a pile. */
+/* How much picture support adding / taking away gives:
+   'ask'  - the number sentence leads; pictures only if he asks   (default)
+   'auto' - the app decides (pictures -> hidden -> numbers)
+   'none' - numbers only, no help button at all                  */
+let picMode = 'above';
+
+function questionForm(m){
+  if (m !== 'add' && m !== 'sub') return 'result';
+  const p = progress[m] || 0;
+  if (p < 15) return 'result';
+  const r = Math.random();
+  if (r < 0.62) return 'result';
+  return r < 0.81 ? 'missingB' : 'missingA';
+}
+
 /* Concrete -> Pictorial -> Abstract.
    0: pictures stay on screen (counting is fine, he is still building meaning)
    1: pictures show briefly, then hide — he must hold them in his head
@@ -2165,6 +2291,7 @@ function fluent(m){
    answer can never be found by counting whatever is left un-faded. */
 function cpaStage(m){
   if (m !== 'add' && m !== 'sub') return 0;
+  if (picMode === 'above' || picMode === 'ask' || picMode === 'none') return 2;
   const p = progress[m] || 0;
   if (p < 12) return 0;
   if (!fluent(m)) return 1;
@@ -2218,6 +2345,8 @@ function newQuestion(){
   q.tries = 0;
   clearTimeout(q.lookTimer);
   const pend = pending[mode];
+  const echo = (!pend && echoNext && echoNext.mode === mode) ? echoNext : null;
+  echoNext = null;
   const emoji = pend ? pend.e : THINGS[rnd(THINGS.length)];
   const monId = pend ? pend.m : pickMon();
   const bub = document.getElementById('bubbles');
@@ -2244,14 +2373,16 @@ function newQuestion(){
     }
     return wrap;
   };
-  q.stage = pend ? pend.s : cpaStage(mode);
+  q.stage = pend ? pend.s : (echo ? 2 : cpaStage(mode));
+  q.isEcho = !!echo;
+  q.usedHelp = false;
   if (pend){
     q.tries = Math.max(1, pend.t || 1);       // already seen: no double stars for it
     setTimeout(() => {
       document.getElementById('quizSpeech').textContent = 'Let\u2019s finish this one first!';
     }, 400);
   } else {
-    savePending(mode, { a:q.a, b:q.b, n:q.ans, e:emoji, m:monId, x:max, s:q.stage, t:0 });
+    savePending(mode, { a:q.a, b:q.b, n:q.ans, e:emoji, m:monId, x:max, s:q.stage, t:0, f:q.form });
   }
   if (mode === 'count'){
     q.ans = pend ? pend.n : 1 + rnd(max);
@@ -2262,9 +2393,12 @@ function newQuestion(){
     }));
   }
   else if (mode === 'add'){
-    q.ans = pend ? pend.n : 2 + rnd(max - 1);
-    if (pend){ q.a = pend.a; q.b = pend.b; }
-    else { q.a = 1 + rnd(q.ans - 1); q.b = q.ans - q.a; }
+    if (echo){ q.a = echo.a; q.b = echo.b; q.ans = echo.a + echo.b; }
+    else {
+      q.ans = pend ? pend.n : 2 + rnd(max - 1);
+      if (pend){ q.a = pend.a; q.b = pend.b; }
+      else { q.a = 1 + rnd(q.ans - 1); q.b = q.ans - q.a; }
+    }
     qt.textContent = 'Add them together!';
     q.phrase = 'What is ' + NUM_WORDS[q.a] + ' plus ' + NUM_WORDS[q.b] + '?';
     bub.appendChild(buildFrames(q.ans, (cell, i) => {
@@ -2274,7 +2408,8 @@ function newQuestion(){
     eq.innerHTML = q.a + ' + ' + q.b + ' = <span class="blank" id="blank">?</span>';
   }
   else { // sub
-    if (pend){ q.a = pend.a; q.b = pend.b; }
+    if (echo){ q.a = echo.a; q.b = echo.b; }
+    else if (pend){ q.a = pend.a; q.b = pend.b; }
     else { q.a = 2 + rnd(max - 1); q.b = 1 + rnd(q.a - 1); }
     q.ans = q.a - q.b;
     qt.textContent = 'Take some away!';
@@ -2324,26 +2459,107 @@ function newQuestion(){
       });
     }, P().look + (mode === 'sub' ? 3400 : 2600));
   }
-  // stage 2: no pictures at all — this is where real mental arithmetic starts
+  // stage 2: the number sentence itself is the question
   if (q.stage === 2){
     bub.innerHTML = '';
     const box = document.createElement('div');
     box.className = 'absq';
-    box.innerHTML = (mode === 'add')
-      ? q.a + ' + ' + q.b + ' = <span class="blank" id="blank">?</span>'
-      : q.a + ' − ' + q.b + ' = <span class="blank" id="blank">?</span>';
+    // which value sits in each slot, and which one is the unknown
+    const opSign = (mode === 'add') ? '+' : '−';
+    const slots = (q.form === 'missingA') ? [null, q.b, q.ans]
+                : (q.form === 'missingB') ? [q.a, null, q.ans]
+                :                           [q.a, q.b, null];
+    if (picMode === 'above'){
+      // Pokémon stand above their own number, so the numeral MEANS that many.
+      // The unknown has nothing above it — there is nothing to count for the answer.
+      box.classList.add('annotated');
+      const row = document.createElement('div');
+      row.className = 'eqrow';
+      const addTerm = (val, isBlank) => {
+        const term = document.createElement('div');
+        term.className = 'term';
+        const minis = document.createElement('div');
+        minis.className = 'minis';
+        if (!isBlank && val !== null && val <= 12){
+          for (let i = 0; i < val; i++){
+            const im = document.createElement('img');
+            im.className = 'mini';
+            im.src = imgSmall(monId);
+            im.alt = '';
+            im.onerror = function(){ this.replaceWith(Object.assign(document.createElement('span'),
+              { textContent: emoji, className: 'mini' })); };
+            minis.appendChild(im);
+          }
+        }
+        term.appendChild(minis);
+        const num = document.createElement('div');
+        num.className = 'num' + (isBlank ? ' blank' : '');
+        if (isBlank) num.id = 'blank';
+        num.textContent = isBlank ? '?' : String(val);
+        term.appendChild(num);
+        return term;
+      };
+      const sign = txt => {
+        const d = document.createElement('div');
+        d.className = 'opsym'; d.textContent = txt;
+        return d;
+      };
+      row.appendChild(addTerm(slots[0], slots[0] === null));
+      row.appendChild(sign(opSign));
+      row.appendChild(addTerm(slots[1], slots[1] === null));
+      row.appendChild(sign('='));
+      row.appendChild(addTerm(slots[2], slots[2] === null));
+      box.appendChild(row);
+    } else {
+      box.innerHTML = q.showEq || ((mode === 'add')
+        ? q.a + ' + ' + q.b + ' = <span class="blank" id="blank">?</span>'
+        : q.a + ' − ' + q.b + ' = <span class="blank" id="blank">?</span>');
+    }
     bub.appendChild(box);
     eq.innerHTML = '';
-    const help = document.createElement('button');
-    help.className = 'btn';
-    help.style.cssText = 'display:block;margin:6px auto 0;font-size:15px;padding:6px 14px';
-    help.textContent = '🔍 Show me the pictures';
-    help.addEventListener('click', () => {
-      help.remove();
-      q.stage = 1;
-      showFramesForQuestion(monId, emoji);
-    });
-    bub.appendChild(help);
+    if (picMode !== 'none' && picMode !== 'above' && q.form === 'result'){
+      const help = document.createElement('button');
+      help.className = 'btn';
+      help.style.cssText = 'display:block;margin:10px auto 0;font-size:15px;padding:8px 16px';
+      help.textContent = '🔍 Show me the pictures';
+      help.addEventListener('click', () => {
+        help.remove();
+        q.usedHelp = true;
+        q.stage = 1;
+        showFramesForQuestion(monId, emoji);
+      });
+      bub.appendChild(help);
+    }
+  }
+  // a missing-number question is always shown as numerals
+  q.form = (q.isEcho || mode === 'count') ? 'result' : (pend ? (pend.f || 'result') : questionForm(mode));
+  if (q.form !== 'result'){
+    q.stage = 2;
+    const shown = (mode === 'add')
+      ? (q.form === 'missingB'
+          ? q.a + ' + <span class="blank" id="blank">?</span> = ' + q.ans
+          : '<span class="blank" id="blank">?</span> + ' + q.b + ' = ' + q.ans)
+      : (q.form === 'missingB'
+          ? q.a + ' − <span class="blank" id="blank">?</span> = ' + q.ans
+          : '<span class="blank" id="blank">?</span> − ' + q.b + ' = ' + q.ans);
+    q.showEq = shown;
+    q.target = (q.form === 'missingB') ? q.b : q.a;
+    q.phrase = (mode === 'add')
+      ? (q.form === 'missingB'
+          ? NUM_WORDS[q.a] + ' plus what makes ' + NUM_WORDS[q.ans] + '?'
+          : 'What plus ' + NUM_WORDS[q.b] + ' makes ' + NUM_WORDS[q.ans] + '?')
+      : (q.form === 'missingB'
+          ? NUM_WORDS[q.a] + ' take away what leaves ' + NUM_WORDS[q.ans] + '?'
+          : 'What take away ' + NUM_WORDS[q.b] + ' leaves ' + NUM_WORDS[q.ans] + '?');
+    document.getElementById('qtext').textContent =
+      (mode === 'add') ? 'Which number is missing?' : 'Which number is missing?';
+  }
+  if (q.isEcho){
+    const qt2 = document.getElementById('qtext');
+    qt2.textContent = 'Same one again — no pictures!';
+    q.phrase = (mode === 'add')
+      ? 'What is ' + NUM_WORDS[q.a] + ' plus ' + NUM_WORDS[q.b] + '?'
+      : 'What is ' + NUM_WORDS[q.a] + ' take away ' + NUM_WORDS[q.b] + '?';
   }
   say(q.phrase);
   buildPad();
@@ -2390,7 +2606,7 @@ function buildPad(){
   const lo = (mode === 'count') ? 1 : 0;
   // Derive from THIS question's range AND its actual answer, so the right
   // button is always present even if anything upstream is stale or corrupt.
-  const hi = Math.max(10, q.max || 10, q.ans || 0);
+  const hi = Math.max(10, q.max || 10, q.ans || 0, q.target || 0);
   for (let n = lo; n <= hi; n++){
     const b = document.createElement('button');
     b.textContent = n;
@@ -2402,12 +2618,14 @@ function buildPad(){
 function answer(n, btn){
   if (padLocked) return;
   audio();
-  if (n === q.ans){
+  const want = (q.form && q.form !== 'result') ? q.target : q.ans;
+  if (n === want){
     padLocked = true;
     uncover();
     btn.classList.add('right');
     const blank = document.getElementById('blank');
     if (blank) blank.textContent = n;
+    q.showEq = null;
     clearPending(mode);
     progress[mode]++; saveProg();
     recordAnswer(mode, q.tries === 0, Date.now() - (q.asked || 0));
@@ -2418,6 +2636,11 @@ function answer(n, btn){
     const fact = mode === 'add' ? NUM_WORDS[q.a] + ' plus ' + NUM_WORDS[q.b] + ' equals ' + NUM_WORDS[q.ans] + '!'
                : mode === 'sub' ? NUM_WORDS[q.a] + ' take away ' + NUM_WORDS[q.b] + ' equals ' + NUM_WORDS[q.ans] + '!'
                : NUM_WORDS[q.ans] + '!';
+    q.form = 'result';
+    if (q.usedHelp && q.tries === 0) q.tries = 1;      // helped: single star, not double
+    if ((mode === 'add' || mode === 'sub') && q.stage < 2 && !q.isEcho){
+      echoNext = { mode: mode, a: q.a, b: q.b };     // ask it again without pictures
+    }
     const praise = praiseLine(q.tries === 0);
     showPraise(praise + (q.tries === 0 ? '  ⭐⭐' : '  ⭐'));
     setTimeout(() => say(praise + ' ' + fact), 420);
@@ -3432,6 +3655,9 @@ async function localPayload(){
     caught: caught.slice(),
     shiny: shinies.slice(),
     cards: cards.slice(),
+    xp: xp,
+    pic: picMode,
+    best: bestStreak,
     badges: badges.slice(),
     traced: traced.slice()
   };
@@ -3456,6 +3682,9 @@ function mergeStates(a, b){
   const out = {
     shiny: uni(a.shiny, b.shiny),
     cards: uni(a.cards, b.cards),
+    xp: Math.max(a.xp || 0, b.xp || 0),
+    pic: newer.pic || 'above',
+    best: Math.max(a.best || 0, b.best || 0),
     badges: uni(a.badges, b.badges),
     traced: uni(a.traced, b.traced),
     at: Math.max(a.at || 0, b.at || 0),
@@ -3485,6 +3714,11 @@ async function applyState(m){
   shinies = m.shiny || []; badges = m.badges || []; traced = m.traced || [];
   cards = m.cards || [];
   await store.set('cubs_cards', cards.join(','));
+  if (m.pic){ picMode = m.pic; await store.set('cubs_pic', picMode); }
+  xp = Math.max(xp, m.xp || 0);
+  bestStreak = Math.max(bestStreak, m.best || 0);
+  await store.set('cubs_xp', xp);
+  renderRank();
   await store.set('cubs_shiny', shinies.join(','));
   await store.set('cubs_badges', badges.join(','));
   await store.set('cubs_traced', traced.join(','));
@@ -3548,7 +3782,7 @@ document.addEventListener('visibilitychange', () => {
 /* ---------- parent backup panel (triple-tap the title) ---------- */
 (function parentPanel(){
   const panel = document.getElementById('parentPanel');
-  let taps = [], KEYS = ['cubs_stars','cubs_prog','cubs_caught','cubs_pbuddy','cubs_ball','cubs_sound','cubs_name','cubs_wv','cubs_caps','cubs_flu','cubs_shiny','cubs_badges','cubs_traced','cubs_streak','cubs_cards'];
+  let taps = [], KEYS = ['cubs_stars','cubs_prog','cubs_caught','cubs_pbuddy','cubs_ball','cubs_sound','cubs_name','cubs_wv','cubs_caps','cubs_flu','cubs_shiny','cubs_badges','cubs_traced','cubs_streak','cubs_cards','cubs_xp','cubs_pic'];
   document.querySelector('h1').addEventListener('click', () => {
     const now = Date.now();
     taps = taps.filter(t => now - t < 1200); taps.push(now);
@@ -3564,7 +3798,7 @@ document.addEventListener('visibilitychange', () => {
     const cfg = await getSyncCfg();
     document.getElementById('syUrl').value = cfg ? cfg.url : '';
     document.getElementById('syCode').value = cfg ? cfg.code : '';
-    renderCaps(); renderVoice();
+    renderCaps(); renderVoice(); renderPic();
     const last = parseInt(await store.get('cubs_lastsync') || '0', 10) || 0;
     if (cfg && last) setSyncStatus('ok', '✓ Connected — last synced ' + new Date(last).toLocaleString());
     else if (cfg) setSyncStatus('', 'connected — hasn\u2019t synced yet, tap Save & sync now');
@@ -3572,6 +3806,16 @@ document.addEventListener('visibilitychange', () => {
     panel.style.display = 'flex';
   }
   const CAP_MODES = [['count','Counting'], ['add','Adding'], ['sub','Taking away'], ['zap','Wild Catch'], ['line','Number Line'], ['abacus','Bead Counter'] ];
+  function renderPic(){
+    document.getElementById('picAsk').classList.toggle('on', picMode === 'above' || picMode === 'ask');
+    document.getElementById('picAuto').classList.toggle('on', picMode === 'auto');
+    document.getElementById('picNone').classList.toggle('on', picMode === 'none');
+  }
+  [['picAsk','above'], ['picAuto','auto'], ['picNone','none']].forEach(([id, val]) => {
+    document.getElementById(id).addEventListener('click', () => {
+      picMode = val; store.set('cubs_pic', picMode); schedulePush(); renderPic(); sndTap();
+    });
+  });
   function renderVoice(){
     document.getElementById('wvOn').classList.toggle('on', wrongVoice);
     document.getElementById('wvOff').classList.toggle('on', !wrongVoice);
@@ -3647,7 +3891,7 @@ document.addEventListener('visibilitychange', () => {
       ['numbers to 30', TRACE_MAX === 30]
     ];
     document.getElementById('ppVer').textContent =
-      'build v46 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
+      'build v49 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
     showPraise(praiseLine(true));
     say(praiseLine(true));
   });
