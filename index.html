@@ -209,25 +209,43 @@
     box-shadow:inset 0 3px 0 rgba(255,255,255,.9);
   }
   .absq .blank{ color:var(--grape-d); }
-  .absq.annotated{ padding:16px 8px 14px; letter-spacing:0; }
-  .eqrow{ display:flex; align-items:flex-end; justify-content:center; gap:10px; flex-wrap:nowrap; }
-  .eqrow .term{ display:flex; flex-direction:column; align-items:center; min-width:52px; }
-  .eqrow .minis{
-    display:flex; flex-wrap:wrap; justify-content:center; align-items:flex-end;
-    gap:2px; max-width:104px; min-height:58px;
+  .absq.annotated{ padding:14px 4px 12px; letter-spacing:0; }
+  .eqrow{
+    display:flex; align-items:flex-end; justify-content:center;
+    gap:6px; flex-wrap:nowrap; width:100%;
   }
-  .eqrow .mini{ width:26px; height:26px; object-fit:contain; font-size:20px; line-height:26px; }
+  .eqrow .term{ display:flex; flex-direction:column; align-items:center; flex:1 1 0; min-width:0; }
+  .eqrow .minis{
+    display:grid; justify-content:center; align-content:end; justify-items:center;
+    gap:3px; min-height:112px; width:100%;
+  }
+  /* the Pokémon are as big as the group allows: few = huge, many = a neat block */
+  .eqrow .minis.n1  { grid-template-columns:repeat(1,1fr); }
+  .eqrow .minis.n2  { grid-template-columns:repeat(2,1fr); }
+  .eqrow .minis.n3  { grid-template-columns:repeat(3,1fr); }
+  .eqrow .minis.n4  { grid-template-columns:repeat(2,1fr); }
+  .eqrow .minis.n6  { grid-template-columns:repeat(3,1fr); }
+  .eqrow .minis.n9  { grid-template-columns:repeat(3,1fr); }
+  .eqrow .minis.n12 { grid-template-columns:repeat(4,1fr); }
+  .eqrow .mini{ width:100%; max-width:56px; aspect-ratio:1/1; object-fit:contain;
+    font-size:34px; line-height:1; text-align:center; }
+  .eqrow .minis.big .mini{ max-width:74px; }
+  .eqrow .minis.small .mini{ max-width:38px; }
+  .eqrow .minis.tiny .mini{ max-width:28px; }
   .eqrow .num{
-    font-size:52px; font-weight:bold; line-height:1.05; margin-top:4px;
-    border-top:4px solid var(--ink); padding:2px 10px 0; min-width:44px; text-align:center;
+    font-size:64px; font-weight:bold; line-height:1.05; margin-top:6px;
+    border-top:5px solid var(--ink); padding:3px 14px 0; min-width:52px; text-align:center;
   }
   .eqrow .num.blank{ color:var(--grape-d); border-top-style:dashed; }
-  .eqrow .opsym{ font-size:44px; font-weight:bold; padding-bottom:8px; }
+  .eqrow .opsym{ font-size:50px; font-weight:bold; padding-bottom:10px; flex:0 0 auto; }
   @media (max-width:430px){
-    .eqrow .mini{ width:21px; height:21px; }
-    .eqrow .minis{ max-width:78px; min-height:48px; }
-    .eqrow .num{ font-size:42px; }
-    .eqrow .opsym{ font-size:34px; }
+    .eqrow .minis{ min-height:92px; }
+    .eqrow .mini{ max-width:44px; font-size:26px; }
+    .eqrow .minis.big .mini{ max-width:58px; }
+    .eqrow .minis.small .mini{ max-width:30px; }
+    .eqrow .minis.tiny .mini{ max-width:23px; }
+    .eqrow .num{ font-size:50px; padding:3px 8px 0; min-width:42px; }
+    .eqrow .opsym{ font-size:38px; }
   }
   .shiny{ filter:hue-rotate(155deg) saturate(1.8) brightness(1.12) drop-shadow(0 0 9px rgba(255,215,0,.95)); }
   .tcard.shinycard{ background:linear-gradient(180deg,#FFFBEA,#FFE9A8); border-color:#C79A16;
@@ -805,7 +823,7 @@
     <div id="rankBox"></div>
     <h1>PokéMath Adventure</h1>
     <p class="sub">Play with numbers to catch them all!</p>
-    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v49</div>
+    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v51</div>
     <div class="modes">
       <button class="mode trace" data-go="trace"><span class="big"><img class="mico" data-mon="133" alt=""><span class="micoalt">✏️</span></span>Write<br>Numbers</button>
       <button class="mode count" data-go="count"><span class="big"><img class="mico" data-mon="102" alt=""><span class="micoalt">🔢</span></span>Counting</button>
@@ -2459,6 +2477,35 @@ function newQuestion(){
       });
     }, P().look + (mode === 'sub' ? 3400 : 2600));
   }
+  q.form = (q.isEcho || mode === 'count') ? 'result' : (pend ? (pend.f || 'result') : questionForm(mode));
+  if (q.form !== 'result'){
+    q.stage = 2;
+    const shown = (mode === 'add')
+      ? (q.form === 'missingB'
+          ? q.a + ' + <span class="blank" id="blank">?</span> = ' + q.ans
+          : '<span class="blank" id="blank">?</span> + ' + q.b + ' = ' + q.ans)
+      : (q.form === 'missingB'
+          ? q.a + ' − <span class="blank" id="blank">?</span> = ' + q.ans
+          : '<span class="blank" id="blank">?</span> − ' + q.b + ' = ' + q.ans);
+    q.showEq = shown;
+    q.target = (q.form === 'missingB') ? q.b : q.a;
+    q.phrase = (mode === 'add')
+      ? (q.form === 'missingB'
+          ? NUM_WORDS[q.a] + ' plus what makes ' + NUM_WORDS[q.ans] + '?'
+          : 'What plus ' + NUM_WORDS[q.b] + ' makes ' + NUM_WORDS[q.ans] + '?')
+      : (q.form === 'missingB'
+          ? NUM_WORDS[q.a] + ' take away what leaves ' + NUM_WORDS[q.ans] + '?'
+          : 'What take away ' + NUM_WORDS[q.b] + ' leaves ' + NUM_WORDS[q.ans] + '?');
+    document.getElementById('qtext').textContent =
+      (mode === 'add') ? 'Which number is missing?' : 'Which number is missing?';
+  }
+  if (q.isEcho){
+    const qt2 = document.getElementById('qtext');
+    qt2.textContent = 'Same one again — no pictures!';
+    q.phrase = (mode === 'add')
+      ? 'What is ' + NUM_WORDS[q.a] + ' plus ' + NUM_WORDS[q.b] + '?'
+      : 'What is ' + NUM_WORDS[q.a] + ' take away ' + NUM_WORDS[q.b] + '?';
+  }
   // stage 2: the number sentence itself is the question
   if (q.stage === 2){
     bub.innerHTML = '';
@@ -2479,7 +2526,12 @@ function newQuestion(){
         const term = document.createElement('div');
         term.className = 'term';
         const minis = document.createElement('div');
-        minis.className = 'minis';
+        const n = (!isBlank && val !== null) ? val : 0;
+        // few Pokémon -> big; more -> a tidy block, still far bigger than before
+        const cols = n <= 1 ? 1 : n <= 2 ? 2 : n <= 3 ? 3 : n <= 4 ? 2 : n <= 6 ? 3 : n <= 9 ? 3 : 4;
+        const sizeCls = n <= 2 ? ' big' : n <= 6 ? '' : n <= 9 ? ' small' : ' tiny';
+        minis.className = 'minis n' + cols + sizeCls;
+        minis.style.gridTemplateColumns = 'repeat(' + cols + ', 1fr)';
         if (!isBlank && val !== null && val <= 12){
           for (let i = 0; i < val; i++){
             const im = document.createElement('img');
@@ -2532,35 +2584,6 @@ function newQuestion(){
     }
   }
   // a missing-number question is always shown as numerals
-  q.form = (q.isEcho || mode === 'count') ? 'result' : (pend ? (pend.f || 'result') : questionForm(mode));
-  if (q.form !== 'result'){
-    q.stage = 2;
-    const shown = (mode === 'add')
-      ? (q.form === 'missingB'
-          ? q.a + ' + <span class="blank" id="blank">?</span> = ' + q.ans
-          : '<span class="blank" id="blank">?</span> + ' + q.b + ' = ' + q.ans)
-      : (q.form === 'missingB'
-          ? q.a + ' − <span class="blank" id="blank">?</span> = ' + q.ans
-          : '<span class="blank" id="blank">?</span> − ' + q.b + ' = ' + q.ans);
-    q.showEq = shown;
-    q.target = (q.form === 'missingB') ? q.b : q.a;
-    q.phrase = (mode === 'add')
-      ? (q.form === 'missingB'
-          ? NUM_WORDS[q.a] + ' plus what makes ' + NUM_WORDS[q.ans] + '?'
-          : 'What plus ' + NUM_WORDS[q.b] + ' makes ' + NUM_WORDS[q.ans] + '?')
-      : (q.form === 'missingB'
-          ? NUM_WORDS[q.a] + ' take away what leaves ' + NUM_WORDS[q.ans] + '?'
-          : 'What take away ' + NUM_WORDS[q.b] + ' leaves ' + NUM_WORDS[q.ans] + '?');
-    document.getElementById('qtext').textContent =
-      (mode === 'add') ? 'Which number is missing?' : 'Which number is missing?';
-  }
-  if (q.isEcho){
-    const qt2 = document.getElementById('qtext');
-    qt2.textContent = 'Same one again — no pictures!';
-    q.phrase = (mode === 'add')
-      ? 'What is ' + NUM_WORDS[q.a] + ' plus ' + NUM_WORDS[q.b] + '?'
-      : 'What is ' + NUM_WORDS[q.a] + ' take away ' + NUM_WORDS[q.b] + '?';
-  }
   say(q.phrase);
   buildPad();
   // patience beat: look at the picture before the buttons wake up
@@ -3891,7 +3914,7 @@ document.addEventListener('visibilitychange', () => {
       ['numbers to 30', TRACE_MAX === 30]
     ];
     document.getElementById('ppVer').textContent =
-      'build v49 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
+      'build v51 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
     showPraise(praiseLine(true));
     say(praiseLine(true));
   });
