@@ -128,6 +128,7 @@
   .mode.tower{ background:linear-gradient(180deg,#FFB6D4,#EE7BA8); }
   .mode.line{ background:linear-gradient(180deg,#F7C98B,#D98E33); }
   .mode.abacus{ background:linear-gradient(180deg,#C9B3F5,#7E5FD6); color:#fff; }
+  .mode.hide{ background:linear-gradient(180deg,#8FE07A,#3E9E4C); color:#fff; }
 
   .card{
     position:relative;
@@ -358,6 +359,42 @@
   #cardView .cvmeta{
     margin-top:10px; background:linear-gradient(180deg,#FFFDF4,#F3E9CF); border:3px solid var(--ink);
     border-radius:16px; padding:8px 14px; font-weight:bold; font-size:15px;
+  }
+  #hdField{
+    position:relative; min-height:170px; display:flex; align-items:center; justify-content:center;
+    gap:10px; flex-wrap:wrap; padding:16px 10px;
+    background:linear-gradient(180deg,#DFF3D6,#B7E6A8);
+    border:4px solid var(--ink); border-radius:24px;
+  }
+  .hdball{ width:56px; height:56px; transition:opacity .25s; }
+  .hdbush{
+    position:relative; display:flex; align-items:center; justify-content:center;
+    min-width:120px; min-height:110px; font-size:76px; line-height:1;
+    filter:drop-shadow(0 4px 3px rgba(0,0,0,.3)); animation:pop .35s ease;
+  }
+  .hdbush span{ position:absolute; font-size:30px; bottom:6px; color:#fff;
+    text-shadow:0 2px 3px rgba(0,0,0,.5); font-weight:bold; }
+  .trn{ width:66px; height:80px; display:block; }
+  .storywrap{ display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .storyline{
+    font-size:20px; font-weight:bold; text-align:center; line-height:1.35;
+    background:linear-gradient(180deg,#FFFFFF,#F4F0FC);
+    border:4px dashed var(--grape); border-radius:22px; padding:14px 16px; width:100%;
+  }
+  .storyscene{ display:flex; align-items:flex-end; justify-content:center; gap:14px; flex-wrap:wrap; }
+  .storygroup{
+    display:grid; gap:6px; justify-items:center; align-content:end;
+    background:#fff; border:3px solid var(--ink); border-radius:18px; padding:10px;
+    min-height:96px;
+  }
+  .storygroup.give{ border-style:dashed; border-color:var(--coral); }
+  .ballimg{ width:52px; height:52px; image-rendering:auto; }
+  .ballimg.leaving{ animation:flyaway .8s ease-in forwards; }
+  .storyperson{ display:flex; flex-direction:column; align-items:center; font-weight:bold; font-size:15px; }
+  .eqreveal{
+    font-size:34px; font-weight:bold; text-align:center; margin-top:10px;
+    background:linear-gradient(180deg,#FFF6D8,#FFE9A8); border:3px solid var(--ink);
+    border-radius:16px; padding:8px; animation:pop .3s ease;
   }
   .badgegrid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
   .badge{
@@ -823,13 +860,14 @@
     <div id="rankBox"></div>
     <h1>PokéMath Adventure</h1>
     <p class="sub">Play with numbers to catch them all!</p>
-    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v51</div>
+    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v54</div>
     <div class="modes">
       <button class="mode trace" data-go="trace"><span class="big"><img class="mico" data-mon="133" alt=""><span class="micoalt">✏️</span></span>Write<br>Numbers</button>
       <button class="mode count" data-go="count"><span class="big"><img class="mico" data-mon="102" alt=""><span class="micoalt">🔢</span></span>Counting</button>
       <button class="mode add" data-go="add"><span class="big"><img class="mico" data-mon="82" alt=""><span class="micoalt">➕</span></span>Adding</button>
       <button class="mode sub" data-go="sub"><span class="big"><img class="mico" data-mon="92" alt=""><span class="micoalt">➖</span></span>Taking<br>Away</button>
       <button class="mode zap" data-go="zap"><span class="big grasspeek"><img class="mico" data-mon="25" alt=""><span class="micoalt">🌿</span><span class="grassfront">🌿</span></span>Wild<br>Catch</button>
+      <button class="mode hide" data-go="hide"><span class="big"><img class="mico" data-mon="52" alt=""><span class="micoalt">🫣</span></span>Hide<br>and Seek</button>
       <button class="mode abacus" data-go="abacus"><span class="big"><img class="mico" data-mon="63" alt=""><span class="micoalt">🧮</span></span>Bead<br>Counter</button>
       <button class="mode line" data-go="line"><span class="big"><img class="mico" data-mon="50" alt=""><span class="micoalt">🧭</span></span>Number<br>Line</button>
       <button class="mode tower" data-go="tower"><span class="big"><img class="mico" data-mon="78" alt=""><span class="micoalt">🏁</span></span>Number<br>Race</button>
@@ -837,6 +875,18 @@
     <button class="widebtn" id="teamBtn">My Pokémon <span id="teamTally"></span></button>
     <button class="widebtn" id="cardBtn" style="background:linear-gradient(180deg,#FFD86B,#E0A517)">🃏 My Cards <span id="cardTally"></span></button>
     <button class="widebtn" id="badgeBtn" style="background:linear-gradient(180deg,#8CCEF9,#3F9BE0)">🏅 My Badges <span id="badgeTally"></span></button>
+  </div>
+
+  <!-- HIDE AND SEEK -->
+  <div class="screen" id="scr-hide">
+    <div class="card">
+      <div class="qtext" id="hdQ"></div>
+      <div id="hdField"></div>
+      <div class="speech" id="hdSpeech"></div>
+    </div>
+    <div class="card">
+      <div class="pad" id="hdPad"></div>
+    </div>
   </div>
 
   <!-- ABACUS -->
@@ -1001,11 +1051,12 @@
       <span>Pictures in Adding / Taking away</span>
     </div>
     <div class="caprow" style="margin-top:0">
+      <button id="picStory">Story problems</button>
       <button id="picAsk">Above the numbers</button>
       <button id="picAuto">Automatic</button>
       <button id="picNone">Never</button>
     </div>
-    <div style="font-size:12px;margin:2px 0 10px">"Above the numbers" shows the sum with Pokémon standing above each number — nothing above the answer, so it can't be counted. Counting, Bead Counter and Number Line always stay visual.</div>
+    <div style="font-size:12px;margin:2px 0 10px">"Story problems" asks in words with objects he can see — how five-year-olds actually solve these — and shows the number sentence afterwards. "Above the numbers" shows the sum with Pokémon standing above each number — nothing above the answer, so it can't be counted. Counting, Bead Counter and Number Line always stay visual.</div>
     <div id="capRows"></div>
     <div class="caprow" style="margin-top:10px">
       <span>Encourage by name</span>
@@ -1154,7 +1205,7 @@ async function loadStars(){
   const wv = await store.get('cubs_wv');
   if (wv === 'off') wrongVoice = false;
   const pm = await store.get('cubs_pic');
-  if (pm === 'above' || pm === 'ask' || pm === 'auto' || pm === 'none') picMode = pm;
+  if (['story','above','ask','auto','none'].indexOf(pm) >= 0) picMode = pm;
   try{
     const st = JSON.parse(await store.get('cubs_streak') || '{}');
     streak = st.s || 0; bestStreak = st.b || 0;
@@ -1424,6 +1475,35 @@ function pickCard(pid, special){
 }
 const CARD_TOTAL = Object.values(CARD_DATA).reduce((a, v) => a + v.length, 0);
 
+const BALLS={"great-ball":"data:image/webp;base64,UklGRnQDAABXRUJQVlA4WAoAAAAQAAAAOwAAOwAAQUxQSDcAAAABDzD/ERGCUeNGklpaAA1pqA+kAbBS/eaef0T/JyBeKAfQV5FdDWWZp1SUJYHs+/n6GtEXcuTyAFZQOCAWAwAAUBMAnQEqPAA8AD4xFohDoiEKBgKqEAGCWoA0mKAcXBsx4PyR/oB+59IDxJ+kx5gP1N/Wv34OkA/oH9V6wD0AP1G9Jn9ZvgY/Yv9m/gJ/XX/15oB2S/0DonOx/rXk4XvniB/IN0Xlaun/Dl8hP7pqan8l/bf27/tPVRedAs4Bgp99ZQIPhZsJA3G8U/VEsWjarqTHHctq0U69Z06miIsH5Qe3sAD+/z1cb//NEV2lWed1S1TqU/VnvBn6Z/ky4z+qeX1Ptu/2HoKHV3GgjWR3/tDxvHv6h4rihrPh1EdaU2ZxokxyuaX0tVTeoT78L/ZLwq//2/jX/mXWuGbB2b/kFwC90FzJW68dRsDmYQXimMNufv8omE6vwqZi41PF7Jz3Kjj/qPCbmBihvPAVy4uyFIJpb6sL1M2E0+gJ9rBeZNVtIzer5vmhULnwI9nRLR1m60TaDr419RopYoUP0YrcvzR1bTYjt8oul9h0JGz91uPHjgqyx0WodbX7c7/4WlxFYLfYQ0YSvjYx/943eSiF4ms4ZNtxU63f0B1eO3qLIX5L4LYQPHn2KZslkuj147h6ws9yiP85adh2Utui1UDOXI+vmBg98mVWRsL+h5f5yTSZuCh86rGp/8L3fCvIezmWa1e0smoJcMQBdZwf2C2hx2dgRCQGXALIbS/4hk1S4cTj3Lc/ZRMb6O+tD8jt8OLDh5f1P/zoNehgfcfKdmfvzG+P/tALiNURP8x65n/JmtDPien7eCZv4IjsA2hELWaOns7ugq0Z7WsSdc3mePVLonU7vQBtnH+0iF5X1rG//7Jse1LeVr/8+ePwd3uOgsytWzWld1Vv/4vhEYObtw/+2Ax9A31VQUU5n/bkSlCegvbqnsx0fbnCH8xlOh8X4tjYDbGW7N0OHGf7QBsKSaEVX5RJerlbnGwbkSzlR67JTcAKP4zNAcYOBZlSbn2avCuczht0f3rPuYh6sVvXVnPr/sJH8/G6VYn/zo9TR/XTH8wD6fi/4zz1dp2+8SOuFaa/gxXliUGDCgK876WNc+BFEAAAAAAAAA==","master-ball":"data:image/webp;base64,UklGRngDAABXRUJQVlA4WAoAAAAQAAAAOwAAOwAAQUxQSDcAAAABDzD/ERFCUSJA0YIBjGR1IxlAmJ+3/4j+T0D8UJ7opDHkoYqypS3xtIqyJZDHOmmsEWMhzzweAFZQOCAaAwAA0BUAnQEqPAA8AD4xFohDoiEKBgKqEAGCWYA0lzlOSfQ9kp/Kf+S+4DtAeJf0mP1V9QH6j/sB78foA/Gb3AP6f/VesA/Wb2AP1g9JT/qf7X4FP2z9gn9c//DmgHZn/UOhI79+rmTt/C+L39Eqbnp/bgf2z8AOQB/VfO2/fP7d/M/9p/T+qS855ZwDBT/kUcYI4LfmKqkD3RgNj0j+l75A1ZUi1YzaUHI8rVj4h3wETZtjYTHg6tgAAP7/PVxv/9E0bhlgHx1mD//xp3/w19puPlr/YT918CHSb4As9xPkXbrYymC7c2q8r8R/6RMr+hKr2s6awJb/+Ry7UESomJ4mljRu+lk1Jrk4pXqyPnsVpBgwJXgjEQThV3oZ98rlQJyTcTecJT9AGroqUyPysVUOad83WBPyCkr/N4tKKxZDzblE3yuSvdV/dYXoEzVi787D1iyOUcKbzzeqtDv+r6DxnCmMYRXkhq510/IHElvN/WzENxseyOuLkR8WNx9/nbfyjEMhY8a5NFtmG+CfdF/ZrG5f16f/+KAsn1TwhCZpHoBL6S//ei2x4ZbXi05O8g8p6p3Zb+tBKIqL2AH883HV62Byu1d6F/0I/xUrDJO4+9dvxdO/vxj/C8jKprwxjDxn/DKiO9Im4EpiQAQ3OX3IVuEGMiGwKxhcr1hyhgZRETLjNzkRQPyqmWvtpLS57VMqdudjXqjhnaGevUdf8OcS/7Jpcv1mtYn19+FfyzJIK6eWyxWk6NP5vfoWK6Mcg1JJC+zJwzzMDKsFYcw9X93W8vY+mfo/9omv3fA+Ff8c5O8GQuk0JgZaI5Zm3m+l7fAnCplfvuP/4vh5PEWQu/6dmPwGXI4J9vl2YG35pfQXuG/2nbztDnv+Y0DBImGJ4bps5t6NgH0NGMh0L9kARH5lHsposcIgmY/lneeqYj50kFGfSF6mV3hU3JVfgvJ6k7yvwducwOp9NxOuSaEW2v5+UyRYi/5sh4WupUf+sCTUZiVP4JIIY8otzmJMU1RvXX2vflwLW19sTYK16Eohzfz2KamSB+8AAAAAAAA=","poke-ball":"data:image/webp;base64,UklGRgYDAABXRUJQVlA4WAoAAAAQAAAAOwAAOwAAQUxQSDgAAAABDzD/ERFCUSJA0YIBjGR1IxlAmJ+3/4j+T0D8UJ5oTHTSGPJQRdnS4GkVZUsgj3XSWCPGQp55PFZQOCCoAgAAsBMAnQEqPAA8AD4xFIhCoiEhFAb8IAMEsgBpLoAdS+9OSR8EPtu7S3gm9QDzAfwD+tfrl74/oA9AD+q/2brAPQA/UD0tP1u+Cv9t/3A9mDMAOxr+O/ih+0fTGerOSCe5eIH8z/GD8ZqHLTw/o+pT/xn5Z/4DpRP8361SFXuPV+KZJJATjB9rdZCU6oiDaCPUtKAB0ojJWv6NfbtmbP3yi/XP1F2HgAD+/vhpQ//0TRvCdZvTaSQ3s3/0GxQkVjHD/39ZpouvP+xiDITFR3bTzvH/N8NCI2gXW+bCBG8ifKlZ//RL83tF7X7uaeMeQibFTyDYzalCvN/8+1lQnkkk7Qz/49aPekrEJm2nU03Ek/+nl1+Af00nbCdEj3U8B0NTGhWVsjMA7d//l9P/p2UPuTpkwMDPBe2x/Dhek4T/3Y72Mc0TyPh+kiDx/PzSAaplt0qTF+Qst6vEEKjsBwkICOrznL3HaeAnd8pMAvL4NrNKsh0YOrWEQK/2bW/1h96v1ZemsabAJaH6T7LEx2rMX+Jev483/zaZKQBvY4CxwPOE1Jf/zzJA+SR43bfewonukrVUb6vvw5AwjVtQwkfacyRyp4+zWdHg+i3YWP2s1XXLCe7C0/4dVKO4eZv7Kz9aSU4T2qt24a4OJUP7NHDIUvgfYhjwMb6LqltBgXbzfrF5BMVcu+hZHyumPPu7+u46s+KyYNc+evH3nf6lZgW0outON7VUKWz4eJK4V4POG+8L9c3WfZNciHj/mQvrkOa6kRuhgJHVgnpMwvivpMfoyBcKxhnwfh+UE3Pw66A3+pah1XC1McCueRcPfywEP/D3/1CgRYt9kQ/wcCiNBpSBJdCN9Ff09bTmBGR7faOcq1/0tg7ppPGD1jTEQ/8aXFQIbg9aAAAAAAA=","premier-ball":"data:image/webp;base64,UklGRsQCAABXRUJQVlA4WAoAAAAQAAAAOwAAOwAAQUxQSDgAAAABDzD/ERFCUSJA0YIBjGR1IxlAmJ+3/4j+T0D8UJ5oTHTSGPJQRdnS4GkVZUsgj3XSWCPGQp55PFZQOCBmAgAAUBIAnQEqPAA8AD4xFohDIiEhEgwHbCADBLGAal3IVAwjbsB4oH7AcIB/a/7d1gH6gewB5V/7VfA5+xX7LfAB+r//4zQDsA/hn4jfuB0qfqX+yuWd+wfjN6AfyD8Sd6Be3aZv89/uGq7/sP5a/3TpL/8761SDGBRKLnTaSQm8Pa3Vzj6718j+BY7aK810/GFY6TjduuCGkAHij4AA/v74acv/6JntG+yuPuQtsPJNweciHfQ//9Evy09yOywXC7OmKrtArCPL3IsKZ0/3+B8UvUX9VdFYQS8LQuoDIA4ieJZq7g3/BaitiOILyfGs9Ni0QFQB3ojawCKAC82uEhiElvzyIXoS71JG5rlV/zQFGBdUTTrgmP9SklpFSM77/4NnSQelxnQQiCtQ1BdPprZ+fwlRhZr/qQcEBGPjsP2xfWZ0/wQznkA30gdJwH1Ar/UOm8LuZ9wxFgaU2on+S+TxzIFPd1rEBp55w/3pEb9P+0yfB3//9nDrW1ZEE58cIoSyu/Ig5mHsuV69QJp7YhjbyOxqh+RE4X9KFFtQpoLMWeefgpIuslvtGEPdZ/V6t1v2L9vr+y+OA7MU+rjYj7jB3yCxE9cXCg/yao7XdRU+sr/9V38ndPzEZkAD8ddwOdHls3qyiyV8ySUy5LSGu0u1+Q6KflIlVI1/qvBktWFBRAM0mn8GL/zsT4ERMzfaBGXff1/97AUqIxTvRSai9+NPHJJTT8Gy/MQOZl+J/5SmYXNl9l/8QdyKfpPUxHg1E3CrG2PYndeeclSRVt1fif+O6OQdTbJZAcx6yedpcbJxjJ6TgAAAAAA=","ultra-ball":"data:image/webp;base64,UklGRjwDAABXRUJQVlA4WAoAAAAQAAAAOwAAOwAAQUxQSDgAAAABDzD/ERFCUSJA0YIBjGR1IxlAmJ+3/4j+T0D8UJ5oTHTSGPJQRdnS4GkVZUsgj3XSWCPGQp55PFZQOCDeAgAAMBQAnQEqPAA8AD4xFohDIiEhFAoG/CADBLEAZ7DtP1W5Q+xYoHwQ+4DtAbZPzAfpX61XSAfpX6QHsk+gB+0fpM/7f3Hv2i/aL2Ws0A/gH4Ad5/8P/GDrAuwHqnkqnuni1/APxy4CmU/af6ZX9M1Ob+i/sn9d/2/9V6SH/S+s6hV7j1faVgj3L/AQ/vmALug+nchcMnskLIZ1aCtiNDygdLmr6eOxp5O1kQAA/v74aMv+iZ8eEXmj3/uR8vU/+XJ4RCKj1P2OkIz7FKWZJKmVAnTaecc+gz49MQneLY3ZB/jrK/rw8SKa8/ol+C30/yRwtJ7cf9SVWo8/OfCMdKVy+nN4w/8uEPlf/fjs6a9tTv+azi68dKLJxEdMRy0O9LK6dBidebIadjnB+RStBAdD7aV9N0P1+OCGlnMZte4kq5ydRLNV797ET6z/TB2ne9dBDKZXX7w5Azrs0KS6YwR3q4/qYQpBReDjA/FEo8rO5u15GgEqsptFhvlpPtD8q/6IKroREHLbE1uAJlyQIVCGXGn35cEg2/3phqxmTRCGrID/1pIr0C3QlhA9f6Fxr9dotYSG3yfH923xAF0jk/oRQ//vx5anGt1gRqKlAckkZxlXwgljGMod2O09o2g/8/uJKKJJwxcIsBLw72Ny81kYOHEO//+uKbB9b8Q6H+boAvRU7t2YFFFbXLjsi6hWzVFgeof6peR6Vf/EddCXLY8t35L/93SNetp65ynnJeq2ff/qCvvAI/OpdGnEr6ol5HN923aAwqAfPH9RfBalPv3yubqxaurKXkm999+K1doRHgnVB49clPGT+ND8oY4o6LbD14GqEIOKQ1kAPJPrpT9Ek4du2tMiMmhG24jR11WCuAklTXrbbCcL6JuV244pIgro6UHWW18KOtn7EJ+K82WFmAc+HgkuV/+QCvDOW41FyXhnzdpZJ2No2v/sJ0OqyAYsisZKbg1HPS3AAAAAAAA="};
+const BALL_KINDS = Object.keys(BALLS);
+const ballImg = k => BALLS[k] || BALLS['poke-ball'];
+
+/* Simple original trainer characters for the story problems.
+   Plain, uniform counters and simple characters keep attention on the
+   quantity rather than on the picture. */
+function trainerSvg(colour, hair){
+  return '<svg viewBox="0 0 80 96" class="trn" aria-hidden="true">' +
+    '<ellipse cx="40" cy="92" rx="22" ry="4" fill="rgba(20,22,60,.22)"/>' +
+    '<rect x="24" y="52" width="32" height="34" rx="10" fill="' + colour + '" stroke="#2B2E5C" stroke-width="3"/>' +
+    '<rect x="14" y="56" width="12" height="24" rx="6" fill="' + colour + '" stroke="#2B2E5C" stroke-width="3"/>' +
+    '<rect x="54" y="56" width="12" height="24" rx="6" fill="' + colour + '" stroke="#2B2E5C" stroke-width="3"/>' +
+    '<circle cx="40" cy="34" r="18" fill="#FFE0BD" stroke="#2B2E5C" stroke-width="3"/>' +
+    '<path d="M22 30 a18 18 0 0 1 36 0 z" fill="' + hair + '" stroke="#2B2E5C" stroke-width="3"/>' +
+    '<path d="M20 30 h40 a4 4 0 0 1 0 6 h-40 a4 4 0 0 1 0 -6 z" fill="' + hair + '" stroke="#2B2E5C" stroke-width="2.5"/>' +
+    '<circle cx="34" cy="38" r="2.6" fill="#2B2E5C"/><circle cx="46" cy="38" r="2.6" fill="#2B2E5C"/>' +
+    '<path d="M35 44 q5 4 10 0" fill="none" stroke="#2B2E5C" stroke-width="2.5" stroke-linecap="round"/>' +
+    '<circle cx="29" cy="42" r="2.5" fill="#FF9EC4" opacity=".7"/>' +
+    '<circle cx="51" cy="42" r="2.5" fill="#FF9EC4" opacity=".7"/>' +
+    '</svg>';
+}
+const FRIENDS = [
+  { name:'Hana',  svg: trainerSvg('#FF9EC4', '#3B2B2B') },
+  { name:'Mum',   svg: trainerSvg('#7BE0C3', '#5A3A2A') },
+  { name:'Dad',   svg: trainerSvg('#5AB8F5', '#2B2E5C') },
+  { name:'Euna',  svg: trainerSvg('#FFC93C', '#4A2E1E') }
+];
+
 const BADGES = [
   { id:'first',    ico:'👟', name:'First catch',     test:() => caught.length >= 1 },
   { id:'streak10', ico:'🔥', name:'10 in a row',     test:() => bestStreak >= 10 },
@@ -1445,6 +1525,7 @@ const BADGES = [
   { id:'ultra',    ico:'🌈', name:'Shiny legendary', test:() => caught.some(id => isLegend(id) && isShiny(id)) },
   { id:'line50',   ico:'🧭', name:'50 hops',        test:() => (progress.line || 0) >= 50 },
   { id:'abacus50', ico:'🧮', name:'50 bead sums',   test:() => (progress.abacus || 0) >= 50 },
+  { id:'hide25',   ico:'🫣', name:'25 hidden finds', test:() => (progress.hide || 0) >= 25 },
   { id:'card1',    ico:'🃏', name:'First card',     test:() => cards.length >= 1 },
   { id:'card25',   ico:'📚', name:'25 cards',       test:() => cards.length >= 25 },
   { id:'holo1',    ico:'🌠', name:'First holo',     test:() => cards.some(c => HOLO.includes(cardInfo(c).rIdx)) }
@@ -1622,7 +1703,7 @@ function catchMon(){
 }
 
 /* ---------- screens ---------- */
-const screens = { home:'scr-home', trace:'scr-trace', quiz:'scr-quiz', zap:'scr-zap', tower:'scr-tower', team:'scr-team', badges:'scr-badges', line:'scr-line', cards:'scr-cards', abacus:'scr-abacus' };
+const screens = { home:'scr-home', trace:'scr-trace', quiz:'scr-quiz', zap:'scr-zap', tower:'scr-tower', team:'scr-team', badges:'scr-badges', line:'scr-line', cards:'scr-cards', abacus:'scr-abacus', hide:'scr-hide' };
 let mode = 'home';
 function show(name){
   Object.values(screens).forEach(id => document.getElementById(id).classList.remove('on'));
@@ -1630,7 +1711,7 @@ function show(name){
   document.getElementById('backBtn').style.display = (name === 'home') ? 'none' : 'block';
 }
 document.getElementById('backBtn').addEventListener('click', () => {
-  sndTap(); shutUp(); stopZap(); stopRace(); lnStopLoop(); abStopLoop(); mode = 'home'; renderBuddyHome(); show('home');
+  sndTap(); shutUp(); stopZap(); stopRace(); lnStopLoop(); abStopLoop(); stopHide(); mode = 'home'; renderBuddyHome(); show('home');
 });
 document.getElementById('teamAll').addEventListener('click', () => { teamFilter = 'all'; sndTap(); renderTeam(); });
 document.getElementById('teamLeg').addEventListener('click', () => { teamFilter = 'legend'; sndTap(); renderTeam(); });
@@ -1664,6 +1745,7 @@ document.querySelectorAll('.mode').forEach(btn => {
     else if (go === 'tower'){ mode = 'tower'; show('tower'); startTower(); }
     else if (go === 'line'){ mode = 'line'; show('line'); startLine(); }
     else if (go === 'abacus'){ mode = 'abacus'; show('abacus'); startAbacus(); }
+    else if (go === 'hide'){ mode = 'hide'; show('hide'); startHide(); }
     else { mode = go; show('quiz'); newQuestion(); }
   });
 });
@@ -2026,7 +2108,7 @@ function buildFramesFor(monId, emoji){
     cell.appendChild(objSpan(monId, emoji, i >= q.a - q.b ? 'gone' : '', 0));
   });
 }
-const progress = { count: 0, add: 0, sub: 0, zap: 0, tower: 0, line: 0, abacus: 0 };
+const progress = { count: 0, add: 0, sub: 0, zap: 0, tower: 0, line: 0, abacus: 0, hide: 0 };
 function saveProg(){
   store.set('cubs_prog', JSON.stringify(progress));
   store.set('cubs_caps', JSON.stringify(capOverride));
@@ -2136,9 +2218,9 @@ let pace = 'calm';
 const P = () => PACE[pace] || PACE.calm;
 
 const FLU_WIN = 10;
-const fluency = { count: [], add: [], sub: [], zap: [], line: [], abacus: [] };
-const capOverride = { count: 0, add: 0, sub: 0, zap: 0, line: 0, abacus: 0 };   // 0 = auto; else hard cap
-const FAST_MS = { count: 9000, add: 8000, sub: 8000, zap: 12000, line: 14000, abacus: 16000 };
+const fluency = { count: [], add: [], sub: [], zap: [], line: [], abacus: [], hide: [] };
+const capOverride = { count: 0, add: 0, sub: 0, zap: 0, line: 0, abacus: 0, hide: 0 };   // 0 = auto; else hard cap
+const FAST_MS = { count: 9000, add: 8000, sub: 8000, zap: 12000, line: 14000, abacus: 16000, hide: 14000 };
 
 /* Trainer rank — an endless ladder, so there is always a next goal even
    after every Pokemon is caught. Ranks come from careful answers, not volume. */
@@ -2290,12 +2372,16 @@ function fluent(m){
    'ask'  - the number sentence leads; pictures only if he asks   (default)
    'auto' - the app decides (pictures -> hidden -> numbers)
    'none' - numbers only, no help button at all                  */
-let picMode = 'above';
+/* 'story' — a spoken word problem with real objects, which is how children
+   of this age genuinely solve adding and taking away. The number sentence is
+   revealed only AFTER he answers, to link the story to the symbols. */
+let picMode = 'story';
 
 function questionForm(m){
   if (m !== 'add' && m !== 'sub') return 'result';
+  if (picMode === 'story') return 'result';
   const p = progress[m] || 0;
-  if (p < 15) return 'result';
+  if (p < 40) return 'result';
   const r = Math.random();
   if (r < 0.62) return 'result';
   return r < 0.81 ? 'missingB' : 'missingA';
@@ -2309,6 +2395,7 @@ function questionForm(m){
    answer can never be found by counting whatever is left un-faded. */
 function cpaStage(m){
   if (m !== 'add' && m !== 'sub') return 0;
+  if (picMode === 'story') return 3;                       // story problem
   if (picMode === 'above' || picMode === 'ask' || picMode === 'none') return 2;
   const p = progress[m] || 0;
   if (p < 12) return 0;
@@ -2317,8 +2404,13 @@ function cpaStage(m){
 }
 function baseMax(m){
   const p = progress[m] || 0;
+  if (m === 'add' || m === 'sub'){
+    // meaning first: stay within five for a good while, then within ten
+    if (p < 30) return 5;
+    return 10;
+  }
   if (p < 6) return 5;
-  return 10;                              // within-10 is the home base at this age
+  return 10;
 }
 function levelMax(m){
   const cap = capOverride[m] || 0;
@@ -2333,11 +2425,23 @@ function levelMax(m){
 }
 
 function pickMon(){
-  const pool = caught.length ? caught : [25, 1, 4, 7, 133];
-  return pool[rnd(pool.length)];
+  const base = caught.length ? caught : [25, 1, 4, 7, 133];
+  const pool = base.filter(id => !!imgArt(id));      // never pick one we can't show
+  const use = pool.length ? pool : [25];
+  return use[rnd(use.length)];
 }
 function objSizeFor(count){
   return count <= 5 ? 76 : count <= 8 ? 64 : count <= 12 ? 54 : 44;
+}
+/* Any sprite that fails or is missing falls back to a Poké Ball, so a
+   counting question can never show blanks. */
+function safeArt(id){
+  const src = imgArt(id);
+  return src || ballImg('poke-ball');
+}
+function safeSmall(id){
+  const src = imgSmall(id);
+  return src || ballImg('poke-ball');
 }
 function objSpan(monId, emoji, cls, px){
   const s = document.createElement('span');
@@ -2345,11 +2449,15 @@ function objSpan(monId, emoji, cls, px){
   const im = document.createElement('img');
   im.className = 'pkspr';
   if (px){ im.style.width = im.style.height = px + 'px'; s.style.fontSize = Math.round(px * 0.8) + 'px'; }
-  im.src = imgArt(monId);
+  im.src = safeArt(monId);
   im.alt = '';
-  im.onerror = function(){                       // offline fallback stays on-theme
-    s.innerHTML = BALL_SVG.replace('width="26" height="26"', 'width="38" height="38"');
-    noteOffline();
+  im.onerror = function(){
+    const b = document.createElement('img');
+    b.className = 'pkspr';
+    if (px) { b.style.width = b.style.height = px + 'px'; }
+    b.src = ballImg('poke-ball');
+    s.innerHTML = '';
+    s.appendChild(b);
   };
   s.appendChild(im);
   return s;
@@ -2361,7 +2469,15 @@ document.getElementById('eqline').addEventListener('click', () => { if (q.phrase
 function newQuestion(){
   padLocked = false;
   q.tries = 0;
+  // clear anything left over from the previous question, or its sentence can
+  // be drawn again while THIS question's answer is expected
+  q.showEq = null;
+  q.target = 0;
+  q.form = 'result';
+  q.stage = 0;
+  q.usedHelp = false;
   clearTimeout(q.lookTimer);
+  clearTimeout(q.leaveTimer);
   const pend = pending[mode];
   const echo = (!pend && echoNext && echoNext.mode === mode) ? echoNext : null;
   echoNext = null;
@@ -2477,6 +2593,27 @@ function newQuestion(){
       });
     }, P().look + (mode === 'sub' ? 3400 : 2600));
   }
+  // Guard: the three numbers must agree before anything is drawn. If they
+  // don't (stale state, an old saved question, anything), rebuild them here.
+  if (mode === 'add' || mode === 'sub'){
+    const sane = (mode === 'add') ? (q.a + q.b === q.ans && q.a >= 1 && q.b >= 1)
+                                  : (q.a - q.b === q.ans && q.b >= 1 && q.ans >= 0);
+    if (!sane || !Number.isInteger(q.a) || !Number.isInteger(q.b) || !Number.isInteger(q.ans)){
+      clearPending(mode);
+      if (mode === 'add'){
+        q.ans = 2 + rnd(Math.max(1, max - 1));
+        q.a = 1 + rnd(Math.max(1, q.ans - 1));
+        q.b = q.ans - q.a;
+      } else {
+        q.a = 2 + rnd(Math.max(1, max - 1));
+        q.b = 1 + rnd(Math.max(1, q.a - 1));
+        q.ans = q.a - q.b;
+      }
+      q.phrase = (mode === 'add')
+        ? 'What is ' + NUM_WORDS[q.a] + ' plus ' + NUM_WORDS[q.b] + '?'
+        : 'What is ' + NUM_WORDS[q.a] + ' take away ' + NUM_WORDS[q.b] + '?';
+    }
+  }
   q.form = (q.isEcho || mode === 'count') ? 'result' : (pend ? (pend.f || 'result') : questionForm(mode));
   if (q.form !== 'result'){
     q.stage = 2;
@@ -2506,8 +2643,77 @@ function newQuestion(){
       ? 'What is ' + NUM_WORDS[q.a] + ' plus ' + NUM_WORDS[q.b] + '?'
       : 'What is ' + NUM_WORDS[q.a] + ' take away ' + NUM_WORDS[q.b] + '?';
   }
+  // stage 3: a story problem — objects he can act on, no symbols yet
+  if (q.stage === 3 && (mode === 'add' || mode === 'sub')){
+    bub.innerHTML = ''; eq.innerHTML = '';
+    const friend = FRIENDS[rnd(FRIENDS.length)];
+    const ball = BALL_KINDS[rnd(BALL_KINDS.length)];
+    const ballName = ball.replace('-', ' ') + (q.a === 1 ? '' : 's');
+    const who = childName || 'You';
+    q.form = 'result';
+    const wrap = document.createElement('div');
+    wrap.className = 'storywrap';
+    const text = document.createElement('div');
+    text.className = 'storyline';
+    if (mode === 'add'){
+      text.textContent = who + ' has ' + q.a + ' ' + ballName + '. ' +
+        friend.name + ' gives ' + q.b + ' more. How many now?';
+      q.phrase = who + ' has ' + NUM_WORDS[q.a] + ' ' + ballName + '. ' +
+        friend.name + ' gives ' + NUM_WORDS[q.b] + ' more. How many altogether?';
+    } else {
+      text.textContent = who + ' has ' + q.a + ' ' + ballName + '. ' +
+        who + ' gives ' + q.b + ' to ' + friend.name + '. How many are left?';
+      q.phrase = who + ' has ' + NUM_WORDS[q.a] + ' ' + ballName + '. ' +
+        who + ' gives ' + NUM_WORDS[q.b] + ' to ' + friend.name + '. How many are left?';
+    }
+    wrap.appendChild(text);
+    const scene = document.createElement('div');
+    scene.className = 'storyscene';
+    const group = (n, cls) => {
+      const g = document.createElement('div');
+      g.className = 'storygroup' + (cls ? ' ' + cls : '');
+      g.style.gridTemplateColumns = 'repeat(' + Math.min(5, Math.max(1, n)) + ', 1fr)';
+      for (let i = 0; i < n; i++){
+        const im = document.createElement('img');
+        im.className = 'ballimg' + (cls === 'give' ? ' goaway' : '');
+        im.src = ballImg(ball); im.alt = '';
+        g.appendChild(im);
+      }
+      return g;
+    };
+    if (mode === 'add'){
+      scene.appendChild(group(q.a));
+      const plus = document.createElement('div'); plus.className = 'opsign'; plus.textContent = '+';
+      scene.appendChild(plus);
+      const fr = document.createElement('div');
+      fr.className = 'storyperson';
+      fr.innerHTML = friend.svg + friend.name;
+      scene.appendChild(fr);
+      scene.appendChild(group(q.b));
+    } else {
+      scene.appendChild(group(q.a - q.b));
+      scene.appendChild(group(q.b, 'give'));
+      const fr = document.createElement('div');
+      fr.className = 'storyperson';
+      fr.innerHTML = friend.svg + friend.name;
+      scene.appendChild(fr);
+      // the given-away ones visibly leave
+      clearTimeout(q.leaveTimer);
+      q.leaveTimer = setTimeout(() => {
+        document.querySelectorAll('#bubbles .goaway').forEach((el, k) => {
+          setTimeout(() => {
+            el.classList.add('leaving');
+            blip(540 - k * 18, 0, .1);
+            setTimeout(() => el.remove(), 800);
+          }, k * 120);
+        });
+      }, 1600);
+    }
+    wrap.appendChild(scene);
+    bub.appendChild(wrap);
+  }
   // stage 2: the number sentence itself is the question
-  if (q.stage === 2){
+  else if (q.stage === 2){
     bub.innerHTML = '';
     const box = document.createElement('div');
     box.className = 'absq';
@@ -2536,7 +2742,7 @@ function newQuestion(){
           for (let i = 0; i < val; i++){
             const im = document.createElement('img');
             im.className = 'mini';
-            im.src = imgSmall(monId);
+            im.src = safeSmall(monId);
             im.alt = '';
             im.onerror = function(){ this.replaceWith(Object.assign(document.createElement('span'),
               { textContent: emoji, className: 'mini' })); };
@@ -2656,12 +2862,20 @@ function answer(n, btn){
     checkBadges();
     sndGood(); burst(btn, q.tries === 0 ? 10 : 8);
     addStar(q.tries === 0 ? 2 : 1);   // accuracy is the fast path to catches
+    if (q.stage === 3 && (mode === 'add' || mode === 'sub')){
+      const rev = document.createElement('div');
+      rev.className = 'eqreveal';
+      rev.textContent = (mode === 'add')
+        ? q.a + ' + ' + q.b + ' = ' + q.ans
+        : q.a + ' − ' + q.b + ' = ' + q.ans;
+      document.getElementById('bubbles').appendChild(rev);
+    }
     const fact = mode === 'add' ? NUM_WORDS[q.a] + ' plus ' + NUM_WORDS[q.b] + ' equals ' + NUM_WORDS[q.ans] + '!'
                : mode === 'sub' ? NUM_WORDS[q.a] + ' take away ' + NUM_WORDS[q.b] + ' equals ' + NUM_WORDS[q.ans] + '!'
                : NUM_WORDS[q.ans] + '!';
     q.form = 'result';
     if (q.usedHelp && q.tries === 0) q.tries = 1;      // helped: single star, not double
-    if ((mode === 'add' || mode === 'sub') && q.stage < 2 && !q.isEcho){
+    if (picMode !== 'story' && (mode === 'add' || mode === 'sub') && q.stage < 2 && !q.isEcho){
       echoNext = { mode: mode, a: q.a, b: q.b };     // ask it again without pictures
     }
     const praise = praiseLine(q.tries === 0);
@@ -3023,6 +3237,128 @@ function towerTap(n, el){
       'Almost! Look for ' + race.next + ' — you\u2019ve got this!';
   }
 }
+
+/* ============================================================
+   HIDE AND SEEK — part-whole understanding without any symbols.
+   He sees the whole, watches some go under the bush, and works out
+   how many are hidden. This is subtraction in its earliest honest form.
+   ============================================================ */
+const HD = { total: 0, hidden: 0, ball: 'poke-ball', tries: 0, locked: false, asked: 0, phrase: '' };
+function hdBuildPad(){
+  const pad = document.getElementById('hdPad');
+  pad.innerHTML = '';
+  for (let n = 0; n <= Math.max(10, HD.total); n++){
+    const b = document.createElement('button');
+    b.textContent = n;
+    b.addEventListener('click', () => hdAnswer(n, b));
+    pad.appendChild(b);
+  }
+}
+function hdNewRound(){
+  HD.locked = false; HD.tries = 0;
+  const pend = pending.hide;
+  const max = pend ? pend.x : Math.min(10, levelMax('hide'));
+  HD.total = pend ? pend.a : 3 + rnd(Math.max(1, max - 2));
+  HD.hidden = pend ? pend.n : 1 + rnd(HD.total - 1);
+  HD.ball = pend ? pend.e : BALL_KINDS[rnd(BALL_KINDS.length)];
+  HD.tries = pend ? Math.max(1, pend.t || 1) : 0;
+  if (!pend) savePending('hide', { a:HD.total, n:HD.hidden, e:HD.ball, x:max, t:0 });
+  HD.asked = Date.now();
+  const field = document.getElementById('hdField');
+  field.innerHTML = '';
+  document.getElementById('hdQ').textContent = 'Count them all first!';
+  for (let i = 0; i < HD.total; i++){
+    const im = document.createElement('img');
+    im.className = 'hdball'; im.src = ballImg(HD.ball); im.alt = '';
+    field.appendChild(im);
+  }
+  hdBuildPad();
+  document.getElementById('hdSpeech').textContent = 'How many altogether?';
+  say('Look! ' + NUM_WORDS[HD.total] + ' balls. Count them.');
+  // count them aloud together, then hide some
+  clearTimeout(HD.t1); clearTimeout(HD.t2);
+  HD.t1 = setTimeout(() => {
+    if (mode !== 'hide') return;
+    const balls = field.querySelectorAll('.hdball');
+    balls.forEach((b, i) => setTimeout(() => {
+      if (mode !== 'hide') return;
+      b.classList.remove('hintpop'); void b.offsetWidth; b.classList.add('hintpop');
+      blip(440 + i * 40, 0, .1);
+      speakNumber(i + 1);
+    }, i * 620));
+    HD.t2 = setTimeout(() => {
+      if (mode !== 'hide') return;
+      hdHideSome();
+    }, HD.total * 620 + 900);
+  }, 900);
+}
+function hdHideSome(){
+  const field = document.getElementById('hdField');
+  const balls = Array.from(field.querySelectorAll('.hdball'));
+  const goHide = balls.slice(0, HD.hidden);
+  goHide.forEach(b => b.remove());
+  const bush = document.createElement('div');
+  bush.className = 'hdbush';
+  bush.textContent = '🌳';
+  bush.innerHTML += '<span>?</span>';
+  field.insertBefore(bush, field.firstChild);
+  document.getElementById('hdQ').textContent =
+    'There were ' + HD.total + '. How many are hiding?';
+  HD.phrase = 'There were ' + NUM_WORDS[HD.total] + ' balls. Now you can see ' +
+    NUM_WORDS[HD.total - HD.hidden] + '. How many are hiding behind the tree?';
+  say(HD.phrase);
+  document.getElementById('hdSpeech').textContent = 'How many are hiding?';
+  blip(392, 0, .2);
+}
+function hdAnswer(n, btn){
+  if (HD.locked || mode !== 'hide') return;
+  audio();
+  if (n === HD.hidden){
+    HD.locked = true;
+    clearPending('hide');
+    progress.hide = (progress.hide || 0) + 1; saveProg();
+    recordAnswer('hide', HD.tries === 0, Date.now() - (HD.asked || 0));
+    if (HD.tries === 0) bumpStreak(true);
+    btn.classList.add('right');
+    // reveal what was hiding
+    const field = document.getElementById('hdField');
+    const bush = field.querySelector('.hdbush');
+    if (bush){
+      bush.remove();
+      for (let i = 0; i < HD.hidden; i++){
+        const im = document.createElement('img');
+        im.className = 'hdball'; im.src = ballImg(HD.ball); im.alt = '';
+        field.insertBefore(im, field.firstChild);
+      }
+    }
+    const praise = praiseLine(HD.tries === 0);
+    showPraise(praise + (HD.tries === 0 ? '  ⭐⭐' : '  ⭐'));
+    sndGood(); burst(btn, HD.tries === 0 ? 10 : 8);
+    addStar(HD.tries === 0 ? 2 : 1);
+    say(praise + ' ' + NUM_WORDS[HD.total - HD.hidden] + ' and ' + NUM_WORDS[HD.hidden] +
+        ' makes ' + NUM_WORDS[HD.total] + '!');
+    document.getElementById('hdSpeech').textContent =
+      (HD.total - HD.hidden) + ' and ' + HD.hidden + ' makes ' + HD.total + '!';
+    checkBadges();
+    setTimeout(function waitQuiet(){
+      if (mode !== 'hide') return;
+      if (!readyForNext()){ setTimeout(waitQuiet, 250); return; }
+      hdNewRound();
+    }, P().next);
+  } else {
+    HD.tries++;
+    if (pending.hide) savePending('hide', Object.assign({}, pending.hide, { t: HD.tries }));
+    btn.classList.add('wrong');
+    setTimeout(() => btn.classList.remove('wrong'), 500);
+    loseStar(); bumpStreak(false); sndOops(); sayWrong();
+    document.getElementById('hdSpeech').textContent =
+      'You can see ' + (HD.total - HD.hidden) + '. There were ' + HD.total + ' altogether.';
+    HD.locked = true;
+    setTimeout(() => { HD.locked = false; }, 900);
+  }
+}
+function startHide(){ hdNewRound(); }
+function stopHide(){ clearTimeout(HD.t1); clearTimeout(HD.t2); }
 
 /* ============================================================
    BEAD COUNTER — a rekenrek. Ten beads a row, five red then five
@@ -3706,7 +4042,7 @@ function mergeStates(a, b){
     shiny: uni(a.shiny, b.shiny),
     cards: uni(a.cards, b.cards),
     xp: Math.max(a.xp || 0, b.xp || 0),
-    pic: newer.pic || 'above',
+    pic: newer.pic || 'story',
     best: Math.max(a.best || 0, b.best || 0),
     badges: uni(a.badges, b.badges),
     traced: uni(a.traced, b.traced),
@@ -3828,13 +4164,14 @@ document.addEventListener('visibilitychange', () => {
     else setSyncStatus('', 'not connected');
     panel.style.display = 'flex';
   }
-  const CAP_MODES = [['count','Counting'], ['add','Adding'], ['sub','Taking away'], ['zap','Wild Catch'], ['line','Number Line'], ['abacus','Bead Counter'] ];
+  const CAP_MODES = [['count','Counting'], ['add','Adding'], ['sub','Taking away'], ['zap','Wild Catch'], ['line','Number Line'], ['abacus','Bead Counter'], ['hide','Hide and Seek'] ];
   function renderPic(){
+    document.getElementById('picStory').classList.toggle('on', picMode === 'story');
     document.getElementById('picAsk').classList.toggle('on', picMode === 'above' || picMode === 'ask');
     document.getElementById('picAuto').classList.toggle('on', picMode === 'auto');
     document.getElementById('picNone').classList.toggle('on', picMode === 'none');
   }
-  [['picAsk','above'], ['picAuto','auto'], ['picNone','none']].forEach(([id, val]) => {
+  [['picStory','story'], ['picAsk','above'], ['picAuto','auto'], ['picNone','none']].forEach(([id, val]) => {
     document.getElementById(id).addEventListener('click', () => {
       picMode = val; store.set('cubs_pic', picMode); schedulePush(); renderPic(); sndTap();
     });
@@ -3914,7 +4251,7 @@ document.addEventListener('visibilitychange', () => {
       ['numbers to 30', TRACE_MAX === 30]
     ];
     document.getElementById('ppVer').textContent =
-      'build v51 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
+      'build v54 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
     showPraise(praiseLine(true));
     say(praiseLine(true));
   });
