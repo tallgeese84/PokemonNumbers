@@ -547,10 +547,21 @@
     position:fixed; inset:0; display:none; align-items:center; justify-content:center;
     background:rgba(24,26,64,.6); z-index:80; padding:16px;
   }
+  #parentPanel{ align-items:flex-start; overflow-y:auto; -webkit-overflow-scrolling:touch; }
   #parentPanel .ppbox{
     background:linear-gradient(180deg,#FFFDF4,#FBF3DF); border:5px solid var(--ink);
     border-radius:28px; padding:18px; max-width:420px; width:100%;
     box-shadow:0 10px 0 rgba(30,32,70,.55);
+    max-height:88vh; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    margin:16px auto;
+  }
+  #parentPanel .ppbox::-webkit-scrollbar{ width:10px; }
+  #parentPanel .ppbox::-webkit-scrollbar-thumb{ background:#C9BFA4; border-radius:8px; }
+  .ppsection{ border-top:3px dashed #E4C05A; margin-top:12px; padding-top:10px; }
+  .ppclose{
+    position:sticky; bottom:-4px;
+    background:linear-gradient(180deg,rgba(251,243,223,.1),#FBF3DF 45%);
+    padding:12px 0 4px; margin-top:10px; text-align:center;
   }
   #parentPanel textarea{
     width:100%; font-family:monospace; font-size:12px; border:3px solid var(--ink);
@@ -860,7 +871,7 @@
     <div id="rankBox"></div>
     <h1>PokéMath Adventure</h1>
     <p class="sub">Play with numbers to catch them all!</p>
-    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v54</div>
+    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v55</div>
     <div class="modes">
       <button class="mode trace" data-go="trace"><span class="big"><img class="mico" data-mon="133" alt=""><span class="micoalt">✏️</span></span>Write<br>Numbers</button>
       <button class="mode count" data-go="count"><span class="big"><img class="mico" data-mon="102" alt=""><span class="micoalt">🔢</span></span>Counting</button>
@@ -1030,6 +1041,20 @@
 <div id="rightPraise"><div class="rp"><span class="rpsign">🌟</span><span class="rptxt">Well done!</span></div></div>
 <div id="parentPanel">
   <div class="ppbox">
+    <div style="font-weight:bold;font-size:18px;margin-bottom:4px">☁️ Sync across tablets</div>
+    <div style="font-size:13px;margin-bottom:6px">Enter the same database link and family code on every tablet. Works with the same database and code as the Chinese app.</div>
+    <input class="syinput" id="syUrl" placeholder="Database URL (https://…firebasedatabase.app)">
+    <div class="pprow" style="margin:6px 0">
+      <input class="syinput" id="syCode" placeholder="Family code" style="flex:1">
+      <button class="btn" id="syGen">🎲</button>
+    </div>
+    <div class="speech" id="syStatus" style="min-height:20px;font-size:15px;margin:2px 0 6px">not connected</div>
+    <div class="pprow">
+      <button class="btn" id="sySave">☁️ Save &amp; sync now</button>
+      <button class="btn" id="syOff">Disconnect</button>
+    </div>
+    <div style="font-size:12px;margin-top:6px">Merges safely: caught Pokémon combine, level progress takes the highest, and the newest play session wins for stars. The family code is the password — keep it private.</div>
+    <div class="ppsection"></div>
     <div style="font-weight:bold;font-size:20px;margin-bottom:6px">Grown-ups: progress backup</div>
     <div style="font-size:14px;margin-bottom:8px">Copy this code somewhere safe (notes, email). Paste it back here on any device to restore all stars and Pokémon.</div>
     <textarea id="ppCode" readonly rows="3"></textarea>
@@ -1041,8 +1066,8 @@
     <textarea id="ppIn" rows="3" placeholder="Paste a backup code here to restore..."></textarea>
     <div class="pprow">
       <button class="btn" id="ppRestore">♻️ Restore</button>
-      <button class="btn" id="ppClose">Close</button>
     </div>
+    <div class="ppclose"><button class="btn" id="ppClose">✕ Close</button></div>
     <div class="speech" id="ppMsg" style="min-height:22px"></div>
     <hr style="border:none;border-top:3px dashed #E4C05A;margin:10px 0">
     <div style="font-weight:bold;font-size:18px;margin-bottom:4px">🎚️ Number range</div>
@@ -1073,20 +1098,6 @@
     </div>
     <div style="font-size:12px;margin-top:2px">Encourages by name, e.g. "So close Jonah! Have another go!"</div>
     <div class="speech" id="fluNote" style="min-height:20px;font-size:14px;margin:6px 0"></div>
-    <hr style="border:none;border-top:3px dashed #E4C05A;margin:10px 0">
-    <div style="font-weight:bold;font-size:18px;margin-bottom:4px">☁️ Sync across tablets</div>
-    <div style="font-size:13px;margin-bottom:6px">Enter the same database link and family code on every tablet. Works with the same database and code as the Chinese app.</div>
-    <input class="syinput" id="syUrl" placeholder="Database URL (https://…firebasedatabase.app)">
-    <div class="pprow" style="margin:6px 0">
-      <input class="syinput" id="syCode" placeholder="Family code" style="flex:1">
-      <button class="btn" id="syGen">🎲</button>
-    </div>
-    <div class="speech" id="syStatus" style="min-height:20px;font-size:15px;margin:2px 0 6px">not connected</div>
-    <div class="pprow">
-      <button class="btn" id="sySave">☁️ Save &amp; sync now</button>
-      <button class="btn" id="syOff">Disconnect</button>
-    </div>
-    <div style="font-size:12px;margin-top:6px">Merges safely: caught Pokémon combine, level progress takes the highest, and the newest play session wins for stars. The family code is the password — keep it private.</div>
   </div>
 </div>
 
@@ -4251,7 +4262,7 @@ document.addEventListener('visibilitychange', () => {
       ['numbers to 30', TRACE_MAX === 30]
     ];
     document.getElementById('ppVer').textContent =
-      'build v54 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
+      'build v55 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
     showPraise(praiseLine(true));
     say(praiseLine(true));
   });
