@@ -871,7 +871,7 @@
     <div id="rankBox"></div>
     <h1>PokéMath Adventure</h1>
     <p class="sub">Play with numbers to catch them all!</p>
-    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v55</div>
+    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v56</div>
     <div class="modes">
       <button class="mode trace" data-go="trace"><span class="big"><img class="mico" data-mon="133" alt=""><span class="micoalt">✏️</span></span>Write<br>Numbers</button>
       <button class="mode count" data-go="count"><span class="big"><img class="mico" data-mon="102" alt=""><span class="micoalt">🔢</span></span>Counting</button>
@@ -2460,18 +2460,21 @@ function objSpan(monId, emoji, cls, px){
   const im = document.createElement('img');
   im.className = 'pkspr';
   if (px){ im.style.width = im.style.height = px + 'px'; s.style.fontSize = Math.round(px * 0.8) + 'px'; }
-  im.src = safeArt(monId);
   im.alt = '';
-  im.onerror = function(){
-    const b = document.createElement('img');
-    b.className = 'pkspr';
-    if (px) { b.style.width = b.style.height = px + 'px'; }
-    b.src = ballImg('poke-ball');
-    s.innerHTML = '';
-    s.appendChild(b);
-  };
+  im.src = ballImg('poke-ball');               // instant placeholder, always visible
+  const real = new Image();
+  real.onload = () => { im.src = real.src; };   // swap in the Pokémon when it arrives
+  real.onerror = () => {};                       // keep the ball if it never does
+  real.src = safeArt(monId);
   s.appendChild(im);
   return s;
+}
+// warm up the picture for a Pokémon so it is ready before it is needed
+const warmed = {};
+function warmArt(id){
+  if (!id || warmed[id]) return;
+  warmed[id] = true;
+  const i = new Image(); i.src = safeArt(id);
 }
 
 document.getElementById('qtext').addEventListener('click', () => { if (q.phrase) say(q.phrase, true); });
@@ -2531,6 +2534,8 @@ function newQuestion(){
   }
   if (mode === 'count'){
     q.ans = pend ? pend.n : 1 + rnd(max);
+    if (!(q.ans >= 1) || !Number.isInteger(q.ans)){ clearPending('count'); q.ans = 1 + rnd(5); }
+    warmArt(pickMon()); warmArt(pickMon());     // get the next likely pictures loading now
     qt.textContent = 'How many ' + monName(monId) + 's?';
     q.phrase = 'How many ' + monName(monId) + 's can you count?';
     bub.appendChild(buildFrames(q.ans, (cell) => {
@@ -2753,8 +2758,11 @@ function newQuestion(){
           for (let i = 0; i < val; i++){
             const im = document.createElement('img');
             im.className = 'mini';
-            im.src = safeSmall(monId);
             im.alt = '';
+            im.src = ballImg('poke-ball');
+            const realM = new Image();
+            realM.onload = () => { im.src = realM.src; };
+            realM.src = safeSmall(monId);
             im.onerror = function(){ this.replaceWith(Object.assign(document.createElement('span'),
               { textContent: emoji, className: 'mini' })); };
             minis.appendChild(im);
@@ -4262,7 +4270,7 @@ document.addEventListener('visibilitychange', () => {
       ['numbers to 30', TRACE_MAX === 30]
     ];
     document.getElementById('ppVer').textContent =
-      'build v55 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
+      'build v56 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
     showPraise(praiseLine(true));
     say(praiseLine(true));
   });

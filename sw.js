@@ -1,5 +1,5 @@
 // PokéMath Adventure — offline cache
-const CACHE = 'pokemath-v55';
+const CACHE = 'pokemath-v56';
 const ART = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/';
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
@@ -20,6 +20,21 @@ self.addEventListener('install', e => {
         await c.put(ART + i + '.png', r);
       }catch(err){}
     }
+    // then quietly fetch the rest of the Pokédex in the background, so a
+    // counting question never waits on a picture the first time it appears
+    (async () => {
+      const c2 = await caches.open(CACHE);
+      for (let i = 152; i <= 1025; i++){
+        if (LEGEND_IDS.includes(i)) continue;
+        try{
+          const have = await c2.match(ART + i + '.png');
+          if (have) continue;
+          const r = await fetch(ART + i + '.png', { mode: 'no-cors' });
+          await c2.put(ART + i + '.png', r);
+        }catch(err){}
+        await new Promise(res => setTimeout(res, 120));   // gentle on the network
+      }
+    })();
     self.skipWaiting();
   })());
 });
