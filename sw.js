@@ -1,6 +1,6 @@
 // PokéMath v58: only app resources and allowlisted artwork enter this cache.
 const CACHE = 'pokemath-v58';
-const CORE = ['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png','./learning-core.js?v=58','./adventure.js?v=58','./adventure.css?v=58','./visuals.js?v=58','./visuals.css?v=58','./assets/meadow.svg'];
+const CORE = ['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png','./learning-core.js?v=58.1','./adventure.js?v=58.1','./adventure.css?v=58.1','./visuals.js?v=58.1','./visuals.css?v=58.1','./assets/meadow.svg'];
 self.addEventListener('install',event=>event.waitUntil((async()=>{
   await (await caches.open(CACHE)).addAll(CORE);
   await self.skipWaiting();
@@ -22,7 +22,7 @@ self.addEventListener('fetch',event=>{
     const cache=await caches.open(CACHE);
     if(art){const hit=await cache.match(req);if(hit)return hit;}
     try{
-      const response=await fetch(req);
+      const response=await fetch(req,{cache:'no-cache'});
       if(response.ok || response.type==='opaque')await cache.put(req,response.clone());
       if(!response.ok && response.type!=='opaque' && app){const hit=await cache.match(req);if(hit)return hit;}
       return response;
