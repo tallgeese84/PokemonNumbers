@@ -1,3 +1,13 @@
+# v58 visual refresh
+
+Base: `8fc6907de015cae708c3100d201ac4a57990d861` (v57).
+
+Implemented: illustrated home and activity cards; shared quieter visual theme; larger Pokémon artwork; original vector counters/trainers/tree; explicit Journal and question replay controls; seven-day journal chart; expandable parent settings; responsive arithmetic and canvas layout; separated race answer targets; reduced-motion and zoom support; parent dialog focus handling.
+
+Initial verification: all 25 existing regression tests pass, including JavaScript parsing for the new visuals module. Live responsive review follows deployment; physical tablet and live sync remain outside this synthetic-browser check. Email remains disabled.
+
+---
+
 # v57 validation and release status
 
 Base repository: `tallgeese84/PokemonNumbers`, commit `c0176371aa8cb219e8d42b5ff150d1a41ab1f5ea` (v56).

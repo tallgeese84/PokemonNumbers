@@ -1,6 +1,6 @@
-// PokéMath v57: only app resources and allowlisted artwork enter this cache.
-const CACHE = 'pokemath-v57';
-const CORE = ['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png','./learning-core.js?v=57','./adventure.js?v=57','./adventure.css?v=57'];
+// PokéMath v58: only app resources and allowlisted artwork enter this cache.
+const CACHE = 'pokemath-v58';
+const CORE = ['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png','./learning-core.js?v=58','./adventure.js?v=58','./adventure.css?v=58','./visuals.js?v=58','./visuals.css?v=58','./assets/meadow.svg'];
 self.addEventListener('install',event=>event.waitUntil((async()=>{
   await (await caches.open(CACHE)).addAll(CORE);
   await self.skipWaiting();

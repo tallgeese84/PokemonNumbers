@@ -3,8 +3,8 @@
   "short_name": "Pok\u00e9Math",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#6FC1F0",
-  "theme_color": "#6FC1F0",
+  "background_color": "#f5f6ef",
+  "theme_color": "#f5f6ef",
   "icons": [
     {
       "src": "icon-192.png",

@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PokéMath Adventure</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#6FC1F0">
+<meta name="theme-color" content="#f5f6ef">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="PokéMath">
@@ -776,11 +776,13 @@
     .pad button{ font-size:18px; min-height:42px; }
   }
 </style>
-<link rel="stylesheet" href="adventure.css?v=57">
-<script src="learning-core.js?v=57"></script>
-<script src="adventure.js?v=57"></script>
+<link rel="stylesheet" href="adventure.css?v=58">
+<link rel="stylesheet" href="visuals.css?v=58">
+<script src="visuals.js?v=58"></script>
+<script src="learning-core.js?v=58"></script>
+<script src="adventure.js?v=58"></script>
 </head>
-<body>
+<body data-screen="home">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
   <linearGradient id="gBody" x1="0" y1="0" x2="1" y2="0">
     <stop offset="0" stop-color="#FFFDF6"/><stop offset=".55" stop-color="#F3EAD6"/><stop offset="1" stop-color="#D9CCAE"/>
@@ -860,35 +862,46 @@
     📶 Connect to the internet to see the Pokémon pictures!
   </div>
   <div class="topbar">
-    <button class="btn icon" id="backBtn" style="display:none">⬅️</button>
+    <div class="brand"><span class="brand-mark" data-illustration="team"></span>PokéMath</div>
+    <button class="btn icon" id="backBtn" aria-label="Back to adventures" style="display:none">← Home</button>
     <div class="pill">⭐ <span id="starCount">0</span></div>
     <div class="pill" id="streakPill" title="Correct in a row — no mistakes">🔥 <span id="streakCount">0/12</span></div>
     <div class="pill" id="ballPill"><svg viewBox="0 0 30 30" width="22" height="22" aria-hidden="true"><circle cx="15" cy="15" r="13" fill="#fff" stroke="#2B2E5C" stroke-width="2.5"/><path d="M2.5 15 A12.5 12.5 0 0 1 27.5 15 L2.5 15 Z" fill="#E0503F" stroke="#2B2E5C" stroke-width="2.5"/><line x1="2.5" y1="15" x2="27.5" y2="15" stroke="#2B2E5C" stroke-width="2.5"/><circle cx="15" cy="15" r="4.5" fill="#fff" stroke="#2B2E5C" stroke-width="2.5"/></svg> <span id="ballCount">0/6</span></div>
-    <button class="btn icon" id="cloudBtn" title="Grown-ups: backup & sync">☁️</button>
-    <button class="btn icon" id="soundBtn">🔊</button>
+    <button class="btn icon" id="cloudBtn" title="Learning journal for grown-ups" aria-label="Learning journal for grown-ups"><span data-illustration="journal"></span>Journal</button>
+    <button class="btn icon" id="soundBtn" aria-label="Toggle sound" title="Turn sound on or off">🔊</button>
   </div>
 
   <!-- HOME -->
   <div class="screen on" id="scr-home">
-    <div id="buddyBox"></div>
-    <div id="rankBox"></div>
-    <h1>PokéMath Adventure</h1>
-    <p class="sub">Play with numbers to catch them all!</p>
-    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v57</div>
+    <section class="home-hero" aria-labelledby="homeTitle">
+      <div class="hero-copy">
+        <span class="eyebrow">Your daily adventure</span>
+        <h1 id="homeTitle">Ready to explore?</h1>
+        <p class="sub">A little practice. A new discovery.<br>Let’s play with numbers!</p>
+        <div id="missionSlot"></div>
+      </div>
+      <div id="buddyBox"></div>
+    </section>
+    <div class="home-progress" id="homeProgress"><div id="rankBox"></div></div>
+    <div class="section-heading"><h2>Choose your adventure</h2><p>Explore a skill at your own pace</p></div>
     <div class="modes">
-      <button class="mode trace" data-go="trace"><span class="big"><img class="mico" data-mon="133" alt=""><span class="micoalt">✏️</span></span>Write<br>Numbers</button>
-      <button class="mode count" data-go="count"><span class="big"><img class="mico" data-mon="102" alt=""><span class="micoalt">🔢</span></span>Counting</button>
-      <button class="mode add" data-go="add"><span class="big"><img class="mico" data-mon="82" alt=""><span class="micoalt">➕</span></span>Adding</button>
-      <button class="mode sub" data-go="sub"><span class="big"><img class="mico" data-mon="92" alt=""><span class="micoalt">➖</span></span>Taking<br>Away</button>
-      <button class="mode zap" data-go="zap"><span class="big grasspeek"><img class="mico" data-mon="25" alt=""><span class="micoalt">🌿</span><span class="grassfront">🌿</span></span>Wild<br>Catch</button>
-      <button class="mode hide" data-go="hide"><span class="big"><img class="mico" data-mon="52" alt=""><span class="micoalt">🫣</span></span>Hide<br>and Seek</button>
-      <button class="mode abacus" data-go="abacus"><span class="big"><img class="mico" data-mon="63" alt=""><span class="micoalt">🧮</span></span>Bead<br>Counter</button>
-      <button class="mode line" data-go="line"><span class="big"><img class="mico" data-mon="50" alt=""><span class="micoalt">🧭</span></span>Number<br>Line</button>
-      <button class="mode tower" data-go="tower"><span class="big"><img class="mico" data-mon="78" alt=""><span class="micoalt">🏁</span></span>Number<br>Race</button>
+      <button class="mode trace" data-go="trace" aria-label="Write numbers"><span class="big"><img class="mico" data-mon="133" alt="" loading="lazy" decoding="async"><span class="micoalt">✦</span><span class="activity-glyph" data-illustration="trace"></span></span><span class="mode-label">Write numbers</span><small>Follow the trail</small></button>
+      <button class="mode count" data-go="count" aria-label="Counting"><span class="big"><img class="mico" data-mon="102" alt="" loading="lazy" decoding="async"><span class="micoalt">✦</span><span class="activity-glyph" data-illustration="count"></span></span><span class="mode-label">Counting</span><small>Spot every Pokémon</small></button>
+      <button class="mode add" data-go="add" aria-label="Adding"><span class="big"><img class="mico" data-mon="82" alt="" loading="lazy" decoding="async"><span class="micoalt">✦</span><span class="activity-glyph" data-illustration="add"></span></span><span class="mode-label">Adding</span><small>Bring groups together</small></button>
+      <button class="mode sub" data-go="sub" aria-label="Taking away"><span class="big"><img class="mico" data-mon="92" alt="" loading="lazy" decoding="async"><span class="micoalt">✦</span><span class="activity-glyph" data-illustration="sub"></span></span><span class="mode-label">Taking away</span><small>See what is left</small></button>
+      <button class="mode zap" data-go="zap" aria-label="Wild Catch"><span class="big"><img class="mico" data-mon="25" alt="" loading="lazy" decoding="async"><span class="micoalt">✦</span><span class="activity-glyph" data-illustration="zap"></span></span><span class="mode-label">Wild Catch</span><small>Find the right number</small></button>
+      <button class="mode hide" data-go="hide" aria-label="Hide and Seek"><span class="big"><img class="mico" data-mon="52" alt="" loading="lazy" decoding="async"><span class="micoalt">✦</span><span class="activity-glyph" data-illustration="hide"></span></span><span class="mode-label">Hide and Seek</span><small>Find the hidden group</small></button>
+      <button class="mode abacus" data-go="abacus" aria-label="Bead Counter"><span class="big"><img class="mico" data-mon="63" alt="" loading="lazy" decoding="async"><span class="micoalt">✦</span><span class="activity-glyph" data-illustration="abacus"></span></span><span class="mode-label">Bead Counter</span><small>Slide, count, discover</small></button>
+      <button class="mode line" data-go="line" aria-label="Number Line"><span class="big"><img class="mico" data-mon="50" alt="" loading="lazy" decoding="async"><span class="micoalt">✦</span><span class="activity-glyph" data-illustration="line"></span></span><span class="mode-label">Number Line</span><small>Hop along the path</small></button>
+      <button class="mode tower" data-go="tower" aria-label="Number Race"><span class="big"><img class="mico" data-mon="78" alt="" loading="lazy" decoding="async"><span class="micoalt">✦</span><span class="activity-glyph" data-illustration="tower"></span></span><span class="mode-label">Number Race</span><small>Put numbers in order</small></button>
     </div>
-    <button class="widebtn" id="teamBtn">My Pokémon <span id="teamTally"></span></button>
-    <button class="widebtn" id="cardBtn" style="background:linear-gradient(180deg,#FFD86B,#E0A517)">🃏 My Cards <span id="cardTally"></span></button>
-    <button class="widebtn" id="badgeBtn" style="background:linear-gradient(180deg,#8CCEF9,#3F9BE0)">🏅 My Badges <span id="badgeTally"></span></button>
+    <div class="section-heading"><h2>Your discoveries</h2><p>Look how far you’ve come</p></div>
+    <div class="collection-links">
+      <button class="collection-link" id="teamBtn"><span data-illustration="team"></span><span><strong>My Pokémon</strong><small id="teamTally"></small></span></button>
+      <button class="collection-link" id="cardBtn"><span data-illustration="cards"></span><span><strong>My Cards</strong><small id="cardTally"></small></span></button>
+      <button class="collection-link" id="badgeBtn"><span data-illustration="badge"></span><span><strong>My Badges</strong><small id="badgeTally"></small></span></button>
+    </div>
+    <footer class="home-footer"><button id="homeJournal"><span data-illustration="journal"></span><span><strong>Learning journal</strong>For grown-ups · activity &amp; progress</span></button><span class="build-label">PokéMath · build v58</span></footer>
   </div>
 
   <!-- HIDE AND SEEK -->
@@ -898,7 +911,8 @@
       <div id="hdField"></div>
       <div class="speech" id="hdSpeech"></div>
     </div>
-    <div class="card">
+    <div class="card answer-card">
+      <p class="answer-label">Tap your answer</p>
       <div class="pad" id="hdPad"></div>
     </div>
   </div>
@@ -992,7 +1006,8 @@
       <div class="eq" id="eqline"></div>
       <div class="speech" id="quizSpeech"></div>
     </div>
-    <div class="card">
+    <div class="card answer-card">
+      <p class="answer-label">Tap your answer</p>
       <div class="pad" id="pad"></div>
     </div>
   </div>
@@ -1033,8 +1048,6 @@
   </div>
 </div>
 
-</div>
-
 <div id="fx"></div>
 <div id="bigcheer"><span id="cheerText">Great job! ⭐</span></div>
 <div id="catch"><div class="box" id="catchBox"></div></div>
@@ -1042,8 +1055,10 @@
 <div id="cardWin"><div class="cwbox" id="cardWinBox"></div></div>
 <div id="wrongWarn"><div class="ww"><span class="wwsign">⚠️</span><span class="wwtxt">Wrong number!</span></div></div>
 <div id="rightPraise"><div class="rp"><span class="rpsign">🌟</span><span class="rptxt">Well done!</span></div></div>
-<div id="parentPanel">
+<div id="parentPanel" role="dialog" aria-modal="true" aria-label="Learning journal and parent settings">
   <div class="ppbox">
+    <div class="parent-head"><span>For grown-ups</span><button class="btn" id="ppClose">✕ Close</button></div>
+    <details class="parent-settings"><summary>Sync, backup &amp; learning settings</summary><div class="parent-settings-content">
     <div style="font-weight:bold;font-size:18px;margin-bottom:4px">☁️ Sync across tablets</div>
     <div style="font-size:13px;margin-bottom:6px">Enter the same database link and family code on every tablet. Works with the same database and code as the Chinese app.</div>
     <input class="syinput" id="syUrl" placeholder="Database URL (https://…firebasedatabase.app)">
@@ -1070,7 +1085,6 @@
     <div class="pprow">
       <button class="btn" id="ppRestore">♻️ Restore</button>
     </div>
-    <div class="ppclose"><button class="btn" id="ppClose">✕ Close</button></div>
     <div class="speech" id="ppMsg" style="min-height:22px"></div>
     <hr style="border:none;border-top:3px dashed #E4C05A;margin:10px 0">
     <div style="font-weight:bold;font-size:18px;margin-bottom:4px">🎚️ Number range</div>
@@ -1101,6 +1115,7 @@
     </div>
     <div style="font-size:12px;margin-top:2px">Encourages by name, e.g. "So close Jonah! Have another go!"</div>
     <div class="speech" id="fluNote" style="min-height:20px;font-size:14px;margin:6px 0"></div>
+    </div></details>
   </div>
 </div>
 
@@ -1374,13 +1389,14 @@ function updateBallPill(){
 }
 function renderBuddyHome(){
   const box = document.getElementById('buddyBox');
+  document.getElementById('homeTitle').textContent = 'Ready, ' + (childName || 'Trainer') + '?';
   const lc = caught.filter(isLegend).length, mc = caught.filter(isMega).length;
   document.getElementById('teamTally').textContent =
     '(' + caught.length + '/' + DEX_TOTAL + (lc ? '  ✨' + lc : '') +
     (mc ? '  ⚡' + mc : '') + (shinies.length ? '  💎' + shinies.length : '') + ')';
   renderBadgeTally();
   if (!pkBuddy){
-    box.innerHTML = '<div class="bname">Win ' + (ballNeed() - ballStars) + ' more ⭐ to meet your first Pokémon!</div>';
+    box.innerHTML = '<img src="' + imgArt(25) + '" alt="Pikachu, your adventure guide" onerror="this.style.display=\'none\'"><div class="bname"><span class="buddy-label">Your adventure guide</span>Meet your first Pokémon in ' + (ballNeed() - ballStars) + ' stars</div>';
     return;
   }
   box.innerHTML = '<img class="' + (isShiny(pkBuddy) ? 'shiny' : '') + '" src="' + imgArt(pkBuddy) + '" alt="" ' +
@@ -1405,6 +1421,7 @@ function renderTeam(){
              : caught;
   if (!list.length && teamFilter !== 'all'){
     const none = document.createElement('div');
+    none.className = 'empty-collection';
     none.style.gridColumn = '1 / -1';
     none.style.fontSize = '15px';
     none.textContent = teamFilter === 'legend'
@@ -1480,28 +1497,10 @@ function pickCard(pid, special){
 }
 const CARD_TOTAL = Object.values(CARD_DATA).reduce((a, v) => a + v.length, 0);
 
-const BALLS={"great-ball":"data:image/webp;base64,UklGRnQDAABXRUJQVlA4WAoAAAAQAAAAOwAAOwAAQUxQSDcAAAABDzD/ERGCUeNGklpaAA1pqA+kAbBS/eaef0T/JyBeKAfQV5FdDWWZp1SUJYHs+/n6GtEXcuTyAFZQOCAWAwAAUBMAnQEqPAA8AD4xFohDoiEKBgKqEAGCWoA0mKAcXBsx4PyR/oB+59IDxJ+kx5gP1N/Wv34OkA/oH9V6wD0AP1G9Jn9ZvgY/Yv9m/gJ/XX/15oB2S/0DonOx/rXk4XvniB/IN0Xlaun/Dl8hP7pqan8l/bf27/tPVRedAs4Bgp99ZQIPhZsJA3G8U/VEsWjarqTHHctq0U69Z06miIsH5Qe3sAD+/z1cb//NEV2lWed1S1TqU/VnvBn6Z/ky4z+qeX1Ptu/2HoKHV3GgjWR3/tDxvHv6h4rihrPh1EdaU2ZxokxyuaX0tVTeoT78L/ZLwq//2/jX/mXWuGbB2b/kFwC90FzJW68dRsDmYQXimMNufv8omE6vwqZi41PF7Jz3Kjj/qPCbmBihvPAVy4uyFIJpb6sL1M2E0+gJ9rBeZNVtIzer5vmhULnwI9nRLR1m60TaDr419RopYoUP0YrcvzR1bTYjt8oul9h0JGz91uPHjgqyx0WodbX7c7/4WlxFYLfYQ0YSvjYx/943eSiF4ms4ZNtxU63f0B1eO3qLIX5L4LYQPHn2KZslkuj147h6ws9yiP85adh2Utui1UDOXI+vmBg98mVWRsL+h5f5yTSZuCh86rGp/8L3fCvIezmWa1e0smoJcMQBdZwf2C2hx2dgRCQGXALIbS/4hk1S4cTj3Lc/ZRMb6O+tD8jt8OLDh5f1P/zoNehgfcfKdmfvzG+P/tALiNURP8x65n/JmtDPien7eCZv4IjsA2hELWaOns7ugq0Z7WsSdc3mePVLonU7vQBtnH+0iF5X1rG//7Jse1LeVr/8+ePwd3uOgsytWzWld1Vv/4vhEYObtw/+2Ax9A31VQUU5n/bkSlCegvbqnsx0fbnCH8xlOh8X4tjYDbGW7N0OHGf7QBsKSaEVX5RJerlbnGwbkSzlR67JTcAKP4zNAcYOBZlSbn2avCuczht0f3rPuYh6sVvXVnPr/sJH8/G6VYn/zo9TR/XTH8wD6fi/4zz1dp2+8SOuFaa/gxXliUGDCgK876WNc+BFEAAAAAAAAA==","master-ball":"data:image/webp;base64,UklGRngDAABXRUJQVlA4WAoAAAAQAAAAOwAAOwAAQUxQSDcAAAABDzD/ERFCUSJA0YIBjGR1IxlAmJ+3/4j+T0D8UJ7opDHkoYqypS3xtIqyJZDHOmmsEWMhzzweAFZQOCAaAwAA0BUAnQEqPAA8AD4xFohDoiEKBgKqEAGCWYA0lzlOSfQ9kp/Kf+S+4DtAeJf0mP1V9QH6j/sB78foA/Gb3AP6f/VesA/Wb2AP1g9JT/qf7X4FP2z9gn9c//DmgHZn/UOhI79+rmTt/C+L39Eqbnp/bgf2z8AOQB/VfO2/fP7d/M/9p/T+qS855ZwDBT/kUcYI4LfmKqkD3RgNj0j+l75A1ZUi1YzaUHI8rVj4h3wETZtjYTHg6tgAAP7/PVxv/9E0bhlgHx1mD//xp3/w19puPlr/YT918CHSb4As9xPkXbrYymC7c2q8r8R/6RMr+hKr2s6awJb/+Ry7UESomJ4mljRu+lk1Jrk4pXqyPnsVpBgwJXgjEQThV3oZ98rlQJyTcTecJT9AGroqUyPysVUOad83WBPyCkr/N4tKKxZDzblE3yuSvdV/dYXoEzVi787D1iyOUcKbzzeqtDv+r6DxnCmMYRXkhq510/IHElvN/WzENxseyOuLkR8WNx9/nbfyjEMhY8a5NFtmG+CfdF/ZrG5f16f/+KAsn1TwhCZpHoBL6S//ei2x4ZbXi05O8g8p6p3Zb+tBKIqL2AH883HV62Byu1d6F/0I/xUrDJO4+9dvxdO/vxj/C8jKprwxjDxn/DKiO9Im4EpiQAQ3OX3IVuEGMiGwKxhcr1hyhgZRETLjNzkRQPyqmWvtpLS57VMqdudjXqjhnaGevUdf8OcS/7Jpcv1mtYn19+FfyzJIK6eWyxWk6NP5vfoWK6Mcg1JJC+zJwzzMDKsFYcw9X93W8vY+mfo/9omv3fA+Ff8c5O8GQuk0JgZaI5Zm3m+l7fAnCplfvuP/4vh5PEWQu/6dmPwGXI4J9vl2YG35pfQXuG/2nbztDnv+Y0DBImGJ4bps5t6NgH0NGMh0L9kARH5lHsposcIgmY/lneeqYj50kFGfSF6mV3hU3JVfgvJ6k7yvwducwOp9NxOuSaEW2v5+UyRYi/5sh4WupUf+sCTUZiVP4JIIY8otzmJMU1RvXX2vflwLW19sTYK16Eohzfz2KamSB+8AAAAAAAA=","poke-ball":"data:image/webp;base64,UklGRgYDAABXRUJQVlA4WAoAAAAQAAAAOwAAOwAAQUxQSDgAAAABDzD/ERFCUSJA0YIBjGR1IxlAmJ+3/4j+T0D8UJ5oTHTSGPJQRdnS4GkVZUsgj3XSWCPGQp55PFZQOCCoAgAAsBMAnQEqPAA8AD4xFIhCoiEhFAb8IAMEsgBpLoAdS+9OSR8EPtu7S3gm9QDzAfwD+tfrl74/oA9AD+q/2brAPQA/UD0tP1u+Cv9t/3A9mDMAOxr+O/ih+0fTGerOSCe5eIH8z/GD8ZqHLTw/o+pT/xn5Z/4DpRP8361SFXuPV+KZJJATjB9rdZCU6oiDaCPUtKAB0ojJWv6NfbtmbP3yi/XP1F2HgAD+/vhpQ//0TRvCdZvTaSQ3s3/0GxQkVjHD/39ZpouvP+xiDITFR3bTzvH/N8NCI2gXW+bCBG8ifKlZ//RL83tF7X7uaeMeQibFTyDYzalCvN/8+1lQnkkk7Qz/49aPekrEJm2nU03Ek/+nl1+Af00nbCdEj3U8B0NTGhWVsjMA7d//l9P/p2UPuTpkwMDPBe2x/Dhek4T/3Y72Mc0TyPh+kiDx/PzSAaplt0qTF+Qst6vEEKjsBwkICOrznL3HaeAnd8pMAvL4NrNKsh0YOrWEQK/2bW/1h96v1ZemsabAJaH6T7LEx2rMX+Jev483/zaZKQBvY4CxwPOE1Jf/zzJA+SR43bfewonukrVUb6vvw5AwjVtQwkfacyRyp4+zWdHg+i3YWP2s1XXLCe7C0/4dVKO4eZv7Kz9aSU4T2qt24a4OJUP7NHDIUvgfYhjwMb6LqltBgXbzfrF5BMVcu+hZHyumPPu7+u46s+KyYNc+evH3nf6lZgW0outON7VUKWz4eJK4V4POG+8L9c3WfZNciHj/mQvrkOa6kRuhgJHVgnpMwvivpMfoyBcKxhnwfh+UE3Pw66A3+pah1XC1McCueRcPfywEP/D3/1CgRYt9kQ/wcCiNBpSBJdCN9Ff09bTmBGR7faOcq1/0tg7ppPGD1jTEQ/8aXFQIbg9aAAAAAAA=","premier-ball":"data:image/webp;base64,UklGRsQCAABXRUJQVlA4WAoAAAAQAAAAOwAAOwAAQUxQSDgAAAABDzD/ERFCUSJA0YIBjGR1IxlAmJ+3/4j+T0D8UJ5oTHTSGPJQRdnS4GkVZUsgj3XSWCPGQp55PFZQOCBmAgAAUBIAnQEqPAA8AD4xFohDIiEhEgwHbCADBLGAal3IVAwjbsB4oH7AcIB/a/7d1gH6gewB5V/7VfA5+xX7LfAB+r//4zQDsA/hn4jfuB0qfqX+yuWd+wfjN6AfyD8Sd6Be3aZv89/uGq7/sP5a/3TpL/8761SDGBRKLnTaSQm8Pa3Vzj6718j+BY7aK810/GFY6TjduuCGkAHij4AA/v74acv/6JntG+yuPuQtsPJNweciHfQ//9Evy09yOywXC7OmKrtArCPL3IsKZ0/3+B8UvUX9VdFYQS8LQuoDIA4ieJZq7g3/BaitiOILyfGs9Ni0QFQB3ojawCKAC82uEhiElvzyIXoS71JG5rlV/zQFGBdUTTrgmP9SklpFSM77/4NnSQelxnQQiCtQ1BdPprZ+fwlRhZr/qQcEBGPjsP2xfWZ0/wQznkA30gdJwH1Ar/UOm8LuZ9wxFgaU2on+S+TxzIFPd1rEBp55w/3pEb9P+0yfB3//9nDrW1ZEE58cIoSyu/Ig5mHsuV69QJp7YhjbyOxqh+RE4X9KFFtQpoLMWeefgpIuslvtGEPdZ/V6t1v2L9vr+y+OA7MU+rjYj7jB3yCxE9cXCg/yao7XdRU+sr/9V38ndPzEZkAD8ddwOdHls3qyiyV8ySUy5LSGu0u1+Q6KflIlVI1/qvBktWFBRAM0mn8GL/zsT4ERMzfaBGXff1/97AUqIxTvRSai9+NPHJJTT8Gy/MQOZl+J/5SmYXNl9l/8QdyKfpPUxHg1E3CrG2PYndeeclSRVt1fif+O6OQdTbJZAcx6yedpcbJxjJ6TgAAAAAA=","ultra-ball":"data:image/webp;base64,UklGRjwDAABXRUJQVlA4WAoAAAAQAAAAOwAAOwAAQUxQSDgAAAABDzD/ERFCUSJA0YIBjGR1IxlAmJ+3/4j+T0D8UJ5oTHTSGPJQRdnS4GkVZUsgj3XSWCPGQp55PFZQOCDeAgAAMBQAnQEqPAA8AD4xFohDIiEhFAoG/CADBLEAZ7DtP1W5Q+xYoHwQ+4DtAbZPzAfpX61XSAfpX6QHsk+gB+0fpM/7f3Hv2i/aL2Ws0A/gH4Ad5/8P/GDrAuwHqnkqnuni1/APxy4CmU/af6ZX9M1Ob+i/sn9d/2/9V6SH/S+s6hV7j1faVgj3L/AQ/vmALug+nchcMnskLIZ1aCtiNDygdLmr6eOxp5O1kQAA/v74aMv+iZ8eEXmj3/uR8vU/+XJ4RCKj1P2OkIz7FKWZJKmVAnTaecc+gz49MQneLY3ZB/jrK/rw8SKa8/ol+C30/yRwtJ7cf9SVWo8/OfCMdKVy+nN4w/8uEPlf/fjs6a9tTv+azi68dKLJxEdMRy0O9LK6dBidebIadjnB+RStBAdD7aV9N0P1+OCGlnMZte4kq5ydRLNV797ET6z/TB2ne9dBDKZXX7w5Azrs0KS6YwR3q4/qYQpBReDjA/FEo8rO5u15GgEqsptFhvlpPtD8q/6IKroREHLbE1uAJlyQIVCGXGn35cEg2/3phqxmTRCGrID/1pIr0C3QlhA9f6Fxr9dotYSG3yfH923xAF0jk/oRQ//vx5anGt1gRqKlAckkZxlXwgljGMod2O09o2g/8/uJKKJJwxcIsBLw72Ny81kYOHEO//+uKbB9b8Q6H+boAvRU7t2YFFFbXLjsi6hWzVFgeof6peR6Vf/EddCXLY8t35L/93SNetp65ynnJeq2ff/qCvvAI/OpdGnEr6ol5HN923aAwqAfPH9RfBalPv3yubqxaurKXkm999+K1doRHgnVB49clPGT+ND8oY4o6LbD14GqEIOKQ1kAPJPrpT9Ek4du2tMiMmhG24jR11WCuAklTXrbbCcL6JuV244pIgro6UHWW18KOtn7EJ+K82WFmAc+HgkuV/+QCvDOW41FyXhnzdpZJ2No2v/sJ0OqyAYsisZKbg1HPS3AAAAAAAA="};
-const BALL_KINDS = Object.keys(BALLS);
-const ballImg = k => BALLS[k] || BALLS['poke-ball'];
+const BALL_KINDS = ['great-ball','master-ball','poke-ball','premier-ball','ultra-ball'];
+const ballImg = k => PokeVisuals.ball(k);
+const trainerSvg = (colour, hair) => PokeVisuals.trainer(colour, hair);
 
-/* Simple original trainer characters for the story problems.
-   Plain, uniform counters and simple characters keep attention on the
-   quantity rather than on the picture. */
-function trainerSvg(colour, hair){
-  return '<svg viewBox="0 0 80 96" class="trn" aria-hidden="true">' +
-    '<ellipse cx="40" cy="92" rx="22" ry="4" fill="rgba(20,22,60,.22)"/>' +
-    '<rect x="24" y="52" width="32" height="34" rx="10" fill="' + colour + '" stroke="#2B2E5C" stroke-width="3"/>' +
-    '<rect x="14" y="56" width="12" height="24" rx="6" fill="' + colour + '" stroke="#2B2E5C" stroke-width="3"/>' +
-    '<rect x="54" y="56" width="12" height="24" rx="6" fill="' + colour + '" stroke="#2B2E5C" stroke-width="3"/>' +
-    '<circle cx="40" cy="34" r="18" fill="#FFE0BD" stroke="#2B2E5C" stroke-width="3"/>' +
-    '<path d="M22 30 a18 18 0 0 1 36 0 z" fill="' + hair + '" stroke="#2B2E5C" stroke-width="3"/>' +
-    '<path d="M20 30 h40 a4 4 0 0 1 0 6 h-40 a4 4 0 0 1 0 -6 z" fill="' + hair + '" stroke="#2B2E5C" stroke-width="2.5"/>' +
-    '<circle cx="34" cy="38" r="2.6" fill="#2B2E5C"/><circle cx="46" cy="38" r="2.6" fill="#2B2E5C"/>' +
-    '<path d="M35 44 q5 4 10 0" fill="none" stroke="#2B2E5C" stroke-width="2.5" stroke-linecap="round"/>' +
-    '<circle cx="29" cy="42" r="2.5" fill="#FF9EC4" opacity=".7"/>' +
-    '<circle cx="51" cy="42" r="2.5" fill="#FF9EC4" opacity=".7"/>' +
-    '</svg>';
-}
 const FRIENDS = [
   { name:'Hana',  svg: trainerSvg('#FF9EC4', '#3B2B2B') },
   { name:'Mum',   svg: trainerSvg('#7BE0C3', '#5A3A2A') },
@@ -1575,7 +1574,7 @@ function renderCards(){
     : cards;
   if (!list.length){
     const none = document.createElement('div');
-    none.style.cssText = 'grid-column:1/-1;font-size:15px';
+    none.className = 'empty-collection';
     none.textContent = cardFilter === 'holo'
       ? 'No holo cards yet — legendary and shiny catches give the best cards!'
       : 'No cards yet — catch a Pokémon to earn your first card!';
@@ -1586,6 +1585,7 @@ function renderCards(){
     const info = cardInfo(cid);
     const b = document.createElement('button');
     b.className = 'cardslot' + (HOLO.includes(info.rIdx) ? ' holo' : '');
+    b.setAttribute('aria-label', monName(info.pid) + ' · ' + info.rarity + ' card');
     b.innerHTML = '<img src="' + cardImg(cid) + '" alt="" loading="lazy" ' +
       'onerror="this.parentElement.classList.add(\'noimg\')">' +
       '<div class="fallback">' + monName(info.pid) + '<br><span style="font-size:10px">' +
@@ -1715,6 +1715,8 @@ function show(name){
   Object.values(screens).forEach(id => document.getElementById(id).classList.remove('on'));
   document.getElementById(screens[name]).classList.add('on');
   document.getElementById('backBtn').style.display = (name === 'home') ? 'none' : 'block';
+  PokeVisuals.screen(name, mode);
+  window.scrollTo(0, 0);
 }
 document.getElementById('backBtn').addEventListener('click', () => {
   sndTap(); shutUp(); stopZap(); stopRace(); lnStopLoop(); abStopLoop(); stopHide(); mode = 'home'; renderBuddyHome(); show('home');
@@ -1842,8 +1844,8 @@ function strokesFor(n){
 }
 
 function sizeCanvas(){
-  const maxW = Math.min(LW === 100 ? 300 : 400, document.getElementById('app').clientWidth - 60);
-  SCALE = Math.max(1.6, maxW / LW);
+  const maxW = Math.min(LW === 100 ? 300 : 400, document.getElementById('traceWrap').clientWidth - 6);
+  SCALE = Math.max(1, maxW / LW);
   const W = Math.round(LW * SCALE), H = Math.round(140 * SCALE);
   const dpr = window.devicePixelRatio || 1;
   canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
@@ -3161,8 +3163,10 @@ function startTower(){
   for (let n = race.from; n <= race.to; n++) nums.push(n);
   for (let i = nums.length - 1; i > 0; i--){ const j = rnd(i + 1); [nums[i], nums[j]] = [nums[j], nums[i]]; }
   const fw = towerField.clientWidth || 300;
-  const cols = 5, rows = Math.ceil((race.to-race.from+1)/5);
-  towerField.style.height=(rows*120)+'px';
+  const bubbleSize = fw < 480 ? 52 : 68;
+  const cols = Math.min(5, Math.max(3, Math.floor(fw / (bubbleSize + 14))));
+  const rows = Math.ceil((race.to-race.from+1) / cols), rowGap = bubbleSize + 26;
+  towerField.style.height=(rows * rowGap + 168)+'px';
   const cells = [];
   for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) cells.push([c, r]);
   for (let i = cells.length - 1; i > 0; i--){ const j = rnd(i + 1); [cells[i], cells[j]] = [cells[j], cells[i]]; }
@@ -3171,8 +3175,9 @@ function startTower(){
     const b = document.createElement('button');
     b.className = 'tbub';
     b.textContent = n;
-    b.style.left = (8 + c * ((fw - 92) / (cols - 1)) + rnd(6)) + 'px';
-    b.style.top = (12 + r * 110 + rnd(14)) + 'px';
+    b.style.width = b.style.height = bubbleSize + 'px';
+    b.style.left = (12 + c * ((fw - bubbleSize - 24) / (cols - 1))) + 'px';
+    b.style.top = (12 + r * rowGap) + 'px';
     b.style.animationDelay = (Math.random() * 2) + 's';
     b.addEventListener('click', () => towerTap(n, b));
     towerField.appendChild(b);
@@ -3313,8 +3318,7 @@ function hdHideSome(){
   goHide.forEach(b => b.remove());
   const bush = document.createElement('div');
   bush.className = 'hdbush';
-  bush.textContent = '🌳';
-  bush.innerHTML += '<span>?</span>';
+  bush.innerHTML = PokeVisuals.tree() + '<span>?</span>';
   field.insertBefore(bush, field.firstChild);
   document.getElementById('hdQ').textContent =
     'There were ' + HD.total + '. How many are hiding?';
@@ -3386,7 +3390,7 @@ const abCanvas = document.getElementById('abCanvas');
 const abCtx = abCanvas.getContext('2d');
 
 function abSize(){
-  const w = Math.min(560, document.getElementById('app').clientWidth - 24);
+  const w = Math.min(560, abCanvas.parentElement.clientWidth - 46);
   AB.rows = Math.max(1, Math.ceil(AB.span / 10));
   AB.pad = 24;
   AB.beadR = Math.min(22, Math.max(13, (w - AB.pad * 2 - 30) / 24));
@@ -3413,7 +3417,7 @@ function abDraw(){
   const c = abCtx, t = performance.now();
   c.clearRect(0, 0, AB.w, AB.h);
   const bg = c.createLinearGradient(0, 0, 0, AB.h);
-  bg.addColorStop(0, '#FFF6E4'); bg.addColorStop(1, '#F0E2C8');
+  bg.addColorStop(0, '#fbf6e8'); bg.addColorStop(1, '#f1e8d0');
   c.fillStyle = bg; c.fillRect(0, 0, AB.w, AB.h);
   // wooden frame
   c.strokeStyle = '#A0723A'; c.lineWidth = 12;
@@ -3442,7 +3446,7 @@ function abDraw(){
       else    { g.addColorStop(0, '#FFFFFF'); g.addColorStop(1, on ? '#C9CBE0' : '#E8E9F2'); }
       c.fillStyle = g;
       c.strokeStyle = '#2B2E5C'; c.lineWidth = on ? 3 : 2;
-      c.globalAlpha = on ? 1 : 0.55;
+      c.globalAlpha = on ? 1 : 0.85;
       c.beginPath(); c.arc(x, y, AB.beadR, 0, Math.PI * 2); c.fill(); c.stroke();
       c.globalAlpha = 1;
       if (on && i === activeInRow - 1){          // gentle glow on the last bead moved
@@ -3649,7 +3653,7 @@ lnBuddyImg.onload = () => { lnBuddyReady = true; lnDraw(); };
 lnBuddyImg.onerror = () => { lnBuddyReady = false; };
 
 function lnSize(){
-  const w = Math.min(560, document.getElementById('app').clientWidth - 24);
+  const w = Math.min(560, lnCanvas.parentElement.clientWidth - 46);
   const h = Math.round(Math.min(330, Math.max(260, w * 0.62)));
   const dpr = window.devicePixelRatio || 1;
   lnCanvas.style.width = w + 'px'; lnCanvas.style.height = h + 'px';
@@ -4193,6 +4197,9 @@ document.addEventListener('visibilitychange', () => {
     else if (cfg) setSyncStatus('', 'connected — hasn\u2019t synced yet, tap Save & sync now');
     else setSyncStatus('', 'not connected');
     panel.style.display = 'flex';
+    document.getElementById('app').inert = true;
+    panel.querySelector('.ppbox').scrollTop = 0;
+    document.getElementById('ppClose').focus();
   }
   const CAP_MODES = [['count','Counting'], ['add','Adding'], ['sub','Taking away'], ['zap','Wild Catch'], ['line','Number Line'], ['abacus','Bead Counter'], ['hide','Hide and Seek'] ];
   function renderPic(){
@@ -4271,7 +4278,14 @@ document.addEventListener('visibilitychange', () => {
     await store.set('cubs_lastsync', '');
     setSyncStatus('', 'disconnected — progress stays on this tablet');
   });
-  document.getElementById('ppClose').addEventListener('click', () => { panel.style.display = 'none'; adventure.tracker?.setBlocked(false); adventure.tracker?.resume(); });
+  document.getElementById('ppClose').addEventListener('click', () => { panel.style.display = 'none'; document.getElementById('app').inert = false; adventure.tracker?.setBlocked(false); adventure.tracker?.resume(); document.getElementById('cloudBtn').focus(); });
+  panel.addEventListener('keydown', ev => {
+    if(ev.key === 'Escape') document.getElementById('ppClose').click();
+    if(ev.key !== 'Tab') return;
+    const items = [...panel.querySelectorAll('button,input,select,textarea,summary')].filter(el => !el.disabled && el.getClientRects().length);
+    if(ev.shiftKey && document.activeElement === items[0]){ev.preventDefault();items[items.length-1].focus();}
+    else if(!ev.shiftKey && document.activeElement === items[items.length-1]){ev.preventDefault();items[0].focus();}
+  });
   document.getElementById('ppTest').addEventListener('click', () => {
     const checks = [
       ['praise voice', typeof praiseLine === 'function'],
@@ -4281,7 +4295,7 @@ document.addEventListener('visibilitychange', () => {
       ['numbers to 30', TRACE_MAX === 30]
     ];
     document.getElementById('ppVer').textContent =
-      'build v57 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
+      'build v58 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
     showPraise(praiseLine(true));
     say(praiseLine(true));
   });
@@ -4344,6 +4358,8 @@ if ('serviceWorker' in navigator){
   }
 })();
 const adventure=createAdventure();
+PokeVisuals.init();
+PokeVisuals.screen('home', 'home');
 buildNumRow();
 loadStars();
 window.addEventListener('resize', () => {
