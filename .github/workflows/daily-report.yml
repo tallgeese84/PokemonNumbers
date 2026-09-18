@@ -1,0 +1,38 @@
+name: Daily PokéMath report
+on:
+  schedule:
+    - cron: '0 8 * * *'
+      timezone: America/Chicago
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Validate data and configuration without sending email
+        type: boolean
+        default: true
+permissions:
+  contents: read
+concurrency:
+  group: pokemath-daily-email
+  cancel-in-progress: false
+jobs:
+  report:
+    if: vars.POKEMATH_REPORTS_ENABLED == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate report calculations
+        run: node --test tests/*.test.cjs
+      - name: Deliver previous day's report
+        env:
+          POKEMATH_FIREBASE_URL: ${{ secrets.POKEMATH_FIREBASE_URL }}
+          POKEMATH_FAMILY_CODE: ${{ secrets.POKEMATH_FAMILY_CODE }}
+          POKEMATH_FIREBASE_TOKEN: ${{ secrets.POKEMATH_FIREBASE_TOKEN }}
+          POKEMATH_REPORT_TO: ${{ secrets.POKEMATH_REPORT_TO }}
+          POKEMATH_REPORT_FROM: ${{ secrets.POKEMATH_REPORT_FROM }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          POKEMATH_DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && 'true' || 'false' }}
+        run: node scripts/daily-report.cjs

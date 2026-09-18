@@ -776,6 +776,9 @@
     .pad button{ font-size:18px; min-height:42px; }
   }
 </style>
+<link rel="stylesheet" href="adventure.css?v=57">
+<script src="learning-core.js?v=57"></script>
+<script src="adventure.js?v=57"></script>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
@@ -871,7 +874,7 @@
     <div id="rankBox"></div>
     <h1>PokéMath Adventure</h1>
     <p class="sub">Play with numbers to catch them all!</p>
-    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v56</div>
+    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build v57</div>
     <div class="modes">
       <button class="mode trace" data-go="trace"><span class="big"><img class="mico" data-mon="133" alt=""><span class="micoalt">✏️</span></span>Write<br>Numbers</button>
       <button class="mode count" data-go="count"><span class="big"><img class="mico" data-mon="102" alt=""><span class="micoalt">🔢</span></span>Counting</button>
@@ -1194,6 +1197,7 @@ function speakNumber(n){ say(NUM_WORDS[n] || String(n)); }
 let stars = 0;
 const starEl = document.getElementById('starCount');
 async function loadStars(){
+  await adventure.ready;
   const v = await store.get('cubs_stars');
   stars = parseInt(v || '0', 10) || 0;
   starEl.textContent = stars;
@@ -1217,6 +1221,10 @@ async function loadStars(){
   if (wv === 'off') wrongVoice = false;
   const pm = await store.get('cubs_pic');
   if (['story','above','ask','auto','none'].indexOf(pm) >= 0) picMode = pm;
+  if (!await store.get('cubs_adaptive_v57')){
+    picMode='auto'; await store.set('cubs_pic','auto');
+    await store.set('cubs_adaptive_v57','1'); await touch();
+  }
   try{
     const st = JSON.parse(await store.get('cubs_streak') || '{}');
     streak = st.s || 0; bestStreak = st.b || 0;
@@ -1228,8 +1236,9 @@ async function loadStars(){
     for (const k in pj){
       const p = pj[k];
       // only keep a saved question that is complete and self-consistent
-      const ok = p && typeof p.n === 'number' && typeof p.x === 'number' &&
-                 p.x >= 5 && p.n >= 0 && p.n <= Math.max(10, p.x);
+      let ok = p && Number.isInteger(p.n) && Number.isInteger(p.x) && p.x >= 5 && p.x <= 30 && p.n >= 0 && p.n <= p.x;
+      if (k === 'add' || k === 'sub') ok = ok && Number.isInteger(p.a) && Number.isInteger(p.b) && p.a >= 1 && p.b >= 1 && (k === 'add' ? p.a+p.b === p.n : p.a-p.b === p.n);
+      if (k === 'line') ok = p && Number.isInteger(p.span) && p.span >= 5 && p.span <= 30 && Number.isInteger(p.start) && Number.isInteger(p.step) && Number.isInteger(p.ans) && p.step >= 1 && p.start >= 0 && p.ans >= 0 && Math.max(p.start,p.ans) <= p.span && (p.op === '+' ? p.start+p.step === p.ans : p.start-p.step === p.ans);
       if (ok) pending[k] = p;
     }
   }catch(e){}
@@ -1270,22 +1279,7 @@ function addStar(n){
     pkState(); updateBallPill();
   }
 }
-function loseStar(){
-  if (stars <= 0) return false;          // never go negative
-  stars -= 1; starEl.textContent = stars;
-  store.set('cubs_stars', stars);
-  const pill = starEl.closest('.pill');
-  pill.classList.remove('shake'); void pill.offsetWidth; pill.classList.add('shake');
-  schedulePush();
-  const r = pill.getBoundingClientRect();
-  const fl = document.createElement('span');
-  fl.className = 'starloss'; fl.textContent = '−1 ⭐';
-  fl.style.left = (r.left + r.width / 2 - 28) + 'px';
-  fl.style.top = (r.bottom + 4) + 'px';
-  document.body.appendChild(fl);
-  setTimeout(() => fl.remove(), 1000);
-  return true;
-}
+function loseStar(){ return false; } // Mistakes invite guidance; earned stars stay earned.
 
 /* ---------- celebration fx ---------- */
 const fx = document.getElementById('fx');
@@ -1717,6 +1711,7 @@ function catchMon(){
 const screens = { home:'scr-home', trace:'scr-trace', quiz:'scr-quiz', zap:'scr-zap', tower:'scr-tower', team:'scr-team', badges:'scr-badges', line:'scr-line', cards:'scr-cards', abacus:'scr-abacus', hide:'scr-hide' };
 let mode = 'home';
 function show(name){
+  adventure.section(mode);
   Object.values(screens).forEach(id => document.getElementById(id).classList.remove('on'));
   document.getElementById(screens[name]).classList.add('on');
   document.getElementById('backBtn').style.display = (name === 'home') ? 'none' : 'block';
@@ -1750,6 +1745,7 @@ document.querySelectorAll('.mode').forEach(btn => {
   btn.addEventListener('click', () => {
     audio(); sndTap();
     shutUp();
+    adventure.cancelMission();
     const go = btn.dataset.go;
     if (go === 'trace'){ mode = 'trace'; show('trace'); startTrace(traceIdx); }
     else if (go === 'zap'){ mode = 'zap'; show('zap'); startZap(); }
@@ -1873,6 +1869,8 @@ function markNumRow(){
 }
 
 function startTrace(d){
+  if (!adventure.beforeQuestion()){setTimeout(()=>{if(mode==='trace')startTrace(d);},500);return;}
+  adventure.begin({section:'trace',skill:'tracing',a:d,b:0,expected:d,range:d<=5?5:d<=10?10:20,support:'trace-guide',format:'trace'});
   if (demoTimer){ clearInterval(demoTimer); demoTimer = null; }
   traceIdx = d;
   LW = d < 10 ? 100 : 200;
@@ -2025,6 +2023,7 @@ function registerInk(p){
 }
 
 function traceComplete(){
+  adventure.respond(traceIdx,true);
   finished = true;
   inkPaths = []; fadingInk = [];
   drawTrace();
@@ -2041,7 +2040,7 @@ function traceComplete(){
 
 canvas.addEventListener('pointerdown', ev => {
   ev.preventDefault(); audio();
-  if (finished) return;
+  if (finished || adventure.isPaused()) return;
   drawing = true;
   canvas.setPointerCapture(ev.pointerId);
   inkPaths.push([]);
@@ -2049,7 +2048,7 @@ canvas.addEventListener('pointerdown', ev => {
   drawTrace();
 });
 canvas.addEventListener('pointermove', ev => {
-  if (!drawing || finished) return;
+  if (!drawing || finished || adventure.isPaused()) return;
   ev.preventDefault();
   registerInk(ptFromEvent(ev));
   drawTrace();
@@ -2076,6 +2075,7 @@ canvas.addEventListener('pointermove', ev => {
 
 document.getElementById('clearTrace').addEventListener('click', () => { sndTap(); startTrace(traceIdx); });
 document.getElementById('showMe').addEventListener('click', () => {
+  adventure.help('tracing demonstration');
   sndTap();
   if (demoTimer){ clearInterval(demoTimer); demoTimer = null; }
   const flat = [];
@@ -2157,11 +2157,13 @@ function praiseLine(firstTry){
    spoken over. Every setter pairs with a safety timeout so it cannot stick. */
 let ceremonyBusy = false, ceremonyGuard = null;
 function beginCeremony(maxMs){
+  adventure.tracker?.setBlocked(true);
   ceremonyBusy = true;
   clearTimeout(ceremonyGuard);
   ceremonyGuard = setTimeout(() => { ceremonyBusy = false; }, maxMs || 12000);
 }
 function endCeremony(){
+  adventure.tracker?.setBlocked(false);
   ceremonyBusy = false;
   clearTimeout(ceremonyGuard);
 }
@@ -2169,7 +2171,7 @@ function rewardPending(){
   return ceremonyBusy || legendPending || overlayBusy();
 }
 function readyForNext(){
-  return speechIdle() && !rewardPending();
+  return speechIdle() && !rewardPending() && adventure.beforeQuestion();
 }
 function overlayBusy(){
   const c = document.getElementById('catch');
@@ -2373,7 +2375,7 @@ function recordAnswer(m, firstTry, ms){
 function fluent(m){
   const f = fluency[m] || [];
   if (f.length < FLU_WIN) return false;
-  const good = f.filter(x => x.first && x.fast).length;
+  const good = f.filter(x => x.first).length;
   return good >= 8;                       // 8 of the last 10: first try AND quick
 }
 /* Which shape the question takes. 'result' asks for the answer; the others
@@ -2386,16 +2388,11 @@ function fluent(m){
 /* 'story' — a spoken word problem with real objects, which is how children
    of this age genuinely solve adding and taking away. The number sentence is
    revealed only AFTER he answers, to link the story to the symbols. */
-let picMode = 'story';
+let picMode = 'auto';
 
 function questionForm(m){
-  if (m !== 'add' && m !== 'sub') return 'result';
-  if (picMode === 'story') return 'result';
-  const p = progress[m] || 0;
-  if (p < 40) return 'result';
-  const r = Math.random();
-  if (r < 0.62) return 'result';
-  return r < 0.81 ? 'missingB' : 'missingA';
+  if (m !== 'add' && m !== 'sub' || picMode !== 'auto') return 'result';
+  return adventure.plan(m).format;
 }
 
 /* Concrete -> Pictorial -> Abstract.
@@ -2406,34 +2403,13 @@ function questionForm(m){
    answer can never be found by counting whatever is left un-faded. */
 function cpaStage(m){
   if (m !== 'add' && m !== 'sub') return 0;
-  if (picMode === 'story') return 3;                       // story problem
-  if (picMode === 'above' || picMode === 'ask' || picMode === 'none') return 2;
-  const p = progress[m] || 0;
-  if (p < 12) return 0;
-  if (!fluent(m)) return 1;
-  return Math.random() < 0.45 ? 2 : 1;
+  if (picMode === 'story') return 3;
+  if (picMode !== 'auto') return 2;
+  return adventure.plan(m).support === 'pictures' ? 3 : 2;
 }
-function baseMax(m){
-  const p = progress[m] || 0;
-  if (m === 'add' || m === 'sub'){
-    // meaning first: stay within five for a good while, then within ten
-    if (p < 30) return 5;
-    return 10;
-  }
-  if (p < 6) return 5;
-  return 10;
-}
-function levelMax(m){
-  const cap = capOverride[m] || 0;
-  const base = baseMax(m);
-  if (cap) return Math.min(cap, Math.max(base, cap));
-  if (!fluent(m)) return base;            // no stretch until within-10 is automatic
-  // fluent: mostly stay at 10, but stretch sometimes — 20s first, 30s once well past
-  const p = progress[m] || 0;
-  const roll = Math.random();
-  if (roll < 0.75) return base;           // 3 in 4 questions stay in the mastered range
-  return (p >= 40 && roll > 0.93) ? 30 : 20;
-}
+function baseMax(m){ return adventure.plan(m).range; }
+function levelMax(m){ return adventure.plan(m).range; }
+
 
 function pickMon(){
   const base = caught.length ? caught : [25, 1, 4, 7, 133];
@@ -2481,6 +2457,13 @@ document.getElementById('qtext').addEventListener('click', () => { if (q.phrase)
 document.getElementById('eqline').addEventListener('click', () => { if (q.phrase) say(q.phrase, true); });
 
 function newQuestion(){
+  adventure.routeMission();
+  if (!adventure.beforeQuestion() || !['count','add','sub'].includes(mode)) return;
+  const questionMode = mode;
+  const generation = q.generation = (q.generation || 0) + 1;
+  const alive = () => mode === questionMode && q.generation === generation;
+  clearTimeout(q.coverTimer);
+  document.getElementById('pad').classList.remove('locked');
   padLocked = false;
   q.tries = 0;
   // clear anything left over from the previous question, or its sentence can
@@ -2493,7 +2476,8 @@ function newQuestion(){
   clearTimeout(q.lookTimer);
   clearTimeout(q.leaveTimer);
   const pend = pending[mode];
-  const echo = (!pend && echoNext && echoNext.mode === mode) ? echoNext : null;
+  const plan = adventure.plan(mode);
+  const echo = !pend && plan.review ? {mode, a:plan.review.a, b:plan.review.b} : null;
   echoNext = null;
   const emoji = pend ? pend.e : THINGS[rnd(THINGS.length)];
   const monId = pend ? pend.m : pickMon();
@@ -2521,19 +2505,19 @@ function newQuestion(){
     }
     return wrap;
   };
-  q.stage = pend ? pend.s : (echo ? 2 : cpaStage(mode));
-  q.isEcho = !!echo;
-  q.usedHelp = false;
+  q.stage = pend ? pend.s : cpaStage(mode);
+  q.isEcho = false; // Delayed review is an independent retrieval check.
+  q.usedHelp = !!pend?.help;
   if (pend){
-    q.tries = Math.max(1, pend.t || 1);       // already seen: no double stars for it
+    q.tries = pend.t || 0;       // already seen: no double stars for it
     setTimeout(() => {
+      if (!alive()) return;
       document.getElementById('quizSpeech').textContent = 'Let\u2019s finish this one first!';
     }, 400);
-  } else {
-    savePending(mode, { a:q.a, b:q.b, n:q.ans, e:emoji, m:monId, x:max, s:q.stage, t:0, f:q.form });
   }
   if (mode === 'count'){
-    q.ans = pend ? pend.n : 1 + rnd(max);
+    q.a = 0; q.b = 0;
+    q.ans = pend ? pend.n : plan.review ? plan.review.expected : 1 + rnd(max);
     if (!(q.ans >= 1) || !Number.isInteger(q.ans)){ clearPending('count'); q.ans = 1 + rnd(5); }
     warmArt(pickMon()); warmArt(pickMon());     // get the next likely pictures loading now
     qt.textContent = 'How many ' + monName(monId) + 's?';
@@ -2570,7 +2554,7 @@ function newQuestion(){
     // they hop away for real — nothing faded is left behind to count
     clearTimeout(q.leaveTimer);
     q.leaveTimer = setTimeout(() => {
-      if (mode !== 'sub') return;
+      if (!alive()) return;
       const leaving = document.querySelectorAll('#bubbles .goaway');
       if (!leaving.length) return;
       say(NUM_WORDS[q.b] + ' hopped away!');
@@ -2604,6 +2588,8 @@ function newQuestion(){
       q.covered = true;
       document.getElementById('peekBtn').addEventListener('click', (ev) => {
         ev.stopPropagation();
+        q.usedHelp = true; adventure.help('peek');
+        if (pending[mode]) savePending(mode, {...pending[mode],help:true});
         cov.style.display = 'none';
         setTimeout(() => { if (q.covered) cov.style.display = 'flex'; }, 1200);
       });
@@ -2801,14 +2787,17 @@ function newQuestion(){
       help.textContent = '🔍 Show me the pictures';
       help.addEventListener('click', () => {
         help.remove();
-        q.usedHelp = true;
+        q.usedHelp = true; adventure.help('pictures');
+        if (pending[mode]) savePending(mode, {...pending[mode],help:true});
         q.stage = 1;
         showFramesForQuestion(monId, emoji);
       });
       bub.appendChild(help);
     }
   }
-  // a missing-number question is always shown as numerals
+  const ref = adventure.begin({section:mode,skill:mode,a:q.a,b:q.b,expected:q.form==='missingA'?q.a:q.form==='missingB'?q.b:q.ans,range:max,format:q.form,support:q.stage===3?'pictures':q.stage===2?(picMode==='above'?'pictures':'numbers'):'pictures'}, pend?.learning);
+  if (pend && !pend.learning) adventure.help('resumed legacy question');
+  savePending(mode, {a:q.a,b:q.b,n:q.ans,e:emoji,m:monId,x:max,s:q.stage,t:q.tries,f:q.form,help:q.usedHelp,learning:ref});
   say(q.phrase);
   buildPad();
   // patience beat: look at the picture before the buttons wake up
@@ -2820,7 +2809,7 @@ function newQuestion(){
     sp.textContent = '👀 Look carefully...';
     clearTimeout(q.lookTimer);
     q.lookTimer = setTimeout(() => {
-      if (mode === 'home') return;
+      if (!alive()) return;
       padLocked = false;
       document.getElementById('pad').classList.remove('locked');
       sp.textContent = 'Now you can answer!';
@@ -2864,9 +2853,13 @@ function buildPad(){
 }
 
 function answer(n, btn){
-  if (padLocked) return;
+  if (padLocked || adventure.isPaused()) return;
+  const answerMode=mode, generation=q.generation;
+  const alive=()=>mode===answerMode && q.generation===generation;
   audio();
   const want = (q.form && q.form !== 'result') ? q.target : q.ans;
+  adventure.respond(n, n === want);
+  const independent = q.tries === 0 && !q.usedHelp;
   if (n === want){
     padLocked = true;
     uncover();
@@ -2876,11 +2869,11 @@ function answer(n, btn){
     q.showEq = null;
     clearPending(mode);
     progress[mode]++; saveProg();
-    recordAnswer(mode, q.tries === 0, Date.now() - (q.asked || 0));
-    if (q.tries === 0) bumpStreak(true);
+    recordAnswer(mode, independent, Date.now() - (q.asked || 0));
+    if (independent) bumpStreak(true);
     checkBadges();
-    sndGood(); burst(btn, q.tries === 0 ? 10 : 8);
-    addStar(q.tries === 0 ? 2 : 1);   // accuracy is the fast path to catches
+    sndGood(); burst(btn, independent ? 10 : 8);
+    addStar(independent ? 2 : 1);   // accuracy is the fast path to catches
     if (q.stage === 3 && (mode === 'add' || mode === 'sub')){
       const rev = document.createElement('div');
       rev.className = 'eqreveal';
@@ -2897,12 +2890,12 @@ function answer(n, btn){
     if (picMode !== 'story' && (mode === 'add' || mode === 'sub') && q.stage < 2 && !q.isEcho){
       echoNext = { mode: mode, a: q.a, b: q.b };     // ask it again without pictures
     }
-    const praise = praiseLine(q.tries === 0);
-    showPraise(praise + (q.tries === 0 ? '  ⭐⭐' : '  ⭐'));
+    const praise = praiseLine(independent);
+    showPraise(praise + (independent ? '  ⭐⭐' : '  ⭐'));
     setTimeout(() => say(praise + ' ' + fact), 420);
     document.getElementById('quizSpeech').textContent = praise;
     setTimeout(function waitQuiet(){
-      if (mode === 'home') return;                 // he left; don't queue a question
+      if (!alive()) return;                 // he left; don't queue a question
       if (!readyForNext()){ setTimeout(waitQuiet, 250); return; }
       newQuestion();
     }, P().next);
@@ -2914,8 +2907,8 @@ function answer(n, btn){
     const lost = loseStar();
     bumpStreak(false);
     if (mode === 'add' || mode === 'sub') sayWrong();
-    // escalating lockout: guessing becomes the SLOW way to play
-    const lockMs = Math.min(5000, 1000 + 1200 * (q.tries - 1));
+    // A brief feedback beat before guided correction.
+    const lockMs = 900;
     padLocked = true;
     const pad = document.getElementById('pad');
     pad.classList.add('locked');
@@ -2923,52 +2916,41 @@ function answer(n, btn){
       if (q.covered) uncover();
       document.getElementById('quizSpeech').textContent =
         'Take your time — look at the picture again.';
-      setTimeout(() => { padLocked = false; pad.classList.remove('locked'); }, lockMs);
+      setTimeout(() => { if (!alive()) return; padLocked = false; pad.classList.remove('locked'); }, lockMs);
     } else {
       uncover();
       document.getElementById('quizSpeech').textContent = 'Let\u2019s count together — you\u2019ve got this!';
-      setTimeout(() => { pad.classList.remove('locked'); countHint(); }, lockMs);
+      setTimeout(() => { if (!alive()) return; pad.classList.remove('locked'); countHint(); }, lockMs);
     }
   }
 }
 
 function countHint(){
-  padLocked = true;
-  const sp = document.getElementById('quizSpeech');
-  if (mode === 'add'){
-    // counting ON, not counting all: "you have A! ...A+1, A+2"
-    const grpA = Array.from(document.querySelectorAll('#bubbles .grpA'));
-    const grpB = Array.from(document.querySelectorAll('#bubbles .grpB'));
-    grpA.forEach(o => { o.classList.remove('hintpop'); void o.offsetWidth; o.classList.add('hintpop'); });
-    blip(392, 0, .2);
-    sp.textContent = 'You already have ' + q.a + '!';
-    say('You already have ' + NUM_WORDS[q.a] + '! Count on!');
-    grpB.forEach((o, i) => {
-      setTimeout(() => {
-        o.classList.remove('hintpop'); void o.offsetWidth; o.classList.add('hintpop');
-        blip(520 + i * 45, 0, .12);
-        const upto = q.a + i + 1;
-        sp.textContent = q.a + '... ' + Array.from({length: i + 1}, (_, k) => q.a + k + 1).join(' \u2022 ');
-        speakNumber(upto);   // queued, so counting never trips over itself
-        if (i === grpB.length - 1){
-          setTimeout(() => { padLocked = false; sp.textContent = 'Now you try!'; }, 600);
-        }
-      }, (P().hint + 250) * i + 1500);
-    });
-    return;
+  q.usedHelp=true; adventure.help('guided counting');
+  if(pending[mode]) savePending(mode,{...pending[mode],help:true});
+  const generation=q.generation, hintMode=mode;
+  const alive=()=>q.generation===generation && mode===hintMode;
+  padLocked=true;
+  const sp=document.getElementById('quizSpeech');
+  const bub=document.getElementById('bubbles');
+  if(q.form !== 'result'){
+    sp.textContent='Think about the whole and the missing part. Take your time.';
+    setTimeout(()=>{if(alive())padLocked=false;},700);return;
   }
-  const objs = Array.from(document.querySelectorAll('#bubbles .obj'))
-    .filter(o => !o.classList.contains('gone'));
-  objs.forEach((o, i) => {
-    setTimeout(() => {
-      o.classList.remove('hintpop'); void o.offsetWidth; o.classList.add('hintpop');
-      blip(440 + i * 40, 0, .12);
-      sp.textContent = 'Let\u2019s count together!  ' + Array.from({length: i + 1}, (_, k) => k + 1).join(' \u2022 ');
-      if (i === objs.length - 1){
-        setTimeout(() => { padLocked = false; sp.textContent = 'Now you try!'; }, 500);
-      }
-    }, P().hint * i + 400);
-  });
+  // Story balls and numerical layouts are rebuilt as a consistent ten-frame teaching aid.
+  const old=bub.querySelector('.guided-frames');if(old)old.remove();
+  const holder=document.createElement('div');holder.className='guided-frames';
+  const p=pending[mode];
+  const count=mode==='count'?q.ans:mode==='add'?q.a+q.b:q.a-q.b;
+  holder.appendChild(buildFrames(count,(cell,i)=>cell.appendChild(objSpan(p?.m || 25,'⭐',mode==='add'?(i<q.a?'grpA':'grpB'):'',0))));
+  bub.appendChild(holder);
+  const objs=[...holder.querySelectorAll('.obj')];
+  const sequence=mode==='add'?objs.slice(q.a):objs;
+  const base=mode==='add'?q.a:0;
+  sp.textContent=base?'Start with '+base+'. Count on.':'Let’s count together.';
+  sequence.forEach((o,i)=>setTimeout(()=>{if(!alive())return;o.classList.add('hintpop');sp.textContent=String(base+i+1);speakNumber(base+i+1);},600+i*600));
+  // Also handles zero objects: there is always a completion timer.
+  setTimeout(()=>{if(!alive())return;padLocked=false;document.getElementById('pad').classList.remove('locked');sp.textContent=count===0?'None left means zero. Now you try!':'Now you try!';},900+sequence.length*600);
 }
 
 /* ============================================================
@@ -2980,15 +2962,16 @@ const PATCH_POS = [[2, 16], [34, 4], [64, 16], [12, 48], [50, 50]];   // [left%,
 let patches = [];
 
 function zapQuestion(){
+  if(!adventure.beforeQuestion()) return;
   zap.locked = false;
   zap.sinceAns = 9;
   zap.wrongs = 0;
   zap.asked = Date.now();
   const pz = pending.zap;
-  const max = pz ? pz.x : levelMax('zap');
-  const kind = pz ? pz.k : (progress.zap < 3 ? 0 : rnd(3));
+  const max = pz ? pz.x : adventure.plan('zap', pz?.skill || 'recognition').range;
+  const kind = pz ? pz.k : 0; // Wild Catch practises numeral recognition; arithmetic has dedicated modes.
   if (kind === 0){
-    zap.ans = pz ? pz.n : 1 + rnd(Math.max(10, max));
+    zap.ans = pz ? pz.n : 1 + rnd(max);
     document.getElementById('zapQ').textContent = 'Find number ' + zap.ans + '!';
     say('Find number ' + NUM_WORDS[zap.ans]);
   } else if (kind === 1){
@@ -3004,7 +2987,9 @@ function zapQuestion(){
     document.getElementById('zapQ').textContent = a + ' − ' + b + ' = ?';
     say('What is ' + NUM_WORDS[a] + ' take away ' + NUM_WORDS[b] + '?');
   }
-  if (!pz) savePending('zap', { n:zap.ans, a:zap.qa, b:zap.qb, k:kind, x:max });
+  const ref=adventure.begin({section:'zap',skill:kind===0?'recognition':kind===1?'add':'sub',a:kind===0?zap.ans:zap.qa,b:kind===0?0:zap.qb,expected:zap.ans,range:max,support:'numbers',format:'result'},pz?.learning);
+  zap.wrongs=pz?.t || 0;
+  savePending('zap', {n:zap.ans,a:zap.qa || 0,b:zap.qb || 0,k:kind,x:max,t:zap.wrongs,learning:ref});
   zap.cands = [zap.ans];
   while (zap.cands.length < 3){
     const d = zap.ans + (rnd(7) - 3);
@@ -3045,8 +3030,10 @@ function popOne(){
 }
 
 function wildTap(n, p, el){
+  if(adventure.isPaused()) return;
   if (zap.locked || mode !== 'zap') return;
   audio();
+  adventure.respond(n,n===zap.ans);
   if (n === zap.ans){
     zap.locked = true;
     sndZap();
@@ -3096,6 +3083,7 @@ function wildTap(n, p, el){
     const lost = loseStar();
     bumpStreak(false);
     zap.wrongs++;
+    if(pending.zap)savePending('zap',{...pending.zap,t:zap.wrongs});
     zap.locked = true;
     zap.tos.push(setTimeout(() => { zap.locked = false; }, Math.min(4000, 900 + 900 * (zap.wrongs - 1))));
     document.getElementById('zapSpeech').textContent = 'Good try! Keep looking for ' +
@@ -3157,12 +3145,11 @@ function positionRacers(){
 function stopRace(){ clearInterval(race.timer); race.timer = null; }
 
 function startTower(){
+  if(!adventure.beforeQuestion()){setTimeout(()=>{if(mode==='tower')startTower();},500);return;}
   stopRace();
   const wins = progress.tower;
-  if (wins >= 6){ race.from = 21; race.to = 30; race.secs = Math.max(65, 100 - (wins - 6) * 4); }
-  else if (wins >= 2){ race.from = 11; race.to = 20; race.secs = Math.max(60, 95 - (wins - 2) * 4); }
-  else { race.from = 1; race.to = 10; race.secs = Math.max(50, 75 - wins * 4); }
-  race.dir = (wins >= 4 && wins % 2 === 0) ? -1 : 1;   // from level 5: alternate countdown races
+  const rp=adventure.plan('tower','sequence');
+  race.from=1;race.to=rp.range;race.secs=90;race.dir=1;
   race.next = race.dir === 1 ? race.from : race.to;
   race.prog = 0; race.rival = 0; race.locked = false;
   towerField.querySelectorAll('.tbub').forEach(e => e.remove());
@@ -3174,7 +3161,8 @@ function startTower(){
   for (let n = race.from; n <= race.to; n++) nums.push(n);
   for (let i = nums.length - 1; i > 0; i--){ const j = rnd(i + 1); [nums[i], nums[j]] = [nums[j], nums[i]]; }
   const fw = towerField.clientWidth || 300;
-  const cols = 5, rows = 2;
+  const cols = 5, rows = Math.ceil((race.to-race.from+1)/5);
+  towerField.style.height=(rows*120)+'px';
   const cells = [];
   for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) cells.push([c, r]);
   for (let i = cells.length - 1; i > 0; i--){ const j = rnd(i + 1); [cells[i], cells[j]] = [cells[j], cells[i]]; }
@@ -3192,7 +3180,7 @@ function startTower(){
   positionRacers();
   setTarget();
   race.timer = setInterval(() => {
-    if (mode !== 'tower' || race.locked) return;
+    if (mode !== 'tower' || race.locked || adventure.isPaused()) return;
     race.rival += 0.1 / race.secs;
     positionRacers();
     if (race.rival >= 1) roundLost();
@@ -3200,6 +3188,7 @@ function startTower(){
 }
 
 function setTarget(){
+  adventure.begin({section:'tower',skill:'sequence',a:race.next,b:0,expected:race.next,range:race.to,support:'numbers',format:'result'});
   document.getElementById('towerSpeech').textContent = 'Find ' + race.next + '!';
   say('Find ' + NUM_WORDS[race.next]);
 }
@@ -3215,7 +3204,8 @@ function roundLost(){
 }
 
 function towerTap(n, el){
-  if (race.locked || mode !== 'tower') return;
+  if (race.locked || mode !== 'tower' || adventure.isPaused()) return;
+  adventure.respond(n,n===race.next);
   audio();
   if (n === race.next){
     blip(392 + (race.dir === 1 ? (n - race.from) : (race.to - n)) * 45, 0, .14);
@@ -3243,7 +3233,8 @@ function towerTap(n, el){
       setTimeout(() => { if (mode === 'tower') startTower(); }, 2500);
     } else {
       race.next += race.dir;
-      setTarget();
+      race.locked=true;
+      (function advance(){if(mode!=='tower')return;if(!adventure.beforeQuestion()){setTimeout(advance,500);return;}race.locked=false;setTarget();})();
     }
   } else {
     el.classList.remove('wrongwob'); void el.offsetWidth; el.classList.add('wrongwob');
@@ -3274,14 +3265,17 @@ function hdBuildPad(){
   }
 }
 function hdNewRound(){
+  if(!adventure.beforeQuestion()) return;
   HD.locked = false; HD.tries = 0;
   const pend = pending.hide;
-  const max = pend ? pend.x : Math.min(10, levelMax('hide'));
+  const max = pend ? pend.x : Math.min(10, adventure.plan('hide','part-whole').range);
   HD.total = pend ? pend.a : 3 + rnd(Math.max(1, max - 2));
   HD.hidden = pend ? pend.n : 1 + rnd(HD.total - 1);
   HD.ball = pend ? pend.e : BALL_KINDS[rnd(BALL_KINDS.length)];
-  HD.tries = pend ? Math.max(1, pend.t || 1) : 0;
-  if (!pend) savePending('hide', { a:HD.total, n:HD.hidden, e:HD.ball, x:max, t:0 });
+  HD.tries = pend ? (pend.t || 0) : 0;
+  const ref=adventure.begin({section:'hide',skill:'part-whole',a:HD.total,b:HD.total-HD.hidden,expected:HD.hidden,range:max,support:'pictures',format:'result'},pend?.learning);
+  savePending('hide', {a:HD.total,n:HD.hidden,e:HD.ball,x:max,t:HD.tries,learning:ref});
+  HD.locked=true;
   HD.asked = Date.now();
   const field = document.getElementById('hdField');
   field.innerHTML = '';
@@ -3312,6 +3306,7 @@ function hdNewRound(){
   }, 900);
 }
 function hdHideSome(){
+  HD.locked=false;
   const field = document.getElementById('hdField');
   const balls = Array.from(field.querySelectorAll('.hdball'));
   const goHide = balls.slice(0, HD.hidden);
@@ -3330,7 +3325,8 @@ function hdHideSome(){
   blip(392, 0, .2);
 }
 function hdAnswer(n, btn){
-  if (HD.locked || mode !== 'hide') return;
+  if (HD.locked || mode !== 'hide' || adventure.isPaused()) return;
+  adventure.respond(n,n===HD.hidden);
   audio();
   if (n === HD.hidden){
     HD.locked = true;
@@ -3557,19 +3553,21 @@ function abFromPoint(cx, cy){
 })();
 
 function abNewQuestion(){
+  if(!adventure.beforeQuestion()) return;
   AB.locked = false; AB.tries = 0;
   const pend = pending.abacus;
-  const max = pend ? pend.x : levelMax('abacus');
+  const addition=pend ? pend.op==='+' : Math.random()<0.5;
+  const max = pend ? pend.x : adventure.plan('abacus',addition?'add':'sub').range;
   AB.span = Math.max(10, max);
   if (pend){
     AB.a = pend.a; AB.b = pend.b; AB.op = pend.op; AB.ans = pend.n;
-    AB.tries = Math.max(1, pend.t || 1);
-  } else if (Math.random() < 0.5){
-    AB.a = 1 + rnd(Math.max(1, AB.span - 2));
-    AB.b = 1 + rnd(Math.min(9, AB.span - AB.a));
+    AB.tries = (pend.t || 0);
+  } else if (addition){
+    AB.a = 1 + rnd(Math.max(1, max - 2));
+    AB.b = 1 + rnd(Math.min(9, max - AB.a));
     AB.ans = AB.a + AB.b; AB.op = '+';
   } else {
-    AB.a = 3 + rnd(Math.max(1, AB.span - 3));
+    AB.a = 3 + rnd(Math.max(1, max - 3));
     AB.b = 1 + rnd(Math.min(9, AB.a));
     AB.ans = AB.a - AB.b; AB.op = '-';
   }
@@ -3580,7 +3578,8 @@ function abNewQuestion(){
     ? AB.a + ' + ' + AB.b + ' = ?   Slide the beads!'
     : AB.a + ' − ' + AB.b + ' = ?   Slide the beads!';
   AB.value = 0; AB.anim = {};
-  if (!pend) savePending('abacus', { a:AB.a, b:AB.b, op:AB.op, n:AB.ans, x:max, t:0 });
+  const ref=adventure.begin({section:'abacus',skill:AB.op==='+'?'add':'sub',a:AB.a,b:AB.b,expected:AB.ans,range:max,support:'beads',format:'result'},pend?.learning);
+  savePending('abacus', {a:AB.a,b:AB.b,op:AB.op,n:AB.ans,x:max,t:AB.tries,learning:ref});
   AB.asked = Date.now();
   abSize();
   document.getElementById('abCount').textContent = '0 beads';
@@ -3590,7 +3589,7 @@ function abNewQuestion(){
 }
 
 function abCheckAnswer(){
-  if (AB.locked || mode !== 'abacus') return;
+  if (AB.locked || mode !== 'abacus' || adventure.isPaused()) return;
   audio();
   if (AB.value === 0 && AB.ans !== 0){
     document.getElementById('abSpeech').textContent = 'Slide some beads first!';
@@ -3598,6 +3597,7 @@ function abCheckAnswer(){
     blip(440, 0, .12);
     return;
   }
+  adventure.respond(AB.value,AB.value===AB.ans);
   if (AB.value === AB.ans){
     AB.locked = true;
     clearPending('abacus');
@@ -3825,11 +3825,12 @@ function lnLoop(){
 function lnStopLoop(){ if (LN.raf) cancelAnimationFrame(LN.raf); LN.raf = null; }
 
 function lnNewQuestion(){
+  if(!adventure.beforeQuestion()) return;
   LN.locked = false; LN.tries = 0;
   const pend = pending.line;
   if (pend){
     LN.span = pend.span; LN.start = pend.start; LN.step = pend.step;
-    LN.ans = pend.ans; LN.op = pend.op; LN.tries = Math.max(1, pend.t || 1);
+    LN.ans = pend.ans; LN.op = pend.op; LN.tries = (pend.t || 0);
     LN.phrase = (LN.op === '+')
       ? 'Start at ' + NUM_WORDS[LN.start] + '. Hop ' + NUM_WORDS[LN.step] + ' forward. Where do you land?'
       : 'Start at ' + NUM_WORDS[LN.start] + '. Hop ' + NUM_WORDS[LN.step] + ' back. Where do you land?';
@@ -3841,12 +3842,14 @@ function lnNewQuestion(){
     LN.asked = Date.now();
     lnSize(); lnHopReadout(); lnStopLoop(); lnLoop();
     document.getElementById('lnSpeech').textContent = 'Let\u2019s finish this one first!';
+    const ref=adventure.begin({section:'line',skill:LN.op==='+'?'add':'sub',a:LN.start,b:LN.step,expected:LN.ans,range:pend.x || LN.span,support:'number-line',format:'result'},pend.learning);
+    savePending('line',{...pend,learning:ref});
     say(LN.phrase);
     return;
   }
-  const max = levelMax('line');
-  LN.span = Math.max(10, max);
   const addition = Math.random() < 0.5;
+  const max = adventure.plan('line',addition?'add':'sub').range;
+  LN.span = max;
   if (addition){
     LN.start = 1 + rnd(Math.max(1, LN.span - 3));
     LN.step = 1 + rnd(Math.min(9, LN.span - LN.start));
@@ -3869,7 +3872,8 @@ function lnNewQuestion(){
   LN.cur = LN.start; LN.pos = LN.start; LN.hopping = false; LN.showGoal = false;
   lnWindow();
   LN.asked = Date.now();
-  savePending('line', { span:LN.span, start:LN.start, step:LN.step, ans:LN.ans, op:LN.op, t:0 });
+  const ref=adventure.begin({section:'line',skill:LN.op==='+'?'add':'sub',a:LN.start,b:LN.step,expected:LN.ans,range:max,support:'number-line',format:'result'});
+  savePending('line', {span:LN.span,start:LN.start,step:LN.step,ans:LN.ans,op:LN.op,t:0,learning:ref});
   lnSize(); lnHopReadout(); lnStopLoop(); lnLoop();
   document.getElementById('lnSpeech').textContent = 'Drag your Pokémon along the line!';
   say(LN.phrase);
@@ -3901,7 +3905,7 @@ function lnHopReadout(){
 }
 
 function lnCheckAnswer(){
-  if (LN.locked) return;
+  if (LN.locked || adventure.isPaused()) return;
   audio();
   if (LN.cur === LN.start && LN.ans !== LN.start){
     // he hasn't moved yet — just remind him, don't punish
@@ -3911,6 +3915,7 @@ function lnCheckAnswer(){
     blip(440, 0, .12);
     return;
   }
+  adventure.respond(LN.cur,LN.cur===LN.ans);
   if (LN.cur === LN.ans){
     LN.locked = true;
     clearPending('line');
@@ -4117,35 +4122,39 @@ function setSyncStatus(kind, text){
 }
 async function syncNow(manual){
   const cfg = await getSyncCfg();
-  if (!cfg){ if (manual) setSyncStatus('', 'not connected'); return false; }
+  if (!cfg){ if (manual) setSyncStatus('', 'Not connected'); return false; }
   if (syncBusy) return false;
   syncBusy = true;
   try{
     const url = syncEndpoint(cfg);
-    const local = await localPayload();
-    const g = await fetch(url);
-    if (g.status === 401 || g.status === 403){
-      setSyncStatus('err', '✗ The database refused access. Check the Rules step: the rules must allow fam/$code, and the family code must match exactly.');
-      syncBusy = false; return false;
+    let saved=false;
+    for(let attempt=0;attempt<3;attempt++){
+      const g=await fetch(url,{cache:'no-store',headers:{'X-Firebase-ETag':'true'},signal:AbortSignal.timeout(15000)});
+      if(!g.ok) throw new Error('read refused'); // Never overwrite after a failed read.
+      const etag=g.headers.get('ETag');
+      if(!etag)throw new Error('missing version');
+      const remote=await g.json();
+      const local=await localPayload();
+      const merged=remote ? mergeStates(local,remote) : local;
+      const p=await fetch(url,{method:'PUT',cache:'no-store',headers:{'Content-Type':'application/json','if-match':etag},body:JSON.stringify(merged),signal:AbortSignal.timeout(15000)});
+      if(p.status===412)continue; // Another device won: read its state and merge again.
+      if(!p.ok)throw new Error('write refused');
+      const latest=await localPayload();
+      // Do not replace in-flight local play with the snapshot taken before the network request.
+      if(JSON.stringify(latest)===JSON.stringify(local))await applyState(merged);
+      else { await store.set('cubs_at',Math.max(Date.now(),merged.at+1)); clearTimeout(syncTimer);syncTimer=setTimeout(()=>syncNow(false),1000); }
+      saved=true;break;
     }
-    let remote = null;
-    if (g.ok){ try{ remote = await g.json(); }catch(e){} }
-    const merged = remote ? mergeStates(local, remote) : local;
-    await applyState(merged);
-    const p = await fetch(url, { method: 'PUT', body: JSON.stringify(merged) });
-    if (p.status === 401 || p.status === 403){
-      setSyncStatus('err', '✗ The database refused the write. Re-check the Rules and the URL.');
-      syncBusy = false; return false;
-    }
-    if (!p.ok) throw new Error('write ' + p.status);
-    await store.set('cubs_lastsync', Date.now());
-    setSyncStatus('ok', '✓ Synced at ' + new Date().toLocaleTimeString() + ' — ' + caught.length + ' Pokémon, ' + stars + ' stars');
-    syncBusy = false;
+    if(!saved)throw new Error('busy remote');
+    await store.set('cubs_lastsync',Date.now());
+    setSyncStatus('ok','✓ Progress synced. See Learning journal for activity upload status.');
     return true;
   }catch(e){
-    setSyncStatus('err', '✗ Couldn\u2019t reach the database — check the internet connection and URL.');
-    syncBusy = false;
+    setSyncStatus('err','✗ Progress not synced. Your local progress is retained; check the connection and database rules.');
     return false;
+  }finally{
+    syncBusy=false;
+    await adventure.sync(cfg);
   }
 }
 function schedulePush(){
@@ -4160,7 +4169,7 @@ document.addEventListener('visibilitychange', () => {
 /* ---------- parent backup panel (triple-tap the title) ---------- */
 (function parentPanel(){
   const panel = document.getElementById('parentPanel');
-  let taps = [], KEYS = ['cubs_stars','cubs_prog','cubs_caught','cubs_pbuddy','cubs_ball','cubs_sound','cubs_name','cubs_wv','cubs_caps','cubs_flu','cubs_shiny','cubs_badges','cubs_traced','cubs_streak','cubs_cards','cubs_xp','cubs_pic'];
+  let taps = [], KEYS = ['cubs_stars','cubs_prog','cubs_caught','cubs_pbuddy','cubs_ball','cubs_sound','cubs_name','cubs_wv','cubs_caps','cubs_flu','cubs_shiny','cubs_badges','cubs_traced','cubs_streak','cubs_cards','cubs_xp','cubs_pic','cubs_pending','pokemath_learning_v1','pokemath_learning_settings'];
   document.querySelector('h1').addEventListener('click', () => {
     const now = Date.now();
     taps = taps.filter(t => now - t < 1200); taps.push(now);
@@ -4168,6 +4177,8 @@ document.addEventListener('visibilitychange', () => {
   });
   document.getElementById('cloudBtn').addEventListener('click', openPanel);
   async function openPanel(){
+    adventure.tracker?.setBlocked(true);
+    adventure.journal();
     const data = {};
     for (const k of KEYS) data[k] = await store.get(k);
     document.getElementById('ppCode').value = 'PKM1.' + btoa(unescape(encodeURIComponent(JSON.stringify(data))));
@@ -4220,7 +4231,7 @@ document.addEventListener('visibilitychange', () => {
       const nm = document.createElement('span');
       nm.textContent = label;
       row.appendChild(nm);
-      [['Auto', 0], ['10', 10], ['20', 20], ['30', 30]].forEach(([txt, val]) => {
+      [['Auto', 0], ['5', 5], ['10', 10], ['20', 20], ['30', 30]].forEach(([txt, val]) => {
         const b = document.createElement('button');
         b.textContent = txt;
         if ((capOverride[m] || 0) === val) b.classList.add('on');
@@ -4232,10 +4243,10 @@ document.addEventListener('visibilitychange', () => {
     const note = document.getElementById('fluNote');
     const parts = CAP_MODES.filter(([m]) => ['add','sub'].includes(m)).map(([m, label]) => {
       const f = fluency[m] || [];
-      const good = f.filter(x => x.first && x.fast).length;
+      const good = f.filter(x => x.first).length;
       return label + ': ' + good + '/' + Math.max(f.length, 1) + (fluent(m) ? ' ✓ fluent' : '');
     });
-    note.textContent = 'Recent quick first-try answers — ' + parts.join('  ·  ');
+    note.textContent = 'Automatic difficulty uses independent accuracy and later-day checks. Number settings are ceilings. Choose Auto pictures to enable the full adaptive sequence.';
   }
   document.getElementById('syGen').addEventListener('click', () => {
     const abc = 'abcdefghjkmnpqrstuvwxyz23456789';
@@ -4260,7 +4271,7 @@ document.addEventListener('visibilitychange', () => {
     await store.set('cubs_lastsync', '');
     setSyncStatus('', 'disconnected — progress stays on this tablet');
   });
-  document.getElementById('ppClose').addEventListener('click', () => { panel.style.display = 'none'; });
+  document.getElementById('ppClose').addEventListener('click', () => { panel.style.display = 'none'; adventure.tracker?.setBlocked(false); adventure.tracker?.resume(); });
   document.getElementById('ppTest').addEventListener('click', () => {
     const checks = [
       ['praise voice', typeof praiseLine === 'function'],
@@ -4270,7 +4281,7 @@ document.addEventListener('visibilitychange', () => {
       ['numbers to 30', TRACE_MAX === 30]
     ];
     document.getElementById('ppVer').textContent =
-      'build v56 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
+      'build v57 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
     showPraise(praiseLine(true));
     say(praiseLine(true));
   });
@@ -4299,7 +4310,7 @@ document.addEventListener('visibilitychange', () => {
 /* ---------- boot ---------- */
 if ('serviceWorker' in navigator){
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
+    navigator.serviceWorker.register('./sw.js', {updateViaCache:'none'}).catch(() => {});
   });
 }
 (function setModeIcons(){
@@ -4332,6 +4343,7 @@ if ('serviceWorker' in navigator){
     bg.appendChild(st);
   }
 })();
+const adventure=createAdventure();
 buildNumRow();
 loadStars();
 window.addEventListener('resize', () => {
