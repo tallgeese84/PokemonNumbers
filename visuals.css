@@ -173,3 +173,7 @@ body:not([data-screen="home"]) #soundBtn{display:none}
 .goal-dialog .trainer-scene{--avatar-size:190px}
 @media(max-width:520px){.trainer-scene,.goal-dialog .trainer-scene{--avatar-size:160px}}
 @media(max-height:680px) and (min-width:600px){#buddyBox .trainer-scene{--avatar-size:120px}}
+
+/* v61: use the available question width for recognizable counting pictures. */
+#scr-quiz .tenframe{--tfc:min(104px,calc((100vw - 52px)/5))}
+#scr-quiz .tfcell .pkspr{width:calc(var(--tfc)*.94);height:calc(var(--tfc)*.94)}
