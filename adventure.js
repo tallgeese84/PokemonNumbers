@@ -104,6 +104,7 @@ function createAdventure() {
   }
   function beforeQuestion(){if(!loaded || modal || total()>=goalMs() && !goalShown[today()+':'+goalMs()]){celebrate();return false;}return true;}
   function render() {
+    $('app').inert=parentOpen() || modal || !idle.hidden;
     const ms=total(),target=goalMs();
     $('adventureClock').textContent=fmt(ms)+' / '+fmt(target);
     $('adventureRing').style.setProperty('--progress',Math.min(100,ms/target*100)+'%');
