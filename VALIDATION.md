@@ -4,7 +4,7 @@ Base: `72d66a24f164c1fd5abc1f56c6eb37ddf0d8027b` (v59).
 
 Jonah’s avatar is confirmed by the `AV_IMG.jonah` mapping in ChineseLearningP1-3. The matching original `jonah_old_avatar.webp` is copied unchanged as a local asset. Home and the daily-goal celebration pair this avatar with the current Pokémon buddy. Question screens, navigation and learning records keep their existing behavior. The new asset is included in the v60 offline cache.
 
-Local verification: all 25 regression tests pass, including celebration gating, active-time tracking and cache isolation. The celebration DOM mock now includes the image style property. All shipped JavaScript parses and the diff has no whitespace errors. Responsive live review follows publication.
+Local verification: all 25 regression tests pass, including celebration gating, active-time tracking and cache isolation. The celebration DOM mock now includes the image style property. All shipped JavaScript parses and the diff has no whitespace errors. GitHub regression and Pages deployment both succeeded for `4291d87eaf49b0a048bf4722e5139062894b9707`. Live browser checks confirmed v60, clear avatar and buddy placement on 320-pixel phone and 768-pixel tablet home layouts, and the complete celebration at 320 pixels. The celebration check used pre-existing synthetic activity with cloud sync disconnected and temporarily selected a 10-minute goal; the setting was restored to 15 minutes afterward. These are browser viewport checks, not a physical-device or offline-network test.
 
 ---
 
