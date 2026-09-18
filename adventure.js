@@ -8,11 +8,10 @@ function createAdventure() {
   const mission={enabled:false,answered:0,focus:'add'};
   const plans={}; let leaseId=crypto.randomUUID(), leaseOwned=true;
   const timer=document.createElement('div'); timer.id='adventureTimer'; timer.className='adventure-timer';
-  timer.innerHTML='<div class="adventure-ring" id="adventureRing" role="progressbar" aria-label="Today’s active practice" aria-valuemin="0"><span>⚡</span></div><div class="adventure-clock"><strong>Today’s adventure</strong><div><b id="adventureClock">0:00 / 15:00</b><small id="adventureState">Choose a question to begin</small></div></div><button id="adventurePause" class="btn" type="button">Pause</button>';
+  timer.innerHTML='<div class="adventure-ring" id="adventureRing" role="progressbar" aria-label="Today’s active practice" aria-valuemin="0"><span>★</span></div><div class="adventure-clock"><b id="adventureClock">0:00 / 15:00</b><small id="adventureState" class="sr-only">Choose a question to begin</small></div><button id="adventurePause" class="btn" type="button" aria-label="Pause practice">'+PokeVisuals.icon('pause')+'</button>';
   document.querySelector('.topbar').after(timer);
-  const missionButton=document.createElement('button');missionButton.id='startAdventure';missionButton.className='widebtn';missionButton.innerHTML='<span>Start adventure</span><span class="start-arrow" aria-hidden="true">→</span>';missionButton.setAttribute('aria-label','Start today’s adventure');
-  const missionNote=document.createElement('p');missionNote.className='adventure-mission-note';missionNote.textContent='Warm up · practise · discover' ;
-  document.getElementById('missionSlot').append(missionButton,missionNote);
+  const missionButton=document.createElement('button');missionButton.id='startAdventure';missionButton.className='widebtn';missionButton.innerHTML=PokeVisuals.icon('play')+'<span>Play</span>';missionButton.setAttribute('aria-label','Start today’s adventure');
+  document.getElementById('missionSlot').append(missionButton);
   missionButton.onclick=()=>{
     const recent=C.summarize(tracker.sessions,C.shiftDay(today(),-6),today());
     const arithmetic=Object.values(recent.groups).filter(g=>['add','sub'].includes(g.section)&&g.n>=3).sort((a,b)=>a.accuracy-b.accuracy);
@@ -26,10 +25,10 @@ function createAdventure() {
   }
 
   const idle=document.createElement('div');idle.id='adventureIdle';idle.className='adventure-modal';idle.hidden=true;
-  idle.innerHTML='<div class="adventure-dialog" role="dialog" aria-modal="true" aria-labelledby="idleTitle"><div class="adventure-hero">💭</div><h2 id="idleTitle">Still thinking?</h2><p>Your practice clock is paused. Take your time!</p><button class="btn" id="adventureResume">Yes, let’s keep going</button><button class="btn secondary" id="adventureRest">Take a break</button></div>';
+  idle.innerHTML='<div class="adventure-dialog" role="dialog" aria-modal="true" aria-labelledby="idleTitle"><h2 id="idleTitle">Paused</h2><button class="btn" id="adventureResume" aria-label="Keep playing">'+PokeVisuals.icon('play')+'<span>Play</span></button><button class="btn secondary" id="adventureRest" aria-label="Finish and go home">'+PokeVisuals.icon('home')+'<span>Home</span></button></div>';
   document.body.append(idle);
   const goal=document.createElement('div');goal.id='adventureGoal';goal.className='adventure-modal';goal.hidden=true;
-  goal.innerHTML='<div class="adventure-dialog goal-dialog" role="dialog" aria-modal="true" aria-labelledby="goalTitle"><div class="goal-sparkles" aria-hidden="true">✦ ✧ ★ ✧ ✦</div><img id="goalPokemon" alt="Your Pokémon celebrates" class="goal-pokemon"><h2 id="goalTitle">Amazing effort, Jonah!</h2><p id="goalMessage"></p><p>You kept thinking and trying. That’s how we learn!</p><button class="btn" id="adventureFinish">Finish for today 🌟</button><button class="btn secondary" id="adventureBonus" hidden>Bonus adventure · 3 minutes</button></div>';
+  goal.innerHTML='<div class="adventure-dialog goal-dialog" role="dialog" aria-modal="true" aria-labelledby="goalTitle"><div class="goal-sparkles" aria-hidden="true">★</div><img id="goalPokemon" alt="Your Pokémon celebrates" class="goal-pokemon"><h2 id="goalTitle">You did it!</h2><p id="goalMessage"></p><button class="btn" id="adventureFinish" aria-label="Finish for today">'+PokeVisuals.icon('home')+'<span>Done</span></button><button class="btn secondary" id="adventureBonus" aria-label="Play three bonus minutes" hidden>'+PokeVisuals.icon('play')+'<span>+3 min</span></button></div>';
   document.body.append(goal);
   const dashboard=document.createElement('section');dashboard.id='learningDashboard';dashboard.className='learning-dashboard';
   dashboard.innerHTML='<h2>Learning journal</h2><p class="muted">Small steps, seen over time · Madison time</p><details><summary>Practice goal &amp; optional bonus</summary><div class="journal-controls"><label>Daily goal <select id="goalMinutes"><option value="10">10 minutes</option><option value="15">15 minutes</option><option value="20">20 minutes</option></select></label><label><input id="enableBonus" type="checkbox"> Allow a 3-minute bonus</label></div></details><div class="journal-controls"><label>View <select id="journalPeriod"><option value="today">Today</option><option value="week">Last 7 days</option></select></label><button class="btn" id="exportLearning">Export history</button></div><div id="journalBody"></div><p id="journalSync" class="muted"></p><p class="muted">The clock counts visible questions, thinking and learning aids. It pauses after 60 seconds without interaction, during rewards, in other tabs and in parent settings. Time is an estimate, not a measurement of attention.</p><hr></section>';
@@ -88,17 +87,17 @@ function createAdventure() {
   }
   function respond(value,correct) {if(!loaded)return;tracker.answer(value,correct);if(correct && mission.enabled)mission.answered++;save();render();}
   function help(kind){tracker?.help(kind);save();}
-  function section(name){if(['home','team','cards','badges'].includes(name))mission.enabled=false;tracker?.setSection(name);save();render();}
+  function section(name){if(['home','games','team','cards','badges'].includes(name))mission.enabled=false;tracker?.setSection(name);save();render();}
   function celebrate() {
     if(modal || total()<goalMs() || tracker.current || blocked() || !speechIdle())return false;
     const key=today()+':'+goalMs();if(goalShown[key])return false;
     goalShown[key]=true;modal=true;save();
-    $('goalTitle').textContent='Amazing effort, '+(childName || 'Jonah')+'!';
-    $('goalMessage').textContent='You completed today’s '+Math.round(goalMs()/60000)+'-minute adventure!';
+    $('goalTitle').textContent='You did it!';
+    $('goalMessage').textContent=Math.round(goalMs()/60000)+' min ✓';
     $('goalPokemon').src=imgArt(pkBuddy || 25);
     $('adventureBonus').hidden=!settings.bonusEnabled || bonusDay===today();
     goal.hidden=false;tracker.setBlocked(true);$('adventureFinish').focus();
-    sndGood();say('Amazing effort, '+(childName || 'Jonah')+'! You completed today’s adventure!');
+    sndGood();say('Amazing effort, '+(childName || 'Jonah')+'! You kept thinking and trying. You completed today’s adventure!');
     for(let i=0;i<4;i++)setTimeout(()=>burst([innerWidth*(0.2+i*0.2),innerHeight*0.35],15),i*160);
     return true;
   }
@@ -138,7 +137,7 @@ function createAdventure() {
       const root=cfg.url.replace(/\/+$/,'')+'/fam/'+encodeURIComponent(cfg.code)+'/pokemathAnalytics';
       const upload={};const revisions={};
       for(const id of dirty)if(tracker.sessions[id]){upload['sessions/'+id]=structuredClone(tracker.sessions[id]);revisions[id]=tracker.sessions[id].rev;}
-      upload['devices/'+await deviceId()]={lastSeenAt:Date.now(),build:58,sessionId:tracker.sessionId};
+      upload['devices/'+await deviceId()]={lastSeenAt:Date.now(),build:59,sessionId:tracker.sessionId};
       const r=await fetch(root+'.json',{method:'PATCH',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify(upload),signal:AbortSignal.timeout(15000)});
       if(!r.ok)throw new Error('upload');
       for(const [id,rev] of Object.entries(revisions))if(tracker.sessions[id]?.rev===rev)dirty.delete(id);

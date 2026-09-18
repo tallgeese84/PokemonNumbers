@@ -1,3 +1,13 @@
+# v59 child interface simplification
+
+Base: `8010fdcfe8be8020917b9986f680b5838ced1871` (v58).
+
+Implemented: three child destinations on home; one buddy and a plain background; three activity choices per page; one-column practice; compact clock and picture controls; question replay for all practice modes; adult-only progress counters; simplified pause and goal dialogs. All nine activities and existing journal records remain available.
+
+Local verification: 25 regression tests pass. The timer exclusion test now includes the game chooser. HTML IDs are unique and all nine activity buttons are present. Browser review and final deployment verification follow publication.
+
+---
+
 # v58 visual refresh
 
 Base: `8fc6907de015cae708c3100d201ac4a57990d861` (v57).

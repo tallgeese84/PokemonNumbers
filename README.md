@@ -21,13 +21,15 @@ and is not included in this repository. Personal, non-commercial project.
 To ship an update, bump `CACHE = 'pokemath-v1'` in `sw.js` (v2, v3, ...) so
 installed tablets pick up the new version.
 
-## v58 — visual refresh
+## v59 — simpler for a child who is not reading yet
 
-An illustrated meadow home, a large Pokémon guide/buddy, and one clear Start adventure action. Nine activity cards pair larger official artwork with original vector skill illustrations. Calmer practice screens have larger answer buttons, explicit activity titles and question replay controls. Tablet landscape arithmetic uses separate question and answer columns; phone layouts retain a single column. Counting balls, story trainers and the hide-and-seek tree are crisp built-in vectors. Tracing uses a compact scrollable number strip. Earned badges and the next discovery take priority over the expandable list of future badges.
+Home has one large **Play** button and Pokémon buddy, with two smaller picture buttons: **Games** and **Pokémon**. Games shows three choices per page. All nine activities remain available. Decorative scenery, marketing copy and repeated activity headings are removed from the child’s main flow.
 
-The labeled **Journal** button opens daily/weekly analytics, a seven-day active-minute chart and practice guidance. Sync, backup and learning settings are in a separate expandable section. There is no email setup required to read the journal. Local data and existing cloud settings are retained.
+Practice uses one column, a small clock/progress ring, a house button, pause, and a speaker button to repeat the question. The speaker also turns sound back on if it was muted. Spoken questions, quantity pictures, number sentences and learning aids remain available. Short icon controls replace long button labels. The daily goal still earns a large Pokémon celebration and spoken encouragement.
 
-Keyboard focus, reduced motion, browser zoom, modal focus and narrow canvas sizing are supported. The service worker caches the new local illustrations and style modules. Online Pokémon/card artwork still has the existing availability limits.
+**Grown-ups**, at the bottom of home, opens the learning journal. Stars, streaks and rank are under **Rewards & progress** there. Daily/weekly analytics and settings retain their existing behavior; opening home or browsing games does not count as practice. Existing progress and cloud settings are retained. Email setup is not required.
+
+Keyboard labels, reduced-motion support and browser zoom remain available. Online Pokémon/card artwork still has the existing availability limits.
 
 For manual responsive review, open `tests/layout-preview.html` and choose 320, 390, 768 or 1024 pixels. This page embeds the real app and uses the current browser's app data; use a test browser with cloud sync disconnected.
 

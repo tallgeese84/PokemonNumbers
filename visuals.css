@@ -42,3 +42,121 @@ button,input,select,textarea{font:inherit}button{touch-action:manipulation}butto
 .badge .bico svg{display:block;width:48px;height:48px;margin:0 auto;color:#497257}.badge small{display:block;font-size:10px;color:#54775d;margin-top:5px}.badge.locked{opacity:.8;filter:none;background:#f2f3e9}.badge.locked .bico{opacity:.55}.badge-next{grid-column:1/-1;display:flex;gap:20px;align-items:center;padding:22px;background:#eef3de;border:1px solid #d9e2c1;border-radius:22px}.badge-next>span{display:block;flex:0 0 72px}.badge-next svg{width:72px;height:72px;color:#597451}.badge-next small{font-size:10px;letter-spacing:1px;font-weight:700;color:#60714c}.badge-next h3{font-size:23px;margin:5px 0;color:#38583f}.badge-next p{font-size:13px;margin:0;color:#597052}.badge-future{grid-column:1/-1;margin-top:12px;padding:16px;border:1px solid #dae3d3;border-radius:18px;background:#f5f7ee}.badge-future>summary{cursor:pointer;min-height:30px;font-size:13px;font-weight:700}.badge-future>.badgegrid{margin-top:14px}@media(max-width:520px){.badge-next{gap:12px;padding:17px}.badge-next>span{flex-basis:57px}.badge-next svg{width:57px;height:57px}.badge-next h3{font-size:20px}.badge .bico svg{width:39px;height:39px}.badge-next p{font-size:12px}}
 
 @media(hover:hover){.adventure-dialog .btn:hover:not(:disabled){background:#216b55}.adventure-dialog .secondary:hover:not(:disabled){background:#e1ebd8}}
+
+/* v59: pictures first, a quiet home, one task in view. */
+[hidden]{display:none!important}
+.sr-only,.activity-header h2{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+body{background:#fafbf7}
+#spaceBg{display:none}
+#app,body:not([data-screen="home"]) #app,body[data-screen="quiz"] #app{max-width:720px;padding:18px 20px 24px}
+.topbar{min-height:48px;gap:10px;margin-bottom:24px}
+.topbar .brand{display:none}
+.topbar .btn.icon{width:48px;min-width:48px;height:48px;border:0;box-shadow:none;background:transparent;padding:7px}
+.topbar .btn svg{width:32px;height:32px;display:block}
+.topbar #backBtn{margin-right:auto}
+body:not([data-screen="home"]) #soundBtn{display:none}
+.home-hero{display:flex;flex-direction:column;justify-content:center;gap:16px;min-height:0;padding:0;background:none;border:0;box-shadow:none;overflow:visible}
+#buddyBox{align-self:center;min-height:170px}
+#buddyBox img{width:180px;height:180px;max-width:100%;filter:none;animation:none}
+#buddyBox .bname{display:none}
+#missionSlot{width:min(100%,280px)}
+#startAdventure{width:100%;margin:0;justify-content:center;gap:13px;min-height:80px;border-radius:24px;font-size:30px;font-weight:800;box-shadow:0 4px 0 #1e604c}
+#startAdventure svg{width:42px;height:42px}
+.home-progress{display:flex;justify-content:center;margin:22px 0 26px}
+.adventure-timer,.home-progress .adventure-timer{display:flex;flex:none;width:auto;max-width:100%;padding:0;border:0;border-radius:0;background:none;box-shadow:none;margin:0;gap:9px}
+.adventure-ring{width:36px;height:36px;flex-basis:36px}
+.adventure-ring span{width:27px;height:27px;font-size:14px;background:#fafbf7;color:#688371}
+.adventure-clock b{font-size:16px;font-weight:600;letter-spacing:0;color:#4d695c}
+.adventure-timer .btn{width:42px;min-height:44px;padding:8px;background:none;border:0;box-shadow:none}
+.adventure-timer .btn svg{width:26px;height:26px}
+.home-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;max-width:280px;margin:auto}
+.quiet-choice{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:110px;padding:12px;border:1.5px solid #d8e2d6;border-radius:22px;background:#fff;color:#344f43;box-shadow:none;cursor:pointer}
+.quiet-choice svg{display:block;width:52px;height:52px}
+.quiet-choice strong{font-size:16px;font-weight:600}
+.quiet-choice:hover{background:#f1f5ec}
+.home-footer{max-width:360px;margin:32px auto 0;padding:8px 0 0;border:0}
+.home-footer #cloudBtn{font-size:12px;min-height:44px;box-shadow:none;padding:7px 2px;border:0;background:none;color:#607366}
+.home-footer #cloudBtn svg{width:20px;height:20px}
+.home-footer .build-label{font-size:10px}
+#scr-games{padding-top:44px}
+#gameChoices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:0 auto;max-width:600px}
+#gameChoices .mode{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px 8px;min-height:178px;border:1.5px solid #d5e1d1;border-radius:23px;box-shadow:none;text-align:center;transition:none}
+#gameChoices .mode:hover{transform:none;background:#f3f7ed!important}
+.game-picture svg{display:block;width:90px;height:90px;color:#48694f}
+#gameChoices .mode-label{font-size:20px;align-self:center;margin:0;font-weight:600;min-height:0}
+.game-pages{display:flex;align-items:center;justify-content:center;gap:36px;margin:32px auto}
+.game-pages .btn{width:56px;height:52px;box-shadow:none;background:transparent;border:0;font-size:30px}
+.game-pages .btn:disabled{opacity:.2}
+#gamePageDots{display:flex;gap:10px}
+#gamePageDots span{display:block;width:8px;height:8px;border-radius:50%;background:#dbe5d7}
+#gamePageDots .current{background:#427b5d}
+.activity-header{display:none}
+#scr-quiz.on{display:block}
+.screen>.card{border:0;border-radius:0;padding:14px 0;box-shadow:none;background:none;margin:0}
+.qtext{font-size:24px;line-height:1.35;text-align:center;margin-bottom:22px}
+#scr-quiz .answer-card{position:static;padding-top:20px}
+.answer-label,.number-picker-label{display:none}
+#scr-quiz .pad{grid-template-columns:repeat(5,minmax(0,1fr));max-width:540px;margin:auto}
+.pad button{background:#fff;border:1.5px solid #cad8c5;border-bottom-width:3px;min-height:64px;font-size:29px;border-radius:16px}
+#scr-quiz .tenframe,.tenframe{--tfc:clamp(42px,10vw,70px);border-color:#a4b99e;border-width:1.5px;border-radius:12px}
+.tfcell{border-color:#e0e7db}
+.obj,.obj img{animation:none}
+.storyscene{justify-content:center;gap:14px}
+.storyperson{display:none}
+.storygroup{background:#fff;box-shadow:none;border:1.5px solid #c5d6be}
+.storygroup.give{background:#fff7ee;border-color:#d7b996}
+.absq{background:none;border:0;padding:16px 0;font-size:clamp(40px,9vw,60px)}
+.screen .speech{font-size:14px;font-weight:500;text-align:center;color:#506e56}
+#scr-quiz .speech{min-height:22px}
+#zapField,#towerField,#hdField{background:#eaf2df;border:0;box-shadow:none}
+.rbunting,.rscene{display:none}
+#traceCanvas{background:#fff;border:1.5px solid #ccd9c5}
+.tracebtns .btn{font-size:25px;min-width:74px}
+.lnrow #lnCheck,.lnrow #abCheck{font-size:30px;min-height:56px}
+.hopcount{background:none;font-size:17px}
+.collection-shortcuts{display:flex;justify-content:center;gap:16px;margin:0 0 24px}
+.collection-shortcuts .quiet-choice{flex-direction:row;min-height:52px;border:0;padding:8px 16px;background:none}
+.collection-shortcuts svg{width:34px;height:34px}
+#scr-cards .card>.speech,#scr-team .card>.speech,#scr-badges .card>.speech{display:none}
+#teamHead,#cardHead,#badgeHead{font-size:16px;font-weight:500;color:#5a705f}
+.parent-rewards{display:flex;flex-wrap:wrap;gap:12px;margin:14px 0}
+.parent-rewards .pill{font-size:16px;min-height:38px;background:#fff;border:1px solid #d6e2cf;box-shadow:none}
+#parentPanel #rankBox{padding:14px;display:flex;border:0;background:#fff;border-radius:12px}
+.adventure-dialog .btn{display:flex;align-items:center;justify-content:center;gap:12px;min-height:66px;font-size:23px}
+.adventure-dialog .btn svg{width:34px;height:34px}
+.goal-dialog{background:#fffdf4}
+.goal-sparkles{font-size:46px;letter-spacing:0}
+.goal-pokemon{height:190px;animation:none;filter:none}
+.goal-dialog h2{font-size:34px}
+.goal-dialog p{font-size:22px}
+@media(max-width:520px){
+  #app,body:not([data-screen="home"]) #app,body[data-screen="quiz"] #app{padding:12px 14px 20px}
+  .topbar{gap:5px;margin-bottom:16px}
+  .topbar .btn.icon{width:44px;min-width:44px;height:44px}
+  #buddyBox{min-height:150px}
+  #buddyBox img{width:160px;height:160px}
+  .home-hero{gap:12px;padding:0;background:none}
+  .home-progress{margin:20px 0 24px}
+  #startAdventure{font-size:29px;min-height:76px}
+  .adventure-ring{width:30px;height:30px;flex-basis:30px}
+  .adventure-ring span{width:22px;height:22px;font-size:12px}
+  .adventure-clock b{font-size:14px}
+  .adventure-timer{gap:6px}
+  .adventure-timer .btn{width:34px;padding:5px}
+  #gameChoices{gap:10px}
+  #gameChoices .mode{padding:16px 4px;min-height:142px;gap:12px;border-radius:20px}
+  .game-picture svg{width:66px;height:66px}
+  #gameChoices .mode-label{font-size:17px}
+  .qtext{font-size:22px;margin-bottom:18px}
+  .pad button{min-height:58px;font-size:27px}
+  .ballimg{width:36px;height:39px}
+  .storyscene{gap:9px}
+  .home-footer{margin-top:26px}
+}
+@media(max-height:680px) and (min-width:600px){
+  body[data-screen="home"] #app{max-width:480px}
+  #buddyBox{min-height:110px}#buddyBox img{width:120px;height:120px}
+  .home-hero{gap:8px}#startAdventure{min-height:62px}
+  .home-progress{margin:14px 0}.quiet-choice{min-height:88px}.quiet-choice svg{width:42px;height:42px}
+  .home-footer{margin-top:14px}
+}

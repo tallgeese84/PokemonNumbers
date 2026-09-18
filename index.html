@@ -776,11 +776,11 @@
     .pad button{ font-size:18px; min-height:42px; }
   }
 </style>
-<link rel="stylesheet" href="adventure.css?v=58.1">
-<link rel="stylesheet" href="visuals.css?v=58.1">
-<script src="visuals.js?v=58.1"></script>
-<script src="learning-core.js?v=58.1"></script>
-<script src="adventure.js?v=58.1"></script>
+<link rel="stylesheet" href="adventure.css?v=59">
+<link rel="stylesheet" href="visuals.css?v=59">
+<script src="visuals.js?v=59"></script>
+<script src="learning-core.js?v=59"></script>
+<script src="adventure.js?v=59"></script>
 </head>
 <body data-screen="home">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
@@ -863,45 +863,48 @@
   </div>
   <div class="topbar">
     <div class="brand"><span class="brand-mark" data-illustration="team"></span>PokéMath</div>
-    <button class="btn icon" id="backBtn" aria-label="Back to adventures" style="display:none">← Home</button>
+    <button class="btn icon" id="backBtn" aria-label="Go home" style="display:none"><span data-illustration="home"></span></button>
     <div class="pill">⭐ <span id="starCount">0</span></div>
     <div class="pill" id="streakPill" title="Correct in a row — no mistakes">🔥 <span id="streakCount">0/12</span></div>
     <div class="pill" id="ballPill"><svg viewBox="0 0 30 30" width="22" height="22" aria-hidden="true"><circle cx="15" cy="15" r="13" fill="#fff" stroke="#2B2E5C" stroke-width="2.5"/><path d="M2.5 15 A12.5 12.5 0 0 1 27.5 15 L2.5 15 Z" fill="#E0503F" stroke="#2B2E5C" stroke-width="2.5"/><line x1="2.5" y1="15" x2="27.5" y2="15" stroke="#2B2E5C" stroke-width="2.5"/><circle cx="15" cy="15" r="4.5" fill="#fff" stroke="#2B2E5C" stroke-width="2.5"/></svg> <span id="ballCount">0/6</span></div>
-    <button class="btn icon" id="cloudBtn" title="Learning journal for grown-ups" aria-label="Learning journal for grown-ups"><span data-illustration="journal"></span>Journal</button>
+    <button class="btn icon" id="cloudBtn" title="Learning journal for grown-ups" aria-label="Learning journal for grown-ups"><span data-illustration="journal"></span>Grown-ups</button>
     <button class="btn icon" id="soundBtn" aria-label="Toggle sound" title="Turn sound on or off">🔊</button>
   </div>
 
-  <!-- HOME -->
+  <!-- HOME: one main action, two optional destinations. -->
   <div class="screen on" id="scr-home">
     <section class="home-hero" aria-labelledby="homeTitle">
-      <div class="hero-copy">
-        <span class="eyebrow">Your daily adventure</span>
-        <h1 id="homeTitle">Ready to explore?</h1>
-        <p class="sub">A little practice. A new discovery.<br>Let’s play with numbers!</p>
-        <div id="missionSlot"></div>
-      </div>
+      <h1 id="homeTitle" class="sr-only">Let’s play</h1>
       <div id="buddyBox"></div>
+      <div id="missionSlot"></div>
     </section>
-    <div class="home-progress" id="homeProgress"><div id="rankBox"></div></div>
-    <div class="section-heading"><h2>Choose your adventure</h2><p>Explore a skill at your own pace</p></div>
-    <div class="modes">
-      <button class="mode trace" data-go="trace" aria-label="Write numbers"><span class="big"><img class="mico" data-mon="133" alt="" loading="lazy" decoding="async"><span class="micoalt">✦</span><span class="activity-glyph" data-illustration="trace"></span></span><span class="mode-label">Write numbers</span><small>Follow the trail</small></button>
-      <button class="mode count" data-go="count" aria-label="Counting"><span class="big"><img class="mico" data-mon="102" alt="" loading="lazy" decoding="async"><span class="micoalt">✦</span><span class="activity-glyph" data-illustration="count"></span></span><span class="mode-label">Counting</span><small>Spot every Pokémon</small></button>
-      <button class="mode add" data-go="add" aria-label="Adding"><span class="big"><img class="mico" data-mon="82" alt="" loading="lazy" decoding="async"><span class="micoalt">✦</span><span class="activity-glyph" data-illustration="add"></span></span><span class="mode-label">Adding</span><small>Bring groups together</small></button>
-      <button class="mode sub" data-go="sub" aria-label="Taking away"><span class="big"><img class="mico" data-mon="92" alt="" loading="lazy" decoding="async"><span class="micoalt">✦</span><span class="activity-glyph" data-illustration="sub"></span></span><span class="mode-label">Taking away</span><small>See what is left</small></button>
-      <button class="mode zap" data-go="zap" aria-label="Wild Catch"><span class="big"><img class="mico" data-mon="25" alt="" loading="lazy" decoding="async"><span class="micoalt">✦</span><span class="activity-glyph" data-illustration="zap"></span></span><span class="mode-label">Wild Catch</span><small>Find the right number</small></button>
-      <button class="mode hide" data-go="hide" aria-label="Hide and Seek"><span class="big"><img class="mico" data-mon="52" alt="" loading="lazy" decoding="async"><span class="micoalt">✦</span><span class="activity-glyph" data-illustration="hide"></span></span><span class="mode-label">Hide and Seek</span><small>Find the hidden group</small></button>
-      <button class="mode abacus" data-go="abacus" aria-label="Bead Counter"><span class="big"><img class="mico" data-mon="63" alt="" loading="lazy" decoding="async"><span class="micoalt">✦</span><span class="activity-glyph" data-illustration="abacus"></span></span><span class="mode-label">Bead Counter</span><small>Slide, count, discover</small></button>
-      <button class="mode line" data-go="line" aria-label="Number Line"><span class="big"><img class="mico" data-mon="50" alt="" loading="lazy" decoding="async"><span class="micoalt">✦</span><span class="activity-glyph" data-illustration="line"></span></span><span class="mode-label">Number Line</span><small>Hop along the path</small></button>
-      <button class="mode tower" data-go="tower" aria-label="Number Race"><span class="big"><img class="mico" data-mon="78" alt="" loading="lazy" decoding="async"><span class="micoalt">✦</span><span class="activity-glyph" data-illustration="tower"></span></span><span class="mode-label">Number Race</span><small>Put numbers in order</small></button>
+    <div class="home-progress" id="homeProgress"></div>
+    <div class="home-choices">
+      <button class="quiet-choice" id="gamesBtn" aria-label="Choose a game"><span data-illustration="games"></span><strong>Games</strong></button>
+      <button class="quiet-choice" id="teamBtn" aria-label="My Pokémon"><span data-illustration="team"></span><strong>Pokémon</strong><small id="teamTally" hidden></small></button>
     </div>
-    <div class="section-heading"><h2>Your discoveries</h2><p>Look how far you’ve come</p></div>
-    <div class="collection-links">
-      <button class="collection-link" id="teamBtn"><span data-illustration="team"></span><span><strong>My Pokémon</strong><small id="teamTally"></small></span></button>
-      <button class="collection-link" id="cardBtn"><span data-illustration="cards"></span><span><strong>My Cards</strong><small id="cardTally"></small></span></button>
-      <button class="collection-link" id="badgeBtn"><span data-illustration="badge"></span><span><strong>My Badges</strong><small id="badgeTally"></small></span></button>
+    <footer class="home-footer"><span id="parentEntry"></span><span class="build-label">v59</span></footer>
+  </div>
+
+  <!-- The other activities stay available, three pictures at a time. -->
+  <div class="screen" id="scr-games">
+    <h2 class="sr-only">Choose a game</h2>
+    <div class="modes" id="gameChoices">
+      <button class="mode count" data-go="count" aria-label="Counting"><span class="game-picture" data-illustration="count"></span><span class="mode-label">Count</span></button>
+      <button class="mode add" data-go="add" aria-label="Adding"><span class="game-picture" data-illustration="add"></span><span class="mode-label">Add</span></button>
+      <button class="mode sub" data-go="sub" aria-label="Taking away"><span class="game-picture" data-illustration="sub"></span><span class="mode-label">Take</span></button>
+      <button class="mode trace" data-go="trace" aria-label="Write numbers"><span class="game-picture" data-illustration="trace"></span><span class="mode-label">Write</span></button>
+      <button class="mode line" data-go="line" aria-label="Number Line"><span class="game-picture" data-illustration="line"></span><span class="mode-label">Hop</span></button>
+      <button class="mode abacus" data-go="abacus" aria-label="Bead Counter"><span class="game-picture" data-illustration="abacus"></span><span class="mode-label">Beads</span></button>
+      <button class="mode zap" data-go="zap" aria-label="Wild Catch"><span class="game-picture" data-illustration="zap"></span><span class="mode-label">Catch</span></button>
+      <button class="mode hide" data-go="hide" aria-label="Hide and Seek"><span class="game-picture" data-illustration="hide"></span><span class="mode-label">Hide</span></button>
+      <button class="mode tower" data-go="tower" aria-label="Number Race"><span class="game-picture" data-illustration="tower"></span><span class="mode-label">Race</span></button>
     </div>
-    <footer class="home-footer"><button id="homeJournal"><span data-illustration="journal"></span><span><strong>Learning journal</strong>For grown-ups · activity &amp; progress</span></button><span class="build-label">PokéMath · build v58</span></footer>
+    <nav class="game-pages" aria-label="Game pages">
+      <button class="btn" id="gamesPrev" aria-label="Previous games">←</button>
+      <div id="gamePageDots" role="status" aria-live="polite"></div>
+      <button class="btn" id="gamesNext" aria-label="Next games">→</button>
+    </nav>
   </div>
 
   <!-- HIDE AND SEEK -->
@@ -924,9 +927,9 @@
       <canvas id="abCanvas"></canvas>
       <div class="hopcount" id="abCount">0 beads</div>
       <div class="lnrow">
-        <button class="btn dpad" id="abBack">◀</button>
-        <button class="btn" id="abCheck">✓ That's my answer!</button>
-        <button class="btn dpad" id="abFwd">▶</button>
+        <button class="btn dpad" id="abBack" aria-label="Remove a bead">◀</button>
+        <button class="btn" id="abCheck" aria-label="Check my answer">✓</button>
+        <button class="btn dpad" id="abFwd" aria-label="Add a bead">▶</button>
       </div>
       <div class="speech" id="abSpeech"></div>
     </div>
@@ -939,9 +942,9 @@
       <canvas id="lnCanvas"></canvas>
       <div class="hopcount" id="lnHops">Hops: 0</div>
       <div class="lnrow">
-        <button class="btn dpad" id="lnBack">◀</button>
-        <button class="btn" id="lnCheck">✓ Land here!</button>
-        <button class="btn dpad" id="lnFwd">▶</button>
+        <button class="btn dpad" id="lnBack" aria-label="Hop back">◀</button>
+        <button class="btn" id="lnCheck" aria-label="Check my answer">✓</button>
+        <button class="btn dpad" id="lnFwd" aria-label="Hop forward">▶</button>
       </div>
       <div class="speech" id="lnSpeech"></div>
     </div>
@@ -971,6 +974,10 @@
 
   <!-- TEAM -->
   <div class="screen" id="scr-team">
+    <div class="collection-shortcuts">
+      <button class="quiet-choice" id="cardBtn" aria-label="My Cards"><span data-illustration="cards"></span><strong>Cards</strong><small id="cardTally" hidden></small></button>
+      <button class="quiet-choice" id="badgeBtn" aria-label="My Badges"><span data-illustration="badge"></span><strong>Badges</strong><small id="badgeTally" hidden></small></button>
+    </div>
     <div class="card">
       <div class="qtext" id="teamHead">My Pokémon</div>
       <div class="speech" id="teamSpeech" style="margin:0 0 8px">Tap a Pokémon to make it your buddy!</div>
@@ -992,8 +999,8 @@
       <div id="traceWrap"><canvas id="traceCanvas"></canvas></div>
       <div class="meter"><div id="traceMeter"></div></div>
       <div class="tracebtns">
-        <button class="btn" id="showMe">👀 Show me</button>
-        <button class="btn" id="clearTrace">🧽 Clear</button>
+        <button class="btn" id="showMe" aria-label="Show me how to write it">👀</button>
+        <button class="btn" id="clearTrace" aria-label="Clear my writing">↺</button>
       </div>
       <div class="speech" id="traceSpeech">Start at the green dot!</div>
     </div>
@@ -1721,7 +1728,7 @@ function catchMon(){
 }
 
 /* ---------- screens ---------- */
-const screens = { home:'scr-home', trace:'scr-trace', quiz:'scr-quiz', zap:'scr-zap', tower:'scr-tower', team:'scr-team', badges:'scr-badges', line:'scr-line', cards:'scr-cards', abacus:'scr-abacus', hide:'scr-hide' };
+const screens = { home:'scr-home', games:'scr-games', trace:'scr-trace', quiz:'scr-quiz', zap:'scr-zap', tower:'scr-tower', team:'scr-team', badges:'scr-badges', line:'scr-line', cards:'scr-cards', abacus:'scr-abacus', hide:'scr-hide' };
 let mode = 'home';
 function show(name){
   adventure.section(mode);
@@ -1731,6 +1738,7 @@ function show(name){
   PokeVisuals.screen(name, mode);
   window.scrollTo(0, 0);
 }
+document.getElementById('gamesBtn').addEventListener('click', () => { sndTap(); shutUp(); mode='games'; show('games'); say('Choose a game.'); });
 document.getElementById('backBtn').addEventListener('click', () => {
   sndTap(); shutUp(); stopZap(); stopRace(); lnStopLoop(); abStopLoop(); stopHide(); mode = 'home'; renderBuddyHome(); show('home');
 });
@@ -2538,7 +2546,7 @@ function newQuestion(){
     q.ans = pend ? pend.n : plan.review ? plan.review.expected : 1 + rnd(max);
     if (!(q.ans >= 1) || !Number.isInteger(q.ans)){ clearPending('count'); q.ans = 1 + rnd(5); }
     warmArt(pickMon()); warmArt(pickMon());     // get the next likely pictures loading now
-    qt.textContent = 'How many ' + monName(monId) + 's?';
+    qt.textContent = 'How many?';
     q.phrase = 'How many ' + monName(monId) + 's can you count?';
     bub.appendChild(buildFrames(q.ans, (cell) => {
       cell.appendChild(objSpan(monId, emoji, '', 0));
@@ -2551,7 +2559,7 @@ function newQuestion(){
       if (pend){ q.a = pend.a; q.b = pend.b; }
       else { q.a = 1 + rnd(q.ans - 1); q.b = q.ans - q.a; }
     }
-    qt.textContent = 'Add them together!';
+    qt.textContent = 'How many?';
     q.phrase = 'What is ' + NUM_WORDS[q.a] + ' plus ' + NUM_WORDS[q.b] + '?';
     bub.appendChild(buildFrames(q.ans, (cell, i) => {
       cell.classList.add(i < q.a ? 'pa' : 'pb');
@@ -2564,7 +2572,7 @@ function newQuestion(){
     else if (pend){ q.a = pend.a; q.b = pend.b; }
     else { q.a = 2 + rnd(max - 1); q.b = 1 + rnd(q.a - 1); }
     q.ans = q.a - q.b;
-    qt.textContent = 'Take some away!';
+    qt.textContent = 'How many left?';
     q.phrase = 'What is ' + NUM_WORDS[q.a] + ' take away ' + NUM_WORDS[q.b] + '?';
     bub.appendChild(buildFrames(q.a, (cell, i) => {
       cell.appendChild(objSpan(monId, emoji, i >= q.a - q.b ? 'goaway' : '', 0));
@@ -2654,7 +2662,7 @@ function newQuestion(){
           ? NUM_WORDS[q.a] + ' take away what leaves ' + NUM_WORDS[q.ans] + '?'
           : 'What take away ' + NUM_WORDS[q.b] + ' leaves ' + NUM_WORDS[q.ans] + '?');
     document.getElementById('qtext').textContent =
-      (mode === 'add') ? 'Which number is missing?' : 'Which number is missing?';
+      (mode === 'add') ? 'Find the number' : 'Find the number';
   }
   if (q.isEcho){
     const qt2 = document.getElementById('qtext');
@@ -2674,7 +2682,7 @@ function newQuestion(){
     const wrap = document.createElement('div');
     wrap.className = 'storywrap';
     const text = document.createElement('div');
-    text.className = 'storyline';
+    text.className = 'storyline sr-only';
     if (mode === 'add'){
       text.textContent = who + ' has ' + q.a + ' ' + ballName + '. ' +
         friend.name + ' gives ' + q.b + ' more. How many now?';
@@ -2802,7 +2810,7 @@ function newQuestion(){
       const help = document.createElement('button');
       help.className = 'btn';
       help.style.cssText = 'display:block;margin:10px auto 0;font-size:15px;padding:8px 16px';
-      help.textContent = '🔍 Show me the pictures';
+      help.textContent = '👀'; help.setAttribute('aria-label','Show me the pictures');
       help.addEventListener('click', () => {
         help.remove();
         q.usedHelp = true; adventure.help('pictures');
@@ -2990,7 +2998,7 @@ function zapQuestion(){
   const kind = pz ? pz.k : 0; // Wild Catch practises numeral recognition; arithmetic has dedicated modes.
   if (kind === 0){
     zap.ans = pz ? pz.n : 1 + rnd(max);
-    document.getElementById('zapQ').textContent = 'Find number ' + zap.ans + '!';
+    document.getElementById('zapQ').textContent = '🔎 ' + zap.ans;
     say('Find number ' + NUM_WORDS[zap.ans]);
   } else if (kind === 1){
     const t = pz ? pz.n : 2 + rnd(max - 1), a = pz ? pz.a : 1 + rnd(t - 1);
@@ -3173,8 +3181,7 @@ function startTower(){
   towerField.querySelectorAll('.tbub').forEach(e => e.remove());
   document.getElementById('racerBuddy').src = imgArt(pkBuddy || 25);
   document.getElementById('racerRival').src = imgArt(RIVAL_ID);
-  document.getElementById('towerQ').textContent = 'Race level ' + (wins + 1) + ' — ' +
-    (race.dir === 1 ? 'tap the numbers in order!' : 'count DOWN — biggest first!');
+  document.getElementById('towerQ').textContent = race.dir === 1 ? '1 → ' + race.to : race.to + ' → 1';
   const nums = [];
   for (let n = race.from; n <= race.to; n++) nums.push(n);
   for (let i = nums.length - 1; i > 0; i--){ const j = rnd(i + 1); [nums[i], nums[j]] = [nums[j], nums[i]]; }
@@ -3300,7 +3307,8 @@ function hdNewRound(){
   HD.asked = Date.now();
   const field = document.getElementById('hdField');
   field.innerHTML = '';
-  document.getElementById('hdQ').textContent = 'Count them all first!';
+  document.getElementById('hdQ').textContent = 'Count';
+  HD.phrase = 'Count all the balls first.';
   for (let i = 0; i < HD.total; i++){
     const im = document.createElement('img');
     im.className = 'hdball'; im.src = ballImg(HD.ball); im.alt = '';
@@ -3337,7 +3345,7 @@ function hdHideSome(){
   bush.innerHTML = PokeVisuals.tree() + '<span>?</span>';
   field.insertBefore(bush, field.firstChild);
   document.getElementById('hdQ').textContent =
-    'There were ' + HD.total + '. How many are hiding?';
+    HD.total + ' − ' + (HD.total - HD.hidden) + ' = ?';
   HD.phrase = 'There were ' + NUM_WORDS[HD.total] + ' balls. Now you can see ' +
     NUM_WORDS[HD.total - HD.hidden] + '. How many are hiding behind the tree?';
   say(HD.phrase);
@@ -4139,7 +4147,7 @@ function setSyncStatus(kind, text){
   if (st){ st.className = 'speech ' + (kind === 'ok' ? 'ok' : kind === 'err' ? 'err' : ''); st.textContent = text; }
   const cb = document.getElementById('cloudBtn');
   if (cb){
-    cb.innerHTML = '<span>' + PokeVisuals.icon('journal') + '</span>Journal';
+    cb.innerHTML = '<span>' + PokeVisuals.icon('journal') + '</span>Grown-ups';
     cb.dataset.sync = kind;
     cb.title = 'Learning journal for grown-ups' + (kind === 'ok' ? ' · Progress synced' : kind === 'err' ? ' · Check sync in settings' : '');
   }
@@ -4315,7 +4323,7 @@ document.addEventListener('visibilitychange', () => {
       ['numbers to 30', TRACE_MAX === 30]
     ];
     document.getElementById('ppVer').textContent =
-      'build v58 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
+      'build v59 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
     showPraise(praiseLine(true));
     say(praiseLine(true));
   });
