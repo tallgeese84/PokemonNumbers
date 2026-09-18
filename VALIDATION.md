@@ -4,7 +4,7 @@ Base: `8010fdcfe8be8020917b9986f680b5838ced1871` (v58).
 
 Implemented: three child destinations on home; one buddy and a plain background; three activity choices per page; one-column practice; compact clock and picture controls; question replay for all practice modes; adult-only progress counters; simplified pause and goal dialogs. All nine activities and existing journal records remain available.
 
-Local verification: 25 regression tests pass. The timer exclusion test now includes the game chooser. HTML IDs are unique and all nine activity buttons are present. Browser review and final deployment verification follow publication.
+Local verification: 25 regression tests pass. The timer exclusion test now includes the game chooser. HTML IDs are unique and all nine activity buttons are present. Live browser checks at 320/390-pixel phone and 768-pixel tablet widths confirmed the quiet home, all nine games across three pages, counting and arithmetic layouts, and access to adult-only rewards. A correct counting answer was accepted and recorded in the journal; the speaker restored muted audio; manual pause held the clock at 9:53 during review. All activity was synthetic in a test browser with cloud sync disconnected. Initial GitHub regression and Pages deployment succeeded. Final tracing navigation and deployment checks follow the last polish.
 
 ---
 

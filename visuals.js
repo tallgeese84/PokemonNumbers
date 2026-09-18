@@ -54,11 +54,11 @@ const PokeVisuals = (() => {
       dots.setAttribute('aria-label',`Game page ${page+1} of ${pages}`);
       dots.innerHTML=Array.from({length:pages},(_,i)=>`<span class="${i===page?'current':''}" aria-hidden="true"></span>`).join('');
     };
-    document.getElementById('gamesPrev').onclick=()=>{page=Math.max(0,page-1);drawPage();document.getElementById('gamesNext').focus();};
-    document.getElementById('gamesNext').onclick=()=>{page=Math.min(pages-1,page+1);drawPage();document.getElementById('gamesPrev').focus();};
+    document.getElementById('gamesPrev').onclick=()=>{page=Math.max(0,page-1);drawPage();document.getElementById(page===0?'gamesNext':'gamesPrev').focus();};
+    document.getElementById('gamesNext').onclick=()=>{page=Math.min(pages-1,page+1);drawPage();document.getElementById(page===pages-1?'gamesPrev':'gamesNext').focus();};
     drawPage();
-    const activities={trace:['Write numbers','Start at the green dot and follow the trail.'],quiz:['Counting','Look carefully. Take your time.'],zap:['Wild Catch','Spot the number in the meadow.'],hide:['Hide and Seek','Think about the group you cannot see.'],abacus:['Bead Counter','Move the beads. See the numbers.'],line:['Number Line','Every hop is a step in your thinking.'],tower:['Number Race','Find the numbers in order.'],team:['My Pokémon','Your growing team of discoveries.'],cards:['My Cards','A little collection of big achievements.'],badges:['My Badges','Celebrate every step forward.']};
-    for(const [key,[title,caption]] of Object.entries(activities)){
+    const activities={trace:'Write numbers',quiz:'Counting',zap:'Wild Catch',hide:'Hide and Seek',abacus:'Bead Counter',line:'Number Line',tower:'Number Race',team:'My Pokémon',cards:'My Cards',badges:'My Badges'};
+    for(const [key,title] of Object.entries(activities)){
       const head=document.createElement('header');head.className='activity-header';
       head.innerHTML=`<h2 class="sr-only">${title}</h2>`;
       if(['quiz','line','abacus','hide','zap','tower','trace'].includes(key)){

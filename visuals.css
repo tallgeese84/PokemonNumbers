@@ -160,3 +160,8 @@ body:not([data-screen="home"]) #soundBtn{display:none}
   .home-progress{margin:14px 0}.quiet-choice{min-height:88px}.quiet-choice svg{width:42px;height:42px}
   .home-footer{margin-top:14px}
 }
+.trace-number-nav{display:flex;align-items:center;justify-content:center;gap:28px;margin:0 0 20px}
+.trace-number-nav>.btn{width:52px;height:48px;border:0;background:none;box-shadow:none;font-size:27px}
+.trace-number-nav .numrow{margin:0;padding:0;overflow:visible}
+.trace-number-nav .numrow button{width:52px;flex-basis:52px;height:48px;margin:0;border:0;background:none;box-shadow:none;font-size:27px;color:#344f43}
+.trace-number-nav .numrow button.done{color:#267d65}

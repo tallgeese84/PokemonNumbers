@@ -25,7 +25,7 @@ installed tablets pick up the new version.
 
 Home has one large **Play** button and Pokémon buddy, with two smaller picture buttons: **Games** and **Pokémon**. Games shows three choices per page. All nine activities remain available. Decorative scenery, marketing copy and repeated activity headings are removed from the child’s main flow.
 
-Practice uses one column, a small clock/progress ring, a house button, pause, and a speaker button to repeat the question. The speaker also turns sound back on if it was muted. Spoken questions, quantity pictures, number sentences and learning aids remain available. Short icon controls replace long button labels. The daily goal still earns a large Pokémon celebration and spoken encouragement.
+Practice uses one column, a small clock/progress ring, a house button, pause, and a speaker button to repeat the question. The speaker also turns sound back on if it was muted. Spoken questions, quantity pictures, number sentences and learning aids remain available. Short icon controls replace long button labels. Writing shows just the current number with previous/next arrows and still advances automatically after completion. The daily goal still earns a large Pokémon celebration and spoken encouragement.
 
 **Grown-ups**, at the bottom of home, opens the learning journal. Stars, streaks and rank are under **Rewards & progress** there. Daily/weekly analytics and settings retain their existing behavior; opening home or browsing games does not count as practice. Existing progress and cloud settings are retained. Email setup is not required.
 

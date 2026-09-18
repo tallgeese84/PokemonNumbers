@@ -776,11 +776,11 @@
     .pad button{ font-size:18px; min-height:42px; }
   }
 </style>
-<link rel="stylesheet" href="adventure.css?v=59">
-<link rel="stylesheet" href="visuals.css?v=59">
-<script src="visuals.js?v=59"></script>
-<script src="learning-core.js?v=59"></script>
-<script src="adventure.js?v=59"></script>
+<link rel="stylesheet" href="adventure.css?v=59.1">
+<link rel="stylesheet" href="visuals.css?v=59.1">
+<script src="visuals.js?v=59.1"></script>
+<script src="learning-core.js?v=59.1"></script>
+<script src="adventure.js?v=59.1"></script>
 </head>
 <body data-screen="home">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
@@ -994,8 +994,11 @@
   <!-- TRACE -->
   <div class="screen" id="scr-trace">
     <div class="card">
-      <p class="number-picker-label">Choose a number <span>Swipe for more →</span></p>
-      <div class="numrow" id="numrow" role="toolbar" aria-label="Choose a number to trace"></div>
+      <div class="trace-number-nav">
+        <button class="btn" id="tracePrev" aria-label="Previous number">←</button>
+        <div class="numrow" id="numrow" role="toolbar" aria-label="Number to trace"></div>
+        <button class="btn" id="traceNext" aria-label="Next number">→</button>
+      </div>
       <div id="traceWrap"><canvas id="traceCanvas"></canvas></div>
       <div class="meter"><div id="traceMeter"></div></div>
       <div class="tracebtns">
@@ -1890,8 +1893,10 @@ function markNumRow(){
     const selected = parseInt(b.dataset.d, 10) === traceIdx;
     b.classList.toggle('cur', selected);
     b.setAttribute('aria-pressed', String(selected));
-    if(selected) b.scrollIntoView({block:'nearest',inline:'center'});
+    b.hidden = !selected;
   });
+  document.getElementById('tracePrev').disabled = traceIdx === 1;
+  document.getElementById('traceNext').disabled = traceIdx === TRACE_MAX;
 }
 
 function startTrace(d){
@@ -2100,6 +2105,8 @@ canvas.addEventListener('pointermove', ev => {
 }));
 
 document.getElementById('clearTrace').addEventListener('click', () => { sndTap(); startTrace(traceIdx); });
+document.getElementById('tracePrev').addEventListener('click', () => { sndTap(); startTrace(Math.max(1, traceIdx - 1)); });
+document.getElementById('traceNext').addEventListener('click', () => { sndTap(); startTrace(Math.min(TRACE_MAX, traceIdx + 1)); });
 document.getElementById('showMe').addEventListener('click', () => {
   adventure.help('tracing demonstration');
   sndTap();
