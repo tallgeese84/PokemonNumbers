@@ -21,6 +21,10 @@ and is not included in this repository. Personal, non-commercial project.
 To ship an update, bump `CACHE = 'pokemath-v1'` in `sw.js` (v2, v3, ...) so
 installed tablets pick up the new version.
 
+## v62 — visual practice timer
+
+A 48-pixel green pie fills as active practice accumulates. The child’s timer has no numerical clock, inner star, ticking or flashing. Existing pause/idle rules freeze progress, and the celebration still waits for the current question to finish. Exact elapsed and target time is shown in the grown-up journal, with an accessible time description on the pie. v61’s larger counting pictures remain in place.
+
 ## v60 — Jonah and his Pokémon
 
 Jonah’s familiar avatar joins his selected Pokémon on home and in the daily-goal celebration. Questions stay clear, with the same simple Play button, clock, games and journal. The avatar is bundled and cached for offline use; no paid media service is used.

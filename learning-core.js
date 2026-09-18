@@ -60,7 +60,7 @@
       this.now=now; this.id=id; this.sessions=sessions; this.onChange=onChange;
       this.sessionId=String(now())+'_'+id(); this.current=null; this.visible=true; this.blocked=false;
       this.section='home'; this.lastTick=now(); this.lastInteraction=now(); this.idle=false;
-      this.sessions[this.sessionId]={id:this.sessionId,startedAt:now(),updatedAt:now(),rev:0,days:{},questions:{},build:61};
+      this.sessions[this.sessionId]={id:this.sessionId,startedAt:now(),updatedAt:now(),rev:0,days:{},questions:{},build:62};
     }
     changed(sid=this.sessionId) { const s=this.sessions[sid]; s.rev++; s.updatedAt=this.now(); this.onChange(sid); }
     tick() {
@@ -102,7 +102,7 @@
       if(this.lastPracticeAt && this.now()-this.lastPracticeAt>300000){
         const deviceId=this.sessions[this.sessionId].deviceId;
         this.sessionId=String(this.now())+'_'+this.id();
-        this.sessions[this.sessionId]={id:this.sessionId,deviceId,startedAt:this.now(),updatedAt:this.now(),rev:0,days:{},questions:{},build:61};
+        this.sessions[this.sessionId]={id:this.sessionId,deviceId,startedAt:this.now(),updatedAt:this.now(),rev:0,days:{},questions:{},build:62};
         this.lastPracticeAt=this.now();
       }
       if (ref && this.sessions[ref.sid]?.questions?.[ref.qid] && !this.sessions[ref.sid].questions[ref.qid].completedAt) this.current=ref;

@@ -776,11 +776,11 @@
     .pad button{ font-size:18px; min-height:42px; }
   }
 </style>
-<link rel="stylesheet" href="adventure.css?v=61">
-<link rel="stylesheet" href="visuals.css?v=61">
-<script src="visuals.js?v=61"></script>
-<script src="learning-core.js?v=61"></script>
-<script src="adventure.js?v=61"></script>
+<link rel="stylesheet" href="adventure.css?v=62">
+<link rel="stylesheet" href="visuals.css?v=62">
+<script src="visuals.js?v=62"></script>
+<script src="learning-core.js?v=62"></script>
+<script src="adventure.js?v=62"></script>
 </head>
 <body data-screen="home">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
@@ -883,7 +883,7 @@
       <button class="quiet-choice" id="gamesBtn" aria-label="Choose a game"><span data-illustration="games"></span><strong>Games</strong></button>
       <button class="quiet-choice" id="teamBtn" aria-label="My Pokémon"><span data-illustration="team"></span><strong>Pokémon</strong><small id="teamTally" hidden></small></button>
     </div>
-    <footer class="home-footer"><span id="parentEntry"></span><span class="build-label">v61</span></footer>
+    <footer class="home-footer"><span id="parentEntry"></span><span class="build-label">v62</span></footer>
   </div>
 
   <!-- The other activities stay available, three pictures at a time. -->
@@ -4327,7 +4327,7 @@ document.addEventListener('visibilitychange', () => {
       ['numbers to 30', TRACE_MAX === 30]
     ];
     document.getElementById('ppVer').textContent =
-      'build v61 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
+      'build v62 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
     showPraise(praiseLine(true));
     say(praiseLine(true));
   });

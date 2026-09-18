@@ -177,3 +177,6 @@ body:not([data-screen="home"]) #soundBtn{display:none}
 /* v61: use the available question width for recognizable counting pictures. */
 #scr-quiz .tenframe{--tfc:min(104px,calc((100vw - 52px)/5))}
 #scr-quiz .tfcell .pkspr{width:calc(var(--tfc)*.94);height:calc(var(--tfc)*.94)}
+
+/* v62: a quiet filling pie, with exact time in the grown-up journal. */
+#adventureRing{width:48px;height:48px;flex:0 0 48px;border:2px solid #abc2b1;background:conic-gradient(#2e876d var(--progress),#e4ece4 0);animation:none;transition:none}
