@@ -28,7 +28,7 @@ function createAdventure() {
   idle.innerHTML='<div class="adventure-dialog" role="dialog" aria-modal="true" aria-labelledby="idleTitle"><h2 id="idleTitle">Paused</h2><button class="btn" id="adventureResume" aria-label="Keep playing">'+PokeVisuals.icon('play')+'<span>Play</span></button><button class="btn secondary" id="adventureRest" aria-label="Finish and go home">'+PokeVisuals.icon('home')+'<span>Home</span></button></div>';
   document.body.append(idle);
   const goal=document.createElement('div');goal.id='adventureGoal';goal.className='adventure-modal';goal.hidden=true;
-  goal.innerHTML='<div class="adventure-dialog goal-dialog" role="dialog" aria-modal="true" aria-labelledby="goalTitle"><div class="goal-sparkles" aria-hidden="true">★</div><img id="goalPokemon" alt="Your Pokémon celebrates" class="goal-pokemon"><h2 id="goalTitle">You did it!</h2><p id="goalMessage"></p><button class="btn" id="adventureFinish" aria-label="Finish for today">'+PokeVisuals.icon('home')+'<span>Done</span></button><button class="btn secondary" id="adventureBonus" aria-label="Play three bonus minutes" hidden>'+PokeVisuals.icon('play')+'<span>+3 min</span></button></div>';
+  goal.innerHTML='<div class="adventure-dialog goal-dialog" role="dialog" aria-modal="true" aria-labelledby="goalTitle"><div class="goal-sparkles" aria-hidden="true">★</div><div class="trainer-scene"><img class="trainer-avatar" src="assets/jonah-avatar.webp" alt="Jonah’s avatar" width="900" height="900"><img id="goalPokemon" alt="Your Pokémon celebrates" class="goal-pokemon trainer-buddy" onerror="this.style.display=\'none\'"></div><h2 id="goalTitle">You did it!</h2><p id="goalMessage"></p><button class="btn" id="adventureFinish" aria-label="Finish for today">'+PokeVisuals.icon('home')+'<span>Done</span></button><button class="btn secondary" id="adventureBonus" aria-label="Play three bonus minutes" hidden>'+PokeVisuals.icon('play')+'<span>+3 min</span></button></div>';
   document.body.append(goal);
   const dashboard=document.createElement('section');dashboard.id='learningDashboard';dashboard.className='learning-dashboard';
   dashboard.innerHTML='<h2>Learning journal</h2><p class="muted">Small steps, seen over time · Madison time</p><details><summary>Practice goal &amp; optional bonus</summary><div class="journal-controls"><label>Daily goal <select id="goalMinutes"><option value="10">10 minutes</option><option value="15">15 minutes</option><option value="20">20 minutes</option></select></label><label><input id="enableBonus" type="checkbox"> Allow a 3-minute bonus</label></div></details><div class="journal-controls"><label>View <select id="journalPeriod"><option value="today">Today</option><option value="week">Last 7 days</option></select></label><button class="btn" id="exportLearning">Export history</button></div><div id="journalBody"></div><p id="journalSync" class="muted"></p><p class="muted">The clock counts visible questions, thinking and learning aids. It pauses after 60 seconds without interaction, during rewards, in other tabs and in parent settings. Time is an estimate, not a measurement of attention.</p><hr></section>';
@@ -94,6 +94,7 @@ function createAdventure() {
     goalShown[key]=true;modal=true;save();
     $('goalTitle').textContent='You did it!';
     $('goalMessage').textContent=Math.round(goalMs()/60000)+' min ✓';
+    $('goalPokemon').style.display='';
     $('goalPokemon').src=imgArt(pkBuddy || 25);
     $('adventureBonus').hidden=!settings.bonusEnabled || bonusDay===today();
     goal.hidden=false;tracker.setBlocked(true);$('adventureFinish').focus();
@@ -137,7 +138,7 @@ function createAdventure() {
       const root=cfg.url.replace(/\/+$/,'')+'/fam/'+encodeURIComponent(cfg.code)+'/pokemathAnalytics';
       const upload={};const revisions={};
       for(const id of dirty)if(tracker.sessions[id]){upload['sessions/'+id]=structuredClone(tracker.sessions[id]);revisions[id]=tracker.sessions[id].rev;}
-      upload['devices/'+await deviceId()]={lastSeenAt:Date.now(),build:59,sessionId:tracker.sessionId};
+      upload['devices/'+await deviceId()]={lastSeenAt:Date.now(),build:60,sessionId:tracker.sessionId};
       const r=await fetch(root+'.json',{method:'PATCH',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify(upload),signal:AbortSignal.timeout(15000)});
       if(!r.ok)throw new Error('upload');
       for(const [id,rev] of Object.entries(revisions))if(tracker.sessions[id]?.rev===rev)dirty.delete(id);

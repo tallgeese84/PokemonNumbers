@@ -776,11 +776,11 @@
     .pad button{ font-size:18px; min-height:42px; }
   }
 </style>
-<link rel="stylesheet" href="adventure.css?v=59.1">
-<link rel="stylesheet" href="visuals.css?v=59.1">
-<script src="visuals.js?v=59.1"></script>
-<script src="learning-core.js?v=59.1"></script>
-<script src="adventure.js?v=59.1"></script>
+<link rel="stylesheet" href="adventure.css?v=60">
+<link rel="stylesheet" href="visuals.css?v=60">
+<script src="visuals.js?v=60"></script>
+<script src="learning-core.js?v=60"></script>
+<script src="adventure.js?v=60"></script>
 </head>
 <body data-screen="home">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
@@ -883,7 +883,7 @@
       <button class="quiet-choice" id="gamesBtn" aria-label="Choose a game"><span data-illustration="games"></span><strong>Games</strong></button>
       <button class="quiet-choice" id="teamBtn" aria-label="My Pokémon"><span data-illustration="team"></span><strong>Pokémon</strong><small id="teamTally" hidden></small></button>
     </div>
-    <footer class="home-footer"><span id="parentEntry"></span><span class="build-label">v59</span></footer>
+    <footer class="home-footer"><span id="parentEntry"></span><span class="build-label">v60</span></footer>
   </div>
 
   <!-- The other activities stay available, three pictures at a time. -->
@@ -1406,13 +1406,10 @@ function renderBuddyHome(){
     '(' + caught.length + '/' + DEX_TOTAL + (lc ? '  ✨' + lc : '') +
     (mc ? '  ⚡' + mc : '') + (shinies.length ? '  💎' + shinies.length : '') + ')';
   renderBadgeTally();
-  if (!pkBuddy){
-    box.innerHTML = '<img src="' + imgArt(25) + '" alt="Pikachu, your adventure guide" onerror="this.style.display=\'none\'"><div class="bname"><span class="buddy-label">Your adventure guide</span>Meet your first Pokémon in ' + (ballNeed() - ballStars) + ' stars</div>';
-    return;
-  }
-  box.innerHTML = '<img class="' + (isShiny(pkBuddy) ? 'shiny' : '') + '" src="' + imgArt(pkBuddy) + '" alt="" ' +
-    'onerror="this.style.display=\'none\'">' +
-    '<div><span class="bname">' + monName(pkBuddy) + '</span></div>';
+  const buddy = pkBuddy || 25;
+  box.innerHTML = '<div class="trainer-scene"><img class="trainer-avatar" src="assets/jonah-avatar.webp" alt="Jonah’s avatar" width="900" height="900" fetchpriority="high">' +
+    '<img class="trainer-buddy' + (isShiny(buddy) ? ' shiny' : '') + '" src="' + imgArt(buddy) + '" alt="Your Pokémon buddy" ' +
+    'onerror="this.style.display=\'none\'"></div>';
 }
 let teamFilter = 'all';
 function renderTeam(){
@@ -4330,7 +4327,7 @@ document.addEventListener('visibilitychange', () => {
       ['numbers to 30', TRACE_MAX === 30]
     ];
     document.getElementById('ppVer').textContent =
-      'build v59 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
+      'build v60 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
     showPraise(praiseLine(true));
     say(praiseLine(true));
   });

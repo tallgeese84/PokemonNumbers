@@ -21,6 +21,12 @@ and is not included in this repository. Personal, non-commercial project.
 To ship an update, bump `CACHE = 'pokemath-v1'` in `sw.js` (v2, v3, ...) so
 installed tablets pick up the new version.
 
+## v60 — Jonah and his Pokémon
+
+Jonah’s familiar avatar joins his selected Pokémon on home and in the daily-goal celebration. Questions stay clear, with the same simple Play button, clock, games and journal. The avatar is bundled and cached for offline use; no paid media service is used.
+
+The character matches the `AV_IMG.jonah` avatar in [ChineseLearningP1-3](https://github.com/tallgeese84/ChineseLearningP1-3). `assets/jonah-avatar.webp` reuses the original `jonah_old_avatar.webp` image unchanged at its original resolution for crisp display.
+
 ## v59 — simpler for a child who is not reading yet
 
 Home has one large **Play** button and Pokémon buddy, with two smaller picture buttons: **Games** and **Pokémon**. Games shows three choices per page. All nine activities remain available. Decorative scenery, marketing copy and repeated activity headings are removed from the child’s main flow.

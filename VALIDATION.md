@@ -1,3 +1,13 @@
+# v60 personalized avatar
+
+Base: `72d66a24f164c1fd5abc1f56c6eb37ddf0d8027b` (v59).
+
+Jonah’s avatar is confirmed by the `AV_IMG.jonah` mapping in ChineseLearningP1-3. The matching original `jonah_old_avatar.webp` is copied unchanged as a local asset. Home and the daily-goal celebration pair this avatar with the current Pokémon buddy. Question screens, navigation and learning records keep their existing behavior. The new asset is included in the v60 offline cache.
+
+Local verification: all 25 regression tests pass, including celebration gating, active-time tracking and cache isolation. The celebration DOM mock now includes the image style property. All shipped JavaScript parses and the diff has no whitespace errors. Responsive live review follows publication.
+
+---
+
 # v59 child interface simplification
 
 Base: `8010fdcfe8be8020917b9986f680b5838ced1871` (v58).

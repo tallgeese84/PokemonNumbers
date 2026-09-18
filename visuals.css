@@ -165,3 +165,11 @@ body:not([data-screen="home"]) #soundBtn{display:none}
 .trace-number-nav .numrow{margin:0;padding:0;overflow:visible}
 .trace-number-nav .numrow button{width:52px;flex-basis:52px;height:48px;margin:0;border:0;background:none;box-shadow:none;font-size:27px;color:#344f43}
 .trace-number-nav .numrow button.done{color:#267d65}
+
+/* v60: one familiar trainer-and-buddy scene, away from the questions. */
+.trainer-scene{--avatar-size:180px;position:relative;width:calc(var(--avatar-size)*1.34);max-width:100%;height:var(--avatar-size);margin-inline:auto}
+.trainer-scene .trainer-avatar,#buddyBox .trainer-avatar{position:absolute;left:0;bottom:0;width:var(--avatar-size);height:var(--avatar-size);max-width:100%;object-fit:contain;filter:none;animation:none}
+.trainer-scene .trainer-buddy,#buddyBox .trainer-buddy{position:absolute;right:0;bottom:2px;width:calc(var(--avatar-size)*.56);height:calc(var(--avatar-size)*.56);max-width:100%;object-fit:contain;filter:none;animation:none}
+.goal-dialog .trainer-scene{--avatar-size:190px}
+@media(max-width:520px){.trainer-scene,.goal-dialog .trainer-scene{--avatar-size:160px}}
+@media(max-height:680px) and (min-width:600px){#buddyBox .trainer-scene{--avatar-size:120px}}
