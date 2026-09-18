@@ -23,7 +23,7 @@ installed tablets pick up the new version.
 
 ## v58 — visual refresh
 
-An illustrated meadow home, a large Pokémon guide/buddy, and one clear Start adventure action. Nine activity cards pair larger official artwork with original vector skill illustrations. Calmer practice screens have larger answer buttons, explicit activity titles and question replay controls. Tablet landscape arithmetic uses separate question and answer columns; phone layouts retain a single column. Counting balls, story trainers and the hide-and-seek tree are crisp built-in vectors.
+An illustrated meadow home, a large Pokémon guide/buddy, and one clear Start adventure action. Nine activity cards pair larger official artwork with original vector skill illustrations. Calmer practice screens have larger answer buttons, explicit activity titles and question replay controls. Tablet landscape arithmetic uses separate question and answer columns; phone layouts retain a single column. Counting balls, story trainers and the hide-and-seek tree are crisp built-in vectors. Tracing uses a compact scrollable number strip. Earned badges and the next discovery take priority over the expandable list of future badges.
 
 The labeled **Journal** button opens daily/weekly analytics, a seven-day active-minute chart and practice guidance. Sync, backup and learning settings are in a separate expandable section. There is no email setup required to read the journal. Local data and existing cloud settings are retained.
 

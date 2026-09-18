@@ -987,7 +987,8 @@
   <!-- TRACE -->
   <div class="screen" id="scr-trace">
     <div class="card">
-      <div class="numrow" id="numrow"></div>
+      <p class="number-picker-label">Choose a number <span>Swipe for more →</span></p>
+      <div class="numrow" id="numrow" role="toolbar" aria-label="Choose a number to trace"></div>
       <div id="traceWrap"><canvas id="traceCanvas"></canvas></div>
       <div class="meter"><div id="traceMeter"></div></div>
       <div class="tracebtns">
@@ -1612,13 +1613,25 @@ function renderBadges(){
   if (!grid) return;
   document.getElementById('badgeHead').textContent = 'My Badges — ' + badges.length + ' of ' + BADGES.length;
   grid.innerHTML = '';
-  BADGES.forEach(b => {
-    const d = document.createElement('div');
-    d.className = 'badge' + (badges.includes(b.id) ? '' : ' locked');
-    d.innerHTML = '<span class="bico">' + b.ico + '</span>' + b.name;
-    grid.appendChild(d);
-  });
+  const earned = BADGES.filter(b => badges.includes(b.id));
+  const waiting = BADGES.filter(b => !badges.includes(b.id));
+  const picture = b => PokeVisuals.icon(b.id.startsWith('add') ? 'add' : b.id.startsWith('sub') ? 'sub' : b.id.startsWith('write') ? 'trace' : b.id.startsWith('line') ? 'line' : b.id.startsWith('abacus') ? 'abacus' : b.id.startsWith('hide') ? 'hide' : b.id.startsWith('card') || b.id === 'holo1' ? 'cards' : b.id.startsWith('streak') || b.id === 'rec15' ? 'zap' : 'badge');
+  const tile = (b, locked) => {
+    const d = document.createElement('div');d.className = 'badge' + (locked ? ' locked' : '');
+    d.innerHTML = '<span class="bico">' + picture(b) + '</span><strong>' + b.name + '</strong><small>' + (locked ? 'To discover' : 'Earned!') + '</small>';
+    return d;
+  };
+  earned.forEach(b => grid.appendChild(tile(b, false)));
+  if(waiting.length){
+    const next = document.createElement('div');next.className = 'badge-next';
+    next.innerHTML = '<span>' + picture(waiting[0]) + '</span><div><small>YOUR NEXT DISCOVERY</small><h3>' + waiting[0].name + '</h3><p>' + (waiting[0].id === 'first' ? 'Catch your first Pokémon to earn this badge.' : 'Keep practising — every small step counts.') + '</p></div>';
+    grid.appendChild(next);
+    const future = document.createElement('details');future.className = 'badge-future';
+    const label = document.createElement('summary');label.textContent = 'More badges to discover · ' + waiting.length;future.appendChild(label);
+    const remaining = document.createElement('div');remaining.className='badgegrid';waiting.forEach(b => remaining.appendChild(tile(b,true)));future.appendChild(remaining);grid.appendChild(future);
+  }
 }
+
 function catchMon(){
   const normal = [];
   for (let i = 1; i <= DEX_TOTAL; i++) if (!caught.includes(i) && !isLegend(i)) normal.push(i);
@@ -1866,7 +1879,10 @@ function buildNumRow(){
 }
 function markNumRow(){
   document.querySelectorAll('#numrow button').forEach(b => {
-    b.classList.toggle('cur', parseInt(b.dataset.d, 10) === traceIdx);
+    const selected = parseInt(b.dataset.d, 10) === traceIdx;
+    b.classList.toggle('cur', selected);
+    b.setAttribute('aria-pressed', String(selected));
+    if(selected) b.scrollIntoView({block:'nearest',inline:'center'});
   });
 }
 
@@ -3414,7 +3430,7 @@ function abBeadX(r, i, activeInRow){
 }
 function abDraw(){
   if (!AB.w) abSize();
-  const c = abCtx, t = performance.now();
+  const c = abCtx, t = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : performance.now();
   c.clearRect(0, 0, AB.w, AB.h);
   const bg = c.createLinearGradient(0, 0, 0, AB.h);
   bg.addColorStop(0, '#fbf6e8'); bg.addColorStop(1, '#f1e8d0');
@@ -3693,14 +3709,14 @@ function lnValueAt(px){
 
 function lnDraw(){
   if (!LN.w) lnSize();
-  const c = lnCtx, t = performance.now();
+  const c = lnCtx, t = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : performance.now();
   c.clearRect(0, 0, LN.w, LN.h);
 
   // --- sky, sun, clouds, hills ---
   const sky = c.createLinearGradient(0, 0, 0, LN.h);
-  sky.addColorStop(0, '#8FD2F5'); sky.addColorStop(0.55, '#CFEEFB'); sky.addColorStop(1, '#EAF8E4');
+  sky.addColorStop(0, '#d2e9e5'); sky.addColorStop(0.55, '#e4f1e9'); sky.addColorStop(1, '#f1f5e7');
   c.fillStyle = sky; c.fillRect(0, 0, LN.w, LN.h);
-  c.fillStyle = '#FFE066';
+  c.fillStyle = '#ffe3a0';
   c.beginPath(); c.arc(LN.w - 46, 44, 24, 0, Math.PI * 2); c.fill();
   c.strokeStyle = 'rgba(255,201,60,.55)'; c.lineWidth = 4;
   for (let i = 0; i < 8; i++){
@@ -3720,13 +3736,13 @@ function lnDraw(){
     c.ellipse(x + 22 * sc, cy + 6, 16 * sc, 8 * sc, 0, 0, Math.PI * 2);
     c.fill();
   });
-  c.fillStyle = '#9BDC86';
+  c.fillStyle = '#bdd7aa';
   c.beginPath();
   c.moveTo(0, LN.y + 26);
   c.quadraticCurveTo(LN.w * 0.3, LN.y - 12, LN.w * 0.6, LN.y + 20);
   c.quadraticCurveTo(LN.w * 0.85, LN.y + 40, LN.w, LN.y + 8);
   c.lineTo(LN.w, LN.h); c.lineTo(0, LN.h); c.closePath(); c.fill();
-  c.fillStyle = '#77C86A';
+  c.fillStyle = '#83b190';
   c.fillRect(0, LN.y + 30, LN.w, LN.h - LN.y - 30);
 
   // --- stepping stones, one per number ---
@@ -3746,13 +3762,13 @@ function lnDraw(){
       c.beginPath(); c.arc(x, LN.y, r * 1.16 * pulse, 0, Math.PI * 2); c.stroke();
     }
     const g = c.createLinearGradient(x, LN.y - r, x, LN.y + r);
-    if (here){ g.addColorStop(0, '#FFF6C4'); g.addColorStop(1, '#FFC93C'); }
+    if (here){ g.addColorStop(0, '#FFF6C4'); g.addColorStop(1, '#edce7f'); }
     else if (v === LN.ans && LN.showGoal){ g.addColorStop(0, '#D6F7E4'); g.addColorStop(1, '#6FD8AE'); }
-    else { g.addColorStop(0, '#FFFDF4'); g.addColorStop(1, '#D9CFB6'); }
+    else { g.addColorStop(0, '#FFFDF4'); g.addColorStop(1, '#e9dfc6'); }
     c.fillStyle = g;
-    c.strokeStyle = '#2B2E5C'; c.lineWidth = here ? 4.5 : 3;
+    c.strokeStyle = '#36574e'; c.lineWidth = here ? 4.5 : 3;
     c.beginPath(); c.arc(x, LN.y, r, 0, Math.PI * 2); c.fill(); c.stroke();
-    c.fillStyle = '#2B2E5C';
+    c.fillStyle = '#36574e';
     c.font = 'bold ' + Math.round(r * (here ? 1.15 : 1.02)) + 'px system-ui, sans-serif';
     c.textAlign = 'center'; c.textBaseline = 'middle';
     c.fillText(String(v), x, LN.y + 1);
@@ -3784,7 +3800,7 @@ function lnDraw(){
   c.strokeStyle = '#8A6A3A'; c.lineWidth = 4;
   c.beginPath(); c.moveTo(sx, LN.y - LN.stoneR); c.lineTo(sx, LN.y - LN.stoneR - 42); c.stroke();
   const wave = Math.sin(t / 260) * 3;
-  c.fillStyle = '#5AB8F5'; c.strokeStyle = '#2B2E5C'; c.lineWidth = 2.5;
+  c.fillStyle = '#5AB8F5'; c.strokeStyle = '#36574e'; c.lineWidth = 2.5;
   c.beginPath();
   c.moveTo(sx, LN.y - LN.stoneR - 42);
   c.quadraticCurveTo(sx + 20, LN.y - LN.stoneR - 38 + wave, sx + 34, LN.y - LN.stoneR - 30);
@@ -3810,7 +3826,7 @@ function lnDraw(){
   if (lnBuddyReady){
     c.drawImage(lnBuddyImg, px - sz / 2, by, sz, sz);
   } else {
-    c.fillStyle = '#FFC93C'; c.strokeStyle = '#2B2E5C'; c.lineWidth = 3;
+    c.fillStyle = '#edce7f'; c.strokeStyle = '#36574e'; c.lineWidth = 3;
     c.beginPath(); c.arc(px, by + sz / 2, sz * 0.3, 0, Math.PI * 2); c.fill(); c.stroke();
   }
   // a little pointer connecting him to the number he is on
@@ -4122,7 +4138,11 @@ function setSyncStatus(kind, text){
   const st = document.getElementById('syStatus');
   if (st){ st.className = 'speech ' + (kind === 'ok' ? 'ok' : kind === 'err' ? 'err' : ''); st.textContent = text; }
   const cb = document.getElementById('cloudBtn');
-  if (cb) cb.textContent = kind === 'ok' ? '☁️✓' : kind === 'err' ? '☁️⚠️' : '☁️';
+  if (cb){
+    cb.innerHTML = '<span>' + PokeVisuals.icon('journal') + '</span>Journal';
+    cb.dataset.sync = kind;
+    cb.title = 'Learning journal for grown-ups' + (kind === 'ok' ? ' · Progress synced' : kind === 'err' ? ' · Check sync in settings' : '');
+  }
 }
 async function syncNow(manual){
   const cfg = await getSyncCfg();
