@@ -21,6 +21,12 @@ and is not included in this repository. Personal, non-commercial project.
 To ship an update, bump `CACHE = 'pokemath-v1'` in `sw.js` (v2, v3, ...) so
 installed tablets pick up the new version.
 
+## v63 — responsive difficulty and the full illustrated collection
+
+Difficulty can rise during the current session: at least 5/6 independently correct answers across four facts, with the latest three correct. Each skill advances one step at a time; three difficulties in five questions restore a support step. Speed is not required, parent ceilings remain respected, and later-day retention remains a separate journal metric. Counting avoids the previous three quantities and favours larger quantities after a step up. Existing learning history is reused.
+
+The bundled PokeAPI snapshot includes 1,339 artwork-backed collectible entries: 1,025 species and 314 forms, including regional, Mega, Primal and Gigantamax variants. Twelve API entries without official artwork are excluded. The complete pool remains reachable after collecting all base species or all legendary species; catches are unique and all existing Pokémon are retained. Reward frequency stays unchanged. New catalogue data is cached offline; unseen artwork still needs an initial online visit.
+
 ## v62 — visual practice timer
 
 A 48-pixel green pie fills as active practice accumulates. The child’s timer has no numerical clock, inner star, ticking or flashing. Existing pause/idle rules freeze progress, and the celebration still waits for the current question to finish. Exact elapsed and target time is shown in the grown-up journal, with an accessible time description on the pie. v61’s larger counting pictures remain in place.

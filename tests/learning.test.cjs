@@ -8,8 +8,41 @@ test('answers after help are supported successes, never independent mastery',()=
 test('resuming a question preserves first response, help and accumulated active duration',()=>{const {t,step}=clock();const ref=t.begin(meta);step();t.answer(3,false);t.help('guided');t.setSection('home');step(5000);t.setSection('add');t.begin(meta,ref);step();t.answer(5,true);const q=C.allQuestions(t.sessions)[0];assert.equal(q.activeMs,2000);assert.equal(q.responses[0].value,3);assert.equal(q.firstResponseMs,1000);assert.equal(q.helped,true);assert.equal(C.allQuestions(t.sessions).length,1);});
 function record(i,day='2026-09-17',extra={}){const a=1+i%4,b=5-a;return {...meta,id:String(i),a,b,day,startedAt:Date.parse(day+'T16:00:00Z')+i*2000,completedAt:Date.parse(day+'T16:00:01Z')+i*2000,responses:[{value:5,correct:true}],firstResponseMs:25000,...extra};}
 const sessions=qs=>({s:{id:'s',rev:1,days:{},questions:Object.fromEntries(qs.map((q,i)=>[i,q]))}});
-test('slow independent success can progress but only after distinct later-day retention checks',()=>{const qs=Array.from({length:10},(_,i)=>record(i));assert.equal(C.planFor('add','add',sessions(qs)).level,0);assert.equal(C.planFor('add','add',sessions(qs)).readyDay,'2026-09-17');qs.push(...[10,11,12].map(i=>record(i,'2026-09-18')));const p=C.planFor('add','add',sessions(qs));assert.equal(p.level,1);assert.equal(p.range,5);assert.equal(p.support,'numbers');});
-test('repeated identical facts or helped answers cannot unlock a new level',()=>{const qs=Array.from({length:10},(_,i)=>record(i,'2026-09-17',{a:1,b:4}));assert.equal(C.planFor('add','add',sessions(qs)).readyDay,null);const helped=Array.from({length:10},(_,i)=>record(i,'2026-09-17',{helped:true}));assert.equal(C.planFor('add','add',sessions(helped)).readyDay,null);});
+test('six varied independent answers advance within the same day without a speed requirement',()=>{
+  const qs=Array.from({length:6},(_,i)=>record(i));
+  assert.equal(C.planFor('add','add',sessions(qs.slice(0,5))).level,0);
+  const p=C.planFor('add','add',sessions(qs));
+  assert.equal(p.level,1);assert.equal(p.range,5);assert.equal(p.support,'numbers');
+});
+test('repeated facts, help and manual overrides do not prove readiness',()=>{
+  for(const extra of [{a:1,b:4},{helped:true},{manual:true},{unverifiedResume:true}]){
+    const qs=Array.from({length:12},(_,i)=>record(i,'2026-09-17',extra));
+    assert.equal(C.planFor('add','add',sessions(qs)).level,0);
+  }
+});
+test('one earlier mistake is allowed but the last three answers must be independent',()=>{
+  const qs=Array.from({length:6},(_,i)=>record(i,'2026-09-17',{helped:i===1}));
+  assert.equal(C.planFor('add','add',sessions(qs)).level,1);
+  qs[1].helped=false;qs[5].helped=true;
+  assert.equal(C.planFor('add','add',sessions(qs)).level,0);
+});
+test('counting can climb 5 to 10 to 20 in one session and keeps skills separate',()=>{
+  const qs=[];
+  for(let i=0;i<12;i++){
+    const p=C.planFor('count','count',sessions(qs));
+    qs.push(record(i,'2026-09-17',{section:'count',skill:'count',level:p.level,range:p.range,support:'pictures',a:0,b:0,expected:1+i%4}));
+    assert.equal(C.planFor('count','count',sessions(qs)).level,i<5?0:i<11?1:2);
+  }
+  assert.equal(C.planFor('count','count',sessions(qs)).range,20);
+  assert.equal(C.planFor('add','add',sessions(qs)).level,0);
+});
+test('easier capped questions cannot promote the wider level',()=>{
+  const qs=Array.from({length:6},(_,i)=>record(i));
+  qs.push(...Array.from({length:6},(_,i)=>record(i+6,'2026-09-17',{level:1,support:'numbers'})));
+  assert.equal(C.planFor('add','add',sessions(qs)).range,10);
+  qs.push(...Array.from({length:12},(_,i)=>record(i+12,'2026-09-17',{level:2,support:'numbers',range:5})));
+  assert.equal(C.planFor('add','add',sessions(qs)).level,2);
+});
 test('three failures in five at the current level restore one support step',()=>{const qs=Array.from({length:10},(_,i)=>record(i));qs.push(...[10,11,12].map(i=>record(i,'2026-09-18')));qs.push(...[13,14,15,16,17].map(i=>record(i,'2026-09-18',{level:1,support:'numbers',helped:i>14})));assert.equal(C.planFor('add','add',sessions(qs)).level,0);});
 test('dashboard comparisons keep representations and levels separate and require samples',()=>{const a=C.summarize(sessions([record(1)]),'2026-09-17');const b=C.summarize(sessions(Array.from({length:10},(_,i)=>record(i,'2026-09-16',{range:10}))),'2026-09-16');assert.equal(C.comparisons(a,b)[0].accuracyChange,null);assert.equal(C.comparisons(a,b)[0].previousN,0);});
 test('replayed session snapshots are idempotent and older snapshots cannot erase updates',()=>{const {t,step}=clock();t.begin(meta);step();t.answer(5,true);const copy=structuredClone(t.sessions);t.merge(copy);t.merge(copy);assert.equal(C.summarize(t.sessions,'2026-09-17').attempted,1);copy[t.sessionId].rev=0;copy[t.sessionId].questions={};t.merge(copy);assert.equal(C.allQuestions(t.sessions).length,1);});

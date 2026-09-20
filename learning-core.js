@@ -26,32 +26,32 @@
   function planFor(section, skill, sessions) {
     const arithmetic = section === 'add' || section === 'sub';
     const stages = arithmetic ? ARITHMETIC : (section==='hide'?[5,10]:RANGES).map(range=>({range,support:'built-in',format:'result'}));
-    let level=0, window=[], readyDay=null, checks=[], changes=[];
+    let level=0, window=[], changes=[];
     const qs = allQuestions(sessions).filter(q=>q.section===section && q.skill===skill && q.completedAt && !q.echo && !q.manual);
     for (const q of qs) {
-      // Evidence must come from the level being evaluated, never easier warm-ups or manual overrides.
-      if (q.level !== level) continue;
-      window.push(q); window = window.slice(-10);
+      // Old easier questions and parent-capped ranges cannot prove a harder step.
+      if (q.level !== level || q.range !== stages[level].range) continue;
+      if (arithmetic && (q.support !== stages[level].support || q.format !== stages[level].format)) continue;
+      window.push(q); window = window.slice(-6);
       const recent=window.slice(-5);
       if (level > 0 && recent.length===5 && recent.filter(x=>!independent(x)).length>=3) {
         changes.push({at:q.completedAt,from:level,to:level-1,reason:'More support after repeated difficulty'});
-        level--; window=[]; readyDay=null; checks=[]; continue;
+        level--; window=[]; continue;
       }
-      if (readyDay && q.day > readyDay) {
-        if (independent(q)) checks.push(q); else checks=[];
-        if (checks.length>=3 && new Set(checks.map(factKey)).size>=3 && level < stages.length-1) {
-          changes.push({at:q.completedAt,from:level,to:level+1,reason:'Independent success confirmed on a later day'});
-          level++; window=[]; readyDay=null; checks=[]; continue;
-        }
+      const successes=window.filter(independent);
+      if (window.length===6 && successes.length>=5 && window.slice(-3).every(independent) &&
+          new Set(successes.map(factKey)).size>=4 && level < stages.length-1) {
+        changes.push({at:q.completedAt,from:level,to:level+1,reason:'At least 5 of 6 independently correct across 4 facts, with the latest 3 correct'});
+        level++; window=[];
       }
-      if (!readyDay && window.length===10 && window.filter(independent).length>=8 && new Set(window.filter(independent).map(factKey)).size>=4) readyDay=q.day;
     }
     const last=qs.at(-1);
     // Revisit a difficult fact after at least two intervening questions (or the next day).
-    const review=qs.slice(-30).reverse().find(q=> !independent(q) && q.range<=stages[level].range && q.format===stages[level].format &&
+    const review=qs.slice(-30).reverse().find(q=> !independent(q) && q.range===stages[level].range && q.format===stages[level].format &&
       (qs.indexOf(q)<qs.length-2 || q.day<dayKey(Date.now())) &&
       !qs.some(x=>x.startedAt>q.startedAt && factKey(x)===factKey(q) && independent(x)));
-    return {...stages[level], level, readyDay, checks:checks.length, samples:window.length, successes:window.filter(independent).length,
+    return {...stages[level], level, samples:window.length, successes:window.filter(independent).length,
+      recentAnswers:qs.slice(-3).map(q=>q.expected),
       changes, review:review ? {a:review.a,b:review.b,expected:review.expected} : null,
       needsSupport:!!last && !independent(last)};
   }
@@ -60,7 +60,7 @@
       this.now=now; this.id=id; this.sessions=sessions; this.onChange=onChange;
       this.sessionId=String(now())+'_'+id(); this.current=null; this.visible=true; this.blocked=false;
       this.section='home'; this.lastTick=now(); this.lastInteraction=now(); this.idle=false;
-      this.sessions[this.sessionId]={id:this.sessionId,startedAt:now(),updatedAt:now(),rev:0,days:{},questions:{},build:62};
+      this.sessions[this.sessionId]={id:this.sessionId,startedAt:now(),updatedAt:now(),rev:0,days:{},questions:{},build:63};
     }
     changed(sid=this.sessionId) { const s=this.sessions[sid]; s.rev++; s.updatedAt=this.now(); this.onChange(sid); }
     tick() {
@@ -102,7 +102,7 @@
       if(this.lastPracticeAt && this.now()-this.lastPracticeAt>300000){
         const deviceId=this.sessions[this.sessionId].deviceId;
         this.sessionId=String(this.now())+'_'+this.id();
-        this.sessions[this.sessionId]={id:this.sessionId,deviceId,startedAt:this.now(),updatedAt:this.now(),rev:0,days:{},questions:{},build:62};
+        this.sessions[this.sessionId]={id:this.sessionId,deviceId,startedAt:this.now(),updatedAt:this.now(),rev:0,days:{},questions:{},build:63};
         this.lastPracticeAt=this.now();
       }
       if (ref && this.sessions[ref.sid]?.questions?.[ref.qid] && !this.sessions[ref.sid].questions[ref.qid].completedAt) this.current=ref;
