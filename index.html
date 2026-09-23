@@ -2950,7 +2950,7 @@ function answer(n, btn){
     checkBadges();
     sndGood(); burst(btn, independent ? 10 : 8);
     addStar(independent ? 2 : 1);   // accuracy is the fast path to catches
-    if (q.stage === 3 && (mode === 'add' || mode === 'sub')){
+    if (q.stage === 3 && !q.subScene && (mode === 'add' || mode === 'sub')){
       const rev = document.createElement('div');
       rev.className = 'eqreveal';
       rev.textContent = (mode === 'add')
