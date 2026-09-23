@@ -14,6 +14,8 @@
     {range:10, support:'numbers', format:'missingB'},
     {range:20, support:'numbers', format:'missingB'}
   ];
+  // Six subtraction questions, one addition and one counting question per cycle.
+  const missionSection = answered => ['sub','sub','sub','sub','sub','sub','add','count'][answered % 8];
   const RANGES = [5,10,20];
   const dayKey = (ms, zone = ZONE) => new Intl.DateTimeFormat('en-CA', {timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(ms));
   const shiftDay = (day, n) => new Date(Date.parse(day + 'T12:00:00Z') + n * 86400000).toISOString().slice(0,10);
@@ -25,7 +27,7 @@
   function groupKey(q) { return [q.section,q.skill,q.range,q.support,q.format].join('|'); }
   function planFor(section, skill, sessions) {
     const arithmetic = section === 'add' || section === 'sub';
-    const stages = arithmetic ? ARITHMETIC : (section==='hide'?[5,10]:RANGES).map(range=>({range,support:'built-in',format:'result'}));
+    const stages = arithmetic ? (section==='sub' ? ARITHMETIC.map((stage,i)=>i===0?{...stage,support:'covered pictures'}:stage) : ARITHMETIC) : (section==='hide'?[5,10]:RANGES).map(range=>({range,support:'built-in',format:'result'}));
     let level=0, window=[], changes=[];
     const qs = allQuestions(sessions).filter(q=>q.section===section && q.skill===skill && q.completedAt && !q.echo && !q.manual);
     for (const q of qs) {
@@ -60,7 +62,7 @@
       this.now=now; this.id=id; this.sessions=sessions; this.onChange=onChange;
       this.sessionId=String(now())+'_'+id(); this.current=null; this.visible=true; this.blocked=false;
       this.section='home'; this.lastTick=now(); this.lastInteraction=now(); this.idle=false;
-      this.sessions[this.sessionId]={id:this.sessionId,startedAt:now(),updatedAt:now(),rev:0,days:{},questions:{},build:63};
+      this.sessions[this.sessionId]={id:this.sessionId,startedAt:now(),updatedAt:now(),rev:0,days:{},questions:{},build:64};
     }
     changed(sid=this.sessionId) { const s=this.sessions[sid]; s.rev++; s.updatedAt=this.now(); this.onChange(sid); }
     tick() {
@@ -102,7 +104,7 @@
       if(this.lastPracticeAt && this.now()-this.lastPracticeAt>300000){
         const deviceId=this.sessions[this.sessionId].deviceId;
         this.sessionId=String(this.now())+'_'+this.id();
-        this.sessions[this.sessionId]={id:this.sessionId,deviceId,startedAt:this.now(),updatedAt:this.now(),rev:0,days:{},questions:{},build:63};
+        this.sessions[this.sessionId]={id:this.sessionId,deviceId,startedAt:this.now(),updatedAt:this.now(),rev:0,days:{},questions:{},build:64};
         this.lastPracticeAt=this.now();
       }
       if (ref && this.sessions[ref.sid]?.questions?.[ref.qid] && !this.sessions[ref.sid].questions[ref.qid].completedAt) this.current=ref;
@@ -179,5 +181,5 @@
       offline:weak?.skill==='sub' ? 'Use five toys: hide some and ask how many are hidden.' : 'Use five toys: make two groups and ask how many altogether.'
     };
   }
-  return {ZONE,IDLE_MS,LABELS,dayKey,shiftDay,median,Tracker,planFor,summarize,comparisons,guidance,allQuestions,independent,factKey,groupKey};
+  return {missionSection,ZONE,IDLE_MS,LABELS,dayKey,shiftDay,median,Tracker,planFor,summarize,comparisons,guidance,allQuestions,independent,factKey,groupKey};
 });

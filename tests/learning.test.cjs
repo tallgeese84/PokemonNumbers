@@ -50,3 +50,20 @@ test('Madison calendar dates and rolling periods handle DST without a fixed UTC 
 
 test('active time is split accurately across midnight in Madison',()=>{let now=Date.parse('2026-09-18T04:59:59.000Z'),i=0;const t=new C.Tracker({now:()=>now,id:()=>String(++i)});t.begin(meta);now+=2000;t.tick();assert.equal(C.summarize(t.sessions,'2026-09-17').practiceMs,1000);assert.equal(C.summarize(t.sessions,'2026-09-18').practiceMs,1000);});
 test('returning after a five-minute break creates a new session for fatigue comparisons',()=>{const {t,step}=clock();t.begin(meta);step();t.answer(5,true);const original=t.sessionId;t.setSection('home');step(301000);t.begin(meta);assert.notEqual(t.sessionId,original);});
+
+
+test('guided Play prioritizes subtraction in every practice cycle',()=>{
+  for(let start=0;start<32;start+=8){
+    const cycle=Array.from({length:8},(_,i)=>C.missionSection(start+i));
+    assert.equal(cycle[0],'sub');assert.equal(cycle.filter(x=>x==='sub').length,6);
+    assert.equal(cycle.filter(x=>x==='add').length,1);assert.equal(cycle.filter(x=>x==='count').length,1);
+  }
+});
+test('counting a visible remainder cannot promote the new covered subtraction step',()=>{
+  const qs=Array.from({length:6},(_,i)=>record(i,'2026-09-17',{section:'sub',skill:'sub',a:5,b:1+i%4,expected:4-i%4}));
+  assert.equal(C.planFor('sub','sub',sessions(qs)).level,0);
+  qs.forEach(q=>q.support='covered pictures');
+  assert.equal(C.planFor('sub','sub',sessions(qs)).level,1);
+  qs[5].helped=true;
+  assert.equal(C.planFor('sub','sub',sessions(qs)).level,0);
+});

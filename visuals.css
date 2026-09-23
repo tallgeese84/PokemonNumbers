@@ -180,3 +180,15 @@ body:not([data-screen="home"]) #soundBtn{display:none}
 
 /* v62: a quiet filling pie, with exact time in the grown-up journal. */
 #adventureRing{width:48px;height:48px;flex:0 0 48px;border:2px solid #abc2b1;background:conic-gradient(#2e876d var(--progress),#e4ece4 0);animation:none;transition:none}
+
+
+/* v64: one covered whole and the part taken away; no visible answer pile. */
+.subtraction-story{width:100%;max-width:520px;margin:auto;display:flex;flex-direction:column;align-items:center;gap:14px}
+.subtraction-whole{width:100%;min-height:104px;border:2px solid #a8bcac;border-radius:20px;display:flex;align-items:center;justify-content:center;background:#edf2ea;font-size:48px;font-weight:800;padding:12px;box-sizing:border-box}
+.subtraction-pile{display:flex;justify-content:center;flex-wrap:wrap;gap:4px}
+.subtraction-cover{width:100%;height:104px;display:grid;place-items:center;font-size:60px;color:#496652}
+.subtraction-away{display:flex;align-items:center;justify-content:center;gap:12px;font-size:36px}
+.subtraction-away:empty{display:none}
+.subtraction-action{min-width:68px;min-height:56px}
+.subtraction-action svg{width:32px;height:32px}
+@media(max-width:360px){.subtraction-pile .pkspr{max-width:48px;max-height:48px}}

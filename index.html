@@ -776,12 +776,12 @@
     .pad button{ font-size:18px; min-height:42px; }
   }
 </style>
-<link rel="stylesheet" href="adventure.css?v=63">
-<link rel="stylesheet" href="visuals.css?v=63">
-<script src="visuals.js?v=63"></script>
-<script src="assets/pokemon-catalog.js?v=63"></script>
-<script src="learning-core.js?v=63"></script>
-<script src="adventure.js?v=63"></script>
+<link rel="stylesheet" href="adventure.css?v=64">
+<link rel="stylesheet" href="visuals.css?v=64">
+<script src="visuals.js?v=64"></script>
+<script src="assets/pokemon-catalog.js?v=64"></script>
+<script src="learning-core.js?v=64"></script>
+<script src="adventure.js?v=64"></script>
 </head>
 <body data-screen="home">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
@@ -884,7 +884,7 @@
       <button class="quiet-choice" id="gamesBtn" aria-label="Choose a game"><span data-illustration="games"></span><strong>Games</strong></button>
       <button class="quiet-choice" id="teamBtn" aria-label="My Pokémon"><span data-illustration="team"></span><strong>Pokémon</strong><small id="teamTally" hidden></small></button>
     </div>
-    <footer class="home-footer"><span id="parentEntry"></span><span class="build-label">v63</span></footer>
+    <footer class="home-footer"><span id="parentEntry"></span><span class="build-label">v64</span></footer>
   </div>
 
   <!-- The other activities stay available, three pictures at a time. -->
@@ -2414,13 +2414,12 @@ function questionForm(m){
    0: pictures stay on screen (counting is fine, he is still building meaning)
    1: pictures show briefly, then hide — he must hold them in his head
    2: no pictures at all, just the number sentence
-   Subtraction ALWAYS animates the taken-away ones off the screen, so the
-   answer can never be found by counting whatever is left un-faded. */
+   Subtraction stories cover the whole before showing what leaves. */
 function cpaStage(m){
   if (m !== 'add' && m !== 'sub') return 0;
   if (picMode === 'story') return 3;
   if (picMode !== 'auto') return 2;
-  return adventure.plan(m).support === 'pictures' ? 3 : 2;
+  return ['pictures','covered pictures'].includes(adventure.plan(m).support) ? 3 : 2;
 }
 function baseMax(m){ return adventure.plan(m).range; }
 function levelMax(m){ return adventure.plan(m).range; }
@@ -2488,6 +2487,7 @@ function newQuestion(){
   q.form = 'result';
   q.stage = 0;
   q.usedHelp = false;
+  q.subScene = false; q.revealSub = null;
   clearTimeout(q.lookTimer);
   clearTimeout(q.leaveTimer);
   const pend = pending[mode];
@@ -2814,7 +2814,8 @@ function newQuestion(){
       bub.appendChild(help);
     }
   }
-  const ref = adventure.begin({section:mode,skill:mode,a:q.a,b:q.b,expected:q.form==='missingA'?q.a:q.form==='missingB'?q.b:q.ans,range:max,format:q.form,support:q.stage===3?'pictures':q.stage===2?(picMode==='above'?'pictures':'numbers'):'pictures'}, pend?.learning);
+  if (mode === 'sub' && q.stage === 3) buildSubtractionStory(monId, alive);
+  const ref = adventure.begin({section:mode,skill:mode,a:q.a,b:q.b,expected:q.form==='missingA'?q.a:q.form==='missingB'?q.b:q.ans,range:max,format:q.form,support:q.subScene?'covered pictures':q.stage===3?'pictures':q.stage===2?(picMode==='above'?'pictures':'numbers'):'pictures'}, pend?.learning);
   if (pend && !pend.learning) adventure.help('resumed legacy question');
   savePending(mode, {a:q.a,b:q.b,n:q.ans,e:emoji,m:monId,x:max,s:q.stage,t:q.tries,f:q.form,help:q.usedHelp,learning:ref});
   say(q.phrase);
@@ -2822,7 +2823,11 @@ function newQuestion(){
   // patience beat: look at the picture before the buttons wake up
   const lookMs = P().look;
   const sp = document.getElementById('quizSpeech');
-  if (lookMs > 0){
+  if (q.subScene){
+    padLocked = true;
+    document.getElementById('pad').classList.add('locked');
+    sp.textContent = '';
+  } else if (lookMs > 0){
     padLocked = true;
     document.getElementById('pad').classList.add('locked');
     sp.textContent = '👀 Look carefully...';
@@ -2839,6 +2844,57 @@ function newQuestion(){
     q.asked = Date.now();
   }
 }
+// The whole is covered BEFORE anything leaves; the remainder is never on view
+// until a response or an explicitly recorded request for help.
+function buildSubtractionStory(monId, alive){
+  clearTimeout(q.leaveTimer);
+  q.subScene = true;
+  const bub = document.getElementById('bubbles');
+  bub.innerHTML = '';
+  const scene = document.createElement('div'); scene.className = 'subtraction-story';
+  const whole = document.createElement('div'); whole.className = 'subtraction-whole';
+  const pile = n => {
+    const g = document.createElement('div'); g.className = 'subtraction-pile';
+    for(let i=0;i<n;i++) g.appendChild(objSpan(monId,'','',64));
+    return g;
+  };
+  whole.appendChild(pile(q.a)); scene.appendChild(whole);
+  const away = document.createElement('div'); away.className = 'subtraction-away';
+  scene.appendChild(away);
+  const action = document.createElement('button'); action.className = 'btn subtraction-action';
+  action.innerHTML = PokeVisuals.icon('play'); action.setAttribute('aria-label','Cover the Pokémon and take some away');
+  scene.appendChild(action); bub.appendChild(scene);
+  document.getElementById('qtext').textContent = String(q.a);
+  q.phrase = 'Here are '+NUM_WORDS[q.a]+' Pokémon. Tap play to cover them and take some away.';
+  q.revealSub = () => {
+    whole.replaceChildren(pile(q.ans));
+    if(q.ans===0) whole.textContent='0';
+    action.remove();
+  };
+  action.addEventListener('click',()=>{
+    if(!alive() || adventure.isPaused()) return;
+    if(action.dataset.phase==='help'){ revealSubtractionHelp(); return; }
+    const cover = document.createElement('div'); cover.className = 'subtraction-cover';
+    cover.textContent = '?'; cover.setAttribute('aria-label','Pokémon remaining are hidden');
+    whole.replaceChildren(cover);
+    const arrow = document.createElement('span'); arrow.textContent='→'; arrow.setAttribute('aria-hidden','true');
+    away.appendChild(arrow); away.appendChild(pile(q.b));
+    document.getElementById('qtext').textContent='How many left?';
+    document.getElementById('eqline').innerHTML=q.a+' − '+q.b+' = <span class="blank" id="blank">?</span>';
+    q.phrase='We started with '+NUM_WORDS[q.a]+'. '+NUM_WORDS[q.b]+' came out. How many are still hiding?';
+    say(q.phrase,true);
+    action.dataset.phase='help'; action.textContent='👀'; action.setAttribute('aria-label','Show me the remaining Pokémon');
+    padLocked=false; document.getElementById('pad').classList.remove('locked'); q.asked=Date.now();
+  });
+}
+function revealSubtractionHelp(){
+  q.usedHelp=true; adventure.help('reveal subtraction');
+  if(pending[mode]) savePending(mode,{...pending[mode],help:true});
+  if(q.revealSub) q.revealSub();
+  const back=Array.from({length:q.b},(_,i)=>NUM_WORDS[q.a-i-1]).join(', ');
+  say('Start at '+NUM_WORDS[q.a]+'. Count back '+NUM_WORDS[q.b]+': '+back+'. '+NUM_WORDS[q.ans]+' left.',true);
+}
+
 function showFramesForQuestion(monId, emoji){
   const bub = document.getElementById('bubbles');
   const abs = bub.querySelector('.absq');
@@ -2882,6 +2938,7 @@ function answer(n, btn){
   if (n === want){
     padLocked = true;
     uncover();
+    if (q.revealSub) q.revealSub();
     btn.classList.add('right');
     const blank = document.getElementById('blank');
     if (blank) blank.textContent = n;
@@ -2931,6 +2988,9 @@ function answer(n, btn){
     padLocked = true;
     const pad = document.getElementById('pad');
     pad.classList.add('locked');
+    if (q.subScene){
+      revealSubtractionHelp();
+    }
     if (q.tries === 1){
       if (q.covered) uncover();
       document.getElementById('quizSpeech').textContent =
@@ -4316,7 +4376,7 @@ document.addEventListener('visibilitychange', () => {
       ['numbers to 30', TRACE_MAX === 30]
     ];
     document.getElementById('ppVer').textContent =
-      'build v63 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
+      'build v64 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
     showPraise(praiseLine(true));
     say(praiseLine(true));
   });

@@ -21,6 +21,16 @@ and is not included in this repository. Personal, non-commercial project.
 To ship an update, bump `CACHE = 'pokemath-v1'` in `sw.js` (v2, v3, ...) so
 installed tablets pick up the new version.
 
+## v64 — subtraction: predict, then check
+
+Guided Play now repeats six subtraction questions, one addition and one counting question. It starts with subtraction.
+
+The first automatic subtraction step shows the whole group with its numeral. The child taps Play when ready: the entire group is covered before the removed part appears outside. The number sentence stays visible. The remainder is revealed after success or through the eye help button; help and mistakes remain supported attempts. Spoken help models counting back from the starting number. This also replaces the explicit story setting's visible-remainder subtraction scene.
+
+Covered-picture subtraction is a separate journal representation. Old visible-picture successes do not establish mastery of this new task. Six varied attempts meeting the existing independence rule unlock number-only subtraction; later steps include larger numbers and missing parts. History, parent overrides and collections are preserved.
+
+Validation: 35 Node tests pass, including cover-before-answer behavior, help recording, stale interactions, zero remainder, adaptive evidence separation and the practice mix.
+
 ## v63 — responsive difficulty and the full illustrated collection
 
 Difficulty can rise during the current session: at least 5/6 independently correct answers across four facts, with the latest three correct. Each skill advances one step at a time; three difficulties in five questions restore a support step. Speed is not required, parent ceilings remain respected, and later-day retention remains a separate journal metric. Counting avoids the previous three quantities and favours larger quantities after a step up. Existing learning history is reused.

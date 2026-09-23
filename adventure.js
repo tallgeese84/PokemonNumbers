@@ -5,7 +5,7 @@ function createAdventure() {
   const KEY='pokemath_learning_v1', SETTINGS='pokemath_learning_settings';
   let tracker, dirty=new Set(), savedAt=0, syncing=false, lastSync=0, syncMessage='Not connected — saved on this device';
   let settings={goalMinutes:15,bonusEnabled:false}, goalShown={}, bonusDay=null, modal=false, loaded=false;
-  const mission={enabled:false,answered:0,focus:'add'};
+  const mission={enabled:false,answered:0,focus:'sub'};
   const plans={}; let leaseId=crypto.randomUUID(), leaseOwned=true;
   const timer=document.createElement('div'); timer.id='adventureTimer'; timer.className='adventure-timer';
   timer.innerHTML='<div class="adventure-ring" id="adventureRing" role="progressbar" aria-label="Today’s active practice" aria-valuemin="0"></div><small id="adventureState" class="sr-only">Choose a question to begin</small><button id="adventurePause" class="btn" type="button" aria-label="Pause practice">'+PokeVisuals.icon('pause')+'</button>';
@@ -13,14 +13,12 @@ function createAdventure() {
   const missionButton=document.createElement('button');missionButton.id='startAdventure';missionButton.className='widebtn';missionButton.innerHTML=PokeVisuals.icon('play')+'<span>Play</span>';missionButton.setAttribute('aria-label','Start today’s adventure');
   document.getElementById('missionSlot').append(missionButton);
   missionButton.onclick=()=>{
-    const recent=C.summarize(tracker.sessions,C.shiftDay(today(),-6),today());
-    const arithmetic=Object.values(recent.groups).filter(g=>['add','sub'].includes(g.section)&&g.n>=3).sort((a,b)=>a.accuracy-b.accuracy);
-    mission.focus=arithmetic[0]?.section || 'add';mission.enabled=true;mission.answered=0;
-    audio();shutUp();mode='count';show('quiz');newQuestion();
+    mission.focus='sub';mission.enabled=true;mission.answered=0;
+    audio();shutUp();mode='sub';show('quiz');newQuestion();
   };
   function routeMission(){
     if(!mission.enabled)return;
-    const next=mission.answered<3?'count':mission.answered<9?mission.focus:mission.answered<12?(mission.focus==='add'?'sub':'add'):mission.focus;
+    const next=C.missionSection(mission.answered);
     if(mode!==next){mode=next;show('quiz');}
   }
 
@@ -137,7 +135,7 @@ function createAdventure() {
       const root=cfg.url.replace(/\/+$/,'')+'/fam/'+encodeURIComponent(cfg.code)+'/pokemathAnalytics';
       const upload={};const revisions={};
       for(const id of dirty)if(tracker.sessions[id]){upload['sessions/'+id]=structuredClone(tracker.sessions[id]);revisions[id]=tracker.sessions[id].rev;}
-      upload['devices/'+await deviceId()]={lastSeenAt:Date.now(),build:63,sessionId:tracker.sessionId};
+      upload['devices/'+await deviceId()]={lastSeenAt:Date.now(),build:64,sessionId:tracker.sessionId};
       const r=await fetch(root+'.json',{method:'PATCH',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify(upload),signal:AbortSignal.timeout(15000)});
       if(!r.ok)throw new Error('upload');
       for(const [id,rev] of Object.entries(revisions))if(tracker.sessions[id]?.rev===rev)dirty.delete(id);
