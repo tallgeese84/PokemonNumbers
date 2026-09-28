@@ -47,3 +47,11 @@ The initial publication attempt was blocked because this repository was missing 
 Email is disabled by default until the repository secrets and `POKEMATH_REPORTS_ENABLED=true` are configured. See REPORT_SETUP.md. No Gmail account was accessed, no real child activity was read, and no test email was sent.
 
 Before release, run the tests and verify on a test browser/profile: wrong twice then correct; leave/reopen an unfinished question; request help then answer; wait 60 seconds for the pause prompt; background the app; browse collection; finish the time goal; inspect parent journal; load offline after one online visit. Check small-phone and tablet layouts. Confirm activity sync on Jonah's device and then validate email with dry-run before a real send.
+
+# v65 visual foundations and daily reports
+
+Play now cycles through structured number splitting, take-away manipulation, missing-part questions, undoing subtraction, predict-then-check, number composition and equal-group berry sharing. Each foundation skill has its own 5-of-6 varied first-try progression and smaller-number fallback. Built-in visual support remains explicit in records. No mental-strategy claims are inferred from keypad accuracy. Existing learning records and collection are retained.
+
+Grown-ups provides today/yesterday reports, per-skill support and timing, matching weekly comparisons, retention and level changes, suggested practice and a text report download. The existing JSON export remains available for review in ChatGPT. Private Drive mirroring is not connected for Jonah; email remains disabled. Euna's existing relay accepts only Mochi backups and is not reused or modified.
+
+Local: 43 passing tests, including all foundation UI branches in a synthetic DOM, construction correction, predict conceal/reveal, help credit, pending question restoration, bounds including zero, separate progression, report denominators and freshness. Existing timing, sync, reward catalogue and legacy activity tests pass. Live browser checks pending publication.

@@ -13,13 +13,15 @@ function createAdventure() {
   const missionButton=document.createElement('button');missionButton.id='startAdventure';missionButton.className='widebtn';missionButton.innerHTML=PokeVisuals.icon('play')+'<span>Play</span>';missionButton.setAttribute('aria-label','Start today’s adventure');
   document.getElementById('missionSlot').append(missionButton);
   missionButton.onclick=()=>{
-    mission.focus='sub';mission.enabled=true;mission.answered=0;
+    mission.focus='sub';mission.enabled=true;mission.answered=0;try{mission.answered=Math.max(0,Number(localStorage.getItem('pokemath_mission_step'))||0);}catch(e){}
     audio();shutUp();mode='sub';show('quiz');newQuestion();
   };
   function routeMission(){
-    if(!mission.enabled)return;
-    const next=C.missionSection(mission.answered);
-    if(mode!==next){mode=next;show('quiz');}
+    if(!mission.enabled)return false;
+    const next=PokeFoundations.skillAt(mission.answered);
+    if(next!=='add'){foundations.start(next);return true;}
+    if(mode!=='add'){mode='add';show('quiz');}
+    return false;
   }
 
   const idle=document.createElement('div');idle.id='adventureIdle';idle.className='adventure-modal';idle.hidden=true;
@@ -29,7 +31,7 @@ function createAdventure() {
   goal.innerHTML='<div class="adventure-dialog goal-dialog" role="dialog" aria-modal="true" aria-labelledby="goalTitle"><div class="goal-sparkles" aria-hidden="true">★</div><div class="trainer-scene"><img class="trainer-avatar" src="assets/jonah-avatar.webp" alt="Jonah’s avatar" width="900" height="900"><img id="goalPokemon" alt="Your Pokémon celebrates" class="goal-pokemon trainer-buddy" onerror="this.style.display=\'none\'"></div><h2 id="goalTitle">You did it!</h2><p id="goalMessage"></p><button class="btn" id="adventureFinish" aria-label="Finish for today">'+PokeVisuals.icon('home')+'<span>Done</span></button><button class="btn secondary" id="adventureBonus" aria-label="Play three bonus minutes" hidden>'+PokeVisuals.icon('play')+'<span>+3 min</span></button></div>';
   document.body.append(goal);
   const dashboard=document.createElement('section');dashboard.id='learningDashboard';dashboard.className='learning-dashboard';
-  dashboard.innerHTML='<h2>Learning journal</h2><p class="muted">Small steps, seen over time · Madison time</p><details><summary>Practice goal &amp; optional bonus</summary><div class="journal-controls"><label>Daily goal <select id="goalMinutes"><option value="10">10 minutes</option><option value="15">15 minutes</option><option value="20">20 minutes</option></select></label><label><input id="enableBonus" type="checkbox"> Allow a 3-minute bonus</label></div></details><div class="journal-controls"><label>View <select id="journalPeriod"><option value="today">Today</option><option value="week">Last 7 days</option></select></label><button class="btn" id="exportLearning">Export history</button></div><div id="journalBody"></div><p id="journalSync" class="muted"></p><p class="muted">The clock counts visible questions, thinking and learning aids. It pauses after 60 seconds without interaction, during rewards, in other tabs and in parent settings. Time is an estimate, not a measurement of attention.</p><hr></section>';
+  dashboard.innerHTML='<h2>Learning journal</h2><p class="muted">Small steps, seen over time · Madison time</p><details><summary>Practice goal &amp; optional bonus</summary><div class="journal-controls"><label>Daily goal <select id="goalMinutes"><option value="10">10 minutes</option><option value="15">15 minutes</option><option value="20">20 minutes</option></select></label><label><input id="enableBonus" type="checkbox"> Allow a 3-minute bonus</label></div></details><div class="journal-controls"><label>View <select id="journalPeriod"><option value="today">Today</option><option value="yesterday">Yesterday</option><option value="week">Last 7 days</option></select></label><button class="btn" id="exportLearning">Export history</button><button class="btn" id="exportDailyReport">Save daily report</button></div><div id="journalBody"></div><p id="journalSync" class="muted"></p><p class="muted">The clock counts visible questions, thinking and learning aids. It pauses after 60 seconds without interaction, during rewards, in other tabs and in parent settings. Time is an estimate, not a measurement of attention.</p><hr></section>';
   document.querySelector('#parentPanel .parent-head').after(dashboard);
   const fmt=ms=>`${Math.floor(ms/60000)}:${String(Math.floor(ms/1000)%60).padStart(2,'0')}`;
   const mins=ms=>(ms/60000).toFixed(1);
@@ -80,10 +82,10 @@ function createAdventure() {
     tracker.setSection(meta.section);
     const p=plans[meta.section+':'+meta.skill] || plan(meta.section,meta.skill);
     const manual=(meta.section==='add'||meta.section==='sub') && picMode!=='auto';
-    const ref=tracker.begin({...meta,level:p.level,manual,echo:!!meta.echo},pendingRef);
+    const ref=tracker.begin({...meta,level:meta.section==='foundation'?meta.level:p.level,manual,echo:!!meta.echo},pendingRef);
     tracker.setBlocked(blocked());save();render();return ref;
   }
-  function respond(value,correct) {if(!loaded)return;tracker.answer(value,correct);if(correct && mission.enabled)mission.answered++;save();render();}
+  function respond(value,correct) {if(!loaded)return;tracker.answer(value,correct);if(correct && mission.enabled){mission.answered++;try{localStorage.setItem('pokemath_mission_step',String(mission.answered));}catch(e){}}save();render();}
   function help(kind){tracker?.help(kind);save();}
   function section(name){if(['home','games','team','cards','badges'].includes(name))mission.enabled=false;tracker?.setSection(name);save();render();}
   function celebrate() {
@@ -112,7 +114,7 @@ function createAdventure() {
   }
   function journal() {
     if(!loaded)return;
-    const day=today(),weekly=$('journalPeriod').value==='week';
+    const day=$('journalPeriod').value==='yesterday'?C.shiftDay(today(),-1):today(),weekly=$('journalPeriod').value==='week';
     const from=weekly?C.shiftDay(day,-6):day;
     const s=C.summarize(tracker.sessions,from,day);
     const week=C.summarize(tracker.sessions,C.shiftDay(day,-6),day), prev=C.summarize(tracker.sessions,C.shiftDay(day,-13),C.shiftDay(day,-7));
@@ -125,8 +127,9 @@ function createAdventure() {
     const rows=Object.entries(s.sections).map(([key,ms])=>`<div class="journal-bar"><span>${esc(C.LABELS[key] || key)}</span><meter min="0" max="${Math.max(s.practiceMs,1)}" value="${ms}"></meter><b>${mins(ms)} min</b></div>`).join('');
     const groups=Object.values(s.groups).map(x=>`<tr><td>${esc(C.LABELS[x.section])}<small>${esc(x.skill)} · ≤${x.range} · ${esc(x.support)} · ${esc(x.format)}</small></td><td>${x.independent}/${x.n}<small>${pct(x.accuracy)}</small></td><td>${x.helped}</td><td>${x.medianMs===null?'—':(x.medianMs/1000).toFixed(1)+'s'}</td></tr>`).join('');
     const trends=comparisons.map(x=>`<li>${esc(C.LABELS[x.section])} · ${esc(x.skill)} · ≤${x.range} · ${esc(x.support)} · ${esc(x.format)}: ${x.accuracyChange===null?'Too little data (need ≥5 attempts in each week)':(x.accuracyChange>=0?'+':'')+Math.round(x.accuracyChange*100)+' percentage points'}; n=${x.n} / ${x.previousN}.${x.timeChange===null?'':' Typical independent response '+(x.timeChange>=0?'+':'')+(x.timeChange/1000).toFixed(1)+'s.'}</li>`).join('');
-    const changes=[...new Set(C.allQuestions(tracker.sessions).map(q=>q.section+':'+q.skill))].flatMap(key=>{const [section,skill]=key.split(':');return C.planFor(section,skill,tracker.sessions).changes.map(c=>({...c,section,skill}));}).filter(c=>C.dayKey(c.at)>=from && C.dayKey(c.at)<=day);
+    const changes=[...new Set(C.allQuestions(tracker.sessions).map(q=>q.section+':'+q.skill))].flatMap(key=>{const [section,skill]=key.split(':');return (section==='foundation'?PokeFoundations.plan(skill,tracker.sessions):C.planFor(section,skill,tracker.sessions)).changes.map(c=>({...c,section,skill}));}).filter(c=>C.dayKey(c.at)>=from && C.dayKey(c.at)<=day);
     $('journalBody').innerHTML=`<p>Today’s active practice: <strong>${fmt(total())} / ${fmt(goalMs())}</strong></p><div class="journal-stats"><div><b>${mins(s.practiceMs)}</b><span>active minutes</span></div><div><b>${s.attempted}</b><span>questions attempted</span></div><div><b>${pct(s.accuracy)}</b><span>independent accuracy</span></div></div><p>${s.completed} completed · ${s.helped} helped · ${s.started-s.completed} unfinished. Foreground: ${mins(s.foregroundMs)} min; collection: ${mins(s.collectionMs)} min.</p><p class="muted">Previous 7 days: ${(priorDays.practiceMs/60000/7).toFixed(1)} active min/day, ${pct(priorDays.accuracy)} independent (${priorDays.attempted} attempts). Unsynced activity may be missing.</p>${chart}<h3>Where the time went</h3>${rows || '<p>No active practice recorded in this period.</p>'}<div class="journal-table"><table><thead><tr><th>Skill and task</th><th>Independent</th><th>Help</th><th>Median response</th></tr></thead><tbody>${groups}</tbody></table></div><p class="muted">Independent = correct first response with no extra help. Built-in pictures, beads and number-line support are shown above and are compared separately. Writing measures guided tracing completion, not freehand mastery.</p><h3>Last 7 days vs previous 7</h3><ul>${trends || '<li>Too little data for a comparison yet.</li>'}</ul><p>Later-day checks: ${s.retention.independent}/${s.retention.checked} independent. Matched early/late sessions: ${s.fatigue.sessions}${s.fatigue.sessions?', '+pct(s.fatigue.early)+' → '+pct(s.fatigue.late):''}.</p><h3>Difficulty changes</h3><ul>${changes.map(c=>`<li>${esc(C.LABELS[c.section])} (${esc(c.skill)}): step ${c.from+1} → ${c.to+1}. ${esc(c.reason)}.</li>`).join('') || '<li>No confirmed changes in this period.</li>'}</ul><div class="journal-next"><h3>Next practice</h3><p>${esc(g.focus)}</p><p>${esc(g.duration)}</p><p><b>With real objects:</b> ${esc(g.offline)}</p></div><details><summary>Recent first-response mistakes</summary><ul>${s.mistakes.slice(-10).map(m=>`<li>${esc(C.LABELS[m.section])} (${esc(m.skill)}, ${esc(m.format)}): ${m.a??''}, ${m.b??''}; answered ${esc(m.first)}, expected ${m.expected}.</li>`).join('') || '<li>None recorded.</li>'}</ul></details>`;
+    const report=document.createElement('details');report.open=true;const title=document.createElement('summary');title.textContent='Daily progress report · '+day;const body=document.createElement('div');body.className='daily-report';body.textContent=PokeFoundations.dailyReport(tracker.sessions,day,lastSync,dirty.size>0);report.append(title,body);$('journalBody').prepend(report);
     $('journalSync').textContent=syncMessage+(lastSync?' · last confirmed upload '+new Date(lastSync).toLocaleString('en-US',{timeZone:C.ZONE}):'')+ (dirty.size?' · local changes waiting to sync':'');
   }
   async function sync(cfg) {
@@ -135,7 +138,7 @@ function createAdventure() {
       const root=cfg.url.replace(/\/+$/,'')+'/fam/'+encodeURIComponent(cfg.code)+'/pokemathAnalytics';
       const upload={};const revisions={};
       for(const id of dirty)if(tracker.sessions[id]){upload['sessions/'+id]=structuredClone(tracker.sessions[id]);revisions[id]=tracker.sessions[id].rev;}
-      upload['devices/'+await deviceId()]={lastSeenAt:Date.now(),build:64,sessionId:tracker.sessionId};
+      upload['devices/'+await deviceId()]={lastSeenAt:Date.now(),build:65,sessionId:tracker.sessionId};
       const r=await fetch(root+'.json',{method:'PATCH',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify(upload),signal:AbortSignal.timeout(15000)});
       if(!r.ok)throw new Error('upload');
       for(const [id,rev] of Object.entries(revisions))if(tracker.sessions[id]?.rev===rev)dirty.delete(id);
@@ -155,6 +158,7 @@ function createAdventure() {
   $('goalMinutes').onchange=()=>{settings.goalMinutes=Number($('goalMinutes').value);saveSettings();};
   $('enableBonus').onchange=()=>{settings.bonusEnabled=$('enableBonus').checked;saveSettings();};
   $('journalPeriod').onchange=journal;
+  $('exportDailyReport').onclick=()=>{const day=$('journalPeriod').value==='yesterday'?C.shiftDay(today(),-1):today();const blob=new Blob([PokeFoundations.dailyReport(tracker.sessions,day,lastSync,dirty.size>0)],{type:'text/plain'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='jonah-daily-report-'+day+'.txt';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);};
   $('exportLearning').onclick=()=>{save();const blob=new Blob([JSON.stringify({schema:1,timezone:C.ZONE,exportedAt:new Date().toISOString(),sessions:tracker.sessions},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='pokemath-learning-'+today()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);};
   document.addEventListener('pointerdown',ev=>{if(!blocked() && ev.target.closest('.screen.on'))tracker?.interact();},true);
   document.addEventListener('pointermove',ev=>{if(ev.buttons && !blocked() && ev.target.closest('canvas'))tracker?.interact();},true);

@@ -776,12 +776,15 @@
     .pad button{ font-size:18px; min-height:42px; }
   }
 </style>
-<link rel="stylesheet" href="adventure.css?v=64">
-<link rel="stylesheet" href="visuals.css?v=64">
-<script src="visuals.js?v=64"></script>
-<script src="assets/pokemon-catalog.js?v=64"></script>
-<script src="learning-core.js?v=64"></script>
-<script src="adventure.js?v=64"></script>
+<link rel="stylesheet" href="adventure.css?v=65">
+<link rel="stylesheet" href="visuals.css?v=65">
+<script src="visuals.js?v=65"></script>
+<script src="assets/pokemon-catalog.js?v=65"></script>
+<script src="learning-core.js?v=65"></script>
+<script src="adventure.js?v=65"></script>
+<script src="foundations.js?v=65"></script>
+<script src="foundation-ui.js?v=65"></script>
+<link rel="stylesheet" href="foundations.css?v=65">
 </head>
 <body data-screen="home">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
@@ -884,7 +887,7 @@
       <button class="quiet-choice" id="gamesBtn" aria-label="Choose a game"><span data-illustration="games"></span><strong>Games</strong></button>
       <button class="quiet-choice" id="teamBtn" aria-label="My Pokémon"><span data-illustration="team"></span><strong>Pokémon</strong><small id="teamTally" hidden></small></button>
     </div>
-    <footer class="home-footer"><span id="parentEntry"></span><span class="build-label">v64</span></footer>
+    <footer class="home-footer"><span id="parentEntry"></span><span class="build-label">v65</span></footer>
   </div>
 
   <!-- The other activities stay available, three pictures at a time. -->
@@ -2471,7 +2474,7 @@ document.getElementById('qtext').addEventListener('click', () => { if (q.phrase)
 document.getElementById('eqline').addEventListener('click', () => { if (q.phrase) say(q.phrase, true); });
 
 function newQuestion(){
-  adventure.routeMission();
+  if (adventure.routeMission()) return;
   if (!adventure.beforeQuestion() || !['count','add','sub'].includes(mode)) return;
   const questionMode = mode;
   const generation = q.generation = (q.generation || 0) + 1;
@@ -4376,7 +4379,7 @@ document.addEventListener('visibilitychange', () => {
       ['numbers to 30', TRACE_MAX === 30]
     ];
     document.getElementById('ppVer').textContent =
-      'build v64 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
+      'build v65 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
     showPraise(praiseLine(true));
     say(praiseLine(true));
   });
@@ -4439,6 +4442,7 @@ if ('serviceWorker' in navigator){
   }
 })();
 const adventure=createAdventure();
+const foundations=createFoundations();
 PokeVisuals.init();
 PokeVisuals.screen('home', 'home');
 buildNumRow();
