@@ -12,7 +12,7 @@ function createFoundations(){
  function active(){return mode==='foundation'&&!adventure.isPaused()&&!done;}
  function button(text,label,fn){const b=document.createElement('button');b.type='button';b.className='btn';b.textContent=text;b.setAttribute('aria-label',label);b.onclick=()=>{if(active())fn();};return b;}
  function token(index,selected,fn){const b=button('',selected?'Bring Pokémon '+(index+1)+' back':'Move Pokémon '+(index+1),fn);b.className='foundation-token';const im=document.createElement('img');im.src=safeArt(task.mon);im.alt='';im.onerror=()=>{im.remove();b.textContent='●';};b.append(im);return b;}
- function frame(indices,clickable=true){const el=document.createElement('div');el.className='foundation-frame '+task.variant;
+ function frame(indices,clickable=true){const el=document.createElement('div');el.className='foundation-frame '+task.variant+(task.a<=3?' small-whole':'');
  indices.forEach(i=>{const b=token(i,moved.includes(i),()=>{moved=moved.includes(i)?moved.filter(x=>x!==i):[...moved,i];recordAction('move part',moved.length);save();draw();});b.disabled=!clickable||done;el.append(b);});
  if(!indices.length){const zero=document.createElement('strong');zero.textContent='0';el.append(zero);}return el;}
  function caption(text){const p=document.createElement('div');p.className='foundation-caption';p.textContent=text;return p;}
@@ -43,7 +43,7 @@ function createFoundations(){
  const t=task,board=$('foundationBoard'),actions=$('foundationActions');board.replaceChildren();actions.replaceChildren();$('foundationFeedback').textContent='';
  const all=Array.from({length:t.a},(_,i)=>i),remaining=all.filter(i=>!moved.includes(i));
  const reveal=phase==='reveal';
- $('foundationEquation').textContent=done?(t.skill==='groups'?Array(t.a).fill(t.b).join(' + ')+' = '+t.expected:`${t.a} = ${t.b} + ${t.a-t.b}`):'';
+ $('foundationEquation').textContent=done?(t.skill==='groups'?Array(t.a).fill(t.b).join(' + ')+' = '+t.expected:`${t.a} = ${t.b} + ${t.a-t.b}\n${t.a} − ${t.b} = ${t.a-t.b}`):'';
  if(t.skill==='groups'){
   phrase=phase==='build'?`Give each Pokémon ${t.b} berries. Tap a bowl to add a berry. Tap minus to take one back.`:'How many berries altogether?';
   $('foundationPrompt').textContent=phase==='build'?`${t.b} each`:'Altogether?';
