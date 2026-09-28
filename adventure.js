@@ -3,6 +3,7 @@ function createAdventure() {
   'use strict';
   const C=PokeLearning, $=id=>document.getElementById(id);
   const KEY='pokemath_learning_v1', SETTINGS='pokemath_learning_settings';
+  let mirror=null;
   let tracker, dirty=new Set(), savedAt=0, syncing=false, lastSync=0, syncMessage='Not connected — saved on this device';
   let settings={goalMinutes:15,bonusEnabled:false}, goalShown={}, bonusDay=null, modal=false, loaded=false;
   const mission={enabled:false,answered:0,focus:'sub'};
@@ -44,7 +45,7 @@ function createAdventure() {
   const blocked=()=>parentOpen() || modal || !$('adventureIdle').hidden || rewardPending() || !leaseOwned;
   function save() {
     if(!tracker)return;
-    try { localStorage.setItem(KEY,JSON.stringify({sessions:tracker.sessions,dirty:[...dirty],lastSync,goalShown,bonusDay})); savedAt=Date.now(); }
+    try { localStorage.setItem(KEY,JSON.stringify({sessions:tracker.sessions,dirty:[...dirty],lastSync,goalShown,bonusDay})); savedAt=Date.now(); mirror?.schedule(); }
     catch(e){syncMessage='Storage is full or unavailable. Keep this tab open and sync/export your history.';}
   }
   function saveSettings(){try{localStorage.setItem(SETTINGS,JSON.stringify(settings));}catch(e){syncMessage='Settings could not be saved on this device.';}render();}
@@ -68,6 +69,7 @@ function createAdventure() {
     tracker.sessions[tracker.sessionId].deviceId=await deviceId();
     $('goalMinutes').value=String(settings.goalMinutes);$('enableBonus').checked=settings.bonusEnabled;
     loaded=true;updateLease();render();
+    mirror=PokeMirror.mount(()=>({sessions:tracker.sessions,settings,lastCloudSyncAt:lastSync}));
   })();
   async function deviceId(){let d=await store.get('pokemath_device');if(!d){d=crypto.randomUUID();await store.set('pokemath_device',d);}return d;}
   function plan(section, skill=section) {
@@ -138,7 +140,7 @@ function createAdventure() {
       const root=cfg.url.replace(/\/+$/,'')+'/fam/'+encodeURIComponent(cfg.code)+'/pokemathAnalytics';
       const upload={};const revisions={};
       for(const id of dirty)if(tracker.sessions[id]){upload['sessions/'+id]=structuredClone(tracker.sessions[id]);revisions[id]=tracker.sessions[id].rev;}
-      upload['devices/'+await deviceId()]={lastSeenAt:Date.now(),build:65,sessionId:tracker.sessionId};
+      upload['devices/'+await deviceId()]={lastSeenAt:Date.now(),build:66,sessionId:tracker.sessionId};
       const r=await fetch(root+'.json',{method:'PATCH',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify(upload),signal:AbortSignal.timeout(15000)});
       if(!r.ok)throw new Error('upload');
       for(const [id,rev] of Object.entries(revisions))if(tracker.sessions[id]?.rev===rev)dirty.delete(id);
@@ -159,7 +161,7 @@ function createAdventure() {
   $('enableBonus').onchange=()=>{settings.bonusEnabled=$('enableBonus').checked;saveSettings();};
   $('journalPeriod').onchange=journal;
   $('exportDailyReport').onclick=()=>{const day=$('journalPeriod').value==='yesterday'?C.shiftDay(today(),-1):today();const blob=new Blob([PokeFoundations.dailyReport(tracker.sessions,day,lastSync,dirty.size>0)],{type:'text/plain'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='jonah-daily-report-'+day+'.txt';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);};
-  $('exportLearning').onclick=()=>{save();const blob=new Blob([JSON.stringify({schema:1,timezone:C.ZONE,exportedAt:new Date().toISOString(),sessions:tracker.sessions},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='pokemath-learning-'+today()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);};
+  $('exportLearning').onclick=()=>{save();const blob=new Blob([JSON.stringify({...PokeMirror.backup({sessions:tracker.sessions,settings,lastCloudSyncAt:lastSync})},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='pokemath-learning-'+today()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);};
   document.addEventListener('pointerdown',ev=>{if(!blocked() && ev.target.closest('.screen.on'))tracker?.interact();},true);
   document.addEventListener('pointermove',ev=>{if(ev.buttons && !blocked() && ev.target.closest('canvas'))tracker?.interact();},true);
   document.addEventListener('keydown',ev=>{if(!blocked() && ev.target.closest('.screen.on'))tracker?.interact();},true);
