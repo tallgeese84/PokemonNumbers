@@ -776,16 +776,16 @@
     .pad button{ font-size:18px; min-height:42px; }
   }
 </style>
-<link rel="stylesheet" href="adventure.css?v=66">
-<link rel="stylesheet" href="visuals.css?v=66">
-<script src="visuals.js?v=66"></script>
-<script src="assets/pokemon-catalog.js?v=66"></script>
-<script src="learning-core.js?v=66"></script>
-<script src="drive-mirror.js?v=66"></script>
-<script src="adventure.js?v=66"></script>
-<script src="foundations.js?v=66"></script>
-<script src="foundation-ui.js?v=66"></script>
-<link rel="stylesheet" href="foundations.css?v=66">
+<link rel="stylesheet" href="adventure.css?v=67">
+<link rel="stylesheet" href="visuals.css?v=67">
+<script src="visuals.js?v=67"></script>
+<script src="assets/pokemon-catalog.js?v=67"></script>
+<script src="learning-core.js?v=67"></script>
+<script src="drive-mirror.js?v=67"></script>
+<script src="adventure.js?v=67"></script>
+<script src="foundations.js?v=67"></script>
+<script src="foundation-ui.js?v=67"></script>
+<link rel="stylesheet" href="foundations.css?v=67">
 </head>
 <body data-screen="home">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
@@ -888,14 +888,14 @@
       <button class="quiet-choice" id="gamesBtn" aria-label="Choose a game"><span data-illustration="games"></span><strong>Games</strong></button>
       <button class="quiet-choice" id="teamBtn" aria-label="My Pokémon"><span data-illustration="team"></span><strong>Pokémon</strong><small id="teamTally" hidden></small></button>
     </div>
-    <footer class="home-footer"><span id="parentEntry"></span><span class="build-label">v66</span></footer>
+    <footer class="home-footer"><span id="parentEntry"></span><span class="build-label">v67</span></footer>
   </div>
 
   <!-- The other activities stay available, three pictures at a time. -->
   <div class="screen" id="scr-games">
     <h2 class="sr-only">Choose a game</h2>
     <div class="modes" id="gameChoices">
-      <button class="mode count" data-go="count" aria-label="Counting"><span class="game-picture" data-illustration="count"></span><span class="mode-label">Count</span></button>
+      <button class="mode count" data-go="count" aria-label="Counting warm-up"><span class="game-picture" data-illustration="count"></span><span class="mode-label">Warm-up</span></button>
       <button class="mode add" data-go="add" aria-label="Adding"><span class="game-picture" data-illustration="add"></span><span class="mode-label">Add</span></button>
       <button class="mode sub" data-go="sub" aria-label="Taking away"><span class="game-picture" data-illustration="sub"></span><span class="mode-label">Take</span></button>
       <button class="mode trace" data-go="trace" aria-label="Write numbers"><span class="game-picture" data-illustration="trace"></span><span class="mode-label">Write</span></button>
@@ -4380,7 +4380,7 @@ document.addEventListener('visibilitychange', () => {
       ['numbers to 30', TRACE_MAX === 30]
     ];
     document.getElementById('ppVer').textContent =
-      'build v66 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
+      'build v67 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
     showPraise(praiseLine(true));
     say(praiseLine(true));
   });
