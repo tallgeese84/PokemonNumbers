@@ -13,11 +13,18 @@ function createAdventure() {
   document.querySelector('.topbar').after(timer);
   const missionButton=document.createElement('button');missionButton.id='startAdventure';missionButton.className='widebtn';missionButton.innerHTML=PokeVisuals.icon('play')+'<span>Play</span>';missionButton.setAttribute('aria-label','Start today’s adventure');
   document.getElementById('missionSlot').append(missionButton);
+  function enableMission(){
+    mission.focus='sub';mission.enabled=true;mission.answered=0;
+    try{const step=Number(localStorage.getItem('pokemath_mission_step'));if(Number.isSafeInteger(step)&&step>=0)mission.answered=step;}catch(e){}
+  }
   missionButton.onclick=()=>{
-    mission.focus='sub';mission.enabled=true;mission.answered=0;try{mission.answered=Math.max(0,Number(localStorage.getItem('pokemath_mission_step'))||0);}catch(e){}
+    enableMission();
     audio();shutUp();mode='sub';show('quiz');newQuestion();
   };
   function routeMission(){
+    // Count used to repeat forever outside Play. Use saved daily history so
+    // returning to Games or refreshing cannot restart an endless counting run.
+    if(!mission.enabled&&mode==='count'&&PokeFoundations.countWarmupDone(tracker?.sessions||{},today()))enableMission();
     if(!mission.enabled)return false;
     const next=PokeFoundations.skillAt(mission.answered);
     if(next!=='add'){foundations.start(next);return true;}
@@ -140,7 +147,7 @@ function createAdventure() {
       const root=cfg.url.replace(/\/+$/,'')+'/fam/'+encodeURIComponent(cfg.code)+'/pokemathAnalytics';
       const upload={};const revisions={};
       for(const id of dirty)if(tracker.sessions[id]){upload['sessions/'+id]=structuredClone(tracker.sessions[id]);revisions[id]=tracker.sessions[id].rev;}
-      upload['devices/'+await deviceId()]={lastSeenAt:Date.now(),build:66,sessionId:tracker.sessionId};
+      upload['devices/'+await deviceId()]={lastSeenAt:Date.now(),build:67,sessionId:tracker.sessionId};
       const r=await fetch(root+'.json',{method:'PATCH',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify(upload),signal:AbortSignal.timeout(15000)});
       if(!r.ok)throw new Error('upload');
       for(const [id,rev] of Object.entries(revisions))if(tracker.sessions[id]?.rev===rev)dirty.delete(id);

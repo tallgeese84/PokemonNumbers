@@ -2,6 +2,21 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),F=require
 const sessions=qs=>({test:{id:'test',rev:1,days:{},questions:Object.fromEntries(qs.map((q,i)=>[i,q]))}});
 function history(skill,n,extra={}){return Array.from({length:n},(_,i)=>({...F.make(skill,{...F.plan(skill,{}),recent:[]},()=>i%5/5),id:String(i),day:'2026-09-27',startedAt:i*1000,completedAt:i*1000+900,responses:[{correct:true}],firstResponseMs:30000,...extra}));}
 test('Play mixes 60% part-whole/subtraction, 25% addition/patterns and 15% equal groups',()=>{const a=Array.from({length:20},(_,i)=>F.skillAt(i));assert.equal(a.filter(x=>['split','take','missing','undo','predict'].includes(x)).length,12);assert.equal(a.filter(x=>['add','patterns'].includes(x)).length,5);assert.equal(a.filter(x=>x==='groups').length,3);assert.equal(F.skillAt(20),a[0]);});
+test('a new adventure introduces taking away, addition and a covered prediction in its first three tasks',()=>{
+ assert.deepEqual([0,1,2].map(F.skillAt),['take','add','predict']);
+});
+test('count warm-up uses completed questions for this day, including helped successes, across saved sessions',()=>{
+ const day='2026-09-27',qs=history('split',3,{section:'count',day});
+ assert.equal(F.countWarmupDone(sessions(qs.slice(0,2)),day),false);
+ qs[2].helped=true;
+ const saved={...sessions(qs.slice(0,2)),other:{id:'other',rev:1,days:{},questions:{third:qs[2]}}};
+ assert.equal(F.countWarmupDone(JSON.parse(JSON.stringify(saved)),day),true);
+ assert.equal(F.countWarmupDone(saved,'2026-09-28'),false);
+ delete qs[2].completedAt;
+ assert.equal(F.countWarmupDone(saved,day),false);
+ qs[2].completedAt=9999;qs[2].section='add';
+ assert.equal(F.countWarmupDone(saved,day),false);
+});
 test('all generated relationships and equal groups stay within their declared range including zero subtraction',()=>{for(const skill of Object.keys(F.labels))for(const p of F.stages(skill))for(let i=0;i<100;i++){const t=F.make(skill,p,()=>i/100);assert.ok(t.expected>=0&&t.expected<=p.range);assert.ok(t.b<=t.a||skill==='groups');assert.equal(t.expected,skill==='groups'?t.a*t.b:skill==='missing'?t.b:skill==='undo'?t.a:t.a-t.b);}});
 test('mastery is specific to the relationship and cannot transfer from visible counting or extra help',()=>{const qs=history('split',6);assert.equal(F.plan('split',sessions(qs)).level,1);assert.equal(F.plan('predict',sessions(qs)).level,0);for(const extra of [{helped:true},{support:'pictures'},{a:5,b:2,expected:3}])assert.equal(F.plan('split',sessions(history('split',6,extra))).level,0);});
 test('repeated difficulty restores small groups after promotion',()=>{const qs=history('split',6);qs.push(...history('split',5,{level:1,range:10,helped:true}).map((q,i)=>({...q,startedAt:10000+i*1000,completedAt:10900+i*1000})));assert.equal(F.plan('split',sessions(qs)).level,0);});

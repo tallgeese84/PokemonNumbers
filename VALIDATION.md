@@ -1,3 +1,9 @@
+# v67 bounded counting warm-up
+
+The standalone Count game previously repeated indefinitely and bypassed the mixed foundation sequence. It now moves into that sequence after three completed counting questions on the current Madison calendar day. The limit includes helped completions, persists through saved session history, and does not treat counting success as mastery of addition or subtraction. The game tile is labeled Warm-up. A new mixed cycle begins with taking away, addition, and covered prediction, while retaining its 60% part-whole/subtraction, 25% addition/patterns, and 15% equal-groups balance. Focused Add and Take games remain available.
+
+Validation: 54 regression tests pass, including the real routing handlers, helped warm-ups, re-entering Games, saved-history reloads, day boundaries, malformed sequence positions, and the existing visual foundations and Drive mirror checks. Shipped JavaScript parses and the diff passes whitespace checks. Browser interaction could not be rechecked in this session because the browser connection remained unavailable; no child records or connection settings were modified for testing.
+
 # v60 personalized avatar
 
 Base: `72d66a24f164c1fd5abc1f56c6eb37ddf0d8027b` (v59).

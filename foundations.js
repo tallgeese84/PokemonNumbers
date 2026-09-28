@@ -3,8 +3,13 @@
 'use strict';
 const labels={split:'Splitting a whole',take:'Taking a part away',missing:'Finding what left',undo:'Putting the whole back',predict:'Predicting what remains',groups:'Building equal groups',patterns:'Seeing number parts'};
 // 12/20 subtraction/parts, 5/20 addition/patterns, 3/20 equal groups.
-const cycle=['split','take','missing','patterns','undo','predict','groups','split','missing','add','take','predict','patterns','groups','missing','undo','patterns','add','predict','groups'];
+const cycle=['take','add','predict','patterns','undo','missing','groups','split','missing','split','take','predict','patterns','groups','missing','undo','patterns','add','predict','groups'];
 const skillAt=n=>cycle[n%cycle.length];
+// Counting is a brief warm-up. Completed supported attempts count too: this is
+// a practice-mix limit, not evidence of mastery or a gate on learning new skills.
+function countWarmupDone(sessions,day){
+ return C.allQuestions(sessions).filter(q=>q.section==='count'&&q.day===day&&q.completedAt).length>=3;
+}
 function stages(skill){
  const support=['split','take','undo','groups'].includes(skill)?'interactive groups':skill==='predict'?'predict then check':'structured pictures';
  return [{range:skill==='groups'?6:5,support,format:skill},{range:skill==='groups'?10:10,support,format:skill}];
@@ -49,5 +54,5 @@ function dailyReport(sessions,day,lastSync=0,dirty=false){
  if(dirty)text.push('Local changes are waiting to sync. Other devices may have missing activity.');
  return text.join('\n\n');
 }
-return {labels,skillAt,stages,plan,make,dailyReport};
+return {labels,skillAt,countWarmupDone,stages,plan,make,dailyReport};
 });
