@@ -21,6 +21,18 @@ and is not included in this repository. Personal, non-commercial project.
 To ship an update, bump `CACHE = 'pokemath-v1'` in `sw.js` (v2, v3, ...) so
 installed tablets pick up the new version.
 
+## v69 — the maths path to P1
+
+Play's maths questions now come from a **maths path**: 28 skills in 8 Gyms, from K2 groundwork to the full Singapore P1 syllabus (2021): numbers to 100 with tens and ones, ordinals, comparing and patterns; adding and subtracting within 100 (mental within 20, renaming, story problems with bar-model help); multiplying within 40 and dividing within 20; money to $1 and $100; time to 5 minutes; length in cm; 2D shapes; picture graphs.
+
+- **Early skills keep the existing games.** Counting, number bonds, adding/taking away within 10 and equal groups still use the part-whole and adding activities, and their history counts towards the path.
+- **Mastery opens the next skill.** A skill is secure after 5 of 6 recent first-try answers across varied questions (latest 3 right); mastered after a later-day success. Skills with harder steps (renaming, half past → 5 minutes) climb one step at a time and drop back after repeated difficulty. Secure skills return for review.
+- **Short maths check** the first time (one try per item, stops at the first miss) places him on the path.
+- **Gym badges**: finishing a Gym earns its badge; Games → **Gyms** shows them and lets him train any open Gym.
+- **👀 help** shows a picture (ten frames, tens and ones blocks, bar models, skip-counting labels, clock minute marks, ruler end) and counts as help.
+
+Grown-ups → **Maths · P1 readiness**: current Gym, pace (all Gyms by October 2027), P1 strands, every skill's status, what he is working on with an idea to try at home, redo the check, mark a skill as known.
+
 ## v68 — reading joins PokéMath
 
 Jonah's Poké Reading app is now a reading wing inside PokéMath, aimed at Singapore P1 English (January 2028).

@@ -1,3 +1,13 @@
+# v69 maths path
+
+Base: v68. Adds `math-path-core.js`, `math-path-ui.js`, `math-path.css`; Play's maths slots ask the path.
+
+Local: 80 Node tests pass (10 new). Every generator (23 question types, all levels, 300 samples each) is checked against an independent solver that reads only what the child sees; P1 limits (sums ≤100, products ≤40, division ≤20, money, 5-minute clock) and renaming/no-renaming levels are checked. Mastery requires varied first-try answers; repeating one fact or helped answers cannot level up. Delegated skills read real foundation histories. Unlocking, placement with prerequisites, routing (check → frontier → existing games → review slot), state merge and redo are covered. A fake-DOM run of the real UI checks independent vs helped credit, help display after two misses, and the one-try maths check.
+
+Browser (headless Chromium, synthetic data, speech stubbed): every question type and its help rendered at 390 px; Play drove reading block → maths check → maths block → reading block with no page errors; Gyms and the grown-ups panel at 820 px. Not checked: a physical tablet, real voices, Firebase sync of the new `mathPath` field.
+
+---
+
 # v68 reading wing
 
 Base: `e2b43b0` (v67). Adds `reading-data.js`, `reading-core.js`, `reading-ui.js`, `reading.css`; Play interleaves reading and maths.

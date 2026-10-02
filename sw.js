@@ -1,6 +1,6 @@
-// PokéMath v68: only app resources and allowlisted artwork enter this cache.
-const CACHE = 'pokemath-v68';
-const CORE = ['./drive-mirror.js?v=68','./foundations.js?v=68','./foundation-ui.js?v=68','./foundations.css?v=68','./reading-data.js?v=68','./reading-core.js?v=68','./reading-ui.js?v=68','./reading.css?v=68','./','./index.html','./manifest.json','./icon-192.png','./icon-512.png','./learning-core.js?v=68','./adventure.js?v=68','./adventure.css?v=68','./visuals.js?v=68','./visuals.css?v=68','./assets/meadow.svg','./assets/jonah-avatar.webp','./assets/pokemon-catalog.js?v=68'];
+// PokéMath v69: only app resources and allowlisted artwork enter this cache.
+const CACHE = 'pokemath-v69';
+const CORE = ['./drive-mirror.js?v=69','./foundations.js?v=69','./foundation-ui.js?v=69','./foundations.css?v=69','./reading-data.js?v=69','./reading-core.js?v=69','./reading-ui.js?v=69','./reading.css?v=69','./math-path-core.js?v=69','./math-path-ui.js?v=69','./math-path.css?v=69','./','./index.html','./manifest.json','./icon-192.png','./icon-512.png','./learning-core.js?v=69','./adventure.js?v=69','./adventure.css?v=69','./visuals.js?v=69','./visuals.css?v=69','./assets/meadow.svg','./assets/jonah-avatar.webp','./assets/pokemon-catalog.js?v=69'];
 self.addEventListener('install',event=>event.waitUntil((async()=>{
   await (await caches.open(CACHE)).addAll(CORE);
   await self.skipWaiting();

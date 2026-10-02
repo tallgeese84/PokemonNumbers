@@ -22,6 +22,7 @@ const PokeVisuals = (() => {
     read:'<path d="M10 20q15-6 30 4v42q-15-9-30-4z" fill="#fff7d6"/><path d="M70 20q-15-6-30 4v42q15-9 30-4z" fill="#dcebf3"/><path d="M18 33h13m-13 9h13m19-9h13m-13 9h9"/>',
     books:'<rect x="12" y="18" width="14" height="48" rx="3" fill="#f4ac96"/><rect x="29" y="12" width="14" height="54" rx="3" fill="#b1d6cd"/><path d="m47 21 13-4 11 46-13 4z" fill="#ffe1a3"/><path d="M12 66h59"/>',
     letters:'<text x="12" y="52" font-size="34" font-weight="800" fill="#476558" stroke="none" font-family="ui-rounded,Arial">a</text><text x="40" y="60" font-size="34" font-weight="800" fill="#c66f57" stroke="none" font-family="ui-rounded,Arial">b</text><path d="M14 66h52" stroke-dasharray="3 6"/>',
+    gyms:'<circle cx="40" cy="40" r="27" fill="#ffe1a3"/><path d="m40 22 5 11 12 1-9 8 3 12-11-6-11 6 3-12-9-8 12-1z" fill="#fff"/>',
     badge:'<path d="m27 48-8 23 20-10 19 10-8-24" fill="#a6cfc4"/><path d="m40 10 8 5 9 1 3 9 5 8-5 8-3 9-9 1-8 5-8-5-9-1-3-9-5-8 5-8 3-9 9-1z" fill="#ffe6a0"/><path d="m29 32 8 8 15-16"/>'
   };
   const icon = key => svg(icons[key] || icons.team);

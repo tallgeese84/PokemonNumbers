@@ -45,6 +45,13 @@ function createAdventure() {
       mission.mathLeft=MATH_BLOCK;
     }
     mission.mathLeft--;
+    // v69: the maths path decides each maths question; early skills still use the part-whole and adding games.
+    if(typeof mathPath!=='undefined'){
+      const r=mathPath.route(MATH_BLOCK-mission.mathLeft-1,mission.answered);
+      if(r.type==='path'){r.start(()=>{if(mission.enabled)newQuestion();});return true;}
+      if(r.type==='foundation'){foundations.start(r.skill);return true;}
+      if(r.type==='quiz'){if(mode!==r.mode){mode=r.mode;show('quiz');}return false;}
+    }
     const next=PokeFoundations.skillAt(mission.answered);
     if(next!=='add'){foundations.start(next);return true;}
     if(mode!=='add'){mode='add';show('quiz');}
@@ -159,7 +166,7 @@ function createAdventure() {
     const trends=comparisons.map(x=>`<li>${esc(C.LABELS[x.section])} · ${esc(x.skill)} · ≤${x.range} · ${esc(x.support)} · ${esc(x.format)}: ${x.accuracyChange===null?'Too little data (need ≥5 attempts in each week)':(x.accuracyChange>=0?'+':'')+Math.round(x.accuracyChange*100)+' percentage points'}; n=${x.n} / ${x.previousN}.${x.timeChange===null?'':' Typical independent response '+(x.timeChange>=0?'+':'')+(x.timeChange/1000).toFixed(1)+'s.'}</li>`).join('');
     const changes=[...new Set(C.allQuestions(tracker.sessions).map(q=>q.section+':'+q.skill))].flatMap(key=>{const [section,skill]=key.split(':');return (section==='foundation'?PokeFoundations.plan(skill,tracker.sessions):C.planFor(section,skill,tracker.sessions)).changes.map(c=>({...c,section,skill}));}).filter(c=>C.dayKey(c.at)>=from && C.dayKey(c.at)<=day);
     $('journalBody').innerHTML=`<p>Today’s active practice: <strong>${fmt(total())} / ${fmt(goalMs())}</strong></p><div class="journal-stats"><div><b>${mins(s.practiceMs)}</b><span>active minutes</span></div><div><b>${s.attempted}</b><span>questions attempted</span></div><div><b>${pct(s.accuracy)}</b><span>independent accuracy</span></div></div><p>${s.completed} completed · ${s.helped} helped · ${s.started-s.completed} unfinished. Foreground: ${mins(s.foregroundMs)} min; collection: ${mins(s.collectionMs)} min.</p><p class="muted">Previous 7 days: ${(priorDays.practiceMs/60000/7).toFixed(1)} active min/day, ${pct(priorDays.accuracy)} independent (${priorDays.attempted} attempts). Unsynced activity may be missing.</p>${chart}<h3>Where the time went</h3>${rows || '<p>No active practice recorded in this period.</p>'}<div class="journal-table"><table><thead><tr><th>Skill and task</th><th>Independent</th><th>Help</th><th>Median response</th></tr></thead><tbody>${groups}</tbody></table></div><p class="muted">Independent = correct first response with no extra help. Built-in pictures, beads and number-line support are shown above and are compared separately. Writing measures guided tracing completion, not freehand mastery.</p><h3>Last 7 days vs previous 7</h3><ul>${trends || '<li>Too little data for a comparison yet.</li>'}</ul><p>Later-day checks: ${s.retention.independent}/${s.retention.checked} independent. Matched early/late sessions: ${s.fatigue.sessions}${s.fatigue.sessions?', '+pct(s.fatigue.early)+' → '+pct(s.fatigue.late):''}.</p><h3>Difficulty changes</h3><ul>${changes.map(c=>`<li>${esc(C.LABELS[c.section])} (${esc(c.skill)}): step ${c.from+1} → ${c.to+1}. ${esc(c.reason)}.</li>`).join('') || '<li>No confirmed changes in this period.</li>'}</ul><div class="journal-next"><h3>Next practice</h3><p>${esc(g.focus)}</p><p>${esc(g.duration)}</p><p><b>With real objects:</b> ${esc(g.offline)}</p></div><details><summary>Recent first-response mistakes</summary><ul>${s.mistakes.slice(-10).map(m=>`<li>${esc(C.LABELS[m.section])} (${esc(m.skill)}, ${esc(m.format)}): ${m.a??''}, ${m.b??''}; answered ${esc(m.first)}, expected ${m.expected}.</li>`).join('') || '<li>None recorded.</li>'}</ul></details>`;
-    const report=document.createElement('details');report.open=true;const title=document.createElement('summary');title.textContent='Daily progress report · '+day;const body=document.createElement('div');body.className='daily-report';body.textContent=(PokeFoundations.dailyReport(tracker.sessions,day,lastSync,dirty.size>0)+'\n\n'+PokeReadingCore.report(tracker.sessions,PokeReadingCore.withSessions(reading.state,tracker.sessions),day));report.append(title,body);$('journalBody').prepend(report);
+    const report=document.createElement('details');report.open=true;const title=document.createElement('summary');title.textContent='Daily progress report · '+day;const body=document.createElement('div');body.className='daily-report';body.textContent=(PokeFoundations.dailyReport(tracker.sessions,day,lastSync,dirty.size>0)+'\n\n'+PokeReadingCore.report(tracker.sessions,PokeReadingCore.withSessions(reading.state,tracker.sessions),day)+'\n\n'+PokeMathPath.report(tracker.sessions,PokeMathPath.withSessions(mathPath.state,tracker.sessions),day));report.append(title,body);$('journalBody').prepend(report);
     $('journalSync').textContent=syncMessage+(lastSync?' · last confirmed upload '+new Date(lastSync).toLocaleString('en-US',{timeZone:C.ZONE}):'')+ (dirty.size?' · local changes waiting to sync':'');
   }
   async function sync(cfg) {
@@ -168,7 +175,7 @@ function createAdventure() {
       const root=cfg.url.replace(/\/+$/,'')+'/fam/'+encodeURIComponent(cfg.code)+'/pokemathAnalytics';
       const upload={};const revisions={};
       for(const id of dirty)if(tracker.sessions[id]){upload['sessions/'+id]=structuredClone(tracker.sessions[id]);revisions[id]=tracker.sessions[id].rev;}
-      upload['devices/'+await deviceId()]={lastSeenAt:Date.now(),build:68,sessionId:tracker.sessionId};
+      upload['devices/'+await deviceId()]={lastSeenAt:Date.now(),build:69,sessionId:tracker.sessionId};
       const r=await fetch(root+'.json',{method:'PATCH',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify(upload),signal:AbortSignal.timeout(15000)});
       if(!r.ok)throw new Error('upload');
       for(const [id,rev] of Object.entries(revisions))if(tracker.sessions[id]?.rev===rev)dirty.delete(id);
@@ -182,13 +189,13 @@ function createAdventure() {
   }
   $('adventurePause').onclick=()=>{tracker.tick();tracker.idle=true;idle.hidden=false;tracker.setBlocked(true);$('adventureResume').focus();render();};
   $('adventureResume').onclick=()=>{idle.hidden=true;tracker.resume();tracker.setBlocked(blocked());render();};
-  function home(){modal=false;goal.hidden=true;idle.hidden=true;shutUp();reading.leave();stopZap();stopRace();lnStopLoop();abStopLoop();stopHide();mode='home';show('home');renderBuddyHome();tracker?.setBlocked(false);save();}
+  function home(){modal=false;goal.hidden=true;idle.hidden=true;shutUp();reading.leave();if(typeof mathPath!=='undefined')mathPath.leave();stopZap();stopRace();lnStopLoop();abStopLoop();stopHide();mode='home';show('home');renderBuddyHome();tracker?.setBlocked(false);save();}
   $('adventureRest').onclick=home;$('adventureFinish').onclick=home;
   $('adventureBonus').onclick=()=>{bonusDay=today();modal=false;goal.hidden=true;tracker.resume();tracker.setBlocked(false);save();render();};
   $('goalMinutes').onchange=()=>{settings.goalMinutes=Number($('goalMinutes').value);saveSettings();};
   $('enableBonus').onchange=()=>{settings.bonusEnabled=$('enableBonus').checked;saveSettings();};
   $('journalPeriod').onchange=journal;
-  $('exportDailyReport').onclick=()=>{const day=$('journalPeriod').value==='yesterday'?C.shiftDay(today(),-1):today();const blob=new Blob([(PokeFoundations.dailyReport(tracker.sessions,day,lastSync,dirty.size>0)+'\n\n'+PokeReadingCore.report(tracker.sessions,PokeReadingCore.withSessions(reading.state,tracker.sessions),day))],{type:'text/plain'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='jonah-daily-report-'+day+'.txt';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);};
+  $('exportDailyReport').onclick=()=>{const day=$('journalPeriod').value==='yesterday'?C.shiftDay(today(),-1):today();const blob=new Blob([(PokeFoundations.dailyReport(tracker.sessions,day,lastSync,dirty.size>0)+'\n\n'+PokeReadingCore.report(tracker.sessions,PokeReadingCore.withSessions(reading.state,tracker.sessions),day)+'\n\n'+PokeMathPath.report(tracker.sessions,PokeMathPath.withSessions(mathPath.state,tracker.sessions),day))],{type:'text/plain'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='jonah-daily-report-'+day+'.txt';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);};
   $('exportLearning').onclick=()=>{save();const blob=new Blob([JSON.stringify({...PokeMirror.backup({sessions:tracker.sessions,settings,lastCloudSyncAt:lastSync})},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='pokemath-learning-'+today()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);};
   document.addEventListener('pointerdown',ev=>{if(!blocked() && ev.target.closest('.screen.on'))tracker?.interact();},true);
   document.addEventListener('pointermove',ev=>{if(ev.buttons && !blocked() && ev.target.closest('canvas'))tracker?.interact();},true);
