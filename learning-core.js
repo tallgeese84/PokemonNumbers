@@ -17,7 +17,21 @@
   // Six subtraction questions, one addition and one counting question per cycle.
   const missionSection = answered => ['sub','sub','sub','sub','sub','sub','add','count'][answered % 8];
   const RANGES = [5,10,20];
-  const dayKey = (ms, zone = ZONE) => new Intl.DateTimeFormat('en-CA', {timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(ms));
+  /* Building an Intl formatter is slow and dayKey runs thousands of times per journal, so keep
+     one formatter per zone and remember answers per 15-minute slot (every time zone offset is a
+     multiple of 15 minutes, so a whole slot always falls on one calendar day). */
+  const FORMATTERS = {}, DAY_CACHE = new Map();
+  const dayKey = (ms, zone = ZONE) => {
+    const slot = zone + ':' + Math.floor(ms / 900000);
+    let d = DAY_CACHE.get(slot);
+    if (d === undefined) {
+      const f = FORMATTERS[zone] ||= new Intl.DateTimeFormat('en-CA', {timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'});
+      d = f.format(new Date(ms));
+      if (DAY_CACHE.size > 20000) DAY_CACHE.clear();
+      DAY_CACHE.set(slot, d);
+    }
+    return d;
+  };
   const shiftDay = (day, n) => new Date(Date.parse(day + 'T12:00:00Z') + n * 86400000).toISOString().slice(0,10);
   const median = xs => { const s = xs.filter(Number.isFinite).sort((a,b)=>a-b); return s.length ? (s[Math.floor((s.length-1)/2)]+s[Math.floor(s.length/2)])/2 : null; };
   const values = x => Object.values(x || {});
@@ -62,7 +76,7 @@
       this.now=now; this.id=id; this.sessions=sessions; this.onChange=onChange;
       this.sessionId=String(now())+'_'+id(); this.current=null; this.visible=true; this.blocked=false;
       this.section='home'; this.lastTick=now(); this.lastInteraction=now(); this.idle=false;
-      this.sessions[this.sessionId]={id:this.sessionId,startedAt:now(),updatedAt:now(),rev:0,days:{},questions:{},build:74};
+      this.sessions[this.sessionId]={id:this.sessionId,startedAt:now(),updatedAt:now(),rev:0,days:{},questions:{},build:75};
     }
     changed(sid=this.sessionId) { const s=this.sessions[sid]; s.rev++; s.updatedAt=this.now(); this.onChange(sid); }
     tick() {
@@ -104,7 +118,7 @@
       if(this.lastPracticeAt && this.now()-this.lastPracticeAt>300000){
         const deviceId=this.sessions[this.sessionId].deviceId;
         this.sessionId=String(this.now())+'_'+this.id();
-        this.sessions[this.sessionId]={id:this.sessionId,deviceId,startedAt:this.now(),updatedAt:this.now(),rev:0,days:{},questions:{},build:74};
+        this.sessions[this.sessionId]={id:this.sessionId,deviceId,startedAt:this.now(),updatedAt:this.now(),rev:0,days:{},questions:{},build:75};
         this.lastPracticeAt=this.now();
       }
       if (ref && this.sessions[ref.sid]?.questions?.[ref.qid] && !this.sessions[ref.sid].questions[ref.qid].completedAt) this.current=ref;

@@ -149,6 +149,7 @@ function createAdventure() {
     $('adventureState').textContent=!leaseOwned?'Paused · another tab is active':tracker?.idle?'Paused · still thinking?':blocked()?'Paused':tracker?.current?(ms>=target?'Goal reached! Finish this question.':'Thinking time counts 💭'):ms>=target?'Today’s goal complete 🌟':'Choose a question to begin';
     $('adventurePause').disabled=!tracker?.current;
   }
+  const journalOpen={};   // which journal sections are open; the long daily report starts closed
   function journal() {
     if(!loaded)return;
     const day=$('journalPeriod').value==='yesterday'?C.shiftDay(today(),-1):today(),weekly=$('journalPeriod').value==='week';
@@ -165,17 +166,24 @@ function createAdventure() {
     const groups=Object.values(s.groups).map(x=>`<tr><td>${esc(C.LABELS[x.section])}<small>${esc(x.skill)} · ≤${x.range} · ${esc(x.support)} · ${esc(x.format)}</small></td><td>${x.independent}/${x.n}<small>${pct(x.accuracy)}</small></td><td>${x.helped}</td><td>${x.medianMs===null?'—':(x.medianMs/1000).toFixed(1)+'s'}</td></tr>`).join('');
     const trends=comparisons.map(x=>`<li>${esc(C.LABELS[x.section])} · ${esc(x.skill)} · ≤${x.range} · ${esc(x.support)} · ${esc(x.format)}: ${x.accuracyChange===null?'Too little data (need ≥5 attempts in each week)':(x.accuracyChange>=0?'+':'')+Math.round(x.accuracyChange*100)+' percentage points'}; n=${x.n} / ${x.previousN}.${x.timeChange===null?'':' Typical independent response '+(x.timeChange>=0?'+':'')+(x.timeChange/1000).toFixed(1)+'s.'}</li>`).join('');
     const changes=[...new Set(C.allQuestions(tracker.sessions).map(q=>q.section+':'+q.skill))].flatMap(key=>{const [section,skill]=key.split(':');return (section==='foundation'?PokeFoundations.plan(skill,tracker.sessions):C.planFor(section,skill,tracker.sessions)).changes.map(c=>({...c,section,skill}));}).filter(c=>C.dayKey(c.at)>=from && C.dayKey(c.at)<=day);
+    // Rebuilding must not undo what the grown-up opened or closed, or jump the page.
+    const box=$('parentPanel').querySelector('.ppbox'),scroll=box?box.scrollTop:0;
+    $('journalBody').querySelectorAll('details[data-k]').forEach(d=>{journalOpen[d.dataset.k]=d.open;});
     $('journalBody').innerHTML=`<p>Today’s active practice: <strong>${fmt(total())} / ${fmt(goalMs())}</strong></p><div class="journal-stats"><div><b>${mins(s.practiceMs)}</b><span>active minutes</span></div><div><b>${s.attempted}</b><span>questions attempted</span></div><div><b>${pct(s.accuracy)}</b><span>independent accuracy</span></div></div><p>${s.completed} completed · ${s.helped} helped · ${s.started-s.completed} unfinished. Foreground: ${mins(s.foregroundMs)} min; collection: ${mins(s.collectionMs)} min.</p><p class="muted">Previous 7 days: ${(priorDays.practiceMs/60000/7).toFixed(1)} active min/day, ${pct(priorDays.accuracy)} independent (${priorDays.attempted} attempts). Unsynced activity may be missing.</p>${chart}<h3>Where the time went</h3>${rows || '<p>No active practice recorded in this period.</p>'}<div class="journal-table"><table><thead><tr><th>Skill and task</th><th>Independent</th><th>Help</th><th>Median response</th></tr></thead><tbody>${groups}</tbody></table></div><p class="muted">Independent = correct first response with no extra help. Built-in pictures, beads and number-line support are shown above and are compared separately. Writing measures guided tracing completion, not freehand mastery.</p><h3>Last 7 days vs previous 7</h3><ul>${trends || '<li>Too little data for a comparison yet.</li>'}</ul><p>Later-day checks: ${s.retention.independent}/${s.retention.checked} independent. Matched early/late sessions: ${s.fatigue.sessions}${s.fatigue.sessions?', '+pct(s.fatigue.early)+' → '+pct(s.fatigue.late):''}.</p><h3>Difficulty changes</h3><ul>${changes.map(c=>`<li>${esc(C.LABELS[c.section])} (${esc(c.skill)}): step ${c.from+1} → ${c.to+1}. ${esc(c.reason)}.</li>`).join('') || '<li>No confirmed changes in this period.</li>'}</ul><div class="journal-next"><h3>Next practice</h3><p>${esc(g.focus)}</p><p>${esc(g.duration)}</p><p><b>With real objects:</b> ${esc(g.offline)}</p></div><details><summary>Recent first-response mistakes</summary><ul>${s.mistakes.slice(-10).map(m=>`<li>${esc(C.LABELS[m.section])} (${esc(m.skill)}, ${esc(m.format)}): ${m.a??''}, ${m.b??''}; answered ${esc(m.first)}, expected ${m.expected}.</li>`).join('') || '<li>None recorded.</li>'}</ul></details>`;
-    const report=document.createElement('details');report.open=true;const title=document.createElement('summary');title.textContent='Daily progress report · '+day;const body=document.createElement('div');body.className='daily-report';body.textContent=(PokeFoundations.dailyReport(tracker.sessions,day,lastSync,dirty.size>0)+'\n\n'+PokeReadingCore.report(tracker.sessions,PokeReadingCore.withSessions(reading.state,tracker.sessions),day)+'\n\n'+PokeMathPath.report(tracker.sessions,PokeMathPath.withSessions(mathPath.state,tracker.sessions),day));report.append(title,body);$('journalBody').prepend(report);
+    const report=document.createElement('details');report.dataset.k='report';const title=document.createElement('summary');title.textContent='Daily progress report · '+day;const body=document.createElement('div');body.className='daily-report';report.append(title,body);
+    // The long text report is only built when someone opens it.
+    const fill=()=>{if(report.open&&!body.textContent)body.textContent=(PokeFoundations.dailyReport(tracker.sessions,day,lastSync,dirty.size>0)+'\n\n'+PokeReadingCore.report(tracker.sessions,PokeReadingCore.withSessions(reading.state,tracker.sessions),day)+'\n\n'+PokeMathPath.report(tracker.sessions,PokeMathPath.withSessions(mathPath.state,tracker.sessions),day));};report.addEventListener('toggle',fill);$('journalBody').prepend(report);
+    $('journalBody').querySelectorAll('details[data-k]').forEach(d=>{d.open=!!journalOpen[d.dataset.k];d.addEventListener('toggle',()=>{journalOpen[d.dataset.k]=d.open;});});fill();
+    if(box)box.scrollTop=scroll;
     $('journalSync').textContent=syncMessage+(lastSync?' · last confirmed upload '+new Date(lastSync).toLocaleString('en-US',{timeZone:C.ZONE}):'')+ (dirty.size?' · local changes waiting to sync':'');
   }
   async function sync(cfg) {
-    if(syncing || !loaded || !cfg)return;syncing=true;save();
+    if(syncing || !loaded || !cfg)return;syncing=true;save();let changedRemote=false;
     try {
       const root=cfg.url.replace(/\/+$/,'')+'/fam/'+encodeURIComponent(cfg.code)+'/pokemathAnalytics';
       const upload={};const revisions={};
       for(const id of dirty)if(tracker.sessions[id]){upload['sessions/'+id]=structuredClone(tracker.sessions[id]);revisions[id]=tracker.sessions[id].rev;}
-      upload['devices/'+await deviceId()]={lastSeenAt:Date.now(),build:74,sessionId:tracker.sessionId};
+      upload['devices/'+await deviceId()]={lastSeenAt:Date.now(),build:75,sessionId:tracker.sessionId};
       const r=await fetch(root+'.json',{method:'PATCH',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify(upload),signal:AbortSignal.timeout(15000)});
       if(!r.ok)throw new Error('upload');
       for(const [id,rev] of Object.entries(revisions))if(tracker.sessions[id]?.rev===rev)dirty.delete(id);
@@ -183,9 +191,9 @@ function createAdventure() {
       const params=new URLSearchParams({orderBy:JSON.stringify('$key'),startAt:JSON.stringify(String(Date.now()-90*86400000))});
       const read=await fetch(root+'/sessions.json?'+params,{cache:'no-store',signal:AbortSignal.timeout(15000)});
       if(!read.ok)throw new Error('download');
-      tracker.merge(await read.json());syncMessage='Learning history synced';save();
+      const before=JSON.stringify(Object.entries(tracker.sessions).map(([id,x])=>[id,x.rev]));tracker.merge(await read.json());changedRemote=before!==JSON.stringify(Object.entries(tracker.sessions).map(([id,x])=>[id,x.rev]));syncMessage='Learning history synced';save();
     }catch(e){syncMessage='Learning history not fully synced — local records are retained. Check connection and Firebase family rules.';}
-    finally{syncing=false;render();if(parentOpen())journal();}
+    finally{syncing=false;render();if(parentOpen()){if(changedRemote)journal();else $('journalSync').textContent=syncMessage+(lastSync?' · last confirmed upload '+new Date(lastSync).toLocaleString('en-US',{timeZone:C.ZONE}):'')+(dirty.size?' · local changes waiting to sync':'');}}
   }
   $('adventurePause').onclick=()=>{tracker.tick();tracker.idle=true;idle.hidden=false;tracker.setBlocked(true);$('adventureResume').focus();render();};
   $('adventureResume').onclick=()=>{idle.hidden=true;tracker.resume();tracker.setBlocked(blocked());render();};

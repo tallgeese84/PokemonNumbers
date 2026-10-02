@@ -1,3 +1,10 @@
+# v75 grown-ups panel speed
+
+- 89 Node tests pass, including a new check that cached day lookups match fresh ones across midnights, DST changes and half-hour time zones.
+- Browser (6x CPU slowdown, 1,189 answers): panel open 3,168 ms → 153 ms; long tasks during 7 s of scrolling 7 (539 ms) → 0.
+- Collapsed daily report stays collapsed after a journal rebuild; opened stays open. No page errors.
+- Beginner walk-through of the English check finishes (about 50 taps including section intros).
+
 # v74 English check
 
 88 Node tests pass (8 new): stuck-Build regression (fails on v73, passes now), check order and early stopping, a non-responding child finishing as a Sound explorer without seeing words, sound batches of three, words gated on known sounds, pre-reading gate, re-teaching missed sounds, and redo surviving sync. Simulated children (knows nothing / listening only / a few letters / half the letters / strong) finish in 15 / 25 / 35 / 46 / 58 items. Headless browser walk-through as a beginner: check → first sounds → shapes, writing, listening and letter games, no page errors and no screen without a tappable way forward. Not checked on the tablet itself.

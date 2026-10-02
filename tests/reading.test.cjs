@@ -112,7 +112,7 @@ function harness(){
   set textContent(v){this._text=String(v);this.children=[];}get textContent(){return this._text+this.children.map(c=>c.textContent).join('');}
   set innerHTML(v){this._html=v;this.children=[];}get innerHTML(){return this._html||'';}
   append(...x){x.forEach(e=>{if(typeof e==='string')e=new El('#text'),e._text=String(e);e.parent=this;this.children.push(e);});}appendChild(x){this.append(x);}prepend(x){this.children.unshift(x);}
-  after(){}replaceChildren(...x){this.children=[];this.append(...x);}remove(){if(this.parent)this.parent.children=this.parent.children.filter(c=>c!==this);}
+  after(){}before(){}replaceChildren(...x){this.children=[];this.append(...x);}remove(){if(this.parent)this.parent.children=this.parent.children.filter(c=>c!==this);}
   setAttribute(k,v){this.attrs[k]=v;}getAttribute(k){return this.attrs[k];}getBoundingClientRect(){return {left:0,top:0,width:0,height:0};}
   click(){if(!this.disabled)this.onclick?.();}addEventListener(){}
   all(){return [this,...this.children.flatMap(c=>c.all())];}

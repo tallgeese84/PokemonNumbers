@@ -30,9 +30,9 @@ function createFox(){
  /* ---------- 3D ---------- */
  let T=null,renderer,scene,camera,fox,parts={},raf=0,clock0=0,anim={},sprites=[];
  function script(src){return new Promise((ok,fail)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=fail;document.head.append(s);});}
- async function loadThree(){if(!window.THREE)await script('assets/vendor/three-r128.min.js?v=74');if(!THREE.GLTFLoader)await script('assets/vendor/three-GLTFLoader-r128.js?v=74');if(!THREE.SkeletonUtils)await script('assets/vendor/three-SkeletonUtils-r128.js?v=74');}
+ async function loadThree(){if(!window.THREE)await script('assets/vendor/three-r128.min.js?v=75');if(!THREE.GLTFLoader)await script('assets/vendor/three-GLTFLoader-r128.js?v=75');if(!THREE.SkeletonUtils)await script('assets/vendor/three-SkeletonUtils-r128.js?v=75');}
  let model=null;
- async function buildFox(){model=await loadFoxModel(THREE,'assets/fox.glb?v=74');fox=model.fox;parts=model.parts;scene.add(fox);}
+ async function buildFox(){model=await loadFoxModel(THREE,'assets/fox.glb?v=75');fox=model.fox;parts=model.parts;scene.add(fox);}
  let progCache=null,progAt=0;
  function progressCached(){const now=Date.now();if(!progCache||now-progAt>2000){progCache=progress();progAt=now;}return progCache;}
  function sizeRenderer(){const st=$('foxStage'),w=st.clientWidth||360,h=Math.round(Math.min(w*.95,540));renderer.setSize(w,h,false);$('foxCanvas').style.height=h+'px';camera.aspect=w/h;camera.updateProjectionMatrix();}

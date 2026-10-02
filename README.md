@@ -21,6 +21,13 @@ and is not included in this repository. Personal, non-commercial project.
 To ship an update, bump `CACHE = 'pokemath-v1'` in `sw.js` (v2, v3, ...) so
 installed tablets pick up the new version.
 
+## v75 — Faster grown-ups panel
+
+- Reading and Maths readiness now sit at the top of Grown-ups.
+- The panel opens straight away; the journal fills in a moment later. With ~1,200 answers on a slowed CPU, opening went from 3.2 s to 0.15 s, and the once-a-second stutter while scrolling is gone (day lookups are now cached).
+- Sections you open or close stay that way; the long daily report starts closed and is only built when opened. Background syncs no longer rebuild the journal unless new history arrived.
+- No background blur behind the panel (costly on tablets).
+
 ## v74 — English check and building up from his level
 
 **Fix:** in Build it, after two misses the help faded every letter except the next one, including letters needed for later boxes, so a word like "dot" could not be finished. Help now fades only letters the word no longer needs and pulses the next letter.

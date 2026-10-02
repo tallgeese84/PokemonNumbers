@@ -398,7 +398,7 @@ function createReading(){
  /* ---------- grown-ups ---------- */
  const panel=document.createElement('details');panel.className='parent-settings reading-panel';panel.id='readingPanel';
  panel.innerHTML='<summary>Reading · P1 readiness</summary><div id="readingBody"></div>';
- $('learningDashboard').after(panel);
+ $('learningDashboard').before(panel);   // readiness first: it is what a grown-up looks for
  panel.addEventListener('toggle',()=>{if(panel.open)renderPanel();});
  function profileHTML(p){
   if(!p)return '<p class="muted">The English check has not run yet. It starts automatically the next time he plays.</p>';
