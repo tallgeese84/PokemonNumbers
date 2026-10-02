@@ -70,21 +70,21 @@ function buildFoxModel(THREE,opts){
  const head=new THREE.Group();head.position.set(0,1.14,.5);fox.add(head);parts.head=head;
  const headG=sculpt(new THREE.SphereGeometry(.47,80,60),v=>{
   const z=Math.max(0,v.z/.47),f=Math.pow(z,2.2)*Math.exp(-Math.pow((v.y+.11)/.2,2));
-  v.z+=.36*f;v.y-=.04*f;v.x*=1-.42*f;                    // muzzle
+  v.z+=.3*f;v.y-=.04*f;v.x*=1-.4*f;                    // muzzle
   if(Math.abs(v.x)>.26&&v.y<.06){const s=Math.sign(v.x);v.x+=s*.09*smooth(.26,.44,Math.abs(v.x))*smooth(.06,-.18,v.y);}   // cheek ruff
   v.y*=1-.08*smooth(-.1,-.47,v.y);                       // flatter chin
  });
  colorize(headG,(v,c)=>{const lower=smooth(-.02,-.14,v.y)*smooth(-.05,.2,v.z+.02);const cheek=smooth(.22,.4,Math.abs(v.x))*smooth(.02,-.15,v.y);const brow=smooth(.15,.32,v.y)*smooth(.25,.4,v.z)*.0;
   mix(O,OL,smooth(-.1,.3,v.z)*.3,c);c.lerp(W,Math.min(1,Math.max(lower,cheek)));});
  const headFur=furry(headG,4);head.add(headFur);
- const nose=new THREE.Mesh(sculpt(new THREE.SphereGeometry(.07,32,24),v=>{v.y*=.78;v.x*=1.15;}),new THREE.MeshStandardMaterial({color:COL.nose,roughness:.28}));nose.position.set(0,-.08,.84);head.add(nose);
+ const nose=new THREE.Mesh(sculpt(new THREE.SphereGeometry(.07,32,24),v=>{v.y*=.78;v.x*=1.15;}),new THREE.MeshStandardMaterial({color:COL.nose,roughness:.28}));nose.position.set(0,-.08,.79);head.add(nose);
  /* eyes: glossy dark eye, warm brown iris, two highlights */
  const irisC=document.createElement('canvas');irisC.width=irisC.height=256;{const x=irisC.getContext('2d');const g=x.createRadialGradient(128,128,20,128,128,128);g.addColorStop(0,'#000');g.addColorStop(.42,'#0b0604');g.addColorStop(.55,COL.iris);g.addColorStop(.9,'#6b3a18');g.addColorStop(1,'#1a0d06');x.fillStyle=g;x.beginPath();x.arc(128,128,128,0,Math.PI*2);x.fill();
-  x.fillStyle='#fff';x.beginPath();x.arc(88,82,30,0,Math.PI*2);x.fill();x.globalAlpha=.85;x.beginPath();x.arc(166,170,13,0,Math.PI*2);x.fill();}
+  x.fillStyle='#fff';x.beginPath();x.arc(84,78,38,0,Math.PI*2);x.fill();x.globalAlpha=.9;x.beginPath();x.arc(170,168,17,0,Math.PI*2);x.fill();x.beginPath();x.arc(150,70,8,0,Math.PI*2);x.fill();}
  const irisT=new THREE.CanvasTexture(irisC);irisT.encoding=THREE.sRGBEncoding;
- const eyes=[];[-1,1].forEach(s=>{const e=new THREE.Group();e.position.set(s*.19,.07,.425);e.rotation.y=s*.34;
-  const ball=new THREE.Mesh(sculpt(new THREE.SphereGeometry(.115,40,30),v=>{v.z*=.5;}),new THREE.MeshStandardMaterial({color:0x120a07,roughness:.08,metalness:.1}));
-  const iris=new THREE.Mesh(new THREE.CircleGeometry(.108,48),new THREE.MeshBasicMaterial({map:irisT,transparent:true}));iris.position.z=.059;iris.renderOrder=20;
+ const eyes=[];[-1,1].forEach(s=>{const e=new THREE.Group();e.position.set(s*.2,.05,.41);e.rotation.y=s*.36;
+  const ball=new THREE.Mesh(sculpt(new THREE.SphereGeometry(.165,48,36),v=>{v.z*=.5;v.y*=1.12;}),new THREE.MeshStandardMaterial({color:0x120a07,roughness:.08,metalness:.1}));
+  const iris=new THREE.Mesh(new THREE.CircleGeometry(.158,64),new THREE.MeshBasicMaterial({map:irisT,transparent:true}));iris.position.z=.084;iris.scale.y=1.12;iris.renderOrder=20;
   e.add(ball,iris);head.add(e);eyes.push(e);});parts.eyes=eyes;
  /* ears: orange front, dark back, soft pink inner */
  const ears=[];[-1,1].forEach(s=>{const e=new THREE.Group();e.position.set(s*.25,.32,-.04);e.rotation.z=-s*.28;e.rotation.x=-.08;
