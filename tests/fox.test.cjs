@@ -1,9 +1,10 @@
 // Jonah's fox: growth comes only from learning; the shop can never put him in debt.
 const {test}=require('node:test'),assert=require('node:assert/strict'),X=require('../fox-core.js');
-test('tails grow from 1 to 9 with reading routes and Gym badges, never shrink and finish when both paths are done',()=>{
+test('milestones (tricks) grow from 1 to 9 with reading routes and Gym badges, never shrink and finish when both paths are done',()=>{
  let last=1;for(let p=0;p<=X.MAX_POINTS;p++){const t=X.tails(p);assert.ok(t>=last&&t<=9);last=t;}
  assert.equal(X.tails(0),1);assert.equal(X.tails(X.points(18,8)),9);assert.equal(X.tails(X.points(18,7)),8);
  assert.equal(X.points(30,20),X.MAX_POINTS);assert.equal(X.nextTail(X.MAX_POINTS),null);assert.deepEqual(X.nextTail(0),{at:2,need:2,tail:2});
+ assert.equal(X.TRICKS.length,9);assert.equal(X.tricks(0).length,1);assert.equal(X.tricks(X.MAX_POINTS).length,9);
 });
 test('treats and toys spend leaves, things to wear are kept and toggled free, and nothing is bought without enough leaves',()=>{
  let s={...X.freshState(),earned:25};

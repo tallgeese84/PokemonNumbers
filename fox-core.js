@@ -1,10 +1,10 @@
-/* Jonah's fox: an original nine-tailed fox from folklore (kitsune / jiǔwěihú).
+/* Jonah's fox, Buddy. Growth comes only from learning: nine milestones each teach him a trick.
    Pure rules here; the 3D model is in fox-ui.js. The fox is never hungry,
    sad or in need: care is optional fun, and growth comes only from learning. */
 (function(root,factory){if(typeof module==='object'&&module.exports)module.exports=factory();else root.PokeFox=factory();})(typeof globalThis!=='undefined'?globalThis:this,function(){
 'use strict';
 const MAX_POINTS=34;              // 18 reading routes + 2 per maths Gym badge (8 Gyms)
-/* Points at which tail 2…9 appears: roughly even through both paths. */
+/* Points at which milestones 2…9 are reached (milestone 1 is free): roughly even through both paths. */
 const TAIL_AT=[0,2,6,10,14,18,23,28,34];
 function points(routesPassed,gymBadges){return Math.max(0,Math.min(MAX_POINTS,(routesPassed|0)+2*(gymBadges|0)));}
 function tails(p){let t=0;for(const at of TAIL_AT)if(p>=at)t++;return Math.max(1,t);}
@@ -37,5 +37,8 @@ function mergeState(a,b){a={...freshState(),...(a||{})};b={...freshState(),...(b
  const newer=(a.at||0)>=(b.at||0)?a:b;
  return {v:1,earned:Math.max(a.earned,b.earned),spent:Math.max(a.spent,b.spent),owned:[...new Set([...a.owned,...b.owned])],wearing:newer.wearing,name:newer.name||a.name||b.name,
   tailsSeen:Math.max(a.tailsSeen,b.tailsSeen),fed:Math.max(a.fed,b.fed),played:Math.max(a.played,b.played),at:Math.max(a.at||0,b.at||0)};}
-return {MAX_POINTS,TAIL_AT,points,tails,nextTail,growth,SHOP,BY,freshState,balance,buy,mergeState};
+/* One trick per milestone, from the model's own animations. */
+const TRICKS=[{clip:'Fox_Sit_Yes',name:'Nod'},{clip:'Fox_Sit_Idle_Break',name:'Look around'},{clip:'Fox_Sit_No',name:'Shake head'},{clip:'Fox_Jump_Pivot_InPlace',name:'Spin jump'},{clip:'Fox_Walk_InPlace',name:'Walk'},{clip:'Fox_Attack_Tail',name:'Tail swish'},{clip:'Fox_Run_InPlace',name:'Run'},{clip:'Fox_Attack_Paws',name:'Pounce'},{clip:'Fox_Somersault_InPlace',name:'Somersault'}];
+const tricks=p=>TRICKS.slice(0,tails(p));
+return {MAX_POINTS,TAIL_AT,TRICKS,tricks,points,tails,nextTail,growth,SHOP,BY,freshState,balance,buy,mergeState};
 });

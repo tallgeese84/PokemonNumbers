@@ -1,156 +1,38 @@
-/* Buddy, model v3: a sitting fox cub with real fur.
-   Fur is drawn as ~18 stacked "shells": copies of each surface pushed out along the
-   normals, each keeping only the hair strands tall enough to reach it. Strands come
-   from a clumped strand texture; roots are shaded darker and tips lighter, with a
-   soft rim light, so the coat reads as individual fluffy hairs. Original design. */
-function buildFoxModel(THREE,opts){
- 'use strict';opts=opts||{};
- const LAYERS=opts.layers||18;
- const lin=h=>new THREE.Color(h).convertSRGBToLinear();
- const smooth=(a,b,x)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t);};
- const O=lin(0xE2621B),OL=lin(0xF39A4A),OD=lin(0xB8460F),W=lin(0xFFF7EE),D=lin(0x2A1810),DB=lin(0x4A2A18);
- const mix=(a,b,t,out)=>out.copy(a).lerp(b,Math.max(0,Math.min(1,t)));
+/* Buddy: "Fox" by pxltiger (https://sketchfab.com/3d-models/fox-39f97fe58f0b47ce80b6e02814001dd7),
+   licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Used as made, with its
+   hand-painted 2k texture and animations; the only addition is optional accessories. */
+function loadFoxModel(THREE,url){
+ 'use strict';
+ return new Promise((resolve,reject)=>new THREE.GLTFLoader().load(url,gltf=>{
+  const HEIGHT=1.62;                                   // ear tip height in scene units
+  const fox=new THREE.Group(),inner=gltf.scene;fox.add(inner);
+  let mesh=null;inner.traverse(o=>{if(o.isSkinnedMesh)mesh=o;if(o.isMesh){o.frustumCulled=false;}});
+  const mat=mesh.material;mat.roughness=.85;mat.metalness=0;if(mat.map){mat.map.anisotropy=8;}mat.side=THREE.DoubleSide;
+  const bones=Object.fromEntries(mesh.skeleton.bones.map(b=>[b.name.replace(/_\d+$/,''),b]));
+  // scale by the ear tip in the rest pose so the fox is a known size
+  inner.updateMatrixWorld(true);const w=new THREE.Vector3();bones.Fox_LEar2.getWorldPosition(w);
+  const s=HEIGHT/w.y;inner.scale.multiplyScalar(s);inner.updateMatrixWorld(true);
 
- /* ---------- strand texture: soft round hairs, value = height. Each hair is a soft dot,
-    so the cross-section that survives at a given layer shrinks towards the tip:
-    hairs taper, and edges stay smooth instead of pixel-hard. ---------- */
- const furTex=(()=>{const n=1024,c=document.createElement('canvas');c.width=c.height=n;const x=c.getContext('2d');
-  x.fillStyle='#000';x.fillRect(0,0,n,n);x.globalCompositeOperation='lighten';
-  const clump=(px,py)=>.62+.2*Math.sin(px*.021+Math.sin(py*.017)*2)+.18*Math.sin(py*.027+Math.cos(px*.013)*2);
-  const dot=document.createElement('canvas');dot.width=dot.height=32;{const d=dot.getContext('2d'),g=d.createRadialGradient(16,16,0,16,16,16);g.addColorStop(0,'#fff');g.addColorStop(1,'#000');d.fillStyle=g;d.fillRect(0,0,32,32);}
-  for(let i=0;i<34000;i++){const px=Math.random()*n,py=Math.random()*n,h=Math.min(1,(.35+.65*Math.random())*clump(px,py)),r=2.2+Math.random()*2.2;x.globalAlpha=h;
-   for(const [ox,oy] of [[0,0],[n,0],[-n,0],[0,n],[0,-n]]){const X=px+ox,Y=py+oy;if((ox||oy)&&(X<-r||X>n+r||Y<-r||Y>n+r))continue;x.drawImage(dot,X-r,Y-r,r*2,r*2);}}
-  x.globalAlpha=1;
-  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.minFilter=THREE.LinearMipmapLinearFilter;t.magFilter=THREE.LinearFilter;t.anisotropy=8;return t;})();
+  /* ---- animations ---- */
+  const mixer=new THREE.AnimationMixer(inner);const clips=Object.fromEntries(gltf.animations.map(c=>[c.name,c]));
+  const act=n=>clips[n]?mixer.clipAction(clips[n]):null;
+  const idle=act('Fox_Sit2_Idle');idle.play();let current=idle;
+  function play(name,{once=true,fade=.25}={}){const a=act(name);if(!a||a===current)return;a.reset();a.setLoop(once?THREE.LoopOnce:THREE.LoopRepeat);a.clampWhenFinished=true;
+   current.crossFadeTo(a,fade,false);a.play();current=a;
+   if(once){const back=e=>{if(e.action!==a)return;mixer.removeEventListener('finished',back);if(current===a){idle.reset().play();a.crossFadeTo(idle,.35,false);current=idle;}};mixer.addEventListener('finished',back);}}
 
- /* ---------- fur shader (all shells share one program) ---------- */
- const light={uKey:{value:new THREE.Vector3(.45,.8,.55).normalize()},uKeyCol:{value:lin(0xFFF0DC)},uSky:{value:lin(0xEAF3FF)},uGround:{value:lin(0x6E8A5C)},uRim:{value:lin(0xFFE2B0)}};
- const VS=`uniform float uLayer;uniform float uLen;uniform vec3 uGrav;attribute vec3 color;attribute float furLen;
-  varying vec3 vColor;varying vec3 vN;varying vec2 vUv;varying vec3 vView;varying float vF;
-  void main(){float h=uLayer*uLen*furLen;vec3 p=position+normal*h+uGrav*h*uLayer;
-   vec4 wp=modelMatrix*vec4(p,1.0);vN=normalize(mat3(modelMatrix)*normal);vView=normalize(cameraPosition-wp.xyz);vUv=uv;vColor=color;vF=furLen;
-   gl_Position=projectionMatrix*viewMatrix*wp;}`;
- const FS=`uniform sampler2D uFur;uniform float uLayer;uniform vec2 uRepeat;uniform vec3 uKey;uniform vec3 uKeyCol;uniform vec3 uSky;uniform vec3 uGround;uniform vec3 uRim;
-  varying vec3 vColor;varying vec3 vN;varying vec2 vUv;varying vec3 vView;varying float vF;
-  void main(){vec4 s=texture2D(uFur,vUv*uRepeat+vec2(0.0,uLayer*0.01));
-   // soft-edged hairs: coverage fades in around the layer height (smoothed by alpha-to-coverage)
-   // short-fur areas keep only their lower layers, so fur thins smoothly to bare skin
-   float hgt=s.r*clamp(vF*1.6,0.0,1.0);
-   float a=uLayer>0.0?smoothstep(uLayer-0.06,uLayer+0.04,hgt):1.0;
-   if(uLayer>0.0&&a<0.02)discard;
-   vec3 n=normalize(vN);float cover=clamp(vF*1.6,0.0,1.0);float ao=mix(mix(0.92,0.42,cover),1.08,uLayer);
-   vec3 amb=mix(uGround,uSky,0.5+0.5*n.y)*0.62;float d=max(dot(n,uKey)*0.6+0.4,0.0);
-   float rim=pow(1.0-max(dot(n,normalize(vView)),0.0),2.6)*uLayer;
-   vec3 c=vColor*(0.9+0.2*s.r)*ao*(amb+uKeyCol*d*0.78)+uRim*rim*0.32;
-   gl_FragColor=vec4(c,a);
-   #include <tonemapping_fragment>
-   #include <encodings_fragment>
-  }`;
- function furMat(layer,len,repeat,grav){
-  return new THREE.ShaderMaterial({alphaToCoverage:layer>0,vertexShader:VS,fragmentShader:FS,uniforms:{uFur:{value:furTex},uLayer:{value:layer},uLen:{value:len},uRepeat:{value:new THREE.Vector2(repeat[0],repeat[1])},uGrav:{value:grav},...light}});
- }
- const shellGroups=[];
- /* A furry part: base surface plus LAYERS shells. len = longest hair, scaled per vertex by furLen. */
- function furry(geo,len,repeat=[6,6],grav=new THREE.Vector3(0,-.5,-.25)){
-  const g=new THREE.Group(),shells=[];
-  for(let k=0;k<=LAYERS;k++){const m=new THREE.Mesh(geo,furMat(k/LAYERS,len,repeat,grav));m.renderOrder=k;m.frustumCulled=false;g.add(m);if(k)shells.push(m);}
-  shellGroups.push(shells);return g;
- }
- function attrs(geo,fn){const p=geo.attributes.position,c=new Float32Array(p.count*3),f=new Float32Array(p.count),v=new THREE.Vector3(),col=new THREE.Color();
-  for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i);const fl=fn(v,col);c.set([col.r,col.g,col.b],i*3);f[i]=fl;}
-  geo.setAttribute('color',new THREE.BufferAttribute(c,3));geo.setAttribute('furLen',new THREE.BufferAttribute(f,1));return geo;}
- function sculpt(geo,fn){const p=geo.attributes.position,v=new THREE.Vector3();for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i);fn(v);p.setXYZ(i,v.x,v.y,v.z);}geo.computeVertexNormals();return geo;}
- const fluff=(v,amt,freq=9)=>{const a=Math.atan2(v.x,v.z),b=Math.atan2(v.y,Math.hypot(v.x,v.z));return 1+amt*Math.pow(Math.abs(Math.sin(a*freq)*Math.sin(b*freq*.8+a*3)),1.5);};
- const std=(c,o={})=>new THREE.MeshStandardMaterial({roughness:.6,...o,color:lin(c),...(o.emissive!==undefined?{emissive:lin(o.emissive)}:{})});
+  /* ---- accessories he can wear, fixed to the head and chest (hidden unless bought) ---- */
+  const std=(c,o={})=>new THREE.MeshStandardMaterial({roughness:.6,...o,color:new THREE.Color(c).convertSRGBToLinear(),...(o.emissive!==undefined?{emissive:new THREE.Color(o.emissive).convertSRGBToLinear()}:{})});
+  const at=(bone,obj,x,y,z)=>{obj.position.set(x*s,y*s,z*s);fox.add(obj);fox.updateMatrixWorld(true);bone.attach(obj);};
+  const acc={};
+  acc.crown=new THREE.Group();for(let i=0;i<11;i++){const a=i/11*Math.PI*2,f=new THREE.Mesh(new THREE.SphereGeometry(.035,18,12),std(i%2?0xF7A8C4:0xFFFFFF));f.position.set(Math.cos(a)*.2,0,Math.sin(a)*.2);acc.crown.add(f);}acc.crown.scale.setScalar(1.15);at(bones.Fox_Head,acc.crown,0,14.3,5.0);
+  acc.hat=new THREE.Group();{const m=std(0x1f1f1f),b=new THREE.Mesh(new THREE.CylinderGeometry(.2,.2,.02,40),m),t=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,.22,40),m),band=new THREE.Mesh(new THREE.CylinderGeometry(.124,.124,.04,40),std(0x3CC7B4));t.position.y=.12;band.position.y=.04;acc.hat.add(b,t,band);}acc.hat.scale.setScalar(1.35);at(bones.Fox_Head,acc.hat,0,14.2,4.6);
+  acc.scarf=new THREE.Group();{const sc=new THREE.Mesh(new THREE.TorusGeometry(.3,.07,16,48),std(0x2F6FB0,{roughness:.85}));sc.rotation.x=Math.PI/2+.5;acc.scarf.add(sc);const e=new THREE.Mesh(new THREE.BoxGeometry(.09,.22,.035),std(0x2F6FB0,{roughness:.85}));e.position.set(.14,-.2,.26);e.rotation.z=.25;acc.scarf.add(e);}at(bones.Fox_Spine,acc.scarf,0,9.0,4.9);
+  acc.bell=new THREE.Group();{const c=new THREE.Mesh(new THREE.TorusGeometry(.29,.022,10,48),std(0xC23B3B));c.rotation.x=Math.PI/2+.5;acc.bell.add(c);const b=new THREE.Mesh(new THREE.SphereGeometry(.045,28,20),std(0xF2C94C,{metalness:.8,roughness:.25}));b.scale.setScalar(1.4);b.position.set(0,-.17,.3);acc.bell.add(b);}at(bones.Fox_Spine,acc.bell,0,9.0,4.9);
+  Object.values(acc).forEach(a=>a.visible=false);
 
- const fox=new THREE.Group(),parts={};
- const bodyWrap=new THREE.Group();fox.add(bodyWrap);parts.body=bodyWrap;
-
- /* ---------- body: sitting, chest forward ---------- */
- const bodyG=sculpt(new THREE.SphereGeometry(1,64,48),v=>{
-  v.x*=.44;v.y*=.56;v.z*=.44;v.z+=v.y*.32;                               // lean the chest forward
-  const chest=smooth(.05,.35,v.z)*smooth(-.1,.35,v.y);v.multiplyScalar(1+chest*.06*fluff(v,1.2,7));   // fluffy ruff
- });
- attrs(bodyG,(v,c)=>{const front=smooth(.12,.34,v.z-v.y*.2)*smooth(-.45,.1,v.y+.1);mix(OD,O,smooth(-.4,.2,v.z+v.y*.3),c);c.lerp(OL,smooth(.2,.5,v.y)*.2);c.lerp(W,front);
-  return .9+.6*smooth(.1,.4,v.z)*smooth(-.1,.4,v.y);});
- const body=furry(bodyG,.075,[11,6]);body.position.set(0,.72,-.05);bodyWrap.add(body);
- /* haunches */
- [-1,1].forEach(s=>{const g=sculpt(new THREE.SphereGeometry(.3,44,32),v=>{v.y*=.82;v.z*=1.2;});attrs(g,(v,c)=>{mix(O,OD,smooth(.1,-.25,v.y),c);return 1;});
-  const h=furry(g,.06,[7,4]);h.position.set(s*.26,.33,-.12);bodyWrap.add(h);});
- /* front legs with dark stockings, and paws */
- [-1,1].forEach(s=>{const g=sculpt(new THREE.SphereGeometry(.12,32,24),v=>{v.y*=2.4;v.x*=1-.15*(v.y<0?-v.y/.29:0);});attrs(g,(v,c)=>{mix(D,O,smooth(-.2,.0,v.y),c);return .8;});
-  const leg=furry(g,.045,[4,6]);leg.position.set(s*.14,.3,.26);leg.rotation.x=-.08;bodyWrap.add(leg);
-  const paw=new THREE.Mesh(sculpt(new THREE.SphereGeometry(.1,28,20),v=>{v.y*=.6;v.z*=1.3;}),std(0x2a1810,{roughness:.9}));paw.position.set(s*.15,.05,.33);bodyWrap.add(paw);
-  const hp=paw.clone();hp.position.set(s*.33,.05,.08);hp.scale.set(1.15,1,1.2);bodyWrap.add(hp);});
-
- /* ---------- head ---------- */
- const head=new THREE.Group();head.position.set(0,1.42,.2);fox.add(head);parts.head=head;
- const EYE=[[-.19,.03,.4],[.19,.03,.4]];
- const headG=sculpt(new THREE.SphereGeometry(.48,72,56),v=>{
-  v.x*=1.1;v.y*=.95;
-  const z=Math.max(0,v.z/.48),m=Math.pow(z,3)*Math.exp(-Math.pow((v.y+.17)/.15,2));v.z+=.16*m;v.x*=1-.25*m;   // short cub muzzle
-  const ch=smooth(.26,.5,Math.abs(v.x))*smooth(.05,-.25,v.y);if(ch>0)v.multiplyScalar(1+ch*.1*fluff(v,1.4,6));   // fluffy cheeks
- });
- attrs(headG,(v,c)=>{const muzzle=smooth(-.06,-.16,v.y)*smooth(.1,.3,v.z);const cheek=smooth(.24,.42,Math.abs(v.x))*smooth(.0,-.16,v.y);const brow=smooth(.2,.45,v.y)*.15;
-  mix(O,OL,smooth(.1,.45,v.z)*.35+brow,c);c.lerp(W,Math.max(muzzle,cheek));
-  let f=1;EYE.forEach(([ex,ey])=>{const dy=v.y<ey?(ey-v.y)*2.4:v.y-ey,d=Math.hypot(v.x-ex,dy);f=Math.min(f,smooth(.1,.15,d));});      // no fur over the eyes
-  f=Math.min(f,smooth(.05,.16,Math.hypot(v.x,v.y+.12)+(v.z<.3?1:0)));                                    // or the nose
-  return f*Math.max(.5,.6+.9*Math.max(cheek,0)+.25*smooth(.2,.4,v.y)-.12*muzzle);});
- head.add(furry(headG,.055,[11,5.5],new THREE.Vector3(0,-.3,-.35)));
- const nose=new THREE.Mesh(sculpt(new THREE.SphereGeometry(.058,32,24),v=>{v.y*=.72;v.x*=1.25;if(v.y<0)v.x*=1+v.y*4;}),std(0x120806,{roughness:.22}));nose.position.set(0,-.12,.62);head.add(nose);
- const smile=new THREE.Mesh(new THREE.TorusGeometry(.04,.006,8,24,Math.PI*.9),std(0x3a2018,{roughness:.8}));smile.position.set(0,-.205,.585);smile.rotation.set(-.35,0,Math.PI*1.05);head.add(smile);
- /* eyes: big, round and watery */
- const T=512,irisC=document.createElement('canvas');irisC.width=irisC.height=T;{const x=irisC.getContext('2d'),c=T/2;x.beginPath();x.arc(c,c,c,0,Math.PI*2);x.clip();
-  const base=x.createLinearGradient(0,0,0,T);base.addColorStop(0,'#160a04');base.addColorStop(.45,'#3e1f0d');base.addColorStop(.82,'#94551f');base.addColorStop(1,'#d89750');x.fillStyle=base;x.fillRect(0,0,T,T);
-  for(let i=0;i<160;i++){const a=Math.random()*Math.PI*2,r1=c*.45,r2=c*(.8+Math.random()*.16);x.strokeStyle=`rgba(${200+Math.random()*55|0},${130+Math.random()*60|0},${60+Math.random()*40|0},${.1+Math.random()*.16})`;x.lineWidth=2+Math.random()*3;x.beginPath();x.moveTo(c+Math.cos(a)*r1,c+Math.sin(a)*r1);x.lineTo(c+Math.cos(a)*r2,c+Math.sin(a)*r2);x.stroke();}
-  const pupil=x.createRadialGradient(c,c*.95,0,c,c*.95,c*.55);pupil.addColorStop(0,'#000');pupil.addColorStop(.82,'#050201');pupil.addColorStop(1,'rgba(5,2,1,0)');x.fillStyle=pupil;x.beginPath();x.arc(c,c*.95,c*.55,0,Math.PI*2);x.fill();
-  const rim=x.createRadialGradient(c,c,c*.8,c,c,c);rim.addColorStop(0,'rgba(0,0,0,0)');rim.addColorStop(1,'rgba(8,3,1,.95)');x.fillStyle=rim;x.fillRect(0,0,T,T);
-  const pool=x.createRadialGradient(c,T*.95,4,c,T*.95,c*.8);pool.addColorStop(0,'rgba(255,210,150,.7)');pool.addColorStop(1,'rgba(255,210,150,0)');x.fillStyle=pool;x.fillRect(0,0,T,T);}
- const shineC=document.createElement('canvas');shineC.width=shineC.height=T;{const x=shineC.getContext('2d'),c=T/2;
-  const blob=(px,py,r,a=1)=>{const g=x.createRadialGradient(px,py,0,px,py,r);g.addColorStop(0,`rgba(255,255,255,${a})`);g.addColorStop(.72,`rgba(255,255,255,${a})`);g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.beginPath();x.arc(px,py,r,0,Math.PI*2);x.fill();};
-  blob(c*.64,c*.58,c*.27);blob(c*1.36,c*1.3,c*.12,.9);blob(c*1.2,c*.46,c*.06,.85);
-  x.strokeStyle='rgba(255,255,255,.45)';x.lineWidth=c*.05;x.lineCap='round';x.beginPath();x.arc(c,c*1.02,c*.74,Math.PI*.22,Math.PI*.78);x.stroke();}
- const irisT=new THREE.CanvasTexture(irisC),shineT=new THREE.CanvasTexture(shineC);irisT.encoding=shineT.encoding=THREE.sRGBEncoding;
- const eyes=[],shines=[];EYE.forEach(([x,y,z])=>{const s=Math.sign(x),e=new THREE.Group();e.position.set(x,y,z);e.rotation.y=s*.3;
-  const ball=new THREE.Mesh(sculpt(new THREE.SphereGeometry(.13,48,36),v=>{v.z*=.55;}),std(0x0b0503,{roughness:.08}));
-  const iris=new THREE.Mesh(new THREE.CircleGeometry(.122,64),new THREE.MeshBasicMaterial({map:irisT,transparent:true,toneMapped:false}));iris.position.z=.068;iris.renderOrder=40;
-  const shine=new THREE.Mesh(new THREE.CircleGeometry(.122,64),new THREE.MeshBasicMaterial({map:shineT,transparent:true,depthWrite:false,toneMapped:false}));shine.position.z=.073;shine.renderOrder=41;
-  e.add(ball,iris,shine);head.add(e);eyes.push(e);shines.push(shine);});parts.eyes=eyes;parts.eyeShine=shines;
- /* ears: orange outside, dark brown back and rims, white fluffy insides */
- const ears=[];[-1,1].forEach(s=>{const e=new THREE.Group();e.position.set(s*.27,.36,-.02);e.rotation.z=-s*.36;e.rotation.x=-.1;
-  const outerG=sculpt(new THREE.ConeGeometry(.21,.52,40,10,true),v=>{v.z*=.5;});
-  attrs(outerG,(v,c)=>{const back=smooth(.0,-.06,v.z),tip=smooth(.1,.22,v.y);mix(O,DB,Math.max(back*.9,tip),c);return .35;});
-  const outer=furry(outerG,.03,[3,4]);outer.position.y=.21;e.add(outer);
-  const innerG=sculpt(new THREE.ConeGeometry(.15,.42,32,8),v=>{v.z*=.28;});attrs(innerG,(v,c)=>{c.copy(W);return 1.6;});
-  const inner=furry(innerG,.05,[3,4],new THREE.Vector3(0,.2,.4));inner.position.set(0,.14,.075);inner.scale.setScalar(.78);e.add(inner);
-  head.add(e);ears.push(e);});parts.ears=ears;
-
- /* ---------- tails ---------- */
- function tailGeometry(){
-  const pts=[new THREE.Vector3(0,0,0),new THREE.Vector3(0,.28,-.26),new THREE.Vector3(0,.72,-.36),new THREE.Vector3(0,1.08,-.18),new THREE.Vector3(0,1.24,.08)];
-  const curve=new THREE.CatmullRomCurve3(pts),seg=36,rad=14,pos=[],uv=[],idx=[],col=[],fl=[],c=new THREE.Color(),fr=curve.computeFrenetFrames(seg,false);
-  for(let i=0;i<=seg;i++){const s=i/seg,p=curve.getPointAt(s),N=fr.normals[i],B=fr.binormals[i];
-   const r=s>=1?.0:(.06+.17*Math.pow(Math.sin(Math.PI*Math.min(1,s*1.03)),.7));
-   for(let j=0;j<=rad;j++){const a=j/rad*Math.PI*2,cx=Math.cos(a),sy=Math.sin(a);
-    pos.push(p.x+r*(cx*N.x+sy*B.x),p.y+r*(cx*N.y+sy*B.y),p.z+r*(cx*N.z+sy*B.z));uv.push(j/rad,s);
-    mix(O,OL,.3*Math.sin(Math.PI*s),c);c.lerp(OD,smooth(.15,0,s)*.5);c.lerp(W,smooth(.76,.86,s));col.push(c.r,c.g,c.b);fl.push(.6+.8*Math.sin(Math.PI*Math.min(1,s*1.1)));}}
-  for(let i=0;i<seg;i++)for(let j=0;j<rad;j++){const a=i*(rad+1)+j,b=a+rad+1;idx.push(a,a+1,b,b,a+1,b+1);}
-  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
-  g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));g.setAttribute('furLen',new THREE.Float32BufferAttribute(fl,1));g.setIndex(idx);g.computeVertexNormals();return g;}
- const tailGeo=tailGeometry();
- const tailRoot=new THREE.Group();tailRoot.position.set(0,.3,-.42);tailRoot.scale.setScalar(1.25);fox.add(tailRoot);
- const tails=[];for(let i=0;i<9;i++){const t=furry(tailGeo,.085,[5,9],new THREE.Vector3(0,.1,-.3));const pivot=new THREE.Group();pivot.add(t);pivot.visible=false;pivot.userData.grow=1;tailRoot.add(pivot);tails.push(pivot);}
- /* Buddy's own touch: a small teal leaf mark */
- const leaf=new THREE.Mesh(sculpt(new THREE.SphereGeometry(.04,20,14),v=>{v.x*=.6;v.y*=1.5;v.z*=.3;}),std(0x3CC7B4,{emissive:0x1d7a6e,emissiveIntensity:.5,roughness:.4}));leaf.position.set(0,.3,.43);leaf.rotation.x=-.6;head.add(leaf);
-
- /* ---------- accessories ---------- */
- const acc={};
- acc.scarf=new THREE.Group();{const sc=new THREE.Mesh(new THREE.TorusGeometry(.31,.08,18,48),std(0x2F6FB0,{roughness:.85}));sc.rotation.x=Math.PI/2;acc.scarf.add(sc);const end=new THREE.Mesh(new THREE.BoxGeometry(.14,.32,.05),std(0x2F6FB0,{roughness:.85}));end.position.set(.18,-.18,.27);end.rotation.z=.25;acc.scarf.add(end);acc.scarf.position.set(0,1.1,.12);}
- acc.bell=new THREE.Group();{const c2=new THREE.Mesh(new THREE.TorusGeometry(.3,.028,12,48),std(0xC23B3B));c2.rotation.x=Math.PI/2;acc.bell.add(c2);const b=new THREE.Mesh(new THREE.SphereGeometry(.07,32,24),std(0xF2C94C,{metalness:.8,roughness:.25}));b.position.set(0,-.08,.3);acc.bell.add(b);acc.bell.position.set(0,1.1,.12);}
- acc.crown=new THREE.Group();for(let i=0;i<11;i++){const a=i/11*Math.PI*2;const f=new THREE.Mesh(new THREE.SphereGeometry(.052,20,14),std(i%2?0xF7A8C4:0xFFFFFF));f.position.set(Math.cos(a)*.3,0,Math.sin(a)*.3);acc.crown.add(f);}acc.crown.position.set(0,.4,-.02);head.add(acc.crown);
- acc.hat=new THREE.Group();{const m=std(0x1f1f1f);const brim=new THREE.Mesh(new THREE.CylinderGeometry(.3,.3,.03,40),m);const top=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,.32,40),m);top.position.y=.17;const band=new THREE.Mesh(new THREE.CylinderGeometry(.185,.185,.06,40),std(0x3CC7B4));band.position.y=.05;acc.hat.add(brim,top,band);acc.hat.position.set(0,.48,-.04);head.add(acc.hat);}
- fox.add(acc.scarf,acc.bell);Object.values(acc).forEach(a=>a.visible=false);parts.acc=acc;
- parts.shellGroups=shellGroups;parts.light=light;
- return {fox,parts,tails};
+  function update(dt){mixer.update(dt);}
+  resolve({fox,parts:{acc,head:bones.Fox_Head},play,update,mixer,clips:Object.keys(clips)});
+ },undefined,reject));
 }
-if(typeof module==='object'&&module.exports)module.exports={buildFoxModel};
+if(typeof module==='object'&&module.exports)module.exports={loadFoxModel};

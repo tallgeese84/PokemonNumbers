@@ -1,4 +1,4 @@
-/* Jonah's fox den: an original 3D nine-tailed fox (Three.js r128, bundled for offline use).
+/* Jonah's fox den: Buddy, the 3D "Fox" by pxltiger (CC BY 4.0), with Three.js r128 bundled for offline use.
    Built from simple rounded shapes; no external models or artwork. */
 function createFox(){
  'use strict';
@@ -8,7 +8,7 @@ function createFox(){
  const foxName=()=>state.name||'Buddy';
  const reduce=()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
- /* Learning progress → tails. Reading routes and maths Gym badges, rebuilt from synced records. */
+ /* Learning progress → milestones and tricks. Reading routes and maths Gym badges, rebuilt from synced records. */
  function progress(){
   try{const s=adventure.tracker?.sessions||{};
    const r=PokeReadingCore.withSessions(reading.state,s),routes=Object.keys(r.passed||{}).length;
@@ -23,30 +23,16 @@ function createFox(){
  root.innerHTML='<header class="activity-header"><h2 class="sr-only">My fox</h2><button class="btn listen-btn" id="foxListen" aria-label="Hear it again">'+PokeVisuals.icon('listen')+'</button></header>'+
   '<div class="fox-den"><div class="fox-stage" id="foxStage"><canvas id="foxCanvas" aria-label="Your fox. Tap to play."></canvas><div class="fox-fx" id="foxFx"></div><div class="fox-note" id="foxNote"></div></div>'+
   '<div class="fox-bar"><div class="fox-name" id="foxName"></div><div class="fox-leaves" id="foxLeaves" aria-label="Leaves"></div></div>'+
-  '<div class="fox-tails" id="foxTails" aria-label="Tails"></div><div class="fox-shop" id="foxShop"></div></div>';
+  '<div class="fox-tails" id="foxTails" aria-label="Tricks learned"></div><div class="fox-shop" id="foxShop"></div></div>';
  $('scr-quiz').after(root);screens.fox=root.id;
  let phrase='';$('foxListen').onclick=()=>{audio();if(!soundOn)$('soundBtn').click();say(phrase,true);};
 
  /* ---------- 3D ---------- */
- let T=null,renderer,scene,camera,fox,parts={},tailGroups=[],raf=0,clock0=0,anim={},sprites=[];
- function loadThree(){if(window.THREE)return Promise.resolve();return new Promise((ok,fail)=>{const s=document.createElement('script');s.src='assets/vendor/three-r128.min.js?v=72';s.onload=ok;s.onerror=fail;document.head.append(s);});}
- function buildFox(){const m=buildFoxModel(THREE,{layers:quality.layers});fox=m.fox;parts=m.parts;tailGroups=m.tails;scene.add(fox);}
- function layoutTails(count,time){
-  if(count===1){const g=tailGroups[0];g.visible=true;tailGroups.slice(1).forEach(t=>t.visible=false);
-   // a single tail curls round his side onto the ground, like a sitting cub
-   g.rotation.order='YZX';g.rotation.y=-.95;g.rotation.z=-1.2+Math.sin(time*1.3)*.05;g.rotation.x=.1;const s=g.userData.grow;g.scale.set(s,s,s);return;}
-  // more tails open into a fan behind him
-  const spread=Math.min(2.4,.32*(count-1));
-  tailGroups.forEach((g,i)=>{g.visible=i<count;if(!g.visible)return;const f=i/(count-1)-.5;
-   g.rotation.order='ZXY';g.rotation.y=0;g.rotation.z=f*spread+Math.sin(time*1.5+i*.6)*.06;g.rotation.x=-.15+Math.abs(f)*.35+Math.sin(time*1.1+i)*.04;
-   const s=g.userData.grow*(1-Math.abs(f)*.12);g.scale.set(s,s,s);});
- }
- /* Fur detail adapts to the tablet: if frames are slow, show fewer fur layers (each shell is a whole layer of hair tips). */
- const quality={layers:(window.__foxLayers??18),frames:0,t0:0,level:window.__foxNoAdapt?2:0};
- function adapt(t){if(quality.level>=2)return;if(!quality.t0){quality.t0=t;quality.frames=0;return;}quality.frames++;
-  if(quality.frames===60){const ms=(t-quality.t0)/60;quality.t0=0;
-   if(ms>30){quality.level++;const keep=quality.level===1?2:3;parts.shellGroups.forEach(sh=>sh.forEach((m,k)=>{m.visible=(k%keep===keep-1);}));
-    if(quality.level===2){renderer.setPixelRatio(Math.min(1.5,window.devicePixelRatio||1));sizeRenderer();}}else quality.level=2;}}
+ let T=null,renderer,scene,camera,fox,parts={},raf=0,clock0=0,anim={},sprites=[];
+ function script(src){return new Promise((ok,fail)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=fail;document.head.append(s);});}
+ async function loadThree(){if(!window.THREE)await script('assets/vendor/three-r128.min.js?v=73');if(!THREE.GLTFLoader)await script('assets/vendor/three-GLTFLoader-r128.js?v=73');if(!THREE.SkeletonUtils)await script('assets/vendor/three-SkeletonUtils-r128.js?v=73');}
+ let model=null;
+ async function buildFox(){model=await loadFoxModel(THREE,'assets/fox.glb?v=73');fox=model.fox;parts=model.parts;scene.add(fox);}
  let progCache=null,progAt=0;
  function progressCached(){const now=Date.now();if(!progCache||now-progAt>2000){progCache=progress();progAt=now;}return progCache;}
  function sizeRenderer(){const st=$('foxStage'),w=st.clientWidth||360,h=Math.round(Math.min(w*.95,540));renderer.setSize(w,h,false);$('foxCanvas').style.height=h+'px';camera.aspect=w/h;camera.updateProjectionMatrix();}
@@ -69,7 +55,7 @@ function createFox(){
   try{renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});}catch(e){$('foxNote').textContent='This tablet cannot show 3D right now.';return false;}
   renderer.setPixelRatio(Math.min(3,window.devicePixelRatio||1));
   renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;
-  scene=new THREE.Scene();camera=new THREE.PerspectiveCamera(32,1,.1,60);camera.position.set(0,1.45,5.4);camera.lookAt(0,1.0,0);
+  scene=new THREE.Scene();camera=new THREE.PerspectiveCamera(30,1,.1,60);camera.position.set(0,1.25,4.6);camera.lookAt(0,.8,0);
   scene.background=forestBackdrop();
   scene.add(new THREE.HemisphereLight(0xfff3e0,0x6e8a5c,.75));
   const key=new THREE.DirectionalLight(0xfff1dc,1.1);key.position.set(2.5,5,3.5);scene.add(key);
@@ -85,48 +71,38 @@ function createFox(){
   const fc=document.createElement('canvas');fc.width=fc.height=64;{const x=fc.getContext('2d'),g=x.createRadialGradient(32,32,0,32,32,32);g.addColorStop(0,'rgba(255,248,170,1)');g.addColorStop(.2,'rgba(245,225,90,.85)');g.addColorStop(1,'rgba(240,220,80,0)');x.fillStyle=g;x.fillRect(0,0,64,64);}
   const ft=new THREE.CanvasTexture(fc);flies=[];for(let i=0;i<22;i++){const m=new THREE.Sprite(new THREE.SpriteMaterial({map:ft,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
    const f={m,x:(Math.random()-.5)*5.5,y:.3+Math.random()*2.6,z:-2.6+Math.random()*2.4,p:Math.random()*10,s:.04+Math.random()*.06};m.scale.setScalar(f.s);scene.add(m);flies.push(f);}
-  buildFox();fox.rotation.y=.35;parts.shadow=shadow;T=true;sizeRenderer();window.addEventListener('resize',()=>{if(mode==='fox')sizeRenderer();});
+  try{await buildFox();}catch(e){$('foxNote').textContent='Buddy is still on his way. Connect to the internet once.';return false;}
+  fox.rotation.y=.45;parts.shadow=shadow;T=true;sizeRenderer();window.addEventListener('resize',()=>{if(mode==='fox')sizeRenderer();});
   // drag to turn, tap to play
   let down=null;canvas.addEventListener('pointerdown',e=>{down={x:e.clientX,r:fox.rotation.y,moved:false};try{canvas.setPointerCapture?.(e.pointerId);}catch(_){}});
   canvas.addEventListener('pointermove',e=>{if(!down)return;const dx=e.clientX-down.x;if(Math.abs(dx)>6)down.moved=true;fox.rotation.y=down.r+dx*.012;});
   canvas.addEventListener('pointerup',()=>{if(down&&!down.moved)hop();down=null;});
   return true;
  }
+ let lastT=0;
  function loop(t){
-  if(mode!=='fox'){raf=0;return;}raf=requestAnimationFrame(loop);adapt(t);
-  const time=t/1000,g=X.growth(progressCached().points);
-  // cub → grown: body scales up, head stays relatively bigger when small
-  const s=.78+.32*g;fox.scale.set(s,s,s);parts.head.scale.setScalar(1.1-.12*g);
-  const breathe=reduce()?0:Math.sin(time*2.2)*.012;parts.body.scale.set(1,1+breathe,1);
-  let y=0;if(anim.hop){const k=(t-anim.hop.t0)/600;if(k>=1)anim.hop=null;else y=Math.sin(k*Math.PI)*.45;}
+  if(mode!=='fox'){raf=0;lastT=0;return;}raf=requestAnimationFrame(loop);
+  const dt=lastT?Math.min(.1,(t-lastT)/1000):0;lastT=t;const time=t/1000,g=X.growth(progressCached().points);
+  const s=.8+.3*g;fox.scale.set(s,s,s);
+  let y=0;if(anim.hop){const k=(t-anim.hop.t0)/600;if(k>=1)anim.hop=null;else y=Math.sin(k*Math.PI)*.12;}
   if(anim.spin){const k=(t-anim.spin.t0)/1100;if(k>=1){anim.spin=null;}else fox.rotation.y=anim.spin.r+k*Math.PI*2;}
-  fox.position.y=y;if(parts.shadow.scale)parts.shadow.scale.setScalar(1-y*.6);
+  fox.position.y=y;parts.shadow.scale.setScalar(1-y*.6);
   if(!reduce())flies.forEach(f=>{f.m.position.set(f.x+Math.sin(time*.4+f.p)*.35,f.y+Math.sin(time*.7+f.p*2)*.2,f.z+Math.cos(time*.3+f.p)*.2);f.m.material.opacity=.35+.65*Math.max(0,Math.sin(time*1.6+f.p*3));});
-  if(anim.eat){const k=(t-anim.eat.t0)/1800;if(k>=1){anim.eat=null;parts.head.rotation.x=0;}else parts.head.rotation.x=.35+Math.sin(k*Math.PI*8)*.12;}
-  else parts.head.rotation.x=reduce()?0:Math.sin(time*.7)*.05;
-  parts.head.rotation.z=reduce()?0:Math.sin(time*.5)*.06;
-  const blink=(time%4.2)<.12;parts.eyes.forEach(e=>e.scale.y=blink?.12:1);
-  // watery shimmer: the highlights drift a hair's breadth, like light on water
-  if(parts.eyeShine&&!reduce())parts.eyeShine.forEach((m,i)=>{m.position.x=Math.sin(time*2.3+i)*.004;m.position.y=Math.cos(time*1.9+i*2)*.004;m.material.opacity=.9+Math.sin(time*3.1+i)*.1;});
-  parts.ears.forEach((e,i)=>e.rotation.x=(Math.sin(time*3+i)>.97)?-.25:0);
-  // newly grown tail swells in
-  tailGroups.forEach(gp=>{if(gp.userData.grow<1)gp.userData.grow=Math.min(1,gp.userData.grow+.012);});
-  layoutTails(X.tails(progressCached().points),reduce()?0:time);
-  // sprites (treats, toys)
+  model.update(reduce()?dt*.5:dt);
   sprites=sprites.filter(sp=>{const k=(t-sp.t0)/sp.dur;if(k>=1){scene.remove(sp.obj);return false;}sp.step(k,sp.obj);return true;});
   renderer.render(scene,camera);
  }
  function emojiSprite(e,size=.5){const cv=document.createElement('canvas');cv.width=cv.height=128;const c=cv.getContext('2d');c.font='100px serif';c.textAlign='center';c.textBaseline='middle';c.fillText(e,64,70);
   const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv),transparent:true}));sp.scale.set(size,size,size);return sp;}
  function hearts(n=5){const fx=$('foxFx');for(let i=0;i<n;i++){const h=document.createElement('span');h.className='fox-heart';h.textContent=['💛','✨','🧡'][i%3];h.style.left=(35+Math.random()*30)+'%';h.style.animationDelay=(i*.12)+'s';fx.append(h);setTimeout(()=>h.remove(),1800);}}
- function hop(){if(!T)return;anim.hop={t0:performance.now()};sndTap();hearts(3);if(Math.random()<.35)say(pick(['Yip yip!','Hello '+(childName||'Jonah')+'!','Again! Again!']),true);}
+ function hop(){if(!T)return;model.play(pick(X.tricks(progressCached().points)).clip);sndTap();hearts(3);if(Math.random()<.35)say(pick(['Yip yip!','Hello '+(childName||'Jonah')+'!','Again! Again!']),true);}
  const pick=a=>a[Math.floor(Math.random()*a.length)];
  function useItem(it){const t0=performance.now();
-  if(it.kind==='treat'){const sp=emojiSprite(it.emoji,.45);scene.add(sp);sprites.push({obj:sp,t0,dur:1900,step:(k,o)=>{o.position.set(0,.25,1.05);const s=.45*(1-Math.max(0,k-.5)*2);o.scale.set(s,s,s);}});anim.eat={t0:t0+150};setTimeout(()=>{hearts(6);sndGood();},1500);say(pick(['Yum!','Mmm, thank you!','Delicious!']),true);}
-  if(it.id==='ball'){const sp=emojiSprite(it.emoji,.35);scene.add(sp);sprites.push({obj:sp,t0,dur:2600,step:(k,o)=>{o.position.set(Math.sin(k*Math.PI*2)*1.2,.2+Math.abs(Math.sin(k*Math.PI*5))*.4,.9);}});anim.spin={t0:t0+600,r:fox.rotation.y};setTimeout(()=>anim.hop={t0:performance.now()},1900);setTimeout(()=>hearts(5),2300);say('Catch!',true);}
-  if(it.id==='bubbles'){for(let i=0;i<7;i++){const sp=emojiSprite('🫧',.25+Math.random()*.15);scene.add(sp);const x0=(Math.random()-.5)*1.8;sprites.push({obj:sp,t0:t0+i*180,dur:2400,step:(k,o)=>{o.position.set(x0+Math.sin(k*6+i)*.15,.3+k*2.2,.6);}});}setTimeout(()=>anim.hop={t0:performance.now()},700);setTimeout(()=>anim.hop={t0:performance.now()},1500);say('Pop! Pop!',true);}
+  if(it.kind==='treat'){const sp=emojiSprite(it.emoji,.45);scene.add(sp);sprites.push({obj:sp,t0,dur:1900,step:(k,o)=>{o.position.set(0,.18,.75);const s=.45*(1-Math.max(0,k-.5)*2);o.scale.set(s,s,s);}});model.play('Fox_Sit_Yes');setTimeout(()=>{hearts(6);sndGood();},1500);say(pick(['Yum!','Mmm, thank you!','Delicious!']),true);}
+  if(it.id==='ball'){const sp=emojiSprite(it.emoji,.35);scene.add(sp);sprites.push({obj:sp,t0,dur:2600,step:(k,o)=>{o.position.set(Math.sin(k*Math.PI*2)*1.2,.2+Math.abs(Math.sin(k*Math.PI*5))*.4,.9);}});setTimeout(()=>model.play('Fox_Somersault_InPlace'),500);setTimeout(()=>hearts(5),2300);say('Catch!',true);}
+  if(it.id==='bubbles'){for(let i=0;i<7;i++){const sp=emojiSprite('🫧',.25+Math.random()*.15);scene.add(sp);const x0=(Math.random()-.5)*1.8;sprites.push({obj:sp,t0:t0+i*180,dur:2400,step:(k,o)=>{o.position.set(x0+Math.sin(k*6+i)*.15,.3+k*2.2,.6);}});}setTimeout(()=>model.play('Fox_Jump_Pivot_InPlace'),600);say('Pop! Pop!',true);}
  }
- function wear(){Object.entries(parts.acc).forEach(([k,o])=>o.visible=state.wearing===k);}
+ function wear(){if(parts.acc)Object.entries(parts.acc).forEach(([k,o])=>o.visible=state.wearing===k);}
 
  /* ---------- den UI ---------- */
  function drawUI(){
@@ -134,8 +110,8 @@ function createFox(){
   $('foxName').textContent=foxName();
   $('foxLeaves').innerHTML='🍃 <b>'+X.balance(state)+'</b>';
   const tl=$('foxTails');tl.replaceChildren();
-  for(let i=0;i<9;i++){const s=document.createElement('span');s.className='fox-tailicon'+(i<tails?' on':'');s.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20C6 10 13 4 20 4c-1 8-6 15-16 16z"/></svg>';tl.append(s);}
-  if(nt){const bar=document.createElement('div');bar.className='fox-next';const prev=X.TAIL_AT[tails-1]||0,f=(p.points-prev)/Math.max(1,nt.at-prev);bar.innerHTML='<span style="width:'+Math.round(f*100)+'%"></span>';bar.setAttribute('aria-label','Next tail');tl.append(bar);}
+  for(let i=0;i<9;i++){const s=document.createElement('span');s.className='fox-tailicon'+(i<tails?' on':'');s.title=i<tails?X.TRICKS[i].name:'';s.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="15.5" rx="5" ry="4.2"/><circle cx="6" cy="9.5" r="2.2"/><circle cx="10" cy="6.5" r="2.2"/><circle cx="14" cy="6.5" r="2.2"/><circle cx="18" cy="9.5" r="2.2"/></svg>';tl.append(s);}
+  if(nt){const bar=document.createElement('div');bar.className='fox-next';const prev=X.TAIL_AT[tails-1]||0,f=(p.points-prev)/Math.max(1,nt.at-prev);bar.innerHTML='<span style="width:'+Math.round(f*100)+'%"></span>';bar.setAttribute('aria-label','Next trick');tl.append(bar);}
   const shop=$('foxShop');shop.replaceChildren();
   X.SHOP.forEach(it=>{const owned=state.owned.includes(it.id),b=document.createElement('button');b.type='button';b.className='fox-item'+(owned?' owned':'')+(state.wearing===it.id?' wearing':'')+(!owned&&X.balance(state)<it.cost?' poor':'');
    b.setAttribute('aria-label',it.label+(owned?'':' costs '+it.cost+' leaves'));b.innerHTML='<span class="fox-ie">'+it.emoji+'</span><small>'+(owned?(state.wearing===it.id?'on':'✓'):'🍃'+it.cost)+'</small>';
@@ -147,20 +123,20 @@ function createFox(){
   progCache=null;shutUp();mode='fox';show('fox');drawUI();
   if(!await init3d())return;wear();
   const p=progress(),tails=X.tails(p.points);
-  if(tails>(state.tailsSeen||1)){tailGroups.slice(state.tailsSeen,tails).forEach(g=>g.userData.grow=.05);
-   phrase='Wow! '+foxName()+' grew '+(tails-state.tailsSeen>1?'new tails':'tail number '+tails)+'! All your reading and maths made it grow.';
+  if(tails>(state.tailsSeen||1)){const tr=X.TRICKS[tails-1];setTimeout(()=>model.play(tr.clip),600);
+   phrase='Wow! '+foxName()+' learned a new trick: '+tr.name+'! All your reading and maths taught him. Tap him to see his tricks.';
    state.tailsSeen=tails;save();setTimeout(()=>{hearts(10);sndGood();say(phrase,true);},400);}
   else{phrase='This is '+foxName()+'. Tap to play. Use your leaves for treats and toys.';say(phrase,true);}
   updateHomeBadge();
   if(!raf)raf=requestAnimationFrame(loop);
  }
- /* Home: the Fox button sparkles when a new tail is waiting. */
+ /* Home: the Fox button sparkles when a new trick is waiting. */
  function updateHomeBadge(){const b=$('foxBtn');if(!b)return;const t=X.tails(progress().points);b.classList.toggle('fox-new',t>(state.tailsSeen||1));}
  function leave(){if(raf){cancelAnimationFrame(raf);raf=0;}}
  // grown-ups: name the fox
- const panel=document.createElement('details');panel.className='parent-settings';panel.innerHTML='<summary>Jonah’s fox</summary><p class="muted">His fox grows a tail at learning milestones: reading routes passed, plus two points for each maths Gym badge. All nine tails come when both paths are finished. Every star he earns also gives the fox a leaf to spend on treats, toys and things to wear. The fox is never hungry or sad.</p><label>Name <input class="syinput" id="foxNameIn" maxlength="14" placeholder="Buddy"></label> <button class="btn" id="foxNameSave">Save</button><p class="muted" id="foxStatus"></p>';
+ const panel=document.createElement('details');panel.className='parent-settings';panel.innerHTML='<summary>Jonah’s fox</summary><p class="muted">Buddy grows bigger as Jonah learns, and learns a new trick at each of nine milestones: reading routes passed, plus two points for each maths Gym badge. The ninth trick comes when both paths are finished. Every star he earns also gives Buddy a leaf to spend on treats, toys and things to wear. The fox is never hungry or sad.</p><p class="muted">3D fox: “Fox” by pxltiger (sketchfab.com/pxltiger), licensed CC BY 4.0. Accessories added.</p><label>Name <input class="syinput" id="foxNameIn" maxlength="14" placeholder="Buddy"></label> <button class="btn" id="foxNameSave">Save</button><p class="muted" id="foxStatus"></p>';
  ($('mathPathPanel')||$('learningDashboard')).after(panel);
- panel.addEventListener('toggle',()=>{if(!panel.open)return;$('foxNameIn').value=state.name||'';const p=progress(),nt=X.nextTail(p.points);$('foxStatus').textContent=`${X.tails(p.points)} of 9 tails · ${p.routes} reading routes + ${p.badges} Gym badges = ${p.points} of ${X.MAX_POINTS} points${nt?` · next tail at ${nt.at}`:''} · ${X.balance(state)} leaves to spend (${state.earned} earned).`;});
+ panel.addEventListener('toggle',()=>{if(!panel.open)return;$('foxNameIn').value=state.name||'';const p=progress(),nt=X.nextTail(p.points);$('foxStatus').textContent=`${X.tails(p.points)} of 9 tricks · ${p.routes} reading routes + ${p.badges} Gym badges = ${p.points} of ${X.MAX_POINTS} points${nt?` · next trick at ${nt.at}`:''} · ${X.balance(state)} leaves to spend (${state.earned} earned).`;});
  $('foxNameSave').onclick=()=>{state.name=$('foxNameIn').value.trim().slice(0,14);save();$('foxStatus').textContent='Saved.';};
- return {open,leave,earn,updateHomeBadge,get state(){return state;},payload:()=>state,applyState(m){if(m){state=X.mergeState(state,m);save();}}};
+ return {_model:()=>model,open,leave,earn,updateHomeBadge,get state(){return state;},payload:()=>state,applyState(m){if(m){state=X.mergeState(state,m);save();}}};
 }
