@@ -21,6 +21,24 @@ and is not included in this repository. Personal, non-commercial project.
 To ship an update, bump `CACHE = 'pokemath-v1'` in `sw.js` (v2, v3, ...) so
 installed tablets pick up the new version.
 
+## v68 — reading joins PokéMath
+
+Jonah's Poké Reading app is now a reading wing inside PokéMath, aimed at Singapore P1 English (January 2028).
+
+**Play** alternates short blocks: a reading round (about five items), then four maths questions, aiming for about 60% reading by active time. The daily goal default is now 20 minutes (10/15/20/25 in the journal). Games has three new tiles: **Read**, **Books** and **Letters**.
+
+What changed in how he learns to read:
+- **Decode first.** In Read it, the word is shown as sound buttons and the app does not say the word before he answers. He taps sounds himself; 👂 help models the sounds, then the blend, then the word. Help and misses are recorded as helped, never independent.
+- **Mastery, not completion.** Every sound, word and tricky word is tracked. Secure = two independent successes; mastered = success again on a later day. A route opens the next only when its sounds, six words, tricky words and book are secure.
+- **Spaced review.** Earlier routes' items come back when due, mixed across sounds, words and tricky words.
+- **Short reading check** on first play (one try per item, no fading), so the old app's completed routes are verified rather than trusted.
+- **Sound Ears** listening games (first sound, blend by ear, count the sounds), **Read and tap** sentences, a comprehension question after every book, and Name Catch (read a Pokémon's name to catch it).
+- **18 routes** (12 original plus igh/ear/air, ay/ou/ie/oy, ue/aw/ew/wh/ph, -s/-ing/-ed, two-syllable words, capitals and full stops). All 92 Dolch pre-primer and primer words are taught. Every practice word, book sentence and readable name is checked by test to decode with only the sounds taught so far.
+
+Grown-ups → **Reading · P1 readiness**: route, what the current route still needs, pace against a P1 timeline (all routes by October 2027), a nine-row readiness checklist, *Listen to Jonah read* (mark each page), redo the reading check, move route, letter names, and recording sounds in your voice. Reading appears in the journal and daily report.
+
+The old app's progress (same site) is imported once: its caught Pokémon join his collection and its sound recordings are used. To retire the old app, copy `tools/reading-redirect/index.html` and `sw.js` into the PokemonReading repository.
+
 ## v64 — subtraction: predict, then check
 
 Guided Play now repeats six subtraction questions, one addition and one counting question. It starts with subtraction.

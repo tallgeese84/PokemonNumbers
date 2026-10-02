@@ -1,0 +1,440 @@
+/* Reading wing UI. Decode first: the whole word is never spoken before he
+   answers unless he asks for help, and asking is recorded as help. */
+function createReading(){
+ 'use strict';
+ const R=PokeReadingCore,D=PokeReadingData,$=id=>document.getElementById(id);
+ const STATE_KEY='pokemath_reading_v1',REC_PREFIX='poke_reading_rec_',LEGACY_KEY='poke_reading_v1';
+ const reduce=()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+ let state=R.freshState();
+ try{state=R.mergeState(state,JSON.parse(localStorage.getItem(STATE_KEY)||'null'));}catch(e){}
+ const sessions=()=>adventure.tracker?.sessions||{};
+ const st=()=>R.withSessions(state,sessions());
+ function save(){try{localStorage.setItem(STATE_KEY,JSON.stringify(state));}catch(e){}if(typeof schedulePush==='function')schedulePush();}
+
+ /* ---------- screen ---------- */
+ const root=document.createElement('div');root.id='scr-read';root.className='screen';
+ root.innerHTML='<header class="activity-header"><h2 class="sr-only" id="rdTitle">Reading</h2><div class="read-route" id="rdRoute"></div><button class="btn listen-btn" id="rdListen" aria-label="Hear it again">'+PokeVisuals.icon('listen')+'</button></header>'+
+  '<div class="read-card"><div class="read-pips" id="rdPips" aria-hidden="true"></div><div class="read-prompt" id="rdPrompt"></div><div class="read-stage" id="rdStage"></div><div class="read-options" id="rdOptions"></div><p class="read-feedback" id="rdFeedback" role="status"></p><div class="read-actions" id="rdActions"></div></div>';
+ $('scr-quiz').after(root);screens.read=root.id;
+ let replay=()=>{};
+ $('rdListen').onclick=()=>{audio();if(!soundOn)$('soundBtn').click();replay();};
+
+ /* ---------- voice ---------- */
+ // A grown-up recording wins; the speech engine cannot say a clean /b/.
+ const REC={};
+ function loadRecs(){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith(REC_PREFIX))REC[k.slice(REC_PREFIX.length)]=localStorage.getItem(k);}}catch(e){}}
+ loadRecs();
+ let voice=null,gen=0,busy=false,audioEl=null;
+ function pickVoice(){
+  const vs=window.speechSynthesis?.getVoices?.()||[];if(!vs.length)return;
+  const score=v=>{let s=0;const l=(v.lang||'').replace('_','-');if(/^en-(GB|SG|AU|NZ|IE)/.test(l))s+=40;else if(l.startsWith('en'))s+=18;const n=(v.name||'').toLowerCase();
+   if(/(google uk english female|serena|kate|sonia|libby|karen|moira|fiona|samantha)/.test(n))s+=10;if(/(natural|premium|enhanced|neural)/.test(n))s+=8;if(/(novelty|whisper|bells|zarvox|trinoids|bad news|good news|albert|jester)/.test(n))s-=60;return s;};
+  voice=vs.slice().sort((a,b)=>score(b)-score(a))[0]||null;
+ }
+ if(window.speechSynthesis){pickVoice();window.speechSynthesis.addEventListener?.('voiceschanged',pickVoice);}
+ function stop(){gen++;busy=false;try{audioEl?.pause();}catch(e){}audioEl=null;try{window.speechSynthesis?.cancel();}catch(e){}}
+ function waitTurn(fn,tries=0){if(speechIdle()||tries>16){if(!speechIdle())shutUp();fn();}else setTimeout(()=>waitTurn(fn,tries+1),250);}
+ function speak(text,opts={}){
+  const g=gen,done=()=>{if(g===gen){busy=false;opts.done?.();}};
+  if(!soundOn||!window.speechSynthesis||!text){setTimeout(done,opts.silentMs||250);return;}
+  busy=true;
+  waitTurn(()=>{if(g!==gen)return;try{window.speechSynthesis.cancel();}catch(e){}
+   const u=new SpeechSynthesisUtterance(String(text));if(voice){u.voice=voice;u.lang=voice.lang;}else u.lang='en-GB';
+   u.rate=opts.rate||0.82;u.pitch=opts.pitch||1.05;let fin=false;const end=()=>{if(fin)return;fin=true;done();};
+   u.onend=end;u.onerror=end;setTimeout(end,Math.min(9000,1100+String(text).length*95));
+   try{window.speechSynthesis.speak(u);}catch(e){end();}});
+ }
+ function playKey(p){return typeof p==='string'?p:(p.play||p.g);}
+ function sound(p,done){
+  const key=playKey(p),g=gen;
+  const fin=()=>{if(g===gen){busy=false;done?.();}};
+  if(p&&p.cls==='silent'){setTimeout(fin,150);return;}
+  if(p&&p.suffix&&p.g==='ed'&&!p.play){speak('id',{rate:.75,done});return;}
+  if(soundOn&&REC[key]){busy=true;waitTurn(()=>{if(g!==gen)return;try{audioEl=new Audio(REC[key]);audioEl.onended=fin;audioEl.onerror=fin;audioEl.play().catch(fin);}catch(e){fin();}});return;}
+  const text=(p&&p.magic==='start')?p.sound:(D.G[key]?D.G[key][0]:(p&&p.sound)||key);
+  speak(text,{rate:.72,pitch:1,done});
+ }
+ function chain(jobs,gap,done){const g=gen;let i=0;(function step(){if(g!==gen)return;if(i>=jobs.length){done?.();return;}jobs[i++](()=>setTimeout(step,gap));})();}
+ function letterName(l){return D.LETTER_NAME[l]||l;}
+ const namesOn=()=>state.namesAt?state.names:st().passed?.[11]>0;
+
+ /* ---------- helpers ---------- */
+ function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;}
+ function btn(cls,label,fn,html){const b=el('button',cls);b.type='button';b.setAttribute('aria-label',label);if(html!=null)b.innerHTML=html;b.onclick=()=>{if(active())fn(b);};return b;}
+ function active(){return mode==='read'&&!adventure.isPaused();}
+ function monImg(id,cls){const im=el('img',cls||'read-mon');im.alt='';im.src=imgArt(id);im.onerror=()=>{im.src=PokeVisuals.ball('poke-ball');};return im;}
+ function label(g){return g.replace('_','–');}
+ function clsOf(g){const e=D.G[g];return e?.[3]==='vowel'?'vowel':e?.[3]==='end'?'end':g.length>1?'team':'cons';}
+ function tiles(host,parts,opts={}){
+  host.replaceChildren();const out=[];
+  parts.forEach((p,i)=>{
+   const b=el('button','gtile '+(p.g.length>1&&p.cls!=='end'?'bar':'dot'));b.type='button';b.dataset.cls=p.cls;
+   if(p.syl)b.classList.add('syl');if(p.suffix)b.classList.add('suffix');
+   b.setAttribute('aria-label',p.cls==='silent'?'silent e':'sound '+p.g);
+   b.append(el('span','g',p.g),el('span','mark'));
+   if(!opts.mute)b.onclick=()=>{if(!active())return;flash(b);opts.onTap?.(i);sound(p);};else b.tabIndex=-1;
+   host.append(b);out.push(b);
+  });
+  const s=parts.findIndex(p=>p.magic==='start'),e=parts.findIndex(p=>p.magic==='end');
+  if(s>=0&&e>=0)requestAnimationFrame(()=>{const hr=host.getBoundingClientRect();if(!hr.width)return;const a=out[s].getBoundingClientRect(),z=out[e].getBoundingClientRect();
+   const x1=a.left-hr.left+a.width/2,x2=z.left-hr.left+z.width/2,y=a.top-hr.top+a.height*.86;
+   const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('class','swoop');const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+   path.setAttribute('d',`M ${x1} ${y} Q ${(x1+x2)/2} ${y+30} ${x2} ${y}`);svg.append(path);host.append(svg);});
+  return out;
+ }
+ function flash(b){b.classList.add('lit');setTimeout(()=>b.classList.remove('lit'),360);}
+ function soundOut(tl,parts,fast,done){chain(parts.map((p,i)=>next=>{tl.forEach(t=>t.classList.remove('lit'));tl[i]?.classList.add('lit');sound(p,next);}),fast?40:260,()=>{setTimeout(()=>tl.forEach(t=>t.classList.remove('lit')),300);done?.();});}
+ function blendOut(tl,parts,word,done){soundOut(tl,parts,true,()=>{tl.forEach(t=>t.classList.add('lit'));speak(R.clean(word),{rate:.75,done:()=>{tl.forEach(t=>t.classList.remove('lit'));done?.();}});});}
+ function fade(container,isRight){const kids=[...container.children].filter(b=>!b.disabled);const wrong=kids.filter(b=>!isRight(b));wrong.slice(0,Math.max(0,kids.length-2)).forEach(b=>{b.disabled=true;b.classList.add('faded');});}
+ function feedback(t){$('rdFeedback').textContent=t||'';}
+ function pips(total,i){const p=$('rdPips');p.replaceChildren();for(let k=0;k<total;k++){const d=el('span',k<i?'on':k===i?'now':'');p.append(d);}}
+ function waitReady(fn){const r=run;(function w(){if(run!==r||mode!=='read')return;if(busy||!readyForNext()){setTimeout(w,250);return;}fn();})();}
+ const praise=ind=>{const n=childName||'';const a=ind?['Brilliant reading, '+n+'!','You read it yourself!','Super sounding out!','Yes! Great reading!']:['You got it, '+n+'!','Well done!','Good thinking!'];return a[Math.floor(Math.random()*a.length)];};
+
+ /* ---------- round runner ---------- */
+ let run=null;            // {round, i, onDone, item, meta, wrong, help, ref}
+ const recent=[];
+ const TITLE={meet:'New sounds',write:'Writing letters',shapes:'Letter shapes',hunt:'Sound hunt',read:'Read it',build:'Build it',heart:'Tricky words',sentence:'Read and tap',ears:'Sound ears',book:'Book time',name:'Name catch',review:'Remember these',caps:'Capital letters',placement:'Reading check'};
+ const INTRO={meet:'Listen to the new sound.',write:'Trace the letter. Start on the green dot.',shapes:'Find the letter that looks the same.',hunt:'Listen. Find the sound.',read:'Tap each sound. Say them fast. Then find the picture.',build:'Listen, then build the word.',heart:'Tricky words. Learn them by heart.',sentence:'Read it, then tap the right picture.',ears:'Listen with your ears.',book:'Let us read a book.',name:'Read the name to catch the Pokémon!',review:'Do you remember these?',caps:'Find the one written the right way.',placement:'Show me what you can read!'};
+ function setHeader(act,n){$('rdTitle').textContent=TITLE[act]||'Reading';const L=R.route(n);$('rdRoute').innerHTML='';const chip=el('span','route-chip','Route '+n);chip.style.setProperty('--route',L.colour);$('rdRoute').append(chip);}
+ function enter(){shutUp();mode='read';show('read');}
+ function startRound(round,onDone){
+  run={round,i:0,onDone};recent.push(round.act);while(recent.length>8)recent.shift();
+  enter();setHeader(round.act,round.route);feedback('');
+  if(!round.items.length){finishRound();return;}
+  speak(INTRO[round.act],{rate:.85,done:()=>nextItem()});
+ }
+ function nextItem(){
+  if(!run)return;
+  if(run.i>=run.round.items.length){finishRound();return;}
+  if(!adventure.beforeQuestion()){waitReady(nextItem);return;}
+  const it=run.round.items[run.i];run.item=it;run.wrong=0;run.helped=false;run.done=false;
+  pips(run.round.items.length,run.i);feedback('');$('rdOptions').replaceChildren();$('rdActions').replaceChildren();$('rdStage').replaceChildren();$('rdPrompt').replaceChildren();
+  run.ref=adventure.begin({section:'read',skill:run.round.placement?'placement':run.round.act,kind:it.kind,item:it.item,route:it.route,range:it.route,support:'read alone',format:it.kind,level:it.route,teach:!!it.teach,a:it.route,b:0,expected:String(it.answer??it.item)});
+  (RENDER[it.kind]||RENDER.unknown)(it);
+ }
+ function respond(value,correct){adventure.respond(value,correct);}
+ function help(kind){if(!run.helped)run.helped=true;adventure.help(kind);}
+ function right(target,value,afterSay){
+  if(run.done)return;run.done=true;
+  if(run.round.placement&&run.item._first===undefined)run.item._first=true;
+  respond(value,true);
+  const ind=run.wrong===0&&!run.helped;
+  target?.classList.add('right');[...$('rdOptions').querySelectorAll('button')].forEach(b=>b.disabled=true);
+  sndGood();if(!reduce())burst(target||$('rdStage'),ind?10:7);
+  // Quick recognition items earn one star; reading words and sentences earn two.
+  if(!run.item.teach&&!run.round.placement){const big=['read','sentence','build','name','quiz'].includes(run.item.kind);const n=big?(ind?2:1):(ind?1:0);if(n)addStar(n);}
+  const line=run.round.placement?'Yes!':praise(ind);feedback(line+(run.round.placement?'':ind?'  ⭐⭐':'  ⭐'));
+  const after=()=>speak(line,{done:()=>setTimeout(advance,350)});
+  if(afterSay&&!run.round.placement)afterSay(after);else after();
+ }
+ function wrong(target,value){
+  respond(value,false);run.wrong++;sndOops();
+  if(target){target.classList.add('wrong');setTimeout(()=>{target.classList.remove('wrong');target.disabled=true;},420);}
+  // The reading check never teaches or fades: one try, then move on kindly.
+  if(run.round.placement&&!run.done){run.done=true;if(run.item._first===undefined)run.item._first=false;feedback('Good try!');setTimeout(advance,700);}
+ }
+ function advance(){if(!run)return;run.i++;waitReady(nextItem);}
+ function finishRound(){
+  const r=run;run=null;if(!r)return;
+  const done=r.onDone;feedback('');
+  waitReady2(()=>done?.());
+ }
+ function waitReady2(fn){(function w(){if(mode!=='read')return;if(busy||!readyForNext()){setTimeout(w,250);return;}fn();})();}
+ function teachDone(next){if(run.done)return;run.done=true;respond('done',true);next?next():advance();}
+
+ /* ---------- renderers ---------- */
+ const RENDER={};
+ RENDER.unknown=()=>advance();
+ RENDER.meet=it=>{
+  const e=D.G[it.g];const stage=$('rdStage');
+  const card=el('div','meet-card');const t=el('div','meet-tile');const tl=tiles(t,[{g:label(it.g),sound:e[0],cls:clsOf(it.g),play:it.g}]);
+  card.append(t,el('div','meet-art',e[2]),el('div','meet-key',e[1]));stage.append(card);
+  const sayIt=()=>sound(it.g,()=>setTimeout(()=>speak(e[1],{rate:.8,done:()=>{if(namesOn()&&it.g.length===1)speak('the letter '+letterName(it.g),{rate:.8});}}),250));
+  replay=sayIt;setTimeout(()=>{flash(tl[0]);sayIt();},300);
+  $('rdPrompt').textContent='';
+  $('rdActions').append(btn('btn read-next','Next',()=>teachDone(),'▶'));
+ };
+ RENDER.shape=it=>{
+  $('rdPrompt').textContent='';tiles($('rdStage'),[{g:it.target,cls:clsOf(it.target)}],{mute:true});
+  replay=()=>sound(it.target);setTimeout(replay,300);
+  it.options.forEach(g=>$('rdOptions').append(btn('ltile','Letter '+g,b=>{if(g===it.answer)right(b,g,go=>sound(g,go));else{wrong(b,g);if(run.wrong>=2)fade($('rdOptions'),x=>x.textContent===it.answer);}},esc(g))));
+ };
+ RENDER.upper=it=>{
+  const big=el('div','upper-target',it.target);$('rdStage').append(big);$('rdPrompt').textContent='Find the capital';
+  replay=()=>speak('Find the capital letter '+letterName(it.target),{rate:.8});setTimeout(replay,250);
+  it.options.forEach(g=>$('rdOptions').append(btn('ltile upper','Capital '+g,b=>{if(g===it.answer)right(b,g);else{wrong(b,g);if(run.wrong>=2)fade($('rdOptions'),x=>x.textContent===it.answer);}},esc(g))));
+ };
+ RENDER.hunt=it=>{
+  const ear=el('div','hunt-ear');ear.innerHTML=PokeVisuals.icon('listen');$('rdStage').append(ear);
+  replay=()=>sound(it.target);setTimeout(replay,350);ear.onclick=replay;
+  it.options.forEach(g=>{const b=btn('ltile','Sound '+label(g),b=>{if(g===it.answer)right(b,g,go=>sound(g,go));else{wrong(b,g);setTimeout(()=>sound(it.target),450);if(run.wrong>=2&&!run.round.placement)fade($('rdOptions'),x=>x.dataset.g===it.answer);}},esc(label(g)));b.dataset.g=g;b.dataset.cls=clsOf(g);$('rdOptions').append(b);});
+ };
+ /* The core change: he decodes; the app never says the word first. */
+ RENDER.read=it=>{
+  const wordBox=el('div','sound-word');$('rdStage').append(wordBox);
+  const tl=tiles(wordBox,it.parts,{onTap:()=>{}});
+  let level=0;
+  replay=()=>speak('Tap each sound. Say them fast. Find the picture.',{rate:.85});
+  const helpBtn=btn('btn read-help','Help me sound it out',()=>{
+   if(run.round.placement)return;
+   level++;help(level===1?'sounds modelled':level===2?'blend modelled':'word spoken');
+   if(level===1)soundOut(tl,it.parts,false);else if(level===2)soundOut(tl,it.parts,true);else{blendOut(tl,it.parts,it.word);fade($('rdOptions'),x=>x.dataset.w===it.answer);}
+  },'👂');
+  if(!run.round.placement)$('rdActions').append(helpBtn);
+  it.options.forEach(o=>{const b=btn('pic','Picture '+(it.options.indexOf(o)+1),b=>{
+   if(R.clean(o.w)===it.answer)right(b,o.w,go=>blendOut(tl,it.parts,it.word,go));
+   else{wrong(b,o.w);if(!run.round.placement){if(run.wrong===1)setTimeout(()=>soundOut(tl,it.parts,false),450);else{help('word spoken');setTimeout(()=>blendOut(tl,it.parts,it.word),450);fade($('rdOptions'),x=>x.dataset.w===it.answer);}}}
+  },'');b.textContent=o.e;b.dataset.w=R.clean(o.w);$('rdOptions').append(b);});
+ };
+ RENDER.build=it=>{
+  const art=el('div','build-art',D.ART[R.clean(it.word)]||'🔊');$('rdStage').append(art);
+  const slots=el('div','build-slots');it.parts.forEach(p=>{const s=el('div','slot');s.dataset.cls=p.cls==='silent'?'team':p.cls;slots.append(s);});$('rdStage').append(slots);
+  let at=0;replay=()=>speak(R.clean(it.word),{rate:.75});setTimeout(replay,300);art.onclick=replay;
+  it.tiles.forEach(g=>{const b=btn('ltile','Sound '+label(g),b=>{
+   const want=it.parts[at];if(!want||run.done)return;
+   if(g===want.g&&!b.classList.contains('used')){slots.children[at].textContent=g;slots.children[at].classList.add('filled');b.classList.add('used');b.disabled=true;sound(want);at++;
+    if(at>=it.parts.length)setTimeout(()=>right(slots,R.clean(it.word),go=>speak(R.clean(it.word),{rate:.75,done:go})),450);}
+   else{if(!run.wrong)respond(g,false);run.wrong++;sndOops();b.classList.add('wrong');setTimeout(()=>b.classList.remove('wrong'),400);
+    setTimeout(()=>sound(want),300);if(run.wrong>=2){fade($('rdOptions'),x=>x.dataset.g===want.g&&!x.classList.contains('used'));}}
+  },esc(g));b.dataset.g=g;$('rdOptions').append(b);});
+ };
+ RENDER.heartTeach=it=>{
+  const h=it.heart,w=h.w;const word=el('div','heart-word');word.innerHTML=esc(w.slice(0,h.i))+'<span class="tricky">'+esc(w.slice(h.i,h.i+h.n))+'</span>'+esc(w.slice(h.i+h.n));
+  $('rdStage').append(el('div','heart-icon','❤️'),word);$('rdPrompt').textContent='';
+  replay=()=>speak(w+'. The red part is tricky. '+w,{rate:.78});setTimeout(replay,300);
+  $('rdActions').append(btn('btn read-next','Next',()=>teachDone(),'▶'));
+ };
+ RENDER.heart=it=>{
+  const ear=el('div','hunt-ear');ear.innerHTML=PokeVisuals.icon('listen');$('rdStage').append(ear);
+  replay=()=>speak(it.word,{rate:.75});setTimeout(replay,300);ear.onclick=replay;
+  it.options.forEach(w=>{const b=btn('wchoice','Word '+(it.options.indexOf(w)+1),b=>{if(w===it.answer)right(b,w);else{wrong(b,w);setTimeout(replay,420);if(run.wrong>=2)fade($('rdOptions'),x=>x.textContent===it.answer);}},esc(w));$('rdOptions').append(b);});
+ };
+ RENDER.sentence=it=>{
+  const s=el('div','read-sentence');it.text.split(' ').forEach((w,i)=>{const t=el('span','w',w);t.onclick=()=>{if(!active())return;help('word read aloud');flash(t);speak(w.replace(/[^A-Za-z]/g,''),{rate:.75});};s.append(t,document.createTextNode(' '));});
+  $('rdStage').append(s);
+  replay=()=>speak('Read it. Then tap the picture.',{rate:.85});
+  $('rdActions').append(btn('btn read-help','Read it to me',()=>{help('sentence read aloud');speak(it.text,{rate:.78});},'👂'));
+  it.options.forEach((o,k)=>{const b=btn('pic sentence-pic','Picture '+(k+1),b=>{if(k===it.answer)right(b,k,go=>speak(it.text,{rate:.8,done:go}));else{wrong(b,k);if(run.wrong>=2){help('sentence read aloud');speak(it.text,{rate:.78});fade($('rdOptions'),x=>+x.dataset.k===it.answer);}}},'');
+   b.dataset.k=k;const n=o.count||1;for(let c=0;c<n;c++){const sp=el('span','pic-e',o.e||'');sp.style.fontSize=(o.size?o.size*52:n>1?40:52)+'px';b.append(sp);}$('rdOptions').append(b);});
+ };
+ RENDER.first=it=>{
+  const first=it.parts[0];
+  replay=()=>{const opts=[...$('rdOptions').children];speak('Which one starts with',{rate:.85,done:()=>sound(first,()=>chain(opts.map(b=>next=>{flash(b);speak(b.dataset.w,{rate:.8,done:next});}),200))});};
+  $('rdPrompt').textContent='';const ear=el('div','hunt-ear');ear.innerHTML=PokeVisuals.icon('listen');ear.onclick=()=>sound(first);$('rdStage').append(ear);
+  it.options.forEach(o=>{const b=btn('pic','Picture',b=>{if(o.w===it.answer)right(b,o.w,go=>speak(o.w,{rate:.8,done:go}));else{wrong(b,o.w);speak(o.w,{rate:.8});if(run.wrong>=2)fade($('rdOptions'),x=>x.dataset.w===it.answer);}},'');b.textContent=o.e;b.dataset.w=o.w;$('rdOptions').append(b);});
+  setTimeout(replay,300);
+ };
+ RENDER.blend=it=>{
+  const ear=el('div','hunt-ear');ear.innerHTML=PokeVisuals.icon('listen');$('rdStage').append(ear);
+  const dots=el('div','ear-dots');it.parts.filter(p=>p.cls!=='silent').forEach(()=>dots.append(el('span')));$('rdStage').append(dots);
+  replay=()=>{const ps=it.parts.filter(p=>p.cls!=='silent');chain(ps.map((p,i)=>next=>{[...dots.children].forEach((d,k)=>d.classList.toggle('lit',k===i));sound(p,next);}),320,()=>[...dots.children].forEach(d=>d.classList.remove('lit')));};
+  ear.onclick=replay;setTimeout(()=>speak('Listen and blend.',{rate:.85,done:replay}),250);
+  it.options.forEach(o=>{const b=btn('pic','Picture',b=>{if(o.w===it.answer)right(b,o.w,go=>speak(o.w,{rate:.8,done:go}));else{wrong(b,o.w);setTimeout(replay,400);if(run.wrong>=2){help('word spoken');fade($('rdOptions'),x=>x.dataset.w===it.answer);}}},'');b.textContent=o.e;b.dataset.w=o.w;$('rdOptions').append(b);});
+ };
+ RENDER.count=it=>{
+  const art=el('div','build-art',D.ART[it.word]||'🔊');$('rdStage').append(art);
+  replay=()=>speak('How many sounds in '+it.word+'?',{rate:.8});art.onclick=()=>speak(it.word,{rate:.75});setTimeout(replay,250);
+  const parts=R.splitWord(it.word).filter(p=>p.cls!=='silent');
+  $('rdActions').append(btn('btn read-help','Say the sounds',()=>{help('sounds modelled');chain(parts.map(p=>next=>sound(p,next)),300);},'👂'));
+  it.options.forEach(k=>{const b=btn('count-choice',k+' sounds',b=>{if(k===it.answer)right(b,k,go=>chain(parts.map(p=>next=>sound(p,next)),260,go));else{wrong(b,k);if(run.wrong>=2)fade($('rdOptions'),x=>+x.dataset.k===it.answer);}},'');b.dataset.k=k;for(let c=0;c<k;c++)b.append(el('span','count-dot'));$('rdOptions').append(b);});
+ };
+ RENDER.punct=it=>{
+  $('rdPrompt').textContent='';replay=()=>speak('Which one is written the right way?',{rate:.85});setTimeout(replay,250);
+  it.options.forEach(t=>$('rdOptions').append(btn('wchoice punct','Sentence '+(it.options.indexOf(t)+1),b=>{if(t===it.answer)right(b,t,go=>speak('A sentence starts with a capital letter and ends with a full stop.',{rate:.85,done:go}));else{wrong(b,t);if(run.wrong>=1)speak('Look at the start and the end.',{rate:.85});}},esc(t))));
+ };
+ RENDER.name=it=>{
+  const wordBox=el('div','sound-word name-word');$('rdStage').append(wordBox);const tl=tiles(wordBox,it.parts);
+  replay=()=>speak('Read the name. Who is it?',{rate:.85});setTimeout(replay,250);
+  $('rdActions').append(btn('btn read-help','Help me sound it out',()=>{help('sounds modelled');soundOut(tl,it.parts,false);},'👂'));
+  it.options.forEach(m=>{const b=btn('pic mon-pic','Pokémon',b=>{
+   if(m.id===it.answer)right(b,m.id,go=>blendOut(tl,it.parts,m.name,()=>{catchNamed(m.id);go();}));
+   else{wrong(b,m.id);if(run.wrong>=2){help('word spoken');blendOut(tl,it.parts,m.name);fade($('rdOptions'),x=>+x.dataset.id===it.answer);}}},'');
+   b.dataset.id=m.id;b.append(monImg(m.id));$('rdOptions').append(b);});
+ };
+ function catchNamed(id){
+  if(caught.includes(id))return;
+  beginCeremony(20000);
+  setTimeout(function w(){if(!speechIdle()||busy){setTimeout(w,250);return;}catchMon(id);},600);
+ }
+ RENDER.quiz=it=>{
+  const q=it.quiz;$('rdPrompt').textContent=q.q;replay=()=>speak(q.q,{rate:.85});setTimeout(replay,250);
+  q.o.forEach((o,k)=>{const b=btn('pic quiz-pic','Answer '+(k+1),b=>{if(k===it.answer)right(b,k,go=>speak(o.t,{rate:.8,done:go}));else{wrong(b,k);if(run.wrong>=1)fade($('rdOptions'),x=>+x.dataset.k===it.answer);}},'');
+   b.dataset.k=k;if(o.m)b.append(monImg(o.m));else b.append(el('span','pic-e',o.e));b.append(el('small','',o.t));$('rdOptions').append(b);});
+ };
+ RENDER.book=it=>{
+  const bk=it.book;let p=0,taps=0;
+  const draw=()=>{
+   const pg=bk.pages[p];pips(bk.pages.length,p);$('rdPrompt').textContent=p===0?bk.title:'';
+   const stage=$('rdStage');stage.replaceChildren();const art=el('div','book-art');if(pg.m)art.append(monImg(pg.m));else art.textContent=pg.a||'📖';stage.append(art);
+   const text=el('div','book-text');const names=D.ROUTES.flatMap(r=>r.mons.map(m=>m.name.toLowerCase()));
+   pg.t.split(/(\s+)/).forEach(tok=>{if(/^\s+$/.test(tok)){text.append(document.createTextNode(' '));return;}const s=el('span','w',tok);const c=tok.replace(/[^A-Za-z']/g,'');if(names.includes(c.toLowerCase()))s.classList.add('mon');
+    s.onclick=()=>{if(!active()||!c)return;taps++;recordAction('word tap',c);flash(s);speak(c,{rate:.72});};text.append(s);});
+   stage.append(text);
+   const acts=$('rdActions');acts.replaceChildren();
+   acts.append(btn('btn','Back a page',()=>{if(p>0){p--;draw();}},'◀'));
+   acts.append(btn('btn read-help','Read this page to me',()=>{recordAction('page read aloud',p);help('page read aloud');const ws=[...text.querySelectorAll('.w')];chain(ws.map(w=>next=>{ws.forEach(x=>x.classList.remove('on'));w.classList.add('on');speak(w.textContent.replace(/[^A-Za-z']/g,''),{rate:.75,done:next});}),80,()=>ws.forEach(x=>x.classList.remove('on')));},'👂'));
+   acts.append(btn('btn read-next','Next page',()=>{if(p<bk.pages.length-1){p++;draw();sndTap();}else{state.books[it.route]=Date.now();save();teachDone();}},p===bk.pages.length-1?'✓':'▶'));
+   acts.children[0].disabled=p===0;
+  };
+  replay=()=>speak(p===0?'Read the book. Tap a word if you need help.':'Read the page.',{rate:.85});
+  draw();if(run.i===0)setTimeout(replay,250);
+ };
+ function recordAction(kind,value){const q=adventure.tracker.question();if(!q)return;q.actions||=[];q.actions.push({kind,value,at:Date.now(),activeMs:q.activeMs});adventure.tracker.changed(run.ref.sid);}
+
+ /* ---------- writing (stroke order, generous tolerance) ---------- */
+ const NS='http://www.w3.org/2000/svg',TOL=17,SAMPLES=64;
+ function svgEl(tag,attrs){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e;}
+ RENDER.write=it=>{
+  const svg=svgEl('svg',{viewBox:'0 0 100 140',class:'write-svg'});$('rdStage').append(svg);
+  const hint=el('div','write-hint');$('rdStage').append(hint);
+  const strokes=D.WRITE[it.letter];let k=0,W=null;
+  replay=()=>sound(it.letter);
+  const draw=()=>{
+   svg.replaceChildren(svgEl('line',{x1:5,y1:56,x2:95,y2:56,class:'wguide'}),svgEl('line',{x1:5,y1:112,x2:95,y2:112,class:'wbase'}));
+   strokes.forEach(d=>svg.append(svgEl('path',{d,class:'wghost'})));for(let i=0;i<k;i++)svg.append(svgEl('path',{d:strokes[i],class:'wdone'}));
+   if(k>=strokes.length){sndGood();addStar(1);sound(it.letter);hint.textContent='';setTimeout(()=>teachDone(),900);return;}
+   const guide=svgEl('path',{d:strokes[k],class:'wnext'});svg.append(guide);const ink=svgEl('path',{d:'',class:'wink'});svg.append(ink);
+   const len=guide.getTotalLength?guide.getTotalLength():0;const pts=[];for(let i=0;i<SAMPLES;i++){const p=guide.getPointAtLength?guide.getPointAtLength(len*i/(SAMPLES-1)):{x:0,y:0};pts.push({x:p.x,y:p.y});}
+   svg.append(svgEl('circle',{cx:pts[0].x,cy:pts[0].y,r:7,class:'wstart'}));
+   W={pts,ink,reached:0,trail:[],drawing:false,guide};hint.textContent=strokes.length>1?'Stroke '+(k+1)+' of '+strokes.length:'';
+  };
+  const pt=e=>{const r=svg.getBoundingClientRect(),s=Math.min(r.width/100,r.height/140),ox=(r.width-100*s)/2,oy=(r.height-140*s)/2;return {x:(e.clientX-r.left-ox)/s,y:(e.clientY-r.top-oy)/s};};
+  const d2=(a,b)=>(a.x-b.x)**2+(a.y-b.y)**2;
+  svg.addEventListener('pointerdown',e=>{if(!W||!active())return;const p=pt(e);if(d2(p,W.pts[0])>(TOL*1.7)**2&&d2(p,W.pts[W.reached])>(TOL*1.7)**2){hint.textContent='Start on the green dot';return;}W.drawing=true;svg.setPointerCapture?.(e.pointerId);move(e);});
+  const move=e=>{if(!W?.drawing)return;e.preventDefault();const p=pt(e);W.trail.push(p);W.ink.setAttribute('d','M '+W.trail.map(q=>q.x.toFixed(1)+' '+q.y.toFixed(1)).join(' L '));for(let j=W.reached;j<=Math.min(SAMPLES-1,W.reached+12);j++)if(d2(p,W.pts[j])<TOL*TOL)W.reached=j;if(W.reached>=SAMPLES-6){W.drawing=false;k++;W=null;setTimeout(draw,220);}};
+  svg.addEventListener('pointermove',move);
+  const up=()=>{if(!W?.drawing)return;W.drawing=false;if(W.reached<=4){W.trail=[];W.ink.setAttribute('d','');hint.textContent='Start on the green dot';}else hint.textContent='Keep going';};
+  ['pointerup','pointercancel','pointerleave'].forEach(t=>svg.addEventListener(t,up));
+  svg.addEventListener('touchstart',e=>e.preventDefault(),{passive:false});
+  $('rdActions').append(btn('btn read-help','Show me',()=>{if(!W)return;help('stroke shown');const dot=svgEl('circle',{r:6,class:'wdot',cx:W.pts[0].x,cy:W.pts[0].y});svg.append(dot);let i=0;const t=setInterval(()=>{i+=1.4;if(i>=SAMPLES-1||!W){clearInterval(t);dot.remove();return;}const p=W.pts[Math.floor(i)];dot.setAttribute('cx',p.x);dot.setAttribute('cy',p.y);},26);},'👀'));
+  draw();setTimeout(replay,300);
+ };
+
+ /* ---------- blocks, placement and routes ---------- */
+ function startBlock(onDone){
+  const s=st(),plan=R.nextActivity(sessions(),s,recent);
+  if(plan.act==='placement'){startPlacement(onDone);return;}
+  if(plan.act==='advance'){passRoute(plan.route,onDone);return;}
+  startRound(R.makeRound(plan.act,plan.route,sessions(),s),onDone);
+ }
+ function passRoute(n,onDone){
+  state.passed[n]=Date.now();save();
+  enter();setHeader('read',Math.min(R.LAST,n+1));$('rdOptions').replaceChildren();$('rdActions').replaceChildren();$('rdPips').replaceChildren();
+  const ref=adventure.begin({section:'read',skill:'advance',kind:'advance',item:'route:'+n,route:n,range:n,support:'gate',format:'advance',teach:true});adventure.respond('passed',true);
+  const next=R.route(Math.min(R.LAST,n+1));const last=n>=R.LAST;
+  $('rdPrompt').textContent=last?'Every route complete!':'New route: '+next.name;
+  const box=el('div','route-open');box.style.setProperty('--route',next.colour);next.mons.slice(0,3).forEach(m=>box.append(monImg(m.id)));$('rdStage').replaceChildren(box);
+  sndGood();if(!reduce())burst($('rdStage'),24);addStar(3);
+  speak(last?'Amazing! You finished every reading route!':'You did it! Route '+(n+1)+' is open. '+next.name+'!',{rate:.85,done:()=>waitReady2(()=>onDone?.())});
+ }
+ function startPlacement(onDone){
+  enter();setHeader('placement',1);let step=0;const results=[];
+  const probe=()=>{
+   const items=R.placementProbe(step);
+   run={round:{act:'placement',route:items[0].route,items,placement:true},i:0,onDone:()=>{
+    const res=items.map(it=>it._first===true);results.push(res);
+    if(res.every(Boolean)&&step<R.PROBE_COUNT-1){step++;probe();}else finish();
+   }};setHeader('placement',items[0].route);nextItem();
+  };
+  const finish=()=>{
+   const placed=R.placementResult(results);state.placedAt=Date.now();state.placedRoute=placed;for(let n=1;n<=placed;n++)state.passed[n]=state.passed[n]||Date.now();save();
+   adventure.begin({section:'read',skill:'placed',kind:'placed',item:'placed',route:placed,range:placed,support:'placement',format:'placed',teach:true});adventure.respond(placed,true);
+   const start=R.route(Math.min(R.LAST,placed+1));
+   $('rdPrompt').textContent='Your route: '+start.name;$('rdOptions').replaceChildren();$('rdActions').replaceChildren();
+   speak('Great reading! Let us start at '+start.name+'.',{rate:.85,done:()=>waitReady2(()=>onDone?.())});
+  };
+  speak('First, show me what you can read. Do your best — it is fine not to know.',{rate:.85,done:probe});
+ }
+ /* ---------- games menu entries ---------- */
+ function startFree(){startBlock(()=>{if(mode==='read')startFree();});}
+ function openShelf(){
+  enter();run=null;setHeader('book',R.currentRoute(st()));$('rdTitle').textContent='My books';
+  $('rdPrompt').textContent='';$('rdStage').replaceChildren();$('rdActions').replaceChildren();$('rdPips').replaceChildren();feedback('');
+  const s=st(),open=D.ROUTES.filter(L=>L.n<=R.currentRoute(s));const shelf=el('div','shelf');
+  open.forEach(L=>{const b=btn('shelf-book',L.book.title,()=>startRound({act:'book',route:L.n,items:R.makeRound('book',L.n,sessions(),s).items},openShelf),'');b.style.setProperty('--route',L.colour);
+   const m=L.book.pages.find(p=>p.m);if(m)b.append(monImg(m.m));b.append(el('span','',L.book.title));if(s.books[L.n])b.classList.add('read');shelf.append(b);});
+  $('rdOptions').replaceChildren(shelf);replay=()=>speak('Choose a book.',{rate:.85});replay();
+ }
+ function openLetters(){
+  enter();run=null;setHeader('write',R.currentRoute(st()));$('rdTitle').textContent='My letters';$('rdPrompt').textContent='';$('rdStage').replaceChildren();$('rdActions').replaceChildren();$('rdPips').replaceChildren();feedback('');
+  const gs=R.graphemesUpTo(R.currentRoute(st())),grid=el('div','letter-grid');
+  gs.forEach(g=>{const b=btn('ltile','Sound '+label(g),()=>{sound(g);if(namesOn()&&g.length===1)setTimeout(()=>speak('the letter '+letterName(g),{rate:.8}),700);},esc(label(g)));grid.append(b);});
+  const writeBtn=btn('btn','Write a letter',()=>{const ls=R.singleLetters(R.currentRoute(st()));startRound({act:'write',route:R.currentRoute(st()),items:ls.slice(-6).map(l=>({route:R.currentRoute(st()),kind:'write',item:'l:'+l,letter:l,teach:true}))},openLetters);},'✏️');
+  $('rdOptions').replaceChildren(grid);$('rdActions').append(writeBtn);replay=()=>speak('Tap a sound to hear it.',{rate:.85});replay();
+ }
+ function esc(x){return String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+ /* ---------- old Poké Reading app (same site) ---------- */
+ function importLegacy(){
+  if(state.legacy)return;
+  let raw=null;try{raw=localStorage.getItem(LEGACY_KEY);}catch(e){}
+  const L=raw&&R.importLegacy(raw);if(!L)return;
+  state.legacy={...L,importedAt:Date.now()};
+  const add=L.caught.filter(id=>!caught.includes(id)&&PokeCatalog.byId?.[id]);
+  if(add.length){caught.push(...add);pkState();renderBuddyHome();updateBallPill();}
+  save();
+ }
+
+ /* ---------- grown-ups ---------- */
+ const panel=document.createElement('details');panel.className='parent-settings reading-panel';panel.id='readingPanel';
+ panel.innerHTML='<summary>Reading · P1 readiness</summary><div id="readingBody"></div>';
+ $('learningDashboard').after(panel);
+ panel.addEventListener('toggle',()=>{if(panel.open)renderPanel();});
+ function renderPanel(){
+  const s=st(),r=R.readiness(sessions(),s),g=R.gate(r.route,R.itemStats(sessions()),s),L=R.route(r.route);
+  const rows=r.rows.map(x=>`<tr><td>${esc(x.label)}${x.note?`<small>${esc(x.note)}</small>`:''}${x.n!==undefined?`<small>${x.n} attempts</small>`:''}</td><td><b>${x.value===null?'—':x.value+(x.unit||'')}</b> / ${x.target}${x.unit||''}${x.secure!==undefined?`<small>${x.secure} secure, ${x.value} mastered</small>`:''}</td></tr>`).join('');
+  const body=$('readingBody');
+  body.innerHTML=`<p><strong>Route ${r.route} of ${R.LAST}: ${esc(L.name)}</strong> · expected by now: route ${r.expected} · <b>${r.pace}</b> (target: all routes by ${r.target}, before P1 in January 2028)</p>
+  <p class="muted">This route opens the next when: sounds ${g.graphemes.ok}/${g.graphemes.total} secure · words read alone ${g.words.ok}/${g.words.need} · tricky words ${g.heart.ok}/${g.heart.total} · book ${g.book?'✓':'not yet'}${L.caps?` · capitals ${g.caps.ok}/${g.caps.need}`:''}. “Secure” means two independent successes; “mastered” adds a success on a later day.</p>
+  <table class="journal-table"><tbody>${rows}</tbody></table>
+  <div class="pprow reading-tools"><button class="btn" id="rdAloud">Listen to ${esc(childName||'Jonah')} read</button><button class="btn" id="rdPlace">Redo reading check</button>
+  <label>Letter names <select id="rdNames"><option value="auto">Automatic (from route 12)</option><option value="on">On</option><option value="off">Off</option></select></label>
+  <label>Move to route <select id="rdMove">${D.ROUTES.map(x=>`<option value="${x.n}" ${x.n===r.route?'selected':''}>${x.n} · ${esc(x.name)}</option>`).join('')}</select></label></div>
+  ${state.legacy?`<p class="muted">Imported from the old Poké Reading app: it had reached route ${state.legacy.at} and ${state.legacy.caught.length} Pokémon (added to his collection). Its routes opened on completion rather than mastery, so the reading check decides the starting route.</p>`:''}
+  <details><summary>Record the sounds in your voice</summary><p class="muted">Speech engines add “uh” to sounds like /b/ and /t/, which makes blending harder. Tap ● and say just the sound, short and clean.</p><div id="rdRecGrid" class="rec-grid"></div></details>`;
+  $('rdNames').value=state.namesAt?(state.names?'on':'off'):'auto';
+  $('rdNames').onchange=()=>{const v=$('rdNames').value;if(v==='auto'){state.namesAt=0;state.names=false;}else{state.names=v==='on';state.namesAt=Date.now();}save();};
+  $('rdMove').onchange=()=>{const to=+$('rdMove').value;if(!confirm('Move reading to route '+to+'? Routes before it are marked done; later routes are reopened.'))return renderPanel();
+   for(let n=1;n<=R.LAST;n++){if(n<to)state.passed[n]=state.passed[n]||Date.now();else delete state.passed[n];}
+   state.overrideAt=Date.now();save();renderPanel();};
+  $('rdPlace').onclick=()=>{if(!confirm('Run the short reading check again next time he plays?'))return;state.placedAt=0;state.passed={};state.redoAt=Date.now();save();renderPanel();};
+  $('rdAloud').onclick=aloudCheck;
+  renderRec();
+ }
+ function aloudCheck(){
+  const s=st(),n=Math.max(1,Math.min(R.LAST,R.currentRoute(s)-(s.books[R.currentRoute(s)]?0:1)))||1;const L=R.route(n);
+  const box=$('readingBody');let p=0,ok=0;
+  const draw=()=>{
+   if(p>=L.book.pages.length){state.aloud[n]={at:Date.now(),ok,total:L.book.pages.length,route:n};save();box.innerHTML=`<p><strong>${ok}/${L.book.pages.length} pages read accurately.</strong> Saved to his readiness checklist.</p><button class="btn" id="rdBack">Done</button>`;$('rdBack').onclick=renderPanel;return;}
+   box.innerHTML=`<p class="muted">Hand him the tablet open on “${esc(L.book.title)}” (Games → Books), or read from here together. Mark each page: read every word correctly without help?</p><div class="aloud-page">${esc(L.book.pages[p].t)}</div><div class="pprow"><button class="btn" id="rdOk">✓ Read it</button><button class="btn" id="rdNo">✗ Needed help</button></div><small>Page ${p+1} of ${L.book.pages.length}</small>`;
+   $('rdOk').onclick=()=>{ok++;p++;draw();};$('rdNo').onclick=()=>{p++;draw();};
+  };
+  draw();
+ }
+ function renderRec(){
+  const grid=$('rdRecGrid');if(!grid)return;grid.replaceChildren();
+  const gs=Object.keys(D.G).filter(g=>D.G[g][3]!=='end'||g==='ing').concat(['id']);
+  gs.forEach(g=>{const cell=el('div','rec-cell'+(REC[g]?' has':''));cell.append(el('b','',label(g)));
+   const rec=el('button','btn','●');rec.onclick=()=>record(g,rec);const play=el('button','btn','▶');play.disabled=!REC[g];play.onclick=()=>{stop();sound(g);};
+   const del=el('button','btn','✕');del.disabled=!REC[g];del.onclick=()=>{delete REC[g];try{localStorage.removeItem(REC_PREFIX+g);}catch(e){}renderRec();};
+   cell.append(rec,play,del);grid.append(cell);});
+ }
+ let media=null;
+ async function record(g,b){
+  if(media){media.stop();return;}
+  try{const stream=await navigator.mediaDevices.getUserMedia({audio:true});const chunks=[];media=new MediaRecorder(stream);b.textContent='■';
+   media.ondataavailable=e=>chunks.push(e.data);
+   media.onstop=()=>{stream.getTracks().forEach(t=>t.stop());media=null;const fr=new FileReader();fr.onload=()=>{REC[g]=fr.result;try{localStorage.setItem(REC_PREFIX+g,fr.result);}catch(e){alert('Storage is full — recording kept until the app closes.');}renderRec();};fr.readAsDataURL(new Blob(chunks,{type:chunks[0]?.type||'audio/webm'}));};
+   media.start();setTimeout(()=>media?.stop(),1600);}
+  catch(e){alert('Microphone not available on this device.');}
+ }
+
+ function leave(){stop();run=null;}
+ // read-only hook for the browser regression script; children never see it
+ const _current=()=>run&&{item:run.item,act:run.round.act,i:run.i,placement:!!run.round.placement};
+ const _round=(act,n)=>startRound(R.makeRound(act,n,sessions(),st()),()=>{});
+ return {_current,_round,startBlock,startFree,openShelf,openLetters,leave,importLegacy,renderPanel,
+  get state(){return state;},applyState(m){if(!m)return;state=R.mergeState(state,m);save();},
+  payload:()=>state,isReading:()=>mode==='read'};
+}

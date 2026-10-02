@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>Poké Reading has moved</title>
+<style>body{font-family:ui-rounded,"Avenir Next",Arial,sans-serif;background:#f5f6ef;color:#263f49;display:grid;place-items:center;min-height:100vh;margin:0;text-align:center}a{display:inline-block;margin-top:16px;padding:14px 26px;border-radius:16px;background:#267d65;color:#fff;font-size:22px;text-decoration:none}</style>
+</head><body><main><h1>Reading lives in PokéMath now 📖</h1><p>Your Pokémon, sounds and recordings come with you.</p><a href="../PokemonNumbers/index.html">Open PokéMath</a></main>
+<script>
+// Progress stays in this site's storage, which PokéMath reads. Retire the old offline copy, then move on.
+if('serviceWorker' in navigator)navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>{if(r.scope.includes('/PokemonReading/'))r.unregister();}));
+if(window.caches)caches.keys().then(ks=>ks.filter(k=>k.startsWith('poke-reading-')&&!k.includes('sprites')).forEach(k=>caches.delete(k)));
+setTimeout(()=>location.replace('../PokemonNumbers/index.html'),1200);
+</script></body></html>

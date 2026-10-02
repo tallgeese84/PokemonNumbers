@@ -1,3 +1,13 @@
+# v68 reading wing
+
+Base: `e2b43b0` (v67). Adds `reading-data.js`, `reading-core.js`, `reading-ui.js`, `reading.css`; Play interleaves reading and maths.
+
+Local: 70 Node tests pass (15 new). New coverage: decodability of all 18 routes' words, books and readable names; segmentation (teams, split digraphs, -s/-ed sounds, syllables); Dolch coverage; item boxes (same-day cap, later-day mastery, help resets); route gates; placement staircase; review of placed routes; option/answer integrity for every activity and route; state merging and session-derived passes; readiness pace. A fake-DOM run of the real UI checks that Read it never speaks the word before an answer, that help is recorded and non-independent, that the reading check gives one try without fading, that books record page help then ask a question, and that legacy import is one-off. Existing mission tests were updated for interleaved Play and the cache-name test for v68.
+
+Browser (headless Chromium, synthetic data, speech stubbed): placement through route 12, a fresh child through route 1 into route 2, and every activity type rendered at 360, 390 and 820 px with no page errors. Not checked: a physical tablet, real speech voices, microphone recording, Firebase sync of the new `reading` field.
+
+---
+
 # v67 bounded counting warm-up
 
 The standalone Count game previously repeated indefinitely and bypassed the mixed foundation sequence. It now moves into that sequence after three completed counting questions on the current Madison calendar day. The limit includes helped completions, persists through saved session history, and does not treat counting success as mastery of addition or subtraction. The game tile is labeled Warm-up. A new mixed cycle begins with taking away, addition, and covered prediction, while retaining its 60% part-whole/subtraction, 25% addition/patterns, and 15% equal-groups balance. Focused Add and Take games remain available.
