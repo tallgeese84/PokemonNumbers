@@ -63,7 +63,7 @@ function createFox(){
   parts.shadow={scale:{setScalar(){}}};
   buildFox();fox.rotation.y=.55;parts.shadow={scale:{setScalar(){}}};T=true;sizeRenderer();window.addEventListener('resize',()=>{if(mode==='fox')sizeRenderer();});
   // drag to turn, tap to play
-  let down=null;canvas.addEventListener('pointerdown',e=>{down={x:e.clientX,r:fox.rotation.y,moved:false};canvas.setPointerCapture?.(e.pointerId);});
+  let down=null;canvas.addEventListener('pointerdown',e=>{down={x:e.clientX,r:fox.rotation.y,moved:false};try{canvas.setPointerCapture?.(e.pointerId);}catch(_){}});
   canvas.addEventListener('pointermove',e=>{if(!down)return;const dx=e.clientX-down.x;if(Math.abs(dx)>6)down.moved=true;fox.rotation.y=down.r+dx*.012;});
   canvas.addEventListener('pointerup',()=>{if(down&&!down.moved)hop();down=null;});
   return true;
@@ -81,6 +81,8 @@ function createFox(){
   else parts.head.rotation.x=reduce()?0:Math.sin(time*.7)*.05;
   parts.head.rotation.z=reduce()?0:Math.sin(time*.5)*.06;
   const blink=(time%4.2)<.12;parts.eyes.forEach(e=>e.scale.y=blink?.12:1);
+  // watery shimmer: the highlights drift a hair's breadth, like light on water
+  if(parts.eyeShine&&!reduce())parts.eyeShine.forEach((m,i)=>{m.position.x=Math.sin(time*2.3+i)*.004;m.position.y=Math.cos(time*1.9+i*2)*.004;m.material.opacity=.9+Math.sin(time*3.1+i)*.1;});
   parts.ears.forEach((e,i)=>e.rotation.x=(Math.sin(time*3+i)>.97)?-.25:0);
   // newly grown tail swells in
   tailGroups.forEach(gp=>{if(gp.userData.grow<1)gp.userData.grow=Math.min(1,gp.userData.grow+.012);});

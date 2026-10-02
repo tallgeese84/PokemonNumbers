@@ -78,14 +78,30 @@ function buildFoxModel(THREE,opts){
   mix(O,OL,smooth(-.1,.3,v.z)*.3,c);c.lerp(W,Math.min(1,Math.max(lower,cheek)));});
  const headFur=furry(headG,4);head.add(headFur);
  const nose=new THREE.Mesh(sculpt(new THREE.SphereGeometry(.07,32,24),v=>{v.y*=.78;v.x*=1.15;}),new THREE.MeshStandardMaterial({color:COL.nose,roughness:.28}));nose.position.set(0,-.08,.79);head.add(nose);
- /* eyes: glossy dark eye, warm brown iris, two highlights */
- const irisC=document.createElement('canvas');irisC.width=irisC.height=256;{const x=irisC.getContext('2d');const g=x.createRadialGradient(128,128,20,128,128,128);g.addColorStop(0,'#000');g.addColorStop(.42,'#0b0604');g.addColorStop(.55,COL.iris);g.addColorStop(.9,'#6b3a18');g.addColorStop(1,'#1a0d06');x.fillStyle=g;x.beginPath();x.arc(128,128,128,0,Math.PI*2);x.fill();
-  x.fillStyle='#fff';x.beginPath();x.arc(84,78,38,0,Math.PI*2);x.fill();x.globalAlpha=.9;x.beginPath();x.arc(170,168,17,0,Math.PI*2);x.fill();x.beginPath();x.arc(150,70,8,0,Math.PI*2);x.fill();}
- const irisT=new THREE.CanvasTexture(irisC);irisT.encoding=THREE.sRGBEncoding;
- const eyes=[];[-1,1].forEach(s=>{const e=new THREE.Group();e.position.set(s*.2,.05,.41);e.rotation.y=s*.36;
-  const ball=new THREE.Mesh(sculpt(new THREE.SphereGeometry(.165,48,36),v=>{v.z*=.5;v.y*=1.12;}),new THREE.MeshStandardMaterial({color:0x120a07,roughness:.08,metalness:.1}));
-  const iris=new THREE.Mesh(new THREE.CircleGeometry(.158,64),new THREE.MeshBasicMaterial({map:irisT,transparent:true}));iris.position.z=.084;iris.scale.y=1.12;iris.renderOrder=20;
-  e.add(ball,iris);head.add(e);eyes.push(e);});parts.eyes=eyes;
+ /* eyes: big and watery. A deep iris that brightens towards the bottom like light through
+    water, a shining tear line along the lower edge, a clear glossy dome over the top, and
+    highlights on their own layer so they shimmer slightly. */
+ const T=512;
+ const irisC=document.createElement('canvas');irisC.width=irisC.height=T;{const x=irisC.getContext('2d'),c=T/2;
+  x.beginPath();x.arc(c,c,c,0,Math.PI*2);x.clip();
+  const base=x.createLinearGradient(0,0,0,T);base.addColorStop(0,'#1a0c05');base.addColorStop(.45,'#4a2410');base.addColorStop(.8,'#a8622a');base.addColorStop(1,'#e8a65a');x.fillStyle=base;x.fillRect(0,0,T,T);
+  for(let i=0;i<140;i++){const a=Math.random()*Math.PI*2,r1=c*.42,r2=c*(.78+Math.random()*.18);x.strokeStyle=`rgba(${200+Math.random()*55|0},${130+Math.random()*60|0},${60+Math.random()*40|0},${.12+Math.random()*.18})`;x.lineWidth=2+Math.random()*3;x.beginPath();x.moveTo(c+Math.cos(a)*r1,c+Math.sin(a)*r1);x.lineTo(c+Math.cos(a)*r2,c+Math.sin(a)*r2);x.stroke();}
+  const pupil=x.createRadialGradient(c,c*.92,0,c,c*.92,c*.5);pupil.addColorStop(0,'#000');pupil.addColorStop(.8,'#070302');pupil.addColorStop(1,'rgba(7,3,2,0)');x.fillStyle=pupil;x.beginPath();x.arc(c,c*.92,c*.5,0,Math.PI*2);x.fill();
+  const rim=x.createRadialGradient(c,c,c*.82,c,c,c);rim.addColorStop(0,'rgba(0,0,0,0)');rim.addColorStop(1,'rgba(10,4,2,.95)');x.fillStyle=rim;x.fillRect(0,0,T,T);
+  // watery glow pooling along the bottom of the iris
+  const pool=x.createRadialGradient(c,T*.95,4,c,T*.95,c*.8);pool.addColorStop(0,'rgba(255,214,150,.75)');pool.addColorStop(1,'rgba(255,214,150,0)');x.fillStyle=pool;x.fillRect(0,0,T,T);}
+ const shineC=document.createElement('canvas');shineC.width=shineC.height=T;{const x=shineC.getContext('2d'),c=T/2;
+  const blob=(px,py,r,a=1)=>{const g=x.createRadialGradient(px,py,0,px,py,r);g.addColorStop(0,`rgba(255,255,255,${a})`);g.addColorStop(.75,`rgba(255,255,255,${a})`);g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.beginPath();x.arc(px,py,r,0,Math.PI*2);x.fill();};
+  blob(c*.62,c*.55,c*.3);blob(c*1.38,c*1.28,c*.13,.95);blob(c*1.18,c*.42,c*.07,.9);blob(c*.55,c*1.2,c*.05,.8);
+  x.strokeStyle='rgba(255,255,255,.55)';x.lineWidth=c*.06;x.lineCap='round';x.beginPath();x.arc(c,c*1.02,c*.72,Math.PI*.22,Math.PI*.78);x.stroke();}   // tear line
+ const irisT=new THREE.CanvasTexture(irisC),shineT=new THREE.CanvasTexture(shineC);irisT.encoding=shineT.encoding=THREE.sRGBEncoding;irisT.anisotropy=shineT.anisotropy=8;
+ const eyes=[],shines=[];[-1,1].forEach(s=>{const e=new THREE.Group();e.position.set(s*.215,.095,.4);e.rotation.y=s*.38;e.rotation.x=-.06;
+  const ball=new THREE.Mesh(sculpt(new THREE.SphereGeometry(.18,56,40),v=>{v.z*=.5;v.y*=1.14;}),new THREE.MeshStandardMaterial({color:0x0e0705,roughness:.1}));
+  const iris=new THREE.Mesh(new THREE.CircleGeometry(.172,72),new THREE.MeshBasicMaterial({map:irisT,transparent:true}));iris.position.z=.091;iris.scale.y=1.14;iris.renderOrder=20;
+  const shine=new THREE.Mesh(new THREE.CircleGeometry(.172,72),new THREE.MeshBasicMaterial({map:shineT,transparent:true,depthWrite:false}));shine.position.z=.097;shine.scale.y=1.14;shine.renderOrder=22;
+  const dome=new THREE.Mesh(sculpt(new THREE.SphereGeometry(.182,56,40,0,Math.PI*2,0,Math.PI/2),v=>{v.y*=1.14;}),new THREE.MeshPhysicalMaterial({color:0xffffff,transparent:true,opacity:.14,roughness:0,metalness:0,clearcoat:1,clearcoatRoughness:0,depthWrite:false}));
+  dome.rotation.x=Math.PI/2;dome.scale.z=.55;dome.position.z=.0;dome.renderOrder=23;
+  e.add(ball,iris,shine,dome);head.add(e);eyes.push(e);shines.push(shine);});parts.eyes=eyes;parts.eyeShine=shines;
  /* ears: orange front, dark back, soft pink inner */
  const ears=[];[-1,1].forEach(s=>{const e=new THREE.Group();e.position.set(s*.25,.32,-.04);e.rotation.z=-s*.28;e.rotation.x=-.08;
   const outerG=colorize(sculpt(new THREE.ConeGeometry(.2,.5,40,8),v=>{v.z*=.55;v.z-=.04*Math.pow((v.y+.25)/.5,2);}),(v,c)=>{const back=smooth(-.01,-.06,v.z);mix(O,D,Math.max(back*smooth(-.1,.1,v.y),smooth(.12,.22,v.y)),c);});
