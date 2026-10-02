@@ -21,9 +21,13 @@ and is not included in this repository. Personal, non-commercial project.
 To ship an update, bump `CACHE = 'pokemath-v1'` in `sw.js` (v2, v3, ...) so
 installed tablets pick up the new version.
 
+## v71 — Buddy, rebuilt in higher quality
+
+The fox is now called **Buddy** and has a new model (`fox-model.js`): sculpted smooth body and head, natural red-fox colouring (orange coat, white chest, muzzle and tail tips, dark stockings and ear backs), glossy eyes with brown irises, smooth tapered tails, a fur colour and bump texture, and layered shell fur for a soft fluffy surface. Rendering uses the tablet's full screen resolution, filmic tone mapping, soft shadows and key/rim/fill lighting. If a tablet draws slowly, Buddy automatically uses half the fur layers.
+
 ## v70 — Jonah's nine-tailed fox
 
-Home has a third button, **Fox**. Kit (renamable in Grown-ups → Jonah's fox) is an original 3D nine-tailed fox from folklore, built from simple shapes with Three.js r128 (bundled in `assets/vendor`, MIT licence) so it works offline.
+Home has a third button, **Fox**. Buddy (renamable in Grown-ups → Jonah's fox) is an original 3D nine-tailed fox from folklore, built from simple shapes with Three.js r128 (bundled in `assets/vendor`, MIT licence) so it works offline.
 
 - **Grows from learning only.** One point per reading route passed and two per maths Gym badge (34 in all). The cub grows bigger with every point and gains tails 2–9 at 2, 6, 10, 14, 18, 23, 28 and 34 points, so the ninth tail arrives when both paths are complete. The Fox button glows when a new tail is waiting; opening the den shows it growing in.
 - **Leaves.** Every star he earns in reading or maths also drops a leaf 🍃. Leaves buy treats (berries, rice ball, fish, cake), toys (ball, bubbles) and things to wear (scarf, bell, flower crown, top hat). Nothing can be bought without enough leaves, and wearables are kept.
