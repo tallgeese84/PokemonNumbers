@@ -1,3 +1,9 @@
+# v70 fox
+
+83 Node tests pass (3 new: tail growth is monotone and reaches nine only when both paths finish; purchases cannot overspend and wearables toggle free; cross-device merge keeps leaves, purchases and seen tails). Headless Chromium with software WebGL rendered the den at 1, 4 and 9 tails from several angles, a treat, wearing an item and drag-to-turn, with no page errors. Not checked on a physical tablet's GPU.
+
+---
+
 # v69 maths path
 
 Base: v68. Adds `math-path-core.js`, `math-path-ui.js`, `math-path.css`; Play's maths slots ask the path.

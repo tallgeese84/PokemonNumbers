@@ -21,6 +21,15 @@ and is not included in this repository. Personal, non-commercial project.
 To ship an update, bump `CACHE = 'pokemath-v1'` in `sw.js` (v2, v3, ...) so
 installed tablets pick up the new version.
 
+## v70 — Jonah's nine-tailed fox
+
+Home has a third button, **Fox**. Kit (renamable in Grown-ups → Jonah's fox) is an original 3D nine-tailed fox from folklore, built from simple shapes with Three.js r128 (bundled in `assets/vendor`, MIT licence) so it works offline.
+
+- **Grows from learning only.** One point per reading route passed and two per maths Gym badge (34 in all). The cub grows bigger with every point and gains tails 2–9 at 2, 6, 10, 14, 18, 23, 28 and 34 points, so the ninth tail arrives when both paths are complete. The Fox button glows when a new tail is waiting; opening the den shows it growing in.
+- **Leaves.** Every star he earns in reading or maths also drops a leaf 🍃. Leaves buy treats (berries, rice ball, fish, cake), toys (ball, bubbles) and things to wear (scarf, bell, flower crown, top hat). Nothing can be bought without enough leaves, and wearables are kept.
+- **Never sad.** No hunger, decay or guilt; tap to make him hop, drag to turn him round.
+- Fox state syncs with the rest of the progress (leaves and purchases merge without loss).
+
 ## v69 — the maths path to P1
 
 Play's maths questions now come from a **maths path**: 28 skills in 8 Gyms, from K2 groundwork to the full Singapore P1 syllabus (2021): numbers to 100 with tens and ones, ordinals, comparing and patterns; adding and subtracting within 100 (mental within 20, renaming, story problems with bar-model help); multiplying within 40 and dividing within 20; money to $1 and $100; time to 5 minutes; length in cm; 2D shapes; picture graphs.

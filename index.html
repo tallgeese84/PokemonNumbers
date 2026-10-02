@@ -776,23 +776,26 @@
     .pad button{ font-size:18px; min-height:42px; }
   }
 </style>
-<link rel="stylesheet" href="adventure.css?v=69">
-<link rel="stylesheet" href="visuals.css?v=69">
-<script src="visuals.js?v=69"></script>
-<script src="assets/pokemon-catalog.js?v=69"></script>
-<script src="learning-core.js?v=69"></script>
-<script src="drive-mirror.js?v=69"></script>
-<script src="adventure.js?v=69"></script>
-<script src="foundations.js?v=69"></script>
-<script src="foundation-ui.js?v=69"></script>
-<script src="reading-data.js?v=69"></script>
-<script src="reading-core.js?v=69"></script>
-<script src="reading-ui.js?v=69"></script>
-<script src="math-path-core.js?v=69"></script>
-<script src="math-path-ui.js?v=69"></script>
-<link rel="stylesheet" href="foundations.css?v=69">
-<link rel="stylesheet" href="reading.css?v=69">
-<link rel="stylesheet" href="math-path.css?v=69">
+<link rel="stylesheet" href="adventure.css?v=70">
+<link rel="stylesheet" href="visuals.css?v=70">
+<script src="visuals.js?v=70"></script>
+<script src="assets/pokemon-catalog.js?v=70"></script>
+<script src="learning-core.js?v=70"></script>
+<script src="drive-mirror.js?v=70"></script>
+<script src="adventure.js?v=70"></script>
+<script src="foundations.js?v=70"></script>
+<script src="foundation-ui.js?v=70"></script>
+<script src="reading-data.js?v=70"></script>
+<script src="reading-core.js?v=70"></script>
+<script src="reading-ui.js?v=70"></script>
+<script src="math-path-core.js?v=70"></script>
+<script src="math-path-ui.js?v=70"></script>
+<script src="fox-core.js?v=70"></script>
+<script src="fox-ui.js?v=70"></script>
+<link rel="stylesheet" href="foundations.css?v=70">
+<link rel="stylesheet" href="reading.css?v=70">
+<link rel="stylesheet" href="math-path.css?v=70">
+<link rel="stylesheet" href="fox.css?v=70">
 </head>
 <body data-screen="home">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
@@ -894,8 +897,9 @@
     <div class="home-choices">
       <button class="quiet-choice" id="gamesBtn" aria-label="Choose a game"><span data-illustration="games"></span><strong>Games</strong></button>
       <button class="quiet-choice" id="teamBtn" aria-label="My Pokémon"><span data-illustration="team"></span><strong>Pokémon</strong><small id="teamTally" hidden></small></button>
+      <button class="quiet-choice" id="foxBtn" aria-label="My fox"><span data-illustration="fox"></span><strong>Fox</strong></button>
     </div>
-    <footer class="home-footer"><span id="parentEntry"></span><span class="build-label">v69</span></footer>
+    <footer class="home-footer"><span id="parentEntry"></span><span class="build-label">v70</span></footer>
   </div>
 
   <!-- The other activities stay available, three pictures at a time. -->
@@ -1302,6 +1306,7 @@ async function loadStars(){
   if (await getSyncCfg()) syncNow(false);
 }
 function addStar(n){
+  if (typeof fox !== 'undefined') fox.earn(n);   // every star also drops a leaf for his fox
   addXp(n * 3);
   stars += n; starEl.textContent = stars;
   store.set('cubs_stars', stars);
@@ -1741,7 +1746,7 @@ function show(name){
 }
 document.getElementById('gamesBtn').addEventListener('click', () => { sndTap(); shutUp(); mode='games'; show('games'); say('Choose a game.'); });
 document.getElementById('backBtn').addEventListener('click', () => {
-  sndTap(); shutUp(); reading.leave(); mathPath.leave(); stopZap(); stopRace(); lnStopLoop(); abStopLoop(); stopHide(); mode = 'home'; renderBuddyHome(); show('home');
+  sndTap(); shutUp(); reading.leave(); mathPath.leave(); fox.leave(); stopZap(); stopRace(); lnStopLoop(); abStopLoop(); stopHide(); mode = 'home'; renderBuddyHome(); show('home');
 });
 document.getElementById('teamAll').addEventListener('click', () => { teamFilter = 'all'; sndTap(); renderTeam(); });
 document.getElementById('teamLeg').addEventListener('click', () => { teamFilter = 'legend'; sndTap(); renderTeam(); });
@@ -4145,7 +4150,8 @@ async function localPayload(){
     badges: badges.slice(),
     traced: traced.slice(),
     reading: reading.payload(),
-    mathPath: mathPath.payload()
+    mathPath: mathPath.payload(),
+    fox: fox.payload()
   };
 }
 function mergeStates(a, b){
@@ -4175,6 +4181,7 @@ function mergeStates(a, b){
     traced: uni(a.traced, b.traced),
     reading: PokeReadingCore.mergeState(a.reading, b.reading),
     mathPath: PokeMathPath.mergeState(a.mathPath, b.mathPath),
+    fox: PokeFox.mergeState(a.fox, b.fox),
     at: Math.max(a.at || 0, b.at || 0),
     stars: newer.stars || 0,
     ball: newer.ball || 0,
@@ -4212,6 +4219,7 @@ async function applyState(m){
   await store.set('cubs_traced', traced.join(','));
   reading.applyState(m.reading);
   mathPath.applyState(m.mathPath);
+  fox.applyState(m.fox);
   await store.set('cubs_at', m.at);
   stars = m.stars; starEl.textContent = stars;
   ballStars = m.ball; pkBuddy = m.buddy;
@@ -4280,7 +4288,7 @@ document.addEventListener('visibilitychange', () => {
 /* ---------- parent backup panel (triple-tap the title) ---------- */
 (function parentPanel(){
   const panel = document.getElementById('parentPanel');
-  let taps = [], KEYS = ['cubs_stars','cubs_prog','cubs_caught','cubs_pbuddy','cubs_ball','cubs_sound','cubs_name','cubs_wv','cubs_caps','cubs_flu','cubs_shiny','cubs_badges','cubs_traced','cubs_streak','cubs_cards','cubs_xp','cubs_pic','cubs_pending','pokemath_learning_v1','pokemath_learning_settings','pokemath_reading_v1','pokemath_path_v1'];
+  let taps = [], KEYS = ['cubs_stars','cubs_prog','cubs_caught','cubs_pbuddy','cubs_ball','cubs_sound','cubs_name','cubs_wv','cubs_caps','cubs_flu','cubs_shiny','cubs_badges','cubs_traced','cubs_streak','cubs_cards','cubs_xp','cubs_pic','cubs_pending','pokemath_learning_v1','pokemath_learning_settings','pokemath_reading_v1','pokemath_path_v1','pokemath_fox_v1'];
   document.querySelector('h1').addEventListener('click', () => {
     const now = Date.now();
     taps = taps.filter(t => now - t < 1200); taps.push(now);
@@ -4404,7 +4412,7 @@ document.addEventListener('visibilitychange', () => {
       ['maths path', typeof PokeMathPath === 'object' && PokeMathPath.SKILLS.length === 28]
     ];
     document.getElementById('ppVer').textContent =
-      'build v69 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
+      'build v70 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
     showPraise(praiseLine(true));
     say(praiseLine(true));
   });
@@ -4470,10 +4478,12 @@ const adventure=createAdventure();
 const foundations=createFoundations();
 const reading=createReading();
 const mathPath=createMathPath();
+const fox=createFox();
+document.getElementById('foxBtn').addEventListener('click', () => { audio(); sndTap(); fox.open(); });
 PokeVisuals.init();
 PokeVisuals.screen('home', 'home');
 buildNumRow();
-loadStars().then(() => reading.importLegacy());
+loadStars().then(() => { reading.importLegacy(); fox.updateHomeBadge(); });
 window.addEventListener('resize', () => {
   if (mode === 'trace'){ sizeCanvas(); drawTrace(); }
   if (mode === 'line'){ lnSize(); }

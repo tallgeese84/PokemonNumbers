@@ -69,7 +69,7 @@ body:not([data-screen="home"]) #soundBtn{display:none}
 .adventure-clock b{font-size:16px;font-weight:600;letter-spacing:0;color:#4d695c}
 .adventure-timer .btn{width:42px;min-height:44px;padding:8px;background:none;border:0;box-shadow:none}
 .adventure-timer .btn svg{width:26px;height:26px}
-.home-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;max-width:280px;margin:auto}
+.home-choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;max-width:400px;margin:auto}
 .quiet-choice{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:110px;padding:12px;border:1.5px solid #d8e2d6;border-radius:22px;background:#fff;color:#344f43;box-shadow:none;cursor:pointer}
 .quiet-choice svg{display:block;width:52px;height:52px}
 .quiet-choice strong{font-size:16px;font-weight:600}
