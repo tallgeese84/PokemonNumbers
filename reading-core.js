@@ -140,6 +140,7 @@ function withSessions(state,sessions){
   const st={...freshState(),...(state||{})};st.passed={...(st.passed||{})};st.books={...(st.books||{})};
   for(const q of C.allQuestions(sessions||{})){
     if(q.section!=='read'||!q.completedAt)continue;
+    if((q.skill==='advance'||q.skill==='placed')&&q.completedAt<(st.resetAt||0))continue;   // superseded by a newer English check
     if(q.skill==='advance'&&q.route)st.passed[q.route]=Math.max(st.passed[q.route]||0,q.completedAt);
     if(q.skill==='placed'){for(let n=1;n<=(q.route||0);n++)st.passed[n]=Math.max(st.passed[n]||0,q.completedAt);if(q.completedAt>(st.placedAt||0)){st.placedAt=q.completedAt;st.placedRoute=q.route||0;}}
     if(q.skill==='book'&&q.kind==='book')st.books[q.route]=Math.max(st.books[q.route]||0,q.completedAt);
@@ -200,17 +201,65 @@ function itemRoute(item){
   if(k==='u')return LAST;
   return 1;
 }
+/* ---------- building up from his level ----------
+   Sounds are introduced two or three at a time; words are only offered once he has
+   enough secure sounds to decode them; a "Sound explorer" (from the English check)
+   stays on listening games and letter sounds until blending by ear and a few sounds
+   are secure. */
+// A sound counts as met once taught, practised, or known in the English check (a miss in the check does not count)
+function touched(sessions){const s=new Set();for(const q of C.allQuestions(sessions))if(q.section==='read'&&q.item&&(q.completedAt||q.responses?.length)&&(q.skill!=='placement'||indep(q)))s.add(q.item);return s;}
+function introduced(sessions,n){const t=touched(sessions);return route(n).add.filter(g=>t.has(gKey(g)));}
+function available(sessions,n){return [...new Set([...graphemesUpTo(n-1),...introduced(sessions,n)])];}
+function nextBatch(sessions,n,stats=itemStats(sessions)){
+  const L=route(n),intro=introduced(sessions,n),left=L.add.filter(g=>!intro.includes(g));
+  if(!left.length)return null;
+  const ready=intro.filter(g=>!DOUBLES.includes(g)).every(g=>(stats[gKey(g)]?.box||0)>=1);
+  return ready?left.slice(0,3):null;
+}
+/* Words are offered only from sounds he has already shown he knows (a clean success), not merely met. */
+function knownSounds(sessions,n,stats=itemStats(sessions)){return [...new Set([...graphemesUpTo(n-1),...route(n).add.filter(g=>DOUBLES.includes(g)?(stats[gKey(g[0])]?.box||0)>=1:(stats[gKey(g)]?.box||0)>=1)])];}
+function readableWords(sessions,n){const av=new Set(knownSounds(sessions,n));
+  return [...new Set([...route(n).blend,...route(n).build])].filter(w=>splitWord(w,n).every(p=>p.cls==='silent'||p.suffix||av.has(p.magic==='start'?p.play:p.g)));}
+function blendAccuracy(sessions){const qs=readQuestions(sessions).filter(q=>q.kind==='blend'&&q.responses?.length).slice(-5);return qs.length>=5?qs.filter(indep).length/qs.length:null;}
+function preReading(sessions,state){
+  if(!state.profile?.pre)return false;
+  const stats=itemStats(sessions),first=route(1).add,secure=first.filter(g=>(stats[gKey(g)]?.box||0)>=2);
+  const vowel=secure.some(g=>'ai'.includes(g)),blend=blendAccuracy(sessions);
+  return !(secure.length>=4&&vowel&&blend!==null&&blend>=.8);
+}
+function pendingTeach(sessions,n,kind){
+  const L=route(n),t=touched(sessions),intro=introduced(sessions,n);
+  if(kind==='shapes')return intro.filter(g=>g.length===1&&!t.has('s:'+g));
+  if(kind==='write'){const ws=writeSet(L);return ws.filter(l=>(intro.includes(l)||intro.some(g=>g.includes(l)))&&!t.has('l:'+l));}
+  return [];
+}
+const needsCheck=(state,sessions)=>state.assessV!==2||(state.redoCheckAt||0)>(state.profile?.at||0);
 /* recent: activities of the last few blocks, newest last */
 function nextActivity(sessions,state={},recent=[],now=Date.now()){
-  if(!state.placedAt&&!readQuestions(sessions).length)return {act:'placement',route:1};
-  const n=currentRoute(state),L=route(n);
+  if(needsCheck(state,sessions))return {act:'placement',route:1};
+  const n=currentRoute(state),L=route(n),stats=itemStats(sessions),last=recent[recent.length-1];
+  const pre=preReading(sessions,state);
+  if(nextBatch(sessions,n,stats))return {act:'meet',route:n,teach:true};
+  if(!L.caps&&pendingTeach(sessions,n,'shapes').length)return {act:'shapes',route:n,teach:true};
+  if(pendingTeach(sessions,n,'write').length)return {act:'write',route:n,teach:true};
+  const reading=!pre&&readableWords(sessions,n).length>=3;
   const done=doneActs(sessions,n);
-  for(const act of TEACH)if(applies(act,L)&&!done.has(act))return {act,route:n,teach:true};
-  const stats=itemStats(sessions),g=gate(n,stats,state),last=recent[recent.length-1];
+  if(L.caps&&!done.has('shapes'))return {act:'shapes',route:n,teach:true};
+  for(const act of (reading?['ears','hunt','read','build','heart','sentence','book','name']:['ears','hunt']))
+    if(applies(act,L)&&!done.has(act))return {act,route:n,teach:true};
+  const g=gate(n,stats,state);
   if(g.met&&!allPassed(state))return {act:'advance',route:n};
   const options=[];
   const reviews=dueReviews(sessions,state,now);
   if(reviews.length>=3&&last!=='review')options.push('review');
+  // A sound he keeps missing is shown again (picture, keyword, mouth sound) rather than only quizzed
+  const weak=introduced(sessions,n).filter(g=>!DOUBLES.includes(g)&&(stats[gKey(g)]?.misses||0)>=2&&(stats[gKey(g)]?.box||0)<2);
+  if(weak.length&&!recent.slice(-3).includes('reteach'))return {act:'reteach',route:n,teach:true};
+  if(!reading){
+    // Sound-building practice: letter sounds and listening, alternating
+    options.push(last==='ears'?'hunt':last==='hunt'?'ears':(recent.length%2?'hunt':'ears'));
+    return {act:options.find(a=>a!==last)||options[0],route:n};
+  }
   const ea=earsAccuracy(sessions);
   if(n<=9&&recent.slice(-4).every(a=>a!=='ears')&&(ea===null||ea<0.85))options.push('ears');
   if(g.graphemes.ok<g.graphemes.total)options.push('hunt');
@@ -253,15 +302,18 @@ function makeRound(act,n,sessions,state={},rnd=Math.random){
   const reviews=dueReviews(sessions,state).map(s=>s.item);
   const items=[];
   const base={route:n};
-  if(act==='meet')return {act,route:n,items:L.add.map(g=>({...base,kind:'meet',item:gKey(g),g,teach:true}))};
-  if(act==='write')return {act,route:n,items:writeSet(L).map(l=>({...base,kind:'write',item:'l:'+l,letter:l,teach:true}))};
+  const av=available(sessions,n),pre=preReading(sessions,state);
+  if(act==='reteach'){const weak=introduced(sessions,n).filter(g=>!DOUBLES.includes(g)&&(stats[gKey(g)]?.misses||0)>=2&&(stats[gKey(g)]?.box||0)<2).slice(0,3);
+    return {act,route:n,items:weak.map(g=>({...base,kind:'meet',item:gKey(g),g,teach:true}))};}
+  if(act==='meet'){const batch=nextBatch(sessions,n,stats)||L.add;return {act,route:n,items:batch.map(g=>({...base,kind:'meet',item:gKey(g),g,teach:true}))};}
+  if(act==='write'){const ls=pendingTeach(sessions,n,'write');return {act,route:n,items:(ls.length?ls:writeSet(L)).map(l=>({...base,kind:'write',item:'l:'+l,letter:l,teach:true}))};}
   if(act==='shapes'){
     if(L.caps){
       const letters=shuffle('abcdefghijklmnopqrstuvwxyz'.split(''),rnd).sort((a,b)=>(stats[uKey(a)]?.box||0)-(stats[uKey(b)]?.box||0)).slice(0,5);
       letters.forEach(l=>items.push({...base,kind:'upper',item:uKey(l),target:l,options:shuffle([l.toUpperCase(),...shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').filter(x=>x!==l.toUpperCase()),rnd).slice(0,3)],rnd),answer:l.toUpperCase()}));
       return {act,route:n,items};
     }
-    const fresh=L.add.filter(g=>g.length===1),pool=singleLetters(n);
+    const pend=pendingTeach(sessions,n,'shapes'),fresh=pend.length?pend:introduced(sessions,n).filter(g=>g.length===1),pool=singleLetters(n);
     fresh.forEach(t=>{const near=(D.CONFUSE[t]||[]).filter(g=>pool.includes(g)&&g!==t),rest=pool.filter(g=>g!==t&&!near.includes(g));
       const others=[...shuffle(near,rnd),...shuffle(rest,rnd)].slice(0,c-1);
       items.push({...base,kind:'shape',item:'s:'+t,target:t,options:shuffle([t,...others],rnd),answer:t});});
@@ -275,25 +327,30 @@ function makeRound(act,n,sessions,state={},rnd=Math.random){
     });
     return {act,route:n,items};
   }
-  const huntItem=(g,from)=>{const others=shuffle(taught.filter(x=>x!==g&&!DOUBLES.includes(x)),rnd).slice(0,c-1);return {...base,route:from||n,kind:'hunt',item:gKey(g),target:g,options:shuffle([g,...others],rnd),answer:g};};
+  // Few sounds known: two big choices; more choices as his set grows
+  const hc=pre||av.length<=6?2:av.length<=12?3:c;
+  const huntItem=(g,from)=>{const others=shuffle(av.filter(x=>x!==g&&!DOUBLES.includes(x)),rnd).slice(0,hc-1);return {...base,route:from||n,kind:'hunt',item:gKey(g),target:g,options:shuffle([g,...others],rnd),answer:g};};
   const readItem=(w,from)=>{const ws=nearWords(w,Math.max(n,from||n),2,rnd);return {...base,route:from||n,kind:'read',item:wKey(w),word:w,parts:splitWord(w,n),options:shuffle([w,...ws],rnd).map(x=>({w:x,e:ART[clean(x)]})),answer:clean(w)};};
   const heartItem=w=>({...base,kind:'heart',item:hKey(w),word:w,options:wordChoices(w,heartPool(n),Math.max(1,c-1),rnd),answer:w});
   if(act==='hunt'){
-    const cur=weakFirst(huntable(L).map(gKey),stats,rnd).map(k=>k.slice(2));
+    const intro=introduced(sessions,n).filter(g=>!DOUBLES.includes(g));
+    const cur=weakFirst((intro.length?intro:huntable(L)).map(gKey),stats,rnd).map(k=>k.slice(2));
     const old=reviews.filter(k=>k.startsWith('g:')).map(k=>k.slice(2)).filter(g=>!DOUBLES.includes(g));
     const pick=[];for(let i=0;i<5;i++){const useOld=old.length&&(i%3===2||!cur.length);pick.push(useOld?old.shift():cur[i%Math.max(1,cur.length)]);}
     pick.filter(Boolean).forEach(g=>items.push(huntItem(g,itemRoute(gKey(g)))));
   }
   if(act==='read'){
-    const words=weakFirst([...new Set([...L.blend,...L.build])].filter(w=>ART[clean(w)]).map(w=>w),stats,rnd);
+    const rw=readableWords(sessions,n);
+    const words=weakFirst((rw.length?rw:[...new Set([...L.blend,...L.build])]).filter(w=>ART[clean(w)]),stats,rnd);
     const old=reviews.filter(k=>k.startsWith('w:')).map(k=>pictureWords(n).find(w=>clean(w)===k.slice(2))).filter(Boolean);
     const pick=[...words.slice(0,4)];if(old.length)pick.push(old[0]);else if(words[4])pick.push(words[4]);
     pick.forEach(w=>items.push(readItem(w,itemRoute(wKey(w)))));
   }
   if(act==='build'){
-    const words=weakFirst([...new Set([...L.build,...L.blend])],stats,rnd).slice(0,4);
+    const rw=readableWords(sessions,n);
+    const words=weakFirst(rw.length?rw:[...new Set([...L.build,...L.blend])],stats,rnd).slice(0,n<=2?3:4);
     words.forEach(w=>{const parts=splitWord(w,n);const need=parts.map(p=>p.g);
-      const extra=shuffle(taught.filter(g=>!need.includes(g)&&G[g]?.[3]!=='end'),rnd).slice(0,2);
+      const extra=shuffle(av.filter(g=>!need.includes(g)&&G[g]?.[3]!=='end'&&!DOUBLES.includes(g)),rnd).slice(0,n<=2?1:2);
       items.push({...base,kind:'build',item:'sp:'+clean(w),word:w,parts,tiles:shuffle([...need,...extra],rnd),answer:clean(w)});});
   }
   if(act==='heart'){
@@ -319,10 +376,12 @@ function makeRound(act,n,sessions,state={},rnd=Math.random){
   }
   if(act==='ears'){
     const pool=D.EARS.filter(w=>ART[w]);
-    const words=shuffle(pool,rnd).slice(0,5);
+    const words=shuffle(pool.filter(w=>!pre||splitWord(w,LAST).length<=3),rnd).slice(0,5);
     words.forEach((w,i)=>{
       const parts=splitWord(w,LAST).filter(p=>p.cls!=='silent');
-      const fmt=['first','blend','count'][i%3];
+      const fmt=(pre?['rhyme','first','blend','blend','rhyme']:['first','blend','count','rhyme','blend'])[i%5];
+      if(fmt==='rhyme'){const sets=shuffle(D.RHYMES,rnd);const set=sets[i%sets.length];const [t,m]=shuffle(set,rnd);const others=shuffle(D.RHYMES.filter(x=>x!==set).map(x=>x[0]),rnd).slice(0,2);
+        items.push({...base,kind:'rhyme',item:'pa:rhyme',word:t,e:ART[t],options:shuffle([m,...others],rnd).map(x=>({w:x,e:ART[x]})),answer:m});return;}
       if(fmt==='count'){items.push({...base,kind:'count',item:'pa:count',word:w,answer:parts.length,options:[2,3,4,5].filter(x=>x<=Math.max(4,parts.length))});return;}
       const others=shuffle(pool.filter(x=>x!==w&&ART[x]!==ART[w]&&(fmt!=='first'||splitWord(x,LAST)[0].g!==parts[0].g)),rnd).slice(0,2);
       items.push({...base,kind:fmt,item:'pa:'+fmt,word:w,parts,options:shuffle([w,...others],rnd).map(x=>({w:x,e:ART[x]})),answer:w});
@@ -368,12 +427,14 @@ function placementResult(results){
 const PROBE_COUNT=PROBES.length;
 
 /* ---------- state (synced, merge-safe) ---------- */
-function freshState(){return {v:1,passed:{},placedAt:0,placedRoute:0,books:{},aloud:{},legacy:null,names:false};}
+function freshState(){return {v:1,passed:{},placedAt:0,placedRoute:0,books:{},aloud:{},legacy:null,names:false,assessV:0,resetAt:0,profile:null};}
 function mergeState(a,b){
   a=a||freshState();b=b||freshState();
   const maxMap=(x,y)=>{const o={...(x||{})};for(const [k,v] of Object.entries(y||{}))o[k]=Math.max(o[k]||0,v||0);return o;};
   const aloud={...(a.aloud||{})};for(const [k,v] of Object.entries(b.aloud||{}))if(!aloud[k]||(v?.at||0)>(aloud[k].at||0))aloud[k]=v;
-  return {v:1,passed:maxMap(a.passed,b.passed),books:maxMap(a.books,b.books),aloud,
+  const resetAt=Math.max(a.resetAt||0,b.resetAt||0),newer=(a.profile?.at||0)>=(b.profile?.at||0)?a:b;
+  const passed=Object.fromEntries(Object.entries(maxMap(a.passed,b.passed)).filter(([,v])=>v>=resetAt));
+  return {v:1,passed,books:maxMap(a.books,b.books),aloud,resetAt,assessV:Math.max(a.assessV||0,b.assessV||0),redoCheckAt:Math.max(a.redoCheckAt||0,b.redoCheckAt||0),profile:newer.profile||a.profile||b.profile||null,
     placedAt:Math.max(a.placedAt||0,b.placedAt||0),placedRoute:(a.placedAt||0)>=(b.placedAt||0)?(a.placedRoute||0):(b.placedRoute||0),
     legacy:a.legacy||b.legacy||null,names:(a.namesAt||0)>=(b.namesAt||0)?!!a.names:!!b.names,namesAt:Math.max(a.namesAt||0,b.namesAt||0)};
 }
@@ -432,7 +493,7 @@ function report(sessions,state,day){
   return lines.join('\n\n');
 }
 
-return {LAST,route,clean,withSessions,graphemesUpTo,heartUpTo,singleLetters,splitWord,missing,tokenOK,validate,dolchRoute,
+return {LAST,route,clean,withSessions,knownSounds,introduced,available,nextBatch,readableWords,preReading,pendingTeach,blendAccuracy,graphemesUpTo,heartUpTo,singleLetters,splitWord,missing,tokenOK,validate,dolchRoute,
   itemStats,due,gate,currentRoute,allPassed,nextActivity,makeRound,applies,writeSet,doneActs,dueReviews,itemRoute,nearWords,heartPool,
   placementProbe,placementResult,PROBE_COUNT,freshState,mergeState,importLegacy,readiness,expectedRoute,report,choiceCount,
   keys:{gKey,wKey,hKey,uKey}};

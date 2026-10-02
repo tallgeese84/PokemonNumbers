@@ -94,8 +94,8 @@ function createReading(){
  /* ---------- round runner ---------- */
  let run=null;            // {round, i, onDone, item, meta, wrong, help, ref}
  const recent=[];
- const TITLE={meet:'New sounds',write:'Writing letters',shapes:'Letter shapes',hunt:'Sound hunt',read:'Read it',build:'Build it',heart:'Tricky words',sentence:'Read and tap',ears:'Sound ears',book:'Book time',name:'Name catch',review:'Remember these',caps:'Capital letters',placement:'Reading check'};
- const INTRO={meet:'Listen to the new sound.',write:'Trace the letter. Start on the green dot.',shapes:'Find the letter that looks the same.',hunt:'Listen. Find the sound.',read:'Tap each sound. Say them fast. Then find the picture.',build:'Listen, then build the word.',heart:'Tricky words. Learn them by heart.',sentence:'Read it, then tap the right picture.',ears:'Listen with your ears.',book:'Let us read a book.',name:'Read the name to catch the Pokémon!',review:'Do you remember these?',caps:'Find the one written the right way.',placement:'Show me what you can read!'};
+ const TITLE={reteach:'Sounds again',meet:'New sounds',write:'Writing letters',shapes:'Letter shapes',hunt:'Sound hunt',read:'Read it',build:'Build it',heart:'Tricky words',sentence:'Read and tap',ears:'Sound ears',book:'Book time',name:'Name catch',review:'Remember these',caps:'Capital letters',placement:'Reading check'};
+ const INTRO={reteach:'Let us look at these sounds again.',meet:'Listen to the new sound.',write:'Trace the letter. Start on the green dot.',shapes:'Find the letter that looks the same.',hunt:'Listen. Find the sound.',read:'Tap each sound. Say them fast. Then find the picture.',build:'Listen, then build the word.',heart:'Tricky words. Learn them by heart.',sentence:'Read it, then tap the right picture.',ears:'Listen with your ears.',book:'Let us read a book.',name:'Read the name to catch the Pokémon!',review:'Do you remember these?',caps:'Find the one written the right way.',placement:'Show me what you can read!'};
  function setHeader(act,n){$('rdTitle').textContent=TITLE[act]||'Reading';const L=R.route(n);$('rdRoute').innerHTML='';const chip=el('span','route-chip','Route '+n);chip.style.setProperty('--route',L.colour);$('rdRoute').append(chip);}
  function enter(){shutUp();mode='read';show('read');}
  function startRound(round,onDone){
@@ -106,10 +106,14 @@ function createReading(){
  }
  function nextItem(){
   if(!run)return;
+  if(run.round.lazy&&run.i>=run.round.items.length){const nx=run.round.lazy.next();if(nx)run.round.items.push(nx);}
   if(run.i>=run.round.items.length){finishRound();return;}
+  const upcoming=run.round.items[run.i];
+  if(upcoming.intro&&!upcoming._introSaid){upcoming._introSaid=true;$('rdOptions').replaceChildren();$('rdStage').replaceChildren();$('rdActions').replaceChildren();$('rdPrompt').textContent='';feedback('');
+   speak(upcoming.intro,{rate:.85,done:()=>setTimeout(nextItem,250)});return;}
   if(!adventure.beforeQuestion()){waitReady(nextItem);return;}
   const it=run.round.items[run.i];run.item=it;run.wrong=0;run.helped=false;run.done=false;
-  pips(run.round.items.length,run.i);feedback('');$('rdOptions').replaceChildren();$('rdActions').replaceChildren();$('rdStage').replaceChildren();$('rdPrompt').replaceChildren();
+  if(run.round.lazy){const pr=run.round.lazy.progress();pips(pr.sections,pr.section);}else pips(run.round.items.length,run.i);feedback('');$('rdOptions').replaceChildren();$('rdActions').replaceChildren();$('rdStage').replaceChildren();$('rdPrompt').replaceChildren();
   run.ref=adventure.begin({section:'read',skill:run.round.placement?'placement':run.round.act,kind:it.kind,item:it.item,route:it.route,range:it.route,support:'read alone',format:it.kind,level:it.route,teach:!!it.teach,a:it.route,b:0,expected:String(it.answer??it.item)});
   (RENDER[it.kind]||RENDER.unknown)(it);
  }
@@ -117,7 +121,7 @@ function createReading(){
  function help(kind){if(!run.helped)run.helped=true;adventure.help(kind);}
  function right(target,value,afterSay){
   if(run.done)return;run.done=true;
-  if(run.round.placement&&run.item._first===undefined)run.item._first=true;
+  if(run.round.placement&&run.item._first===undefined){run.item._first=true;run.round.lazy?.record(true);}
   respond(value,true);
   const ind=run.wrong===0&&!run.helped;
   target?.classList.add('right');[...$('rdOptions').querySelectorAll('button')].forEach(b=>b.disabled=true);
@@ -132,7 +136,7 @@ function createReading(){
   respond(value,false);run.wrong++;sndOops();
   if(target){target.classList.add('wrong');setTimeout(()=>{target.classList.remove('wrong');target.disabled=true;},420);}
   // The reading check never teaches or fades: one try, then move on kindly.
-  if(run.round.placement&&!run.done){run.done=true;if(run.item._first===undefined)run.item._first=false;feedback('Good try!');setTimeout(advance,700);}
+  if(run.round.placement&&!run.done){run.done=true;if(run.item._first===undefined){run.item._first=false;run.round.lazy?.record(false);}feedback('Good try!');setTimeout(advance,700);}
  }
  function advance(){if(!run)return;run.i++;waitReady(nextItem);}
  function finishRound(){
@@ -193,10 +197,15 @@ function createReading(){
   let at=0;replay=()=>speak(R.clean(it.word),{rate:.75});setTimeout(replay,300);art.onclick=replay;
   it.tiles.forEach(g=>{const b=btn('ltile','Sound '+label(g),b=>{
    const want=it.parts[at];if(!want||run.done)return;
-   if(g===want.g&&!b.classList.contains('used')){slots.children[at].textContent=g;slots.children[at].classList.add('filled');b.classList.add('used');b.disabled=true;sound(want);at++;
+   if(g===want.g&&!b.classList.contains('used')){[...$('rdOptions').children].forEach(x=>x.classList.remove('hint'));slots.children[at].textContent=g;slots.children[at].classList.add('filled');b.classList.add('used');b.disabled=true;sound(want);at++;
     if(at>=it.parts.length)setTimeout(()=>right(slots,R.clean(it.word),go=>speak(R.clean(it.word),{rate:.75,done:go})),450);}
    else{if(!run.wrong)respond(g,false);run.wrong++;sndOops();b.classList.add('wrong');setTimeout(()=>b.classList.remove('wrong'),400);
-    setTimeout(()=>sound(want),300);if(run.wrong>=2){fade($('rdOptions'),x=>x.dataset.g===want.g&&!x.classList.contains('used'));}}
+    setTimeout(()=>sound(want),300);
+    // Help after two misses: fade only tiles this word no longer needs, and point at the next one.
+    // (Fading by "not the next letter" used to grey out letters needed for later boxes, leaving him stuck.)
+    if(run.wrong>=2){const need=it.parts.slice(at).map(p=>p.g),free=[...$('rdOptions').children].filter(x=>!x.classList.contains('used'));
+     free.forEach(x=>{const k=need.indexOf(x.dataset.g);if(k>=0)need.splice(k,1);else{x.disabled=true;x.classList.add('faded');}});
+     const next=free.find(x=>x.dataset.g===want.g&&!x.disabled);if(next){next.classList.remove('hint');void next.offsetWidth;next.classList.add('hint');}}}
   },esc(g));b.dataset.g=g;$('rdOptions').append(b);});
  };
  RENDER.heartTeach=it=>{
@@ -217,6 +226,18 @@ function createReading(){
   $('rdActions').append(btn('btn read-help','Read it to me',()=>{help('sentence read aloud');speak(it.text,{rate:.78});},'👂'));
   it.options.forEach((o,k)=>{const b=btn('pic sentence-pic','Picture '+(k+1),b=>{if(k===it.answer)right(b,k,go=>speak(it.text,{rate:.8,done:go}));else{wrong(b,k);if(run.wrong>=2){help('sentence read aloud');speak(it.text,{rate:.78});fade($('rdOptions'),x=>+x.dataset.k===it.answer);}}},'');
    b.dataset.k=k;const n=o.count||1;for(let c=0;c<n;c++){const sp=el('span','pic-e',o.e||'');sp.style.fontSize=(o.size?o.size*52:n>1?40:52)+'px';b.append(sp);}$('rdOptions').append(b);});
+ };
+ RENDER.vocab=it=>{
+  const ear=el('div','hunt-ear');ear.innerHTML=PokeVisuals.icon('listen');$('rdStage').append(ear);
+  replay=()=>speak('Tap the '+it.word+'.',{rate:.82});ear.onclick=replay;setTimeout(replay,250);
+  it.options.forEach(o=>{const b=btn('pic','Picture',b=>{if(o.w===it.answer)right(b,o.w);else wrong(b,o.w);},'');b.textContent=o.e;b.dataset.w=o.w;$('rdOptions').append(b);});
+ };
+ RENDER.rhyme=it=>{
+  const big=el('div','build-art',it.e||'🔊');big.onclick=()=>speak(it.word,{rate:.8});$('rdStage').append(big);
+  const opts=()=>[...$('rdOptions').children];
+  replay=()=>speak('Which one rhymes with '+it.word+'?',{rate:.85,done:()=>chain(opts().map(b=>next=>{flash(b);speak(b.dataset.w,{rate:.8,done:next});}),250)});
+  it.options.forEach(o=>{const b=btn('pic','Picture',b=>{if(o.w===it.answer)right(b,o.w,go=>speak(it.word+', '+o.w+'. They rhyme!',{rate:.8,done:go}));else{wrong(b,o.w);if(!run.round.placement){speak(o.w,{rate:.8});if(run.wrong>=2){help('rhyme shown');fade($('rdOptions'),x=>x.dataset.w===it.answer);}}}},'');b.textContent=o.e;b.dataset.w=o.w;$('rdOptions').append(b);});
+  setTimeout(replay,300);
  };
  RENDER.first=it=>{
   const first=it.parts[0];
@@ -328,23 +349,21 @@ function createReading(){
   sndGood();if(!reduce())burst($('rdStage'),24);addStar(3);
   speak(last?'Amazing! You finished every reading route!':'You did it! Route '+(n+1)+' is open. '+next.name+'!',{rate:.85,done:()=>waitReady2(()=>onDone?.())});
  }
+ /* The English check: listening first, then letters, then words, each part stopping early after misses. */
  function startPlacement(onDone){
-  enter();setHeader('placement',1);let step=0;const results=[];
-  const probe=()=>{
-   const items=R.placementProbe(step);
-   run={round:{act:'placement',route:items[0].route,items,placement:true},i:0,onDone:()=>{
-    const res=items.map(it=>it._first===true);results.push(res);
-    if(res.every(Boolean)&&step<R.PROBE_COUNT-1){step++;probe();}else finish();
-   }};setHeader('placement',items[0].route);nextItem();
-  };
+  enter();setHeader('placement',1);
+  const A=new PokeReadingAssess.Assess(),startedAt=Date.now();
+  run={round:{act:'placement',route:1,items:[],placement:true,lazy:A},i:0,onDone:()=>finish()};
   const finish=()=>{
-   const placed=R.placementResult(results);state.placedAt=Date.now();state.placedRoute=placed;for(let n=1;n<=placed;n++)state.passed[n]=state.passed[n]||Date.now();save();
-   adventure.begin({section:'read',skill:'placed',kind:'placed',item:'placed',route:placed,range:placed,support:'placement',format:'placed',teach:true});adventure.respond(placed,true);
-   const start=R.route(Math.min(R.LAST,placed+1));
-   $('rdPrompt').textContent='Your route: '+start.name;$('rdOptions').replaceChildren();$('rdActions').replaceChildren();
-   speak('Great reading! Let us start at '+start.name+'.',{rate:.85,done:()=>waitReady2(()=>onDone?.())});
+   const p=A.result();
+   state.assessV=2;state.profile=p;state.resetAt=startedAt;state.placedAt=Date.now();state.placedRoute=p.passed;state.passed={};
+   for(let n=1;n<=p.passed;n++)state.passed[n]=Date.now();save();
+   adventure.begin({section:'read',skill:'placed',kind:'placed',item:'placed',route:p.passed,range:p.passed,support:'placement',format:'placed',teach:true});adventure.respond(p.passed,true);
+   $('rdPrompt').textContent='';$('rdOptions').replaceChildren();$('rdActions').replaceChildren();$('rdStage').replaceChildren();
+   sndGood();if(!reduce())burst($('rdStage'),16);
+   speak('Great listening, '+(childName||'Jonah')+'! Now I know just what to play with you.',{rate:.85,done:()=>waitReady2(()=>onDone?.())});
   };
-  speak('First, show me what you can read. Do your best — it is fine not to know.',{rate:.85,done:probe});
+  speak('Let us play some listening games. Do your best. It is fine not to know.',{rate:.85,done:()=>nextItem()});
  }
  /* ---------- games menu entries ---------- */
  function startFree(){startBlock(()=>{if(mode==='read')startFree();});}
@@ -381,14 +400,26 @@ function createReading(){
  panel.innerHTML='<summary>Reading · P1 readiness</summary><div id="readingBody"></div>';
  $('learningDashboard').after(panel);
  panel.addEventListener('toggle',()=>{if(panel.open)renderPanel();});
+ function profileHTML(p){
+  if(!p)return '<p class="muted">The English check has not run yet. It starts automatically the next time he plays.</p>';
+  const row=x=>`<tr><td>${esc(x.label)}${x.skipped?'<small>not needed yet</small>':x.stoppedEarly?'<small>stopped early after misses</small>':''}</td><td><b>${x.skipped?'—':x.ok+' / '+x.n}</b></td></tr>`;
+  const plan=p.pre?'Starting with listening games (rhyme, first sounds, blending by ear) and letter sounds two or three at a time. Short words begin once four sounds and blending by ear are secure.'
+   :p.passed?`Starting at route ${p.passed+1}; earlier sounds and words come back for review.`:'Starting at route 1 with letter sounds two or three at a time, then short words made only from sounds he knows.';
+  return `<details open class="assess-box"><summary>English check · ${new Date(p.at).toLocaleDateString('en-US',{month:'short',day:'numeric'})} · <b>${esc(p.level.name)}</b></summary>
+   <p>${esc(p.level.what)}</p><p class="muted">${esc(plan)}</p>
+   <p class="muted">Letter sounds he knew: <b>${p.known.length?esc(p.known.join(' ')):'none yet'}</b>${p.known.length<25&&p.known.length?` (${25-p.known.length} to learn)`:''}.</p>
+   <table class="journal-table"><tbody>${p.rows.map(row).join('')}</tbody></table>
+   <p class="muted">One try per question with no help, so a few lucky guesses are possible. Each part stops after a few misses so he is never stuck on things he has not learned.</p></details>`;
+ }
  function renderPanel(){
   const s=st(),r=R.readiness(sessions(),s),g=R.gate(r.route,R.itemStats(sessions()),s),L=R.route(r.route);
   const rows=r.rows.map(x=>`<tr><td>${esc(x.label)}${x.note?`<small>${esc(x.note)}</small>`:''}${x.n!==undefined?`<small>${x.n} attempts</small>`:''}</td><td><b>${x.value===null?'—':x.value+(x.unit||'')}</b> / ${x.target}${x.unit||''}${x.secure!==undefined?`<small>${x.secure} secure, ${x.value} mastered</small>`:''}</td></tr>`).join('');
   const body=$('readingBody');
   body.innerHTML=`<p><strong>Route ${r.route} of ${R.LAST}: ${esc(L.name)}</strong> · expected by now: route ${r.expected} · <b>${r.pace}</b> (target: all routes by ${r.target}, before P1 in January 2028)</p>
   <p class="muted">This route opens the next when: sounds ${g.graphemes.ok}/${g.graphemes.total} secure · words read alone ${g.words.ok}/${g.words.need} · tricky words ${g.heart.ok}/${g.heart.total} · book ${g.book?'✓':'not yet'}${L.caps?` · capitals ${g.caps.ok}/${g.caps.need}`:''}. “Secure” means two independent successes; “mastered” adds a success on a later day.</p>
+  ${profileHTML(s.profile)}
   <table class="journal-table"><tbody>${rows}</tbody></table>
-  <div class="pprow reading-tools"><button class="btn" id="rdAloud">Listen to ${esc(childName||'Jonah')} read</button><button class="btn" id="rdPlace">Redo reading check</button>
+  <div class="pprow reading-tools"><button class="btn" id="rdAloud">Listen to ${esc(childName||'Jonah')} read</button><button class="btn" id="rdPlace">Redo English check</button>
   <label>Letter names <select id="rdNames"><option value="auto">Automatic (from route 12)</option><option value="on">On</option><option value="off">Off</option></select></label>
   <label>Move to route <select id="rdMove">${D.ROUTES.map(x=>`<option value="${x.n}" ${x.n===r.route?'selected':''}>${x.n} · ${esc(x.name)}</option>`).join('')}</select></label></div>
   ${state.legacy?`<p class="muted">Imported from the old Poké Reading app: it had reached route ${state.legacy.at} and ${state.legacy.caught.length} Pokémon (added to his collection). Its routes opened on completion rather than mastery, so the reading check decides the starting route.</p>`:''}
@@ -398,7 +429,7 @@ function createReading(){
   $('rdMove').onchange=()=>{const to=+$('rdMove').value;if(!confirm('Move reading to route '+to+'? Routes before it are marked done; later routes are reopened.'))return renderPanel();
    for(let n=1;n<=R.LAST;n++){if(n<to)state.passed[n]=state.passed[n]||Date.now();else delete state.passed[n];}
    state.overrideAt=Date.now();save();renderPanel();};
-  $('rdPlace').onclick=()=>{if(!confirm('Run the short reading check again next time he plays?'))return;state.placedAt=0;state.passed={};state.redoAt=Date.now();save();renderPanel();};
+  $('rdPlace').onclick=()=>{if(!confirm('Run the English check again next time he plays?'))return;state.redoCheckAt=Date.now();save();renderPanel();};
   $('rdAloud').onclick=aloudCheck;
   renderRec();
  }

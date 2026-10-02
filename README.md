@@ -21,6 +21,23 @@ and is not included in this repository. Personal, non-commercial project.
 To ship an update, bump `CACHE = 'pokemath-v1'` in `sw.js` (v2, v3, ...) so
 installed tablets pick up the new version.
 
+## v74 — English check and building up from his level
+
+**Fix:** in Build it, after two misses the help faded every letter except the next one, including letters needed for later boxes, so a word like "dot" could not be finished. Help now fades only letters the word no longer needs and pulses the next letter.
+
+**English check** (replaces the reading check; runs once on the next reading turn, including for children placed by the old check): seven short parts, easiest first, one try each, no help. Each part stops early after a run of misses, so a pre-reader finishes in about 15 taps and never sees words he cannot read.
+1. Understands spoken words (tap the picture) · 2. Hears rhymes · 3. Hears first sounds · 4. Blends sounds by ear · 5. Letter sounds, in teaching order, all 25 if he keeps going (q comes with qu later) · 6. Reads short words — only if he knows five or more sounds including a vowel · 7. Tricky words — only if he read three words.
+
+Results give a level (Sound explorer, Letter learner, Word blender, Confident beginner reader), the letter sounds he knew, and a start point. Grown-ups → Reading · P1 readiness shows the results; *Redo English check* runs it again.
+
+**Building up from there**
+- New sounds come two or three at a time (s a t, then p i n), each with its picture, writing and shape practice; the next set waits until each sound has one clean success.
+- Words are offered only from sounds he has shown he knows, not merely met.
+- A Sound explorer plays listening games (rhyme, first sounds, blending by ear) and letter-sound games until four route-1 sounds are secure and he blends by ear 4 times in 5.
+- A sound he keeps missing is shown again (picture, keyword and sound) before more quizzing.
+- Letter games start with two big choices and add more as his set of sounds grows; Build it starts with one spare letter.
+- Ambiguous pictures (for example 🦋 for "moth") are left out of listening games.
+
 ## v73 — Buddy is the "Fox" by pxltiger
 
 Buddy now uses **"Fox" by pxltiger** ([Sketchfab](https://sketchfab.com/3d-models/fox-39f97fe58f0b47ce80b6e02814001dd7)), licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), shown as the author made it (standing idle pose, the model's own material and normal map, lit with one key light and a real shadow as on Sketchfab), unchanged apart from optional accessories. `assets/fox.glb` is bundled with Three.js's GLTFLoader and SkeletonUtils (MIT) and cached for offline use.

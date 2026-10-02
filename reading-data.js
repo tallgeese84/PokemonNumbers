@@ -195,7 +195,11 @@ const ROUTES=[
 ];
 
 /* Pictures clear enough to name from sound alone (listening games). */
-const EARS=['pin','pan','tin','map','mop','dog','pot','cat','cup','duck','sock','sun','net','ten','pen','nut','rock','hat','hen','bed','bus','leg','bell','fan','log','bat','jam','van','fox','box','six','jet','web','jug','ship','fish','chip','ring','king','shell','shop','bath','moth','chick','frog','flag','drum','hand','milk','tent','nest','lamp','crab','clock','rain','tree','goat','boat','feet','sheep','sail','coat','train','queen','moon','book','star','car','corn','fork','horn','spoon','shark','foot','cake','bike','kite','snake','five','gate','plate','home','bone','rose','nose','leaf','seal','cow','owl','coin','crown','bird','girl','shirt','clown'];
+/* Pictures a 5-year-old names easily (ambiguous ones such as moth→🦋 or jug→🫙 left out). */
+const EARS=['pin','pan','map','mop','dog','pot','cat','cup','duck','sock','sun','ten','pen','hat','hen','bed','bus','leg','bell','fan','log','bat','van','fox','box','six','web','ship','fish','chip','ring','shell','shop','bath','chick','frog','flag','drum','hand','milk','tent','nest','crab','clock','rain','tree','goat','boat','feet','sheep','coat','train','queen','moon','book','star','car','corn','fork','spoon','shark','foot','cake','bike','kite','snake','five','plate','home','bone','rose','nose','leaf','seal','cow','owl','coin','crown','bird','girl','shirt','clown'];
+
+/* Rhyme families with pictures, for listening games. */
+const RHYMES=[['cat','hat','bat'],['dog','log','frog'],['cake','snake','lake'],['moon','spoon'],['goat','boat','coat'],['bell','shell'],['fox','box'],['car','star'],['nose','rose'],['hen','pen','ten'],['bed','sled'],['mop','top']];
 
 /* Dolch pre-primer and primer: the sight-word lists Singapore schools send home in P1. */
 const DOLCH=['a','and','away','big','blue','can','come','down','find','for','funny','go','help','here','I','in','is','it','jump','little','look','make','me','my','not','one','play','red','run','said','see','the','three','to','two','up','we','where','yellow','you',
@@ -226,5 +230,5 @@ const CONFUSE={
   o:['c','e','a','g'],a:['e','o','c','d'],g:['q','y','p','a'],y:['g','v','x'],v:['w','y','u'],h:['n','b','k'],k:['h','x','r'],r:['n','f','k'],x:['k','y','z'],j:['i','g','y']
 };
 const LETTER_NAME={a:'ay',b:'bee',c:'see',d:'dee',e:'ee',f:'eff',g:'jee',h:'aitch',i:'eye',j:'jay',k:'kay',l:'ell',m:'em',n:'en',o:'oh',p:'pee',q:'cue',r:'ar',s:'ess',t:'tee',u:'you',v:'vee',w:'double you',x:'ex',y:'why',z:'zed'};
-return {G,LONG,VOWELS,MULTI,ART,ROUTES,DOLCH,EARS,WRITE,CONFUSE,LETTER_NAME};
+return {G,LONG,VOWELS,MULTI,ART,ROUTES,DOLCH,EARS,RHYMES,WRITE,CONFUSE,LETTER_NAME};
 });

@@ -1,3 +1,9 @@
+# v74 English check
+
+88 Node tests pass (8 new): stuck-Build regression (fails on v73, passes now), check order and early stopping, a non-responding child finishing as a Sound explorer without seeing words, sound batches of three, words gated on known sounds, pre-reading gate, re-teaching missed sounds, and redo surviving sync. Simulated children (knows nothing / listening only / a few letters / half the letters / strong) finish in 15 / 25 / 35 / 46 / 58 items. Headless browser walk-through as a beginner: check → first sounds → shapes, writing, listening and letter games, no page errors and no screen without a tappable way forward. Not checked on the tablet itself.
+
+---
+
 # v70 fox
 
 83 Node tests pass (3 new: tail growth is monotone and reaches nine only when both paths finish; purchases cannot overspend and wearables toggle free; cross-device merge keeps leaves, purchases and seen tails). Headless Chromium with software WebGL rendered the den at 1, 4 and 9 tails from several angles, a treat, wearing an item and drag-to-turn, with no page errors. Not checked on a physical tablet's GPU.

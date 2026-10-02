@@ -75,3 +75,7 @@ button:disabled.right{opacity:1}
 
 @media(max-width:400px){.gtile{min-width:46px;padding:4px 5px 11px}.pic{min-width:84px;min-height:84px;font-size:46px}.ltile{min-width:62px;min-height:62px;font-size:34px}.read-card{padding:10px}.gtile.syl{margin-left:10px}}
 @media(prefers-reduced-motion:reduce){.gtile,.wrong{transition:none;animation:none}}
+
+#scr-read .hint{animation:read-hint 1s ease-in-out 3;border-color:#e6b93c!important;box-shadow:0 0 0 4px #f3ce7577}
+@keyframes read-hint{50%{transform:scale(1.08)}}
+.assess-box{margin:8px 0 12px;padding:8px 12px;border:1px solid #d6e2d9;border-radius:14px;background:#f8fbf6}.assess-box summary{cursor:pointer}

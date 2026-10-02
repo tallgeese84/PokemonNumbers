@@ -41,16 +41,35 @@ test('a route opens only when its sounds, words, tricky words and book are secur
  assert.equal(R.gate(1,R.itemStats(sess(qs)),{}).met,false,'book still unread');
  qs.push(q('book','b:1:0',true));
  const g=R.gate(1,R.itemStats(sess(qs)),{});assert.equal(g.met,true);
- const teach=['shapes','meet','write','ears','hunt','read','build','heart','sentence','book'].map(a=>({...q(a,'x',true),teach:a==='meet'}));
- assert.equal(R.nextActivity(sess([...qs,...teach]),{placedAt:1},[]).act,'advance');
+ const teach=['ears','hunt','read','build','heart','sentence','book'].map(a=>({...q(a,'x',true)}));
+ const marks=[...L.add.map(g=>q('shapes','s:'+g,true)),...L.add.map(g=>q('write','l:'+g,true))];
+ assert.equal(R.nextActivity(sess([...qs,...teach,...marks]),{assessV:2},[]).act,'advance');
 });
-test('first play runs a placement check; afterwards new routes teach in a fixed order before practice',()=>{
+test('the English check runs first (and again for children placed by the old check); new sounds come two or three at a time',()=>{
  assert.equal(R.nextActivity({},{}).act,'placement');
- assert.deepEqual(['shapes','meet'].map((a,i)=>a),[R.nextActivity({},{placedAt:1}).act,'meet']);
- const done=sess([q('shapes','s:s',true)]);assert.equal(R.nextActivity(done,{placedAt:1}).act,'meet');
- assert.equal(R.placementResult([[true,true,true],[true,true,false]]),1);
- assert.equal(R.placementResult([[true,true,true],[true,true,true],[false]]),3);
- assert.equal(R.placementResult([[false,true,true]]),0);
+ assert.equal(R.nextActivity({},{placedAt:1,passed:{1:1}}).act,'placement','old placement is redone');
+ const st={assessV:2};
+ const p=R.nextActivity({},st);assert.equal(p.act,'meet');
+ assert.deepEqual(R.makeRound('meet',1,{},st).items.map(i=>i.g),['s','a','t']);
+ // after meeting s a t, more sounds wait until each has one clean success
+ const met=['s','a','t'].map(g=>({...q('meet','g:'+g,true),teach:true}));
+ assert.equal(R.nextActivity(sess(met),st).act,'shapes');
+ const marks=['s','a','t'].flatMap(g=>[q('shapes','s:'+g,true),q('write','l:'+g,true)]);
+ assert.notEqual(R.nextActivity(sess([...met,...marks]),st).act,'meet');
+ const ok=['s','a','t'].map(g=>q('hunt','g:'+g,true));
+ assert.equal(R.nextActivity(sess([...met,...marks,...ok]),st).act,'meet');
+ assert.deepEqual(R.makeRound('meet',1,sess([...met,...marks,...ok]),st).items.map(i=>i.g),['p','i','n']);
+});
+test('a Sound explorer gets listening and letter-sound games, not words, until blending and four sounds are secure',()=>{
+ const st={assessV:2,profile:{pre:true}};
+ const intro=R.route(1).add.flatMap(g=>[{...q('meet','g:'+g,true),teach:true},q('shapes','s:'+g,true),q('write','l:'+g,true),q('hunt','g:'+g,true)]);
+ const base=[...intro,q('ears','pa:x',true),q('hunt','x',true)];
+ for(let i=0;i<6;i++){const a=R.nextActivity(sess(base),st,['ears','hunt'][i%2]==='ears'?['ears']:['hunt']).act;assert.ok(['hunt','ears','review'].includes(a),a);}
+ assert.equal(R.preReading(sess(base),st),true);
+ const secure=['s','a','t','p'].flatMap(g=>[q('hunt','g:'+g,true),q('hunt','g:'+g,true)]);
+ const blends=Array.from({length:5},()=>({...q('ears','pa:blend',true),kind:'blend'}));
+ assert.equal(R.preReading(sess([...base,...secure,...blends]),st),false);
+ const round=R.makeRound('ears',1,{},st);assert.ok(round.items.some(i=>i.kind==='rhyme'));
 });
 test('placed routes return as unconfirmed review items, mixed across sounds, words and tricky words',()=>{
  const st={placedAt:1,passed:{1:1,2:1}};
@@ -100,7 +119,7 @@ function harness(){
   querySelectorAll(sel){return this.all().slice(1).filter(e=>sel.startsWith('.')?e._cls.has(sel.slice(1)):e.tag===sel);}querySelector(sel){return this.querySelectorAll(sel)[0]||null;}}
  const els={},data={},spoken=[],t=new C.Tracker({now:()=>now}),helps=[],answers=[];
  const adventure={get tracker(){return t;},begin:meta=>t.begin(meta),respond:(v,c)=>{answers.push({v,c});t.answer(v,c);},help:k=>{helps.push(k);t.help(k);},isPaused:()=>false,beforeQuestion:()=>true};
- const ctx={PokeReadingCore:R,PokeReadingData:D,PokeLearning:C,adventure,screens:{},mode:'home',soundOn:true,childName:'Jonah',caught:[],stars:0,
+ const ctx={PokeReadingCore:R,PokeReadingData:D,PokeLearning:C,PokeReadingAssess:require('../reading-assess.js'),adventure,screens:{},mode:'home',soundOn:true,childName:'Jonah',caught:[],stars:0,
   document:{createElement:tag=>new El(tag),createElementNS:(_,tag)=>new El(tag),createTextNode:s=>{const e=new El('#text');e._text=s;return e;},getElementById:id=>els[id]||=new El(),body:{dataset:{}}},
   window:{speechSynthesis:{getVoices:()=>[],speak:u=>{spoken.push(u.text);timers.push({at:now+20,f:()=>u.onend?.()});},cancel(){}}},
   SpeechSynthesisUtterance:function(text){this.text=text;},
@@ -133,12 +152,20 @@ test('asking for help is recorded, and a clean first answer is independent and e
  h.opts().find(b=>b.dataset.w===it.answer).click();h.flush(3000);
  assert.equal(C.independent(q),true);assert.equal(h.ctx.stars-before,2);
 });
-test('the reading check gives one try per item with no fading or help, then moves on',()=>{
+test('the English check gives one try per item with no fading or help, then moves on',()=>{
  const h=harness();h.ui.startBlock(()=>{});h.flush(8000);
- const c=h.ui._current();assert.equal(c.placement,true);
+ const c=h.ui._current();assert.equal(c.placement,true);assert.equal(c.item.kind,'vocab','starts with the easiest listening game');
  const first=c.item;const wrong=h.opts().find(b=>(b.dataset.g||b.dataset.w)!==first.answer);wrong.click();h.flush(3000);
  assert.equal(h.helps.length,0);assert.ok(h.opts().every(b=>!b._cls.has('faded')));
  assert.notEqual(h.ui._current()?.item,first,'moved to the next item');
+});
+test('a child who answers nothing finishes the English check quickly and becomes a Sound explorer at route 1',()=>{
+ const h=harness();let done=0;h.ui.startBlock(()=>done++);h.flush(8000);
+ for(let i=0;i<60&&!done;i++){const c=h.ui._current();if(!c){h.flush(2000);continue;}
+  const w=h.opts().find(b=>(b.dataset.g||b.dataset.w||b.textContent)!==String(c.item.answer)&&!b.disabled);if(w)w.click();h.flush(3000);}
+ assert.equal(done,1);const p=h.ui.state.profile;assert.equal(p.pre,true);assert.equal(p.level.id,'explorer');assert.equal(p.passed,0);
+ assert.ok(p.rows.find(r=>r.id==='words').skipped,'never shown words he cannot read');
+ assert.equal(R.nextActivity(h.t.sessions,R.withSessions(h.ui.state,h.t.sessions)).act,'meet');
 });
 test('a book records page help, completes, then asks its comprehension question',()=>{
  const h=harness();h.ui._round('book',3);h.flush();
@@ -156,4 +183,30 @@ test('the old Poké Reading app adds its Pokémon once and stays a hint, not a p
  h.ctx.PokeCatalog.byId={25:{},89:{}};h.ctx.caught.push(25);
  h.ui.importLegacy();h.ui.importLegacy();
  assert.deepEqual([...h.ctx.caught],[25,89]);assert.equal(h.ui.state.legacy.at,6);assert.deepEqual(h.ui.state.passed,{});
+});
+test('Build never greys out a letter that a later box still needs (stuck-screen regression)',()=>{
+ const h=harness();h.ui._round('build',2);h.flush();
+ for(let item=0;item<4;item++){const it=h.ui._current()?.item;if(!it)break;
+  const wrongTile=()=>h.opts().find(b=>!b._cls.has('used')&&!b.disabled&&!it.parts.some(p=>p.g===b.dataset.g));
+  for(let k=0;k<3;k++){const w=wrongTile();if(w){w.click();h.flush(600);}}     // three misses on the first box
+  for(const p of it.parts){const b=h.opts().find(x=>x.dataset.g===p.g&&!x._cls.has('used')&&!x.disabled);assert.ok(b,'tile for '+p.g+' still tappable in '+it.word);b.click();h.flush(300);}
+  h.flush(4000);
+ }
+});
+test('words wait until he has shown he knows their sounds, not just met them',()=>{
+ const st={assessV:2};
+ const met=R.route(1).add.flatMap(g=>[{...q('meet','g:'+g,true),teach:true},q('shapes','s:'+g,true),q('write','l:'+g,true)]);
+ const wrong=['p','i','n'].map(g=>q('hunt','g:'+g,false));const right=['s','a','t'].map(g=>q('hunt','g:'+g,true));
+ assert.deepEqual(R.readableWords(sess([...met,...wrong,...right]),1).map(R.clean),['sat']);
+ assert.ok(['hunt','ears','review'].includes(R.nextActivity(sess([...met,...wrong,...right,q('ears','pa:x',true),q('hunt','x',true)]),st,['ears']).act));
+ const more=['p','i','n'].map(g=>q('hunt','g:'+g,true));
+ assert.ok(R.readableWords(sess([...met,...wrong,...right,...more]),1).length>=6);
+});
+test('a sound he keeps missing is shown again before more quizzing',()=>{
+ const st={assessV:2};
+ const met=R.route(1).add.flatMap(g=>[{...q('meet','g:'+g,true),teach:true},q('shapes','s:'+g,true),q('write','l:'+g,true)]);
+ const miss=[q('hunt','g:p',false),q('hunt','g:p',false),q('ears','pa:x',true)];
+ const p=R.nextActivity(sess([...met,...miss]),st,['hunt']);assert.equal(p.act,'reteach');
+ assert.deepEqual(R.makeRound('reteach',1,sess([...met,...miss]),st).items.map(i=>i.g),['p']);
+ assert.notEqual(R.nextActivity(sess([...met,...miss]),st,['reteach']).act,'reteach');
 });
