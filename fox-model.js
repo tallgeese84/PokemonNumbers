@@ -11,12 +11,17 @@ function buildFoxModel(THREE,opts){
  const O=lin(0xE2621B),OL=lin(0xF39A4A),OD=lin(0xB8460F),W=lin(0xFFF7EE),D=lin(0x2A1810),DB=lin(0x4A2A18);
  const mix=(a,b,t,out)=>out.copy(a).lerp(b,Math.max(0,Math.min(1,t)));
 
- /* ---------- strand texture: R = strand height (0 = gap), G = per-strand tint ---------- */
- const furTex=(()=>{const n=256,c=document.createElement('canvas');c.width=c.height=n;const x=c.getContext('2d'),img=x.createImageData(n,n);
-  const noise=(px,py)=>.5+.25*Math.sin(px*.11+Math.sin(py*.07)*2)+.25*Math.sin(py*.13+Math.cos(px*.05)*2);
-  for(let i=0;i<n*n;i++){const px=i%n,py=(i/n)|0;const clump=noise(px,py);const on=Math.random()<.62;
-   const h=on?Math.min(1,(.3+.7*Math.random())*(.65+.5*clump)):0;img.data[i*4]=h*255;img.data[i*4+1]=150+Math.random()*105;img.data[i*4+2]=0;img.data[i*4+3]=255;}
-  x.putImageData(img,0,0);const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestMipmapLinearFilter;return t;})();
+ /* ---------- strand texture: soft round hairs, value = height. Each hair is a soft dot,
+    so the cross-section that survives at a given layer shrinks towards the tip:
+    hairs taper, and edges stay smooth instead of pixel-hard. ---------- */
+ const furTex=(()=>{const n=1024,c=document.createElement('canvas');c.width=c.height=n;const x=c.getContext('2d');
+  x.fillStyle='#000';x.fillRect(0,0,n,n);x.globalCompositeOperation='lighten';
+  const clump=(px,py)=>.62+.2*Math.sin(px*.021+Math.sin(py*.017)*2)+.18*Math.sin(py*.027+Math.cos(px*.013)*2);
+  const dot=document.createElement('canvas');dot.width=dot.height=32;{const d=dot.getContext('2d'),g=d.createRadialGradient(16,16,0,16,16,16);g.addColorStop(0,'#fff');g.addColorStop(1,'#000');d.fillStyle=g;d.fillRect(0,0,32,32);}
+  for(let i=0;i<34000;i++){const px=Math.random()*n,py=Math.random()*n,h=Math.min(1,(.35+.65*Math.random())*clump(px,py)),r=2.2+Math.random()*2.2;x.globalAlpha=h;
+   for(const [ox,oy] of [[0,0],[n,0],[-n,0],[0,n],[0,-n]]){const X=px+ox,Y=py+oy;if((ox||oy)&&(X<-r||X>n+r||Y<-r||Y>n+r))continue;x.drawImage(dot,X-r,Y-r,r*2,r*2);}}
+  x.globalAlpha=1;
+  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.minFilter=THREE.LinearMipmapLinearFilter;t.magFilter=THREE.LinearFilter;t.anisotropy=8;return t;})();
 
  /* ---------- fur shader (all shells share one program) ---------- */
  const light={uKey:{value:new THREE.Vector3(.45,.8,.55).normalize()},uKeyCol:{value:lin(0xFFF0DC)},uSky:{value:lin(0xEAF3FF)},uGround:{value:lin(0x6E8A5C)},uRim:{value:lin(0xFFE2B0)}};
@@ -27,18 +32,22 @@ function buildFoxModel(THREE,opts){
    gl_Position=projectionMatrix*viewMatrix*wp;}`;
  const FS=`uniform sampler2D uFur;uniform float uLayer;uniform vec2 uRepeat;uniform vec3 uKey;uniform vec3 uKeyCol;uniform vec3 uSky;uniform vec3 uGround;uniform vec3 uRim;
   varying vec3 vColor;varying vec3 vN;varying vec2 vUv;varying vec3 vView;varying float vF;
-  void main(){vec4 s=texture2D(uFur,vUv*uRepeat+vec2(0.0,uLayer*0.012));
-   if(uLayer>0.0&&(s.r<uLayer||vF<0.02))discard;
-   vec3 n=normalize(vN);float ao=mix(0.42,1.08,uLayer);
+  void main(){vec4 s=texture2D(uFur,vUv*uRepeat+vec2(0.0,uLayer*0.01));
+   // soft-edged hairs: coverage fades in around the layer height (smoothed by alpha-to-coverage)
+   // short-fur areas keep only their lower layers, so fur thins smoothly to bare skin
+   float hgt=s.r*clamp(vF*1.6,0.0,1.0);
+   float a=uLayer>0.0?smoothstep(uLayer-0.06,uLayer+0.04,hgt):1.0;
+   if(uLayer>0.0&&a<0.02)discard;
+   vec3 n=normalize(vN);float cover=clamp(vF*1.6,0.0,1.0);float ao=mix(mix(0.92,0.42,cover),1.08,uLayer);
    vec3 amb=mix(uGround,uSky,0.5+0.5*n.y)*0.62;float d=max(dot(n,uKey)*0.6+0.4,0.0);
    float rim=pow(1.0-max(dot(n,normalize(vView)),0.0),2.6)*uLayer;
-   vec3 c=vColor*(0.86+0.28*s.g)*ao*(amb+uKeyCol*d*0.78)+uRim*rim*0.32;
-   gl_FragColor=vec4(c,1.0);
+   vec3 c=vColor*(0.9+0.2*s.r)*ao*(amb+uKeyCol*d*0.78)+uRim*rim*0.32;
+   gl_FragColor=vec4(c,a);
    #include <tonemapping_fragment>
    #include <encodings_fragment>
   }`;
  function furMat(layer,len,repeat,grav){
-  return new THREE.ShaderMaterial({vertexShader:VS,fragmentShader:FS,uniforms:{uFur:{value:furTex},uLayer:{value:layer},uLen:{value:len},uRepeat:{value:new THREE.Vector2(repeat[0],repeat[1])},uGrav:{value:grav},...light}});
+  return new THREE.ShaderMaterial({alphaToCoverage:layer>0,vertexShader:VS,fragmentShader:FS,uniforms:{uFur:{value:furTex},uLayer:{value:layer},uLen:{value:len},uRepeat:{value:new THREE.Vector2(repeat[0],repeat[1])},uGrav:{value:grav},...light}});
  }
  const shellGroups=[];
  /* A furry part: base surface plus LAYERS shells. len = longest hair, scaled per vertex by furLen. */
@@ -69,8 +78,8 @@ function buildFoxModel(THREE,opts){
  [-1,1].forEach(s=>{const g=sculpt(new THREE.SphereGeometry(.3,44,32),v=>{v.y*=.82;v.z*=1.2;});attrs(g,(v,c)=>{mix(O,OD,smooth(.1,-.25,v.y),c);return 1;});
   const h=furry(g,.06,[7,4]);h.position.set(s*.26,.33,-.12);bodyWrap.add(h);});
  /* front legs with dark stockings, and paws */
- [-1,1].forEach(s=>{const g=sculpt(new THREE.CylinderGeometry(.115,.09,.56,28,12,true),v=>{});attrs(g,(v,c)=>{mix(D,O,smooth(-.16,.02,v.y),c);return .8;});
-  const leg=furry(g,.045,[4,3]);leg.position.set(s*.14,.3,.26);leg.rotation.x=-.08;bodyWrap.add(leg);
+ [-1,1].forEach(s=>{const g=sculpt(new THREE.SphereGeometry(.12,32,24),v=>{v.y*=2.4;v.x*=1-.15*(v.y<0?-v.y/.29:0);});attrs(g,(v,c)=>{mix(D,O,smooth(-.2,.0,v.y),c);return .8;});
+  const leg=furry(g,.045,[4,6]);leg.position.set(s*.14,.3,.26);leg.rotation.x=-.08;bodyWrap.add(leg);
   const paw=new THREE.Mesh(sculpt(new THREE.SphereGeometry(.1,28,20),v=>{v.y*=.6;v.z*=1.3;}),std(0x2a1810,{roughness:.9}));paw.position.set(s*.15,.05,.33);bodyWrap.add(paw);
   const hp=paw.clone();hp.position.set(s*.33,.05,.08);hp.scale.set(1.15,1,1.2);bodyWrap.add(hp);});
 
@@ -84,11 +93,12 @@ function buildFoxModel(THREE,opts){
  });
  attrs(headG,(v,c)=>{const muzzle=smooth(-.06,-.16,v.y)*smooth(.1,.3,v.z);const cheek=smooth(.24,.42,Math.abs(v.x))*smooth(.0,-.16,v.y);const brow=smooth(.2,.45,v.y)*.15;
   mix(O,OL,smooth(.1,.45,v.z)*.35+brow,c);c.lerp(W,Math.max(muzzle,cheek));
-  let f=1;EYE.forEach(([ex,ey])=>{const d=Math.hypot(v.x-ex,v.y-ey);f=Math.min(f,smooth(.15,.22,d));});      // no fur over the eyes
-  f=Math.min(f,smooth(.06,.14,Math.hypot(v.x,v.y+.12)+(v.z<.3?1:0)));                                    // or the nose
-  return f*(.55+.9*Math.max(cheek,0)+.25*smooth(.2,.4,v.y)-.35*muzzle);});
+  let f=1;EYE.forEach(([ex,ey])=>{const dy=v.y<ey?(ey-v.y)*2.4:v.y-ey,d=Math.hypot(v.x-ex,dy);f=Math.min(f,smooth(.1,.15,d));});      // no fur over the eyes
+  f=Math.min(f,smooth(.05,.16,Math.hypot(v.x,v.y+.12)+(v.z<.3?1:0)));                                    // or the nose
+  return f*Math.max(.5,.6+.9*Math.max(cheek,0)+.25*smooth(.2,.4,v.y)-.12*muzzle);});
  head.add(furry(headG,.055,[11,5.5],new THREE.Vector3(0,-.3,-.35)));
  const nose=new THREE.Mesh(sculpt(new THREE.SphereGeometry(.058,32,24),v=>{v.y*=.72;v.x*=1.25;if(v.y<0)v.x*=1+v.y*4;}),std(0x120806,{roughness:.22}));nose.position.set(0,-.12,.62);head.add(nose);
+ const smile=new THREE.Mesh(new THREE.TorusGeometry(.04,.006,8,24,Math.PI*.9),std(0x3a2018,{roughness:.8}));smile.position.set(0,-.205,.585);smile.rotation.set(-.35,0,Math.PI*1.05);head.add(smile);
  /* eyes: big, round and watery */
  const T=512,irisC=document.createElement('canvas');irisC.width=irisC.height=T;{const x=irisC.getContext('2d'),c=T/2;x.beginPath();x.arc(c,c,c,0,Math.PI*2);x.clip();
   const base=x.createLinearGradient(0,0,0,T);base.addColorStop(0,'#160a04');base.addColorStop(.45,'#3e1f0d');base.addColorStop(.82,'#94551f');base.addColorStop(1,'#d89750');x.fillStyle=base;x.fillRect(0,0,T,T);
