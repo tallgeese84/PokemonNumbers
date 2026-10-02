@@ -7,7 +7,7 @@ function loadFoxModel(THREE,url){
   const HEIGHT=1.62;                                   // ear tip height in scene units
   const fox=new THREE.Group(),inner=gltf.scene;fox.add(inner);
   let mesh=null;inner.traverse(o=>{if(o.isSkinnedMesh)mesh=o;if(o.isMesh){o.frustumCulled=false;}});
-  const mat=mesh.material;mat.roughness=.85;mat.metalness=0;if(mat.map){mat.map.anisotropy=8;}mat.side=THREE.DoubleSide;
+  const mat=mesh.material;mat.roughness=.6;mat.metalness=0;if(mat.map){mat.map.anisotropy=8;}if(mat.normalMap)mat.normalMap.anisotropy=8;mesh.castShadow=true;
   const bones=Object.fromEntries(mesh.skeleton.bones.map(b=>[b.name.replace(/_\d+$/,''),b]));
   // scale by the ear tip in the rest pose so the fox is a known size
   inner.updateMatrixWorld(true);const w=new THREE.Vector3();bones.Fox_LEar2.getWorldPosition(w);
@@ -16,7 +16,7 @@ function loadFoxModel(THREE,url){
   /* ---- animations ---- */
   const mixer=new THREE.AnimationMixer(inner);const clips=Object.fromEntries(gltf.animations.map(c=>[c.name,c]));
   const act=n=>clips[n]?mixer.clipAction(clips[n]):null;
-  const idle=act('Fox_Sit2_Idle');idle.play();let current=idle;
+  const idle=act('Fox_Idle');idle.play();let current=idle;
   function play(name,{once=true,fade=.25}={}){const a=act(name);if(!a||a===current)return;a.reset();a.setLoop(once?THREE.LoopOnce:THREE.LoopRepeat);a.clampWhenFinished=true;
    current.crossFadeTo(a,fade,false);a.play();current=a;
    if(once){const back=e=>{if(e.action!==a)return;mixer.removeEventListener('finished',back);if(current===a){idle.reset().play();a.crossFadeTo(idle,.35,false);current=idle;}};mixer.addEventListener('finished',back);}}

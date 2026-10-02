@@ -23,7 +23,7 @@ installed tablets pick up the new version.
 
 ## v73 — Buddy is the "Fox" by pxltiger
 
-Buddy now uses **"Fox" by pxltiger** ([Sketchfab](https://sketchfab.com/3d-models/fox-39f97fe58f0b47ce80b6e02814001dd7)), licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), unchanged apart from optional accessories: hand-painted 2k fur texture, rigged, with its own sit, idle and trick animations. `assets/fox.glb` is bundled with Three.js's GLTFLoader and SkeletonUtils (MIT) and cached for offline use.
+Buddy now uses **"Fox" by pxltiger** ([Sketchfab](https://sketchfab.com/3d-models/fox-39f97fe58f0b47ce80b6e02814001dd7)), licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), shown as the author made it (standing idle pose, the model's own material and normal map, lit with one key light and a real shadow as on Sketchfab), unchanged apart from optional accessories. `assets/fox.glb` is bundled with Three.js's GLTFLoader and SkeletonUtils (MIT) and cached for offline use.
 
 He grows bigger as Jonah learns, and each of the nine learning milestones (reading routes plus two points per maths Gym badge) teaches him a trick: nod, look around, shake head, spin jump, walk, tail swish, run, pounce and somersault. Tapping him plays a trick he knows; treats and toys use the model's animations too. The earlier home-made fox models are retired.
 

@@ -54,12 +54,17 @@ function createFox(){
   const canvas=$('foxCanvas');
   try{renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});}catch(e){$('foxNote').textContent='This tablet cannot show 3D right now.';return false;}
   renderer.setPixelRatio(Math.min(3,window.devicePixelRatio||1));
-  renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;
+  // Lit like the author's Sketchfab scene: one strong key light with a real shadow, gentle fill, no film tone curve
+  renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.NoToneMapping;
+  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   scene=new THREE.Scene();camera=new THREE.PerspectiveCamera(30,1,.1,60);camera.position.set(0,1.25,4.6);camera.lookAt(0,.8,0);
   scene.background=forestBackdrop();
-  scene.add(new THREE.HemisphereLight(0xfff3e0,0x6e8a5c,.75));
-  const key=new THREE.DirectionalLight(0xfff1dc,1.1);key.position.set(2.5,5,3.5);scene.add(key);
-  const rim=new THREE.DirectionalLight(0xffe2b0,.6);rim.position.set(-3,2.5,-3.5);scene.add(rim);
+  scene.add(new THREE.HemisphereLight(0xffffff,0x8a8f99,.45));
+  const key=new THREE.DirectionalLight(0xffffff,1.4);key.position.set(-2.2,4.5,3.2);key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.radius=4;key.shadow.bias=-.0005;
+  Object.assign(key.shadow.camera,{left:-2,right:2,top:2.5,bottom:-1,near:.5,far:12});scene.add(key);
+  const fill=new THREE.DirectionalLight(0xdfe8ff,.35);fill.position.set(3,2,2);scene.add(fill);
+  const rim=new THREE.DirectionalLight(0xffffff,.35);rim.position.set(0,3,-4);scene.add(rim);
+  const catcher=new THREE.Mesh(new THREE.PlaneGeometry(6,6),new THREE.ShadowMaterial({opacity:.35}));catcher.rotation.x=-Math.PI/2;catcher.position.y=.002;catcher.receiveShadow=true;scene.add(catcher);
   // mossy clearing with soft edges, and a soft shadow under him
   const gc=document.createElement('canvas');gc.width=gc.height=256;{const x=gc.getContext('2d'),g=x.createRadialGradient(128,128,10,128,128,128);g.addColorStop(0,'rgba(120,160,90,1)');g.addColorStop(.7,'rgba(95,140,75,.9)');g.addColorStop(1,'rgba(80,120,70,0)');x.fillStyle=g;x.fillRect(0,0,256,256);
    for(let i=0;i<900;i++){x.fillStyle=`rgba(${60+Math.random()*60|0},${110+Math.random()*70|0},${50+Math.random()*30|0},.5)`;const a=Math.random()*Math.PI*2,r=Math.random()*110;x.fillRect(128+Math.cos(a)*r,128+Math.sin(a)*r,1.5,4);}}
@@ -72,7 +77,7 @@ function createFox(){
   const ft=new THREE.CanvasTexture(fc);flies=[];for(let i=0;i<22;i++){const m=new THREE.Sprite(new THREE.SpriteMaterial({map:ft,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
    const f={m,x:(Math.random()-.5)*5.5,y:.3+Math.random()*2.6,z:-2.6+Math.random()*2.4,p:Math.random()*10,s:.04+Math.random()*.06};m.scale.setScalar(f.s);scene.add(m);flies.push(f);}
   try{await buildFox();}catch(e){$('foxNote').textContent='Buddy is still on his way. Connect to the internet once.';return false;}
-  fox.rotation.y=.45;parts.shadow=shadow;T=true;sizeRenderer();window.addEventListener('resize',()=>{if(mode==='fox')sizeRenderer();});
+  fox.rotation.y=-.75;parts.shadow=shadow;shadow.visible=false;T=true;sizeRenderer();window.addEventListener('resize',()=>{if(mode==='fox')sizeRenderer();});
   // drag to turn, tap to play
   let down=null;canvas.addEventListener('pointerdown',e=>{down={x:e.clientX,r:fox.rotation.y,moved:false};try{canvas.setPointerCapture?.(e.pointerId);}catch(_){}});
   canvas.addEventListener('pointermove',e=>{if(!down)return;const dx=e.clientX-down.x;if(Math.abs(dx)>6)down.moved=true;fox.rotation.y=down.r+dx*.012;});
