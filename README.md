@@ -21,6 +21,10 @@ and is not included in this repository. Personal, non-commercial project.
 To ship an update, bump `CACHE = 'pokemath-v1'` in `sw.js` (v2, v3, ...) so
 installed tablets pick up the new version.
 
+## v72 — Buddy with real fur, sitting in a firefly forest
+
+New model: a sitting fox cub with a round head, short white muzzle, big watery eyes, fluffy white cheeks and chest ruff, dark-rimmed ears with white fluffy insides and dark paws. Fur is drawn as 18 layers of hair strands (darker roots, lighter tips, rim light) on every part, including the tails. One tail curls round his side; more tails fan out behind. He sits in a misty forest with glowing fireflies. If a tablet draws slowly, Buddy steps down to fewer fur layers automatically.
+
 ## v71 — Buddy, rebuilt in higher quality
 
 The fox is now called **Buddy** and has a new model (`fox-model.js`): sculpted smooth body and head, natural red-fox colouring (orange coat, white chest, muzzle and tail tips, dark stockings and ear backs), glossy eyes with brown irises, smooth tapered tails, a fur colour and bump texture, and layered shell fur for a soft fluffy surface. Rendering uses the tablet's full screen resolution, filmic tone mapping, soft shadows and key/rim/fill lighting. If a tablet draws slowly, Buddy automatically uses half the fur layers.

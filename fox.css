@@ -1,6 +1,6 @@
 /* Fox den */
 .fox-den{max-width:640px;margin:auto;text-align:center}
-.fox-stage{position:relative;border-radius:26px;overflow:hidden;background:linear-gradient(#e8f3fb 0%,#f6f3e4 62%,#e2efd6 100%);border:1px solid #d8e3d9;box-shadow:var(--shadow)}
+.fox-stage{position:relative;border-radius:26px;overflow:hidden;background:#a9c79a;border:1px solid #d8e3d9;box-shadow:var(--shadow)}
 #foxCanvas{display:block;width:100%;touch-action:none;cursor:grab}
 .fox-fx{position:absolute;inset:0;pointer-events:none}.fox-heart{position:absolute;bottom:35%;font-size:30px;animation:fox-float 1.6s ease-out forwards}
 @keyframes fox-float{from{transform:translateY(0) scale(.6);opacity:0}20%{opacity:1}to{transform:translateY(-170px) scale(1.15);opacity:0}}

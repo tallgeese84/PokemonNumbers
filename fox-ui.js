@@ -29,39 +29,63 @@ function createFox(){
 
  /* ---------- 3D ---------- */
  let T=null,renderer,scene,camera,fox,parts={},tailGroups=[],raf=0,clock0=0,anim={},sprites=[];
- function loadThree(){if(window.THREE)return Promise.resolve();return new Promise((ok,fail)=>{const s=document.createElement('script');s.src='assets/vendor/three-r128.min.js?v=71';s.onload=ok;s.onerror=fail;document.head.append(s);});}
- function buildFox(){const m=buildFoxModel(THREE,{shells:quality.shells});fox=m.fox;parts=m.parts;tailGroups=m.tails;fox.traverse(o=>{if(o.isMesh&&o.parent===fox)o.castShadow=true;});scene.add(fox);}
+ function loadThree(){if(window.THREE)return Promise.resolve();return new Promise((ok,fail)=>{const s=document.createElement('script');s.src='assets/vendor/three-r128.min.js?v=72';s.onload=ok;s.onerror=fail;document.head.append(s);});}
+ function buildFox(){const m=buildFoxModel(THREE,{layers:quality.layers});fox=m.fox;parts=m.parts;tailGroups=m.tails;scene.add(fox);}
  function layoutTails(count,time){
-  // one tail stands up; more tails open into a fan behind him
-  const spread=count===1?0:Math.min(2.2,.3*(count-1));
-  tailGroups.forEach((g,i)=>{g.visible=i<count;if(!g.visible)return;const f=count===1?0:i/(count-1)-.5;
-   g.rotation.order='ZXY';g.rotation.z=f*spread+Math.sin(time*1.5+i*.6)*.06;g.rotation.x=-.1+Math.abs(f)*.3+Math.sin(time*1.1+i)*.04;
+  if(count===1){const g=tailGroups[0];g.visible=true;tailGroups.slice(1).forEach(t=>t.visible=false);
+   // a single tail curls round his side onto the ground, like a sitting cub
+   g.rotation.order='YZX';g.rotation.y=-.95;g.rotation.z=-1.2+Math.sin(time*1.3)*.05;g.rotation.x=.1;const s=g.userData.grow;g.scale.set(s,s,s);return;}
+  // more tails open into a fan behind him
+  const spread=Math.min(2.4,.32*(count-1));
+  tailGroups.forEach((g,i)=>{g.visible=i<count;if(!g.visible)return;const f=i/(count-1)-.5;
+   g.rotation.order='ZXY';g.rotation.y=0;g.rotation.z=f*spread+Math.sin(time*1.5+i*.6)*.06;g.rotation.x=-.15+Math.abs(f)*.35+Math.sin(time*1.1+i)*.04;
    const s=g.userData.grow*(1-Math.abs(f)*.12);g.scale.set(s,s,s);});
  }
- /* Fur detail adapts to the tablet: if frames are slow, drop every other fur layer. */
- const quality={shells:(window.__foxShells??8),frames:0,t0:0,reduced:false};
- function adapt(t){if(quality.reduced)return;if(!quality.t0){quality.t0=t;return;}quality.frames++;
-  if(quality.frames===90){const ms=(t-quality.t0)/90;if(ms>34){quality.reduced=true;parts.shellGroups.forEach(sh=>sh.forEach((m,k)=>{if(k%2===0)m.visible=false;}));renderer.setPixelRatio(Math.min(1.5,window.devicePixelRatio||1));sizeRenderer();}}}
+ /* Fur detail adapts to the tablet: if frames are slow, show fewer fur layers (each shell is a whole layer of hair tips). */
+ const quality={layers:(window.__foxLayers??18),frames:0,t0:0,level:window.__foxNoAdapt?2:0};
+ function adapt(t){if(quality.level>=2)return;if(!quality.t0){quality.t0=t;quality.frames=0;return;}quality.frames++;
+  if(quality.frames===60){const ms=(t-quality.t0)/60;quality.t0=0;
+   if(ms>30){quality.level++;const keep=quality.level===1?2:3;parts.shellGroups.forEach(sh=>sh.forEach((m,k)=>{m.visible=(k%keep===keep-1);}));
+    if(quality.level===2){renderer.setPixelRatio(Math.min(1.5,window.devicePixelRatio||1));sizeRenderer();}}else quality.level=2;}}
  let progCache=null,progAt=0;
  function progressCached(){const now=Date.now();if(!progCache||now-progAt>2000){progCache=progress();progAt=now;}return progCache;}
  function sizeRenderer(){const st=$('foxStage'),w=st.clientWidth||360,h=Math.round(Math.min(w*.95,540));renderer.setSize(w,h,false);$('foxCanvas').style.height=h+'px';camera.aspect=w/h;camera.updateProjectionMatrix();}
+ let flies=[];
+ /* A soft, misty forest painted once on a canvas: trunks, foliage, flowers and glow. */
+ function forestBackdrop(){const W=1024,H=1024,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
+  const sky=x.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#9fbf96');sky.addColorStop(.45,'#7ea476');sky.addColorStop(.75,'#5c8655');sky.addColorStop(1,'#3a5e38');x.fillStyle=sky;x.fillRect(0,0,W,H);
+  const glow=x.createRadialGradient(W*.55,H*.32,10,W*.55,H*.32,W*.6);glow.addColorStop(0,'rgba(255,248,215,.75)');glow.addColorStop(1,'rgba(255,248,215,0)');x.fillStyle=glow;x.fillRect(0,0,W,H);
+  [[.06,110,'#3e2e22',.9],[.94,130,'#35281e',.92],[.28,46,'#6b5c48',.45],[.7,52,'#665643',.45],[.48,30,'#7c6d58',.3],[.17,34,'#74654f',.35],[.83,38,'#6f604b',.38]].forEach(([px,w,col,a])=>{x.globalAlpha=a;x.filter='blur('+(a>.8?3:9)+'px)';x.fillStyle=col;x.fillRect(px*W-w/2,0,w,H*.82);});x.filter='none';
+  x.globalAlpha=1;
+  for(let i=0;i<260;i++){const px=Math.random()*W,py=H*(.55+Math.random()*.35),r=12+Math.random()*40;x.fillStyle=`hsla(${95+Math.random()*50},${35+Math.random()*25}%,${30+Math.random()*25}%,.55)`;x.beginPath();x.arc(px,py,r,0,Math.PI*2);x.fill();}
+  for(let i=0;i<70;i++){const px=Math.random()*W,py=H*(.6+Math.random()*.32),r=5+Math.random()*9;x.fillStyle=pick(['rgba(240,130,170,.8)','rgba(255,190,215,.8)','rgba(200,90,140,.75)','rgba(255,255,255,.7)']);x.beginPath();x.arc(px,py,r,0,Math.PI*2);x.fill();}
+  for(let i=0;i<120;i++){const px=Math.random()*W,py=Math.random()*H*.85,r=1+Math.random()*4;x.fillStyle=`rgba(255,250,200,${.25+Math.random()*.5})`;x.beginPath();x.arc(px,py,r,0,Math.PI*2);x.fill();}
+  const v=x.createRadialGradient(W/2,H*.45,W*.25,W/2,H*.45,W*.75);v.addColorStop(0,'rgba(20,35,20,0)');v.addColorStop(1,'rgba(20,35,20,.55)');x.fillStyle=v;x.fillRect(0,0,W,H);
+  const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;return t;}
  async function init3d(){
   if(T)return true;
   try{await loadThree();}catch(e){$('foxNote').textContent='Connect to the internet once to wake your fox.';return false;}
   const canvas=$('foxCanvas');
   try{renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});}catch(e){$('foxNote').textContent='This tablet cannot show 3D right now.';return false;}
   renderer.setPixelRatio(Math.min(3,window.devicePixelRatio||1));
-  renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
-  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-  scene=new THREE.Scene();camera=new THREE.PerspectiveCamera(34,1,.1,50);camera.position.set(0,1.6,5.6);camera.lookAt(0,1.05,0);
-  scene.add(new THREE.HemisphereLight(0xfff3e0,0x7d9a80,.7));
-  const key=new THREE.DirectionalLight(0xfff1dc,1.25);key.position.set(2.5,5,3.5);key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.radius=6;key.shadow.bias=-.0004;
-  Object.assign(key.shadow.camera,{left:-2.5,right:2.5,top:3,bottom:-1.5,near:.5,far:14});scene.add(key);
-  const rim=new THREE.DirectionalLight(0xbfe6ff,.65);rim.position.set(-3,2.5,-3.5);scene.add(rim);
-  const fill=new THREE.DirectionalLight(0xffe0c4,.35);fill.position.set(-2,1,4);scene.add(fill);
-  const ground=new THREE.Mesh(new THREE.CircleGeometry(3.2,96),new THREE.MeshStandardMaterial({color:0xBFD9AE,roughness:1}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
-  parts.shadow={scale:{setScalar(){}}};
-  buildFox();fox.rotation.y=.55;parts.shadow={scale:{setScalar(){}}};T=true;sizeRenderer();window.addEventListener('resize',()=>{if(mode==='fox')sizeRenderer();});
+  renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;
+  scene=new THREE.Scene();camera=new THREE.PerspectiveCamera(32,1,.1,60);camera.position.set(0,1.45,5.4);camera.lookAt(0,1.0,0);
+  scene.background=forestBackdrop();
+  scene.add(new THREE.HemisphereLight(0xfff3e0,0x6e8a5c,.75));
+  const key=new THREE.DirectionalLight(0xfff1dc,1.1);key.position.set(2.5,5,3.5);scene.add(key);
+  const rim=new THREE.DirectionalLight(0xffe2b0,.6);rim.position.set(-3,2.5,-3.5);scene.add(rim);
+  // mossy clearing with soft edges, and a soft shadow under him
+  const gc=document.createElement('canvas');gc.width=gc.height=256;{const x=gc.getContext('2d'),g=x.createRadialGradient(128,128,10,128,128,128);g.addColorStop(0,'rgba(120,160,90,1)');g.addColorStop(.7,'rgba(95,140,75,.9)');g.addColorStop(1,'rgba(80,120,70,0)');x.fillStyle=g;x.fillRect(0,0,256,256);
+   for(let i=0;i<900;i++){x.fillStyle=`rgba(${60+Math.random()*60|0},${110+Math.random()*70|0},${50+Math.random()*30|0},.5)`;const a=Math.random()*Math.PI*2,r=Math.random()*110;x.fillRect(128+Math.cos(a)*r,128+Math.sin(a)*r,1.5,4);}}
+  const gt=new THREE.CanvasTexture(gc);gt.encoding=THREE.sRGBEncoding;
+  const ground=new THREE.Mesh(new THREE.CircleGeometry(3.4,96),new THREE.MeshBasicMaterial({map:gt,transparent:true,depthWrite:false,toneMapped:false}));ground.rotation.x=-Math.PI/2;ground.position.y=-.01;scene.add(ground);
+  const sc=document.createElement('canvas');sc.width=sc.height=128;{const x=sc.getContext('2d'),g=x.createRadialGradient(64,64,4,64,64,64);g.addColorStop(0,'rgba(20,35,15,.55)');g.addColorStop(1,'rgba(20,35,15,0)');x.fillStyle=g;x.fillRect(0,0,128,128);}
+  const shadow=new THREE.Mesh(new THREE.PlaneGeometry(1.9,1.6),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(sc),transparent:true,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.position.y=.005;scene.add(shadow);
+  // fireflies
+  const fc=document.createElement('canvas');fc.width=fc.height=64;{const x=fc.getContext('2d'),g=x.createRadialGradient(32,32,0,32,32,32);g.addColorStop(0,'rgba(255,248,170,1)');g.addColorStop(.2,'rgba(245,225,90,.85)');g.addColorStop(1,'rgba(240,220,80,0)');x.fillStyle=g;x.fillRect(0,0,64,64);}
+  const ft=new THREE.CanvasTexture(fc);flies=[];for(let i=0;i<22;i++){const m=new THREE.Sprite(new THREE.SpriteMaterial({map:ft,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
+   const f={m,x:(Math.random()-.5)*5.5,y:.3+Math.random()*2.6,z:-2.6+Math.random()*2.4,p:Math.random()*10,s:.04+Math.random()*.06};m.scale.setScalar(f.s);scene.add(m);flies.push(f);}
+  buildFox();fox.rotation.y=.35;parts.shadow=shadow;T=true;sizeRenderer();window.addEventListener('resize',()=>{if(mode==='fox')sizeRenderer();});
   // drag to turn, tap to play
   let down=null;canvas.addEventListener('pointerdown',e=>{down={x:e.clientX,r:fox.rotation.y,moved:false};try{canvas.setPointerCapture?.(e.pointerId);}catch(_){}});
   canvas.addEventListener('pointermove',e=>{if(!down)return;const dx=e.clientX-down.x;if(Math.abs(dx)>6)down.moved=true;fox.rotation.y=down.r+dx*.012;});
@@ -72,11 +96,12 @@ function createFox(){
   if(mode!=='fox'){raf=0;return;}raf=requestAnimationFrame(loop);adapt(t);
   const time=t/1000,g=X.growth(progressCached().points);
   // cub → grown: body scales up, head stays relatively bigger when small
-  const s=.72+.38*g;fox.scale.set(s,s,s);parts.head.scale.setScalar(1.14-.14*g);
+  const s=.78+.32*g;fox.scale.set(s,s,s);parts.head.scale.setScalar(1.1-.12*g);
   const breathe=reduce()?0:Math.sin(time*2.2)*.012;parts.body.scale.set(1,1+breathe,1);
   let y=0;if(anim.hop){const k=(t-anim.hop.t0)/600;if(k>=1)anim.hop=null;else y=Math.sin(k*Math.PI)*.45;}
   if(anim.spin){const k=(t-anim.spin.t0)/1100;if(k>=1){anim.spin=null;}else fox.rotation.y=anim.spin.r+k*Math.PI*2;}
-  fox.position.y=y;parts.shadow.scale.setScalar(1-y*.6);
+  fox.position.y=y;if(parts.shadow.scale)parts.shadow.scale.setScalar(1-y*.6);
+  if(!reduce())flies.forEach(f=>{f.m.position.set(f.x+Math.sin(time*.4+f.p)*.35,f.y+Math.sin(time*.7+f.p*2)*.2,f.z+Math.cos(time*.3+f.p)*.2);f.m.material.opacity=.35+.65*Math.max(0,Math.sin(time*1.6+f.p*3));});
   if(anim.eat){const k=(t-anim.eat.t0)/1800;if(k>=1){anim.eat=null;parts.head.rotation.x=0;}else parts.head.rotation.x=.35+Math.sin(k*Math.PI*8)*.12;}
   else parts.head.rotation.x=reduce()?0:Math.sin(time*.7)*.05;
   parts.head.rotation.z=reduce()?0:Math.sin(time*.5)*.06;
