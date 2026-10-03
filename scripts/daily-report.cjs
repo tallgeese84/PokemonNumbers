@@ -37,6 +37,7 @@ function report(sessions,devices,date){
     'Offline activity appears in later reports and rolling weekly totals after upload. Already-sent daily emails are not revised.',
     '', 'Timing counts visible questions and thinking, pauses after 60 seconds without interaction, and excludes rewards and collection browsing. It estimates activity, not attention. Independent means no extra help; built-in pictures and manipulatives are compared separately. Guided tracing completion is not freehand handwriting mastery.',
     'Difficulty thresholds are adjustable design rules (8/10 across varied questions plus 3 independent, varied later-day checks), not validated diagnostic cutoffs.');
+  lines.push('',require('../reading-buddies.js').report(sessions,date));
   const text=lines.join('\n');
   return {subject:`PokéMath daily adventure · ${date}`,text,html:`<!doctype html><html><body style="font:16px/1.6 system-ui,sans-serif;color:#253858;max-width:720px;margin:auto;padding:24px"><h1 style="font-size:25px">PokéMath learning journal</h1><div style="white-space:pre-wrap">${esc(text)}</div></body></html>`};
 }

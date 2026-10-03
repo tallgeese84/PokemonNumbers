@@ -1,7 +1,7 @@
 /* Reading engine: segmentation, decodability, per-item mastery with spaced
    review, route gates, round building, placement and P1 readiness.
    Pure functions over the shared learning sessions (section 'read'). */
-(function(root,factory){if(typeof module==='object'&&module.exports)module.exports=factory(require('./reading-data.js'),require('./learning-core.js'),require('./reading-phonics.js'));else root.PokeReadingCore=factory(root.PokeReadingData,root.PokeLearning,root.PokePhonics);})(typeof globalThis!=='undefined'?globalThis:this,function(D,C,P){
+(function(root,factory){if(typeof module==='object'&&module.exports)module.exports=factory(require('./reading-data.js'),require('./learning-core.js'),require('./reading-phonics.js'),require('./reading-buddies.js'));else root.PokeReadingCore=factory(root.PokeReadingData,root.PokeLearning,root.PokePhonics,root.PokeSoundBuddies);})(typeof globalThis!=='undefined'?globalThis:this,function(D,C,P,B){
 'use strict';
 const {G,LONG,VOWELS,MULTI,ART,ROUTES,DOLCH}=D;
 const LAST=ROUTES.length, DAY=86400000;
@@ -586,6 +586,7 @@ function report(sessions,state,day){
   lines.push(`Route ${r.route} gate: sounds ${gt.graphemes.ok}/${gt.graphemes.total} practised, words ${gt.words.ok}/${gt.words.need}, heart words ${gt.heart.ok}/${gt.heart.total}, book ${gt.book?'read':'not yet'}.`);
   lines.push('P1 readiness: '+r.rows.map(x=>`${x.label} ${x.value===null?'—':x.value+(x.unit||'')}/${x.target}${x.unit||''}`).join('; ')+'.');
   lines.push('Correct answers after the app sounds a word out count as helped, not independent reading.');
+  lines.push(B.report(sessions,day));
   return lines.join('\n\n');
 }
 
