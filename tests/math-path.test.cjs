@@ -84,9 +84,9 @@ test('skills unlock from their prerequisites; a placed skill opens what builds o
 test('Play routing: first a short check, then frontier skills, delegated ones to the existing games, a review in the last slot',()=>{
  assert.equal(M.next({},{}).type,'check');
  const s={checkedAt:1};
- assert.deepEqual(M.next({},s,0,0),{type:'quiz',mode:'count',skill:'count10',review:false});
+ assert.deepEqual(M.next({},s,0,0),{type:'foundation',skill:'take'});
  assert.equal(M.next({},s,1,0).skill,'numeral10');
- assert.equal(M.next({},s,2,0).skill,'numeral10','a ready new skill gets a slot even when the first need is an existing game');
+ assert.equal(M.next({},s,2,0).skill,'addsub10','arithmetic is protected from endless counting');
  const placed={checkedAt:1,placed:{numeral10:1,compare10:1,teens:1}};
  const r=M.next({},placed,3,0,T0);assert.equal(r.review,true);
  assert.equal(M.route('bond10',3).type,'foundation');assert.equal(M.route('addsub10',1).mode,'sub');
@@ -103,24 +103,24 @@ test('path state merges monotonically, and a redo clears earlier placements even
 
 /* ---------- the real UI on a fake DOM ---------- */
 const seeded=k=>{let x=k;return ()=>(x=(x*16807)%2147483647)/2147483647;};
-function harness(){
+function harness({teaching=false}={}){
  let now=T0;const timers=[];
  class El{constructor(tag='div'){this.tag=tag;this.children=[];this.attrs={};this.dataset={};this.style={setProperty(){}};this._cls=new Set();this.disabled=false;this._text='';const c=this._cls;
   this.classList={add:(...x)=>x.forEach(v=>c.add(v)),remove:(...x)=>x.forEach(v=>c.delete(v)),toggle(){},contains:v=>c.has(v)};}
   set className(v){this._cls.clear();String(v).split(/\s+/).filter(Boolean).forEach(x=>this._cls.add(x));}get className(){return [...this._cls].join(' ');}
   set textContent(v){this._text=String(v);this.children=[];}get textContent(){return this._text+this.children.map(c=>c.textContent).join('');}
   set innerHTML(v){this._html=v;this.children=[];}get innerHTML(){return this._html||'';}
-  append(...x){x.forEach(e=>{e.parent=this;this.children.push(e);});}after(){}replaceChildren(...x){this.children=[];this.append(...x);}
+  append(...x){x.forEach(e=>{e.parent=this;this.children.push(e);});}prepend(x){this.children.unshift(x);}after(){}replaceChildren(...x){this.children=[];this.append(...x);}
   setAttribute(k,v){this.attrs[k]=v;}click(){if(!this.disabled)this.onclick?.();}addEventListener(){}
   all(){return [this,...this.children.flatMap(c=>c.all())];}querySelectorAll(sel){return this.all().slice(1).filter(e=>e.tag===sel);}}
  const els={},data={},said=[],t=new C.Tracker({now:()=>now}),helps=[];
- const adventure={get tracker(){return t;},begin:m=>t.begin(m),respond:(v,c)=>t.answer(v,c),help:k=>{helps.push(k);t.help(k);},isPaused:()=>false,beforeQuestion:()=>true};
- const ctx={PokeMathPath:M,adventure,screens:{},mode:'home',soundOn:true,childName:'Jonah',stars:0,
+ const adventure={recordState(){},get tracker(){return t;},begin:m=>t.begin(m),respond:(v,c)=>t.answer(v,c),help:k=>{helps.push(k);t.help(k);},isPaused:()=>false,beforeQuestion:()=>true};
+ const ctx={PokeMathTutor:require('../math-tutor.js'),PokeLearning:C,PokeReadingTutor:teaching?require('../reading-tutor.js'):{needsModel:()=>false},PokeMathPath:M,adventure,screens:{},mode:'home',soundOn:true,childName:'Jonah',stars:0,
   document:{createElement:tag=>new El(tag),getElementById:id=>els[id]||=new El()},window:{},
   localStorage:{setItem:(k,v)=>data[k]=v,getItem:k=>data[k]??null},setTimeout:(f,ms=0)=>{timers.push({at:now+ms,f});},Date:{now:()=>now},confirm:()=>true,
   show(){},shutUp(){},say:t=>said.push(t),sndGood(){},sndOops(){},burst(){},audio(){},readyForNext:()=>true,schedulePush(){},praiseLine:()=>'Well done!',
   addStar:n=>{ctx.stars+=n;},imgArt:()=>'',pickMon:()=>25,PokeVisuals:{icon:()=>''}};
- vm.createContext(ctx);vm.runInContext(fs.readFileSync(require.resolve('../math-path-ui.js'),'utf8')+'\nvar ui=createMathPath();',ctx);
+ vm.createContext(ctx);vm.runInContext(fs.readFileSync(require.resolve('../reading-art.js'),'utf8'),ctx);vm.runInContext(fs.readFileSync(require.resolve('../math-path-ui.js'),'utf8')+'\nvar ui=createMathPath();',ctx);
  const flush=(ms=5000)=>{const end=now+ms;for(let g=0;g<3000;g++){timers.sort((a,b)=>a.at-b.at);const x=timers[0];if(!x||x.at>end)break;timers.shift();now=Math.max(now,x.at);x.f();}now=end;};
  const pad=()=>els.mpEntry.all().filter(e=>e.tag==='button'),opts=()=>els.mpOptions.children;
  const tapNumber=n=>{const p=pad();const direct=p.find(b=>b.attrs['aria-label']==='Answer '+n);if(direct)return direct.click();for(const d of String(n))p.find(b=>b.attrs['aria-label']==='Digit '+d).click();p.find(b=>b.attrs['aria-label']==='Check').click();};
@@ -144,4 +144,9 @@ test('the maths check gives one try per item, places passed skills with their pr
  assert.equal(back,1);assert.equal(h.helps.length,0);
  assert.deepEqual(Object.keys(h.ui.state.placed).sort(),['compare10','numeral10','order20','teens']);
  assert.ok(h.ui.state.checkedAt);
+});
+
+test('math model and guided answer hand back to a different independent question',()=>{
+ const h=harness({teaching:true});h.ui.startItem(M.make('teens',0,seeded(3)),()=>{});h.flush(500);const model=h.t.question();assert.equal(model.phase,'model');
+ h.els.mpActions.children.find(b=>b.attrs['aria-label']==='Try together').click();const guide=h.t.question();assert.equal(guide.phase,'guided');h.tapNumber(h.ui._current().item.answer);h.flush();const independent=h.t.question();assert.equal(independent.teach,false);assert.notEqual(C.factKey(independent),C.factKey(guide));assert.equal(C.independent(model),false);assert.equal(C.independent(guide),false);
 });

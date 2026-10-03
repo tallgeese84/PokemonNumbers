@@ -21,12 +21,27 @@ and is not included in this repository. Personal, non-commercial project.
 To ship an update, bump `CACHE = 'pokemath-v1'` in `sw.js` (v2, v3, ...) so
 installed tablets pick up the new version.
 
-## v76 — Following Jonah's school reading plan (MMSD, fall K)
+## v77 — Guided teaching and illustrated vocabulary
 
-His screener put him at the 11th percentile, pre-alphabetic in spelling. The school is working on letter names, letter sounds and hearing sounds in words, so the app now does the same.
+- New skills and repeated difficulty get **Watch → Together → Your turn**. Demonstrated answers and their echoes are excluded from mastery and answer-accuracy statistics; the independent question uses a different item.
+- Original storybook illustrations replace reading emoji, cover every picture-choice word and phonics keyword, and extend to maths story objects. Exact quantities, frames, shapes and number lines remain code-rendered. Art atlases are cached offline.
+- Worked maths explanations connect part–whole pictures to equations. Every early maths block includes a visual relationship and arithmetic; addition and subtraction alternate based on completed arithmetic history. Counting warm-ups stop at three completions a day. Small equal-group explorations introduce multiplication meaning without tables to memorize.
+- Bundled synthetic phoneme clips avoid device TTS letter approximations. `assets/phonemes/README.md` documents generation, phoneme-event checks, credits and the adult preview/override. These are not human recordings. Whole instructions still use the tablet's voice.
+- Auditory tasks use a pronunciation lexicon, distinct from spelling: x and qu each contain two sounds. Varied words plus later-day evidence are needed for secure listening skills; one successful session permits further practice but cannot establish retention.
+- Spelling help re-enables letters needed in the next box. Maths path events preserve their actual level, and historical events with a skill-level format can be interpreted correctly.
+- Versioned reading/maths state snapshots travel **inside existing sessions**, so the already-deployed Drive relay preserves placement, resets, books and adult observations without an Apps Script change. Device exports report build 77.
+- The parent panel offers a brief spoken-letter check, separately from multiple-choice recognition. Calendar pace is labelled as a schedule comparison, not school readiness. Daily reports distinguish teaching, guided support and independent answers.
+
+This app provides a structured teaching sequence for its reading and maths curriculum; it is not a validated autonomous replacement for an entire education. Spoken language, handwriting, transfer to real objects and reading aloud still need observation. Assessment results belong in private records, not this repository.
+
+Validation: `node --test tests/*.test.cjs` (synthetic data only). No real learning records, school report, relay secret or credentials are checked in.
+
+## v76 — Early reading sequence
+
+Early reading activities build letter names, letter sounds and awareness of sounds in words. Individual assessments belong only in private learning records.
 - **American English voice** throughout (en-US voices preferred, British ones avoided); "zee", not "zed".
 - **Letter names from the first route**, alongside sounds: "This is the letter S. S says /s/, as in sun." Two of every five sound-hunt questions are "Find the letter M." On by default; can be turned off in Grown-ups.
-- **Listening ladder** in the school's order: rhymes → first sounds → blending → end sounds → counting sounds → middle sounds → taking a sound away (snail without /s/ → nail) → swapping a sound (cat → hat). Each step opens when the one before is secure (5+ tries, 80% of the last 6 first try); open steps keep coming back.
+- **Listening ladder** in a developmental sequence: rhymes → first sounds → blending → end sounds → counting sounds → middle sounds → taking a sound away (snail without /s/ → nail) → swapping a sound (cat → hat). Originally, steps opened after 5+ tries with 80% of the last six correct; v77 adds varied-word evidence and separates later-day retention. Open steps keep coming back.
 - **Step-by-step spelling**: sound boxes for a word he hears; first sound only, then first and last, then whole words (Build it). Only words spelled as they sound, only letters he knows.
 - Recording your own voice: short vowels and stop sounds are starred and listed first.
 - Readiness panel adds letter names, listening steps and spelling.

@@ -9,7 +9,7 @@ function createReading(){
  try{state=R.mergeState(state,JSON.parse(localStorage.getItem(STATE_KEY)||'null'));}catch(e){}
  const sessions=()=>adventure.tracker?.sessions||{};
  const st=()=>R.withSessions(state,sessions());
- function save(){try{localStorage.setItem(STATE_KEY,JSON.stringify(state));}catch(e){}if(typeof schedulePush==='function')schedulePush();}
+ function save(){try{localStorage.setItem(STATE_KEY,JSON.stringify(state));}catch(e){}adventure.recordState('reading',state);if(typeof schedulePush==='function')schedulePush();}
 
  /* ---------- screen ---------- */
  const root=document.createElement('div');root.id='scr-read';root.className='screen';
@@ -47,6 +47,10 @@ function createReading(){
   if(p&&p.cls==='silent'){setTimeout(fin,150);return;}
   if(p&&p.suffix&&p.g==='ed'&&!p.play){speak('id',{rate:.75,done});return;}
   if(soundOn&&REC[key]){busy=true;waitTurn(()=>{if(g!==gen)return;try{audioEl=new Audio(REC[key]);audioEl.onended=fin;audioEl.onerror=fin;audioEl.play().catch(fin);}catch(e){fin();}});return;}
+  const keys=PokePhonics.clipKeys(p);
+  if(soundOn&&keys.every(k=>PokePhonics.clips.includes(k))){busy=true;let at=0,failed=false;
+   const next=()=>{if(g!==gen)return;if(at>=keys.length){fin();return;}try{audioEl=new Audio('assets/phonemes/'+keys[at++]+'.wav');audioEl.onended=next;audioEl.onerror=()=>{if(failed)return;failed=true;if(run?.ref)help('sound clip unavailable');feedback('Tap listen to try the sound again.');fin();};audioEl.play().catch(audioEl.onerror);}catch(e){fin();}};waitTurn(next);return;
+  }
   const text=(p&&p.magic==='start')?p.sound:(D.G[key]?D.G[key][0]:(p&&p.sound)||key);
   speak(text,{rate:.72,pitch:1,done});
  }
@@ -55,6 +59,7 @@ function createReading(){
  const namesOn=()=>R.namesOn(state);
 
  /* ---------- helpers ---------- */
+ function picture(cls,word,fallback){const node=el('div',cls,fallback);PokeReadingArt.paint(node,R.clean(word));return node;}
  function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;}
  function btn(cls,label,fn,html){const b=el('button',cls);b.type='button';b.setAttribute('aria-label',label);if(html!=null)b.innerHTML=html;b.onclick=()=>{if(active())fn(b);};return b;}
  function active(){return mode==='read'&&!adventure.isPaused();}
@@ -95,6 +100,7 @@ function createReading(){
  function setHeader(act,n){$('rdTitle').textContent=TITLE[act]||'Reading';const L=R.route(n);$('rdRoute').innerHTML='';const chip=el('span','route-chip','Route '+n);chip.style.setProperty('--route',L.colour);$('rdRoute').append(chip);}
  function enter(){shutUp();mode='read';show('read');}
  function startRound(round,onDone){
+  round=PokeReadingTutor.prepare(round,sessions());
   run={round,i:0,onDone};recent.push(round.act);while(recent.length>8)recent.shift();
   enter();setHeader(round.act,round.route);feedback('');
   if(!round.items.length){finishRound();return;}
@@ -110,21 +116,23 @@ function createReading(){
   if(!adventure.beforeQuestion()){waitReady(nextItem);return;}
   const it=run.round.items[run.i];run.item=it;run.wrong=0;run.helped=false;run.done=false;
   if(run.round.lazy){const pr=run.round.lazy.progress();pips(pr.sections,pr.section);}else pips(run.round.items.length,run.i);feedback('');$('rdOptions').replaceChildren();$('rdActions').replaceChildren();$('rdStage').replaceChildren();$('rdPrompt').replaceChildren();
-  run.ref=adventure.begin({section:'read',skill:run.round.placement?'placement':run.round.act,kind:it.kind,item:it.item,route:it.route,range:it.route,support:'read alone',format:it.kind,level:it.route,teach:!!it.teach,a:it.route,b:0,expected:String(it.answer??it.item)});
+  run.ref=adventure.begin({section:'read',skill:run.round.placement?'placement':run.round.act,kind:it.kind,item:it.item,route:it.route,range:it.route,support:it.phase||'independent',word:it.word||it.target||it.item,phase:it.phase||'independent',format:it.kind,level:it.route,teach:!!it.teach,a:it.route,b:0,expected:String(it.answer??it.item)});
+  if(it.phase==='model'){renderModel(it);return;}
   (RENDER[it.kind]||RENDER.unknown)(it);
+  if(!run.round.placement){const phase=el('div','tutor-phase',it.phase==='guided'?'Together':'Your turn');$('rdStage').prepend(phase);if(it.phase==='guided'){run.helped=true;highlightGuide(it);}}
  }
  function respond(value,correct){adventure.respond(value,correct);}
  function help(kind){if(!run.helped)run.helped=true;adventure.help(kind);}
  function right(target,value,afterSay){
   if(run.done)return;run.done=true;
   if(run.round.placement&&run.item._first===undefined){run.item._first=true;run.round.lazy?.record(true);}
-  respond(value,true);
-  const ind=run.wrong===0&&!run.helped;
+  const answered=adventure.tracker.question();respond(value,true);
+  const ind=PokeLearning.independent(answered);
   target?.classList.add('right');[...$('rdOptions').querySelectorAll('button')].forEach(b=>b.disabled=true);
   sndGood();if(!reduce())burst(target||$('rdStage'),ind?10:7);
   // Quick recognition items earn one star; reading words and sentences earn two.
   if(!run.item.teach&&!run.round.placement){const big=['read','sentence','build','name','quiz'].includes(run.item.kind);const n=big?(ind?2:1):(ind?1:0);if(n)addStar(n);}
-  const line=run.round.placement?'Yes!':praise(ind);feedback(line+(run.round.placement?'':ind?'  ⭐⭐':'  ⭐'));
+  const line=run.round.placement?'Yes!':run.item.teach?'Well done. We tried it together.':praise(ind);feedback(line+(run.round.placement?'':ind?'  ⭐⭐':'  ⭐'));
   const after=()=>speak(line,{done:()=>setTimeout(advance,350)});
   if(afterSay&&!run.round.placement)afterSay(after);else after();
  }
@@ -143,13 +151,61 @@ function createReading(){
  function waitReady2(fn){(function w(){if(mode!=='read')return;if(busy||!readyForNext()){setTimeout(w,250);return;}fn();})();}
  function teachDone(next){if(run.done)return;run.done=true;respond('done',true);next?next():advance();}
 
+ function highlightGuide(it){
+  const want=String(it.kind==='spell1'||it.kind==='spell2'?it.parts[it.ask[0]].g:it.kind==='build'?it.parts[0].g:it.answer);
+  for(const b of $('rdOptions').children){const val=b.dataset.w??b.dataset.g??b.dataset.k??b.textContent;if(String(val)===want)b.classList.add('tutor-guided');}
+ }
+ function renderModel(it){
+  const stage=$('rdStage'),card=el('div','tutor-model');stage.append(el('div','tutor-phase','Watch'),card);
+  const caption=el('p','tutor-caption');let jobs=[],parts=it.parts||PokePhonics.parts(it.word),tl=[];
+  const tell=text=>done=>speak(text,{rate:.8,done});
+  const play=p=>done=>sound(p,done);
+  const dots=(ps,at)=>{const d=el('div','tutor-boxes');ps.forEach((p,i)=>d.append(el('span',i===at?'focus':'')));card.append(d);return d;};
+  const showWord=(word,ps)=>{const box=el('div','sound-word');card.append(box);tl=tiles(box,ps,{mute:true});return box;};
+  const w=R.clean(it.word||'');
+  if(['shape','upper','hunt','lname'].includes(it.kind)){
+   const g=it.answer,e=D.G[String(g).toLowerCase()];showWord(g,[{g,cls:clsOf(String(g).toLowerCase())}]);
+   if(e)card.append(picture('meet-art',e[1],e[2]));
+   caption.textContent=it.kind==='upper'?'A capital and a small letter make the same sound.':'Look at the shape. Listen to its name and sound.';
+   jobs=[tell('This is the letter '+String(g).toUpperCase()+'.'),play(String(g).toLowerCase()),tell(e?'As in '+e[1]+'.':'Look at its shape.')];
+  }else if(it.kind==='heart'){
+   showWord(w,[{g:it.word,cls:'team'}]);caption.textContent='This word has a tricky part. Look, listen, and say it.';jobs=[tell(it.word+'. Look carefully. Say '+it.word+'.')];
+  }else if(it.kind==='rhyme'){
+   const pics=el('div','illustrated');pics.append(picture('build-art',it.word),picture('build-art',it.answer));card.append(pics);
+   caption.textContent='Rhyming words sound the same at the end.';jobs=[tell(it.word+'. '+it.answer+'. Listen to their endings. '+it.word+', '+it.answer+'. They rhyme.')];
+  }else if(['first','last','middle','count','blend','spell1','spell2'].includes(it.kind)){
+   card.append(picture('build-art',w));const at=it.kind==='last'?parts.length-1:it.kind==='middle'?1:0;const row=dots(parts,at);
+   if(it.kind==='spell1'||it.kind==='spell2'){
+    caption.textContent=it.kind==='spell1'?'Hear the first sound. Match it to a letter.':'Hear the first and last sounds. Match each to a letter.';
+    jobs=[tell('Listen to '+w+'.'),...it.ask.flatMap(i=>[tell(i===0?'The first sound is':'The last sound is'),play(parts[i]),done=>{row.children[i].textContent=parts[i].g;row.children[i].classList.add('focus');speak('Write the letter '+parts[i].g.toUpperCase()+'.',{done});}])];
+   }else if(it.kind==='count'){
+    caption.textContent='One box for each sound we hear.';jobs=[tell(w+'. Listen to each sound.'),...parts.map((p,i)=>done=>{[...row.children].forEach((x,j)=>x.classList.toggle('focus',j===i));sound(p,done);}),tell('We heard '+parts.length+' sounds. '+w+'.')];
+   }else if(it.kind==='blend'){
+    caption.textContent='Listen to the sounds, then join them into a word.';jobs=[...parts.map(play),tell('Put the sounds together. '+w+'.')];
+   }else{
+    const pos={first:'first',last:'last',middle:'middle'}[it.kind];caption.textContent='Listen for the '+pos+' sound.';
+    jobs=[tell(w+'. Listen to its sounds.'),...parts.map(play),tell('The '+pos+' sound is'),play(parts[at]),tell(w+'.')];
+   }
+  }else if(it.kind==='delete'||it.kind==='swap'){
+   card.append(picture('build-art',w));const ps=PokePhonics.parts(w),row=dots(ps,it.kind==='swap'?it.at:0);
+   caption.textContent=it.kind==='delete'?'Take one sound away. What is left?':'Change one sound to make a new word.';
+   jobs=it.kind==='delete'?[tell(w+'. Take away'),play(it.gone),done=>{row.children[it.where==='end'?ps.length-1:0]?.classList.add('removed');speak('What is left? '+it.answer+'.',{done});}]:[tell(w+'. Change'),play(it.out),tell('to'),play(it.in),tell('Now we have '+it.answer+'.')];
+   jobs.push(done=>{card.append(picture('build-art',it.answer));done();});
+  }else{
+   showWord(w,parts);card.append(picture('build-art',w));caption.textContent=it.kind==='build'?'Say the word. Match the sounds to letters.':'Point to each sound. Blend them into a word.';
+   jobs=[tell('Watch me.'),done=>soundOut(tl,parts,false,done),tell('Join the sounds. '+w+'.')];
+  }
+  card.append(caption);const next=btn('btn read-next','Try together',()=>teachDone(),'Try together →');next.disabled=true;$('rdActions').append(next);
+  const current=run,idx=run.i;replay=()=>{next.disabled=true;chain(jobs,180,()=>{if(run===current&&run.i===idx)next.disabled=false;});};replay();
+ }
+
  /* ---------- renderers ---------- */
  const RENDER={};
  RENDER.unknown=()=>advance();
  RENDER.meet=it=>{
   const e=D.G[it.g];const stage=$('rdStage');
   const card=el('div','meet-card');const t=el('div','meet-tile');const tl=tiles(t,[{g:label(it.g),sound:e[0],cls:clsOf(it.g),play:it.g}]);
-  card.append(t,el('div','meet-art',e[2]),el('div','meet-key',e[1]));stage.append(card);
+  card.append(t,picture('meet-art',e[1],e[2]),el('div','meet-key',e[1]));stage.append(card);
   // Letter name and sound together, as at school: "This is the letter S. S says /s/, as in sun."
   const up=it.g.toUpperCase();
   const sayIt=()=>namesOn()&&it.g.length===1
@@ -184,15 +240,15 @@ function createReading(){
    if(run.round.placement)return;
    level++;help(level===1?'sounds modelled':level===2?'blend modelled':'word spoken');
    if(level===1)soundOut(tl,it.parts,false);else if(level===2)soundOut(tl,it.parts,true);else{blendOut(tl,it.parts,it.word);fade($('rdOptions'),x=>x.dataset.w===it.answer);}
-  },'👂');
+  },PokeVisuals.icon('listen'));
   if(!run.round.placement)$('rdActions').append(helpBtn);
   it.options.forEach(o=>{const b=btn('pic','Picture '+(it.options.indexOf(o)+1),b=>{
    if(R.clean(o.w)===it.answer)right(b,o.w,go=>blendOut(tl,it.parts,it.word,go));
    else{wrong(b,o.w);if(!run.round.placement){if(run.wrong===1)setTimeout(()=>soundOut(tl,it.parts,false),450);else{help('word spoken');setTimeout(()=>blendOut(tl,it.parts,it.word),450);fade($('rdOptions'),x=>x.dataset.w===it.answer);}}}
-  },'');b.textContent=o.e;b.dataset.w=R.clean(o.w);$('rdOptions').append(b);});
+  },'');PokeReadingArt.paint(b,R.clean(o.w));b.dataset.w=R.clean(o.w);$('rdOptions').append(b);});
  };
  RENDER.build=it=>{
-  const art=el('div','build-art',D.ART[R.clean(it.word)]||'🔊');$('rdStage').append(art);
+  const art=picture('build-art',it.word);$('rdStage').append(art);
   const slots=el('div','build-slots');it.parts.forEach(p=>{const s=el('div','slot');s.dataset.cls=p.cls==='silent'?'team':p.cls;slots.append(s);});$('rdStage').append(slots);
   let at=0;replay=()=>speak(R.clean(it.word),{rate:.75});setTimeout(replay,300);art.onclick=replay;
   it.tiles.forEach(g=>{const b=btn('ltile','Sound '+label(g),b=>{
@@ -223,27 +279,27 @@ function createReading(){
   const s=el('div','read-sentence');it.text.split(' ').forEach((w,i)=>{const t=el('span','w',w);t.onclick=()=>{if(!active())return;help('word read aloud');flash(t);speak(w.replace(/[^A-Za-z]/g,''),{rate:.75});};s.append(t,document.createTextNode(' '));});
   $('rdStage').append(s);
   replay=()=>speak('Read it. Then tap the picture.',{rate:.85});
-  $('rdActions').append(btn('btn read-help','Read it to me',()=>{help('sentence read aloud');speak(it.text,{rate:.78});},'👂'));
+  $('rdActions').append(btn('btn read-help','Read it to me',()=>{help('sentence read aloud');speak(it.text,{rate:.78});},PokeVisuals.icon('listen')));
   it.options.forEach((o,k)=>{const b=btn('pic sentence-pic','Picture '+(k+1),b=>{if(k===it.answer)right(b,k,go=>speak(it.text,{rate:.8,done:go}));else{wrong(b,k);if(run.wrong>=2){help('sentence read aloud');speak(it.text,{rate:.78});fade($('rdOptions'),x=>+x.dataset.k===it.answer);}}},'');
-   b.dataset.k=k;const n=o.count||1;for(let c=0;c<n;c++){const sp=el('span','pic-e',o.e||'');sp.style.fontSize=(o.size?o.size*52:n>1?40:52)+'px';b.append(sp);}$('rdOptions').append(b);});
+   b.dataset.k=k;const n=o.count||1;for(let c=0;c<n;c++){const sp=el('span','pic-e');PokeReadingArt.paint(sp,R.clean(o.w));sp.style.fontSize=(o.size?o.size*52:n>1?40:52)+'px';b.append(sp);}$('rdOptions').append(b);});
  };
  RENDER.vocab=it=>{
   const ear=el('div','hunt-ear');ear.innerHTML=PokeVisuals.icon('listen');$('rdStage').append(ear);
   replay=()=>speak('Tap the '+it.word+'.',{rate:.82});ear.onclick=replay;setTimeout(replay,250);
-  it.options.forEach(o=>{const b=btn('pic','Picture',b=>{if(o.w===it.answer)right(b,o.w);else wrong(b,o.w);},'');b.textContent=o.e;b.dataset.w=o.w;$('rdOptions').append(b);});
+  it.options.forEach(o=>{const b=btn('pic','Picture',b=>{if(o.w===it.answer)right(b,o.w);else wrong(b,o.w);},'');PokeReadingArt.paint(b,R.clean(o.w));b.dataset.w=o.w;$('rdOptions').append(b);});
  };
  RENDER.rhyme=it=>{
-  const big=el('div','build-art',it.e||'🔊');big.onclick=()=>speak(it.word,{rate:.8});$('rdStage').append(big);
+  const big=picture('build-art',it.word);big.onclick=()=>speak(it.word,{rate:.8});$('rdStage').append(big);
   const opts=()=>[...$('rdOptions').children];
   replay=()=>speak('Which one rhymes with '+it.word+'?',{rate:.85,done:()=>chain(opts().map(b=>next=>{flash(b);speak(b.dataset.w,{rate:.8,done:next});}),250)});
-  it.options.forEach(o=>{const b=btn('pic','Picture',b=>{if(o.w===it.answer)right(b,o.w,go=>speak(it.word+', '+o.w+'. They rhyme!',{rate:.8,done:go}));else{wrong(b,o.w);if(!run.round.placement){speak(o.w,{rate:.8});if(run.wrong>=2){help('rhyme shown');fade($('rdOptions'),x=>x.dataset.w===it.answer);}}}},'');b.textContent=o.e;b.dataset.w=o.w;$('rdOptions').append(b);});
+  it.options.forEach(o=>{const b=btn('pic','Picture',b=>{if(o.w===it.answer)right(b,o.w,go=>speak(it.word+', '+o.w+'. They rhyme!',{rate:.8,done:go}));else{wrong(b,o.w);if(!run.round.placement){speak(o.w,{rate:.8});if(run.wrong>=2){help('rhyme shown');fade($('rdOptions'),x=>x.dataset.w===it.answer);}}}},'');PokeReadingArt.paint(b,R.clean(o.w));b.dataset.w=o.w;$('rdOptions').append(b);});
   setTimeout(replay,300);
  };
  RENDER.first=it=>{
   const first=it.parts[0];
   replay=()=>{const opts=[...$('rdOptions').children];speak('Which one starts with',{rate:.85,done:()=>sound(first,()=>chain(opts.map(b=>next=>{flash(b);speak(b.dataset.w,{rate:.8,done:next});}),200))});};
   $('rdPrompt').textContent='';const ear=el('div','hunt-ear');ear.innerHTML=PokeVisuals.icon('listen');ear.onclick=()=>sound(first);$('rdStage').append(ear);
-  it.options.forEach(o=>{const b=btn('pic','Picture',b=>{if(o.w===it.answer)right(b,o.w,go=>speak(o.w,{rate:.8,done:go}));else{wrong(b,o.w);speak(o.w,{rate:.8});if(run.wrong>=2)fade($('rdOptions'),x=>x.dataset.w===it.answer);}},'');b.textContent=o.e;b.dataset.w=o.w;$('rdOptions').append(b);});
+  it.options.forEach(o=>{const b=btn('pic','Picture',b=>{if(o.w===it.answer)right(b,o.w,go=>speak(o.w,{rate:.8,done:go}));else{wrong(b,o.w);speak(o.w,{rate:.8});if(run.wrong>=2)fade($('rdOptions'),x=>x.dataset.w===it.answer);}},'');PokeReadingArt.paint(b,R.clean(o.w));b.dataset.w=o.w;$('rdOptions').append(b);});
   setTimeout(replay,300);
  };
  RENDER.blend=it=>{
@@ -251,11 +307,11 @@ function createReading(){
   const dots=el('div','ear-dots');it.parts.filter(p=>p.cls!=='silent').forEach(()=>dots.append(el('span')));$('rdStage').append(dots);
   replay=()=>{const ps=it.parts.filter(p=>p.cls!=='silent');chain(ps.map((p,i)=>next=>{[...dots.children].forEach((d,k)=>d.classList.toggle('lit',k===i));sound(p,next);}),320,()=>[...dots.children].forEach(d=>d.classList.remove('lit')));};
   ear.onclick=replay;setTimeout(()=>speak('Listen and blend.',{rate:.85,done:replay}),250);
-  it.options.forEach(o=>{const b=btn('pic','Picture',b=>{if(o.w===it.answer)right(b,o.w,go=>speak(o.w,{rate:.8,done:go}));else{wrong(b,o.w);setTimeout(replay,400);if(run.wrong>=2){help('word spoken');fade($('rdOptions'),x=>x.dataset.w===it.answer);}}},'');b.textContent=o.e;b.dataset.w=o.w;$('rdOptions').append(b);});
+  it.options.forEach(o=>{const b=btn('pic','Picture',b=>{if(o.w===it.answer)right(b,o.w,go=>speak(o.w,{rate:.8,done:go}));else{wrong(b,o.w);setTimeout(replay,400);if(run.wrong>=2){help('word spoken');fade($('rdOptions'),x=>x.dataset.w===it.answer);}}},'');PokeReadingArt.paint(b,R.clean(o.w));b.dataset.w=o.w;$('rdOptions').append(b);});
  };
  /* Shared by the listening steps: a target picture or ear, picture choices read aloud */
  function picChoices(it,onRight,onWrongExtra){
-  it.options.forEach(o=>{const b=btn('pic','Picture',b=>{if(o.w===it.answer)right(b,o.w,go=>onRight(o,go));else{wrong(b,o.w);if(!run.round.placement){speak(o.w,{rate:.8});onWrongExtra?.();if(run.wrong>=2){help('answer shown');fade($('rdOptions'),x=>x.dataset.w===it.answer);}}}},'');b.textContent=o.e;b.dataset.w=o.w;$('rdOptions').append(b);});
+  it.options.forEach(o=>{const b=btn('pic','Picture',b=>{if(o.w===it.answer)right(b,o.w,go=>onRight(o,go));else{wrong(b,o.w);if(!run.round.placement){speak(o.w,{rate:.8});onWrongExtra?.();if(run.wrong>=2){help('answer shown');fade($('rdOptions'),x=>x.dataset.w===it.answer);}}}},'');PokeReadingArt.paint(b,R.clean(o.w));b.dataset.w=o.w;$('rdOptions').append(b);});
  }
  const readOptions=next=>chain([...$('rdOptions').children].map(b=>go=>{flash(b);speak(b.dataset.w,{rate:.8,done:go});}),200,next);
  RENDER.last=it=>{
@@ -269,12 +325,12 @@ function createReading(){
   picChoices(it,(o,go)=>{const ps=it.parts||R.splitWord(o.w).filter(p=>p.cls!=='silent');chain(ps.map(p=>next=>sound(p,next)),260,()=>speak(o.w,{rate:.8,done:go}));});setTimeout(replay,300);
  };
  RENDER.delete=it=>{
-  const big=el('div','build-art',it.e);big.onclick=()=>speak(it.word,{rate:.78});$('rdStage').append(big);
+  const big=picture('build-art',it.word);big.onclick=()=>speak(it.word,{rate:.78});$('rdStage').append(big);
   replay=()=>speak('Say '+it.word+'. Now say '+it.word+' without',{rate:.8,done:()=>sound(it.gone,()=>speak('What is left?',{rate:.85,done:()=>readOptions()}))});
   picChoices(it,(o,go)=>speak(it.word+' without',{rate:.8,done:()=>sound(it.gone,()=>speak('is '+o.w+'!',{rate:.8,done:go}))}));setTimeout(replay,300);
  };
  RENDER.swap=it=>{
-  const big=el('div','build-art',it.e);big.onclick=()=>speak(it.word,{rate:.78});$('rdStage').append(big);
+  const big=picture('build-art',it.word);big.onclick=()=>speak(it.word,{rate:.78});$('rdStage').append(big);
   const pos=['first','middle','last'][it.at];
   replay=()=>speak('This is '+it.word+'. Change the '+pos+' sound',{rate:.8,done:()=>sound(it.out,()=>speak('to',{rate:.85,done:()=>sound(it.in,()=>speak('What do you get?',{rate:.85,done:()=>readOptions()}))}))});
   picChoices(it,(o,go)=>speak(it.word+', '+o.w+'!',{rate:.8,done:go}));setTimeout(replay,300);
@@ -287,7 +343,7 @@ function createReading(){
  };
  /* Spelling step by step: sound boxes for the whole word, only the first (then first and last) to fill. */
  function renderSpell(it){
-  const art=el('div','build-art',it.e);$('rdStage').append(art);
+  const art=picture('build-art',it.word);$('rdStage').append(art);
   const boxes=el('div','build-slots sound-boxes');it.parts.forEach((p,i)=>{const b=el('div','slot'+(it.ask.includes(i)?' ask':' given'));b.dataset.cls=p.cls;boxes.append(b);});$('rdStage').append(boxes);
   let k=0;const ask=()=>it.ask[k],word=()=>speak(it.word,{rate:.72});
   const prompt=()=>speak(it.ask.length===1?'What is the first sound?':k===0?'What is the first sound?':'What is the last sound?',{rate:.85});
@@ -297,7 +353,7 @@ function createReading(){
    if(run.done)return;const want=it.parts[ask()];
    if(g===want.g&&!b.classList.contains('used')){[...$('rdOptions').children].forEach(x=>x.classList.remove('hint'));const box=boxes.children[ask()];box.textContent=label(g);box.classList.add('filled');b.classList.add('used');b.disabled=true;k++;
     if(k>=it.ask.length)sound(want,()=>setTimeout(()=>right(boxes,it.word,go=>lightBoxes(()=>speak(it.word,{rate:.75,done:go}))),200));
-    else sound(want,()=>setTimeout(prompt,250));}
+    else {run.wrong=0;[...$('rdOptions').children].forEach(x=>{if(!x.classList.contains('used')){x.disabled=false;x.classList.remove('faded','hint');}});sound(want,()=>setTimeout(prompt,250));}}
    else{if(!run.wrong)respond(g,false);run.wrong++;sndOops();b.classList.add('wrong');setTimeout(()=>b.classList.remove('wrong'),400);
     // First miss: stretch the word and say the sound he needs; second: fade the rest and point.
     setTimeout(()=>speak(it.word,{rate:.6,done:()=>sound(want)}),350);
@@ -307,10 +363,10 @@ function createReading(){
  }
  RENDER.spell1=renderSpell;RENDER.spell2=renderSpell;
  RENDER.count=it=>{
-  const art=el('div','build-art',D.ART[it.word]||'🔊');$('rdStage').append(art);
+  const art=picture('build-art',it.word);$('rdStage').append(art);
   replay=()=>speak('How many sounds in '+it.word+'?',{rate:.8});art.onclick=()=>speak(it.word,{rate:.75});setTimeout(replay,250);
-  const parts=R.splitWord(it.word).filter(p=>p.cls!=='silent');
-  $('rdActions').append(btn('btn read-help','Say the sounds',()=>{help('sounds modelled');chain(parts.map(p=>next=>sound(p,next)),300);},'👂'));
+  const parts=PokePhonics.parts(it.word);
+  $('rdActions').append(btn('btn read-help','Say the sounds',()=>{help('sounds modelled');chain(parts.map(p=>next=>sound(p,next)),300);},PokeVisuals.icon('listen')));
   it.options.forEach(k=>{const b=btn('count-choice',k+' sounds',b=>{if(k===it.answer)right(b,k,go=>chain(parts.map(p=>next=>sound(p,next)),260,go));else{wrong(b,k);if(run.wrong>=2)fade($('rdOptions'),x=>+x.dataset.k===it.answer);}},'');b.dataset.k=k;for(let c=0;c<k;c++)b.append(el('span','count-dot'));$('rdOptions').append(b);});
  };
  RENDER.punct=it=>{
@@ -320,7 +376,7 @@ function createReading(){
  RENDER.name=it=>{
   const wordBox=el('div','sound-word name-word');$('rdStage').append(wordBox);const tl=tiles(wordBox,it.parts);
   replay=()=>speak('Read the name. Who is it?',{rate:.85});setTimeout(replay,250);
-  $('rdActions').append(btn('btn read-help','Help me sound it out',()=>{help('sounds modelled');soundOut(tl,it.parts,false);},'👂'));
+  $('rdActions').append(btn('btn read-help','Help me sound it out',()=>{help('sounds modelled');soundOut(tl,it.parts,false);},PokeVisuals.icon('listen')));
   it.options.forEach(m=>{const b=btn('pic mon-pic','Pokémon',b=>{
    if(m.id===it.answer)right(b,m.id,go=>blendOut(tl,it.parts,m.name,()=>{catchNamed(m.id);go();}));
    else{wrong(b,m.id);if(run.wrong>=2){help('word spoken');blendOut(tl,it.parts,m.name);fade($('rdOptions'),x=>+x.dataset.id===it.answer);}}},'');
@@ -334,20 +390,20 @@ function createReading(){
  RENDER.quiz=it=>{
   const q=it.quiz;$('rdPrompt').textContent=q.q;replay=()=>speak(q.q,{rate:.85});setTimeout(replay,250);
   q.o.forEach((o,k)=>{const b=btn('pic quiz-pic','Answer '+(k+1),b=>{if(k===it.answer)right(b,k,go=>speak(o.t,{rate:.8,done:go}));else{wrong(b,k);if(run.wrong>=1)fade($('rdOptions'),x=>+x.dataset.k===it.answer);}},'');
-   b.dataset.k=k;if(o.m)b.append(monImg(o.m));else b.append(el('span','pic-e',o.e));b.append(el('small','',o.t));$('rdOptions').append(b);});
+   b.dataset.k=k;if(o.m)b.append(monImg(o.m));else{const art=el('span','pic-e',o.e);PokeReadingArt.emoji(art,o.e,D.ART);b.append(art);}b.append(el('small','',o.t));$('rdOptions').append(b);});
  };
  RENDER.book=it=>{
   const bk=it.book;let p=0,taps=0;
   const draw=()=>{
    const pg=bk.pages[p];pips(bk.pages.length,p);$('rdPrompt').textContent=p===0?bk.title:'';
-   const stage=$('rdStage');stage.replaceChildren();const art=el('div','book-art');if(pg.m)art.append(monImg(pg.m));else art.textContent=pg.a||'📖';stage.append(art);
+   const stage=$('rdStage');stage.replaceChildren();const art=el('div','book-art');if(pg.m)art.append(monImg(pg.m));else{art.textContent=pg.a||'';PokeReadingArt.paint(art,pg.picture)||PokeReadingArt.emoji(art,pg.a,D.ART);}stage.append(art);
    const text=el('div','book-text');const names=D.ROUTES.flatMap(r=>r.mons.map(m=>m.name.toLowerCase()));
    pg.t.split(/(\s+)/).forEach(tok=>{if(/^\s+$/.test(tok)){text.append(document.createTextNode(' '));return;}const s=el('span','w',tok);const c=tok.replace(/[^A-Za-z']/g,'');if(names.includes(c.toLowerCase()))s.classList.add('mon');
     s.onclick=()=>{if(!active()||!c)return;taps++;recordAction('word tap',c);flash(s);speak(c,{rate:.72});};text.append(s);});
    stage.append(text);
    const acts=$('rdActions');acts.replaceChildren();
    acts.append(btn('btn','Back a page',()=>{if(p>0){p--;draw();}},'◀'));
-   acts.append(btn('btn read-help','Read this page to me',()=>{recordAction('page read aloud',p);help('page read aloud');const ws=[...text.querySelectorAll('.w')];chain(ws.map(w=>next=>{ws.forEach(x=>x.classList.remove('on'));w.classList.add('on');speak(w.textContent.replace(/[^A-Za-z']/g,''),{rate:.75,done:next});}),80,()=>ws.forEach(x=>x.classList.remove('on')));},'👂'));
+   acts.append(btn('btn read-help','Read this page to me',()=>{recordAction('page read aloud',p);help('page read aloud');const ws=[...text.querySelectorAll('.w')];chain(ws.map(w=>next=>{ws.forEach(x=>x.classList.remove('on'));w.classList.add('on');speak(w.textContent.replace(/[^A-Za-z']/g,''),{rate:.75,done:next});}),80,()=>ws.forEach(x=>x.classList.remove('on')));},PokeVisuals.icon('listen')));
    acts.append(btn('btn read-next','Next page',()=>{if(p<bk.pages.length-1){p++;draw();sndTap();}else{state.books[it.route]=Date.now();save();teachDone();}},p===bk.pages.length-1?'✓':'▶'));
    acts.children[0].disabled=p===0;
   };
@@ -411,7 +467,7 @@ function createReading(){
    const p=A.result();
    state.assessV=2;state.profile=p;state.resetAt=startedAt;state.placedAt=Date.now();state.placedRoute=p.passed;state.passed={};
    for(let n=1;n<=p.passed;n++)state.passed[n]=Date.now();save();
-   adventure.begin({section:'read',skill:'placed',kind:'placed',item:'placed',route:p.passed,range:p.passed,support:'placement',format:'placed',teach:true});adventure.respond(p.passed,true);
+   adventure.begin({section:'read',skill:'placed',kind:'placed',item:'placed',route:p.passed,range:p.passed,support:'placement',format:'placed',teach:true,assessmentStartedAt:startedAt,profile:p});adventure.respond(p.passed,true);
    $('rdPrompt').textContent='';$('rdOptions').replaceChildren();$('rdActions').replaceChildren();$('rdStage').replaceChildren();
    sndGood();if(!reduce())burst($('rdStage'),16);
    speak('Great listening, '+(childName||'Jonah')+'! Now I know just what to play with you.',{rate:.85,done:()=>waitReady2(()=>onDone?.())});
@@ -466,25 +522,32 @@ function createReading(){
  }
  function renderPanel(){
   const s=st(),r=R.readiness(sessions(),s),g=R.gate(r.route,R.itemStats(sessions()),s),L=R.route(r.route);
-  const rows=r.rows.map(x=>`<tr><td>${esc(x.label)}${x.note?`<small>${esc(x.note)}</small>`:''}${x.n!==undefined?`<small>${x.n} attempts</small>`:''}</td><td><b>${x.value===null?'—':x.value+(x.unit||'')}</b> / ${x.target}${x.unit||''}${x.secure!==undefined?`<small>${x.secure} secure, ${x.value} mastered</small>`:''}</td></tr>`).join('');
+  const rows=r.rows.map(x=>`<tr><td>${esc(x.label)}${x.note?`<small>${esc(x.note)}</small>`:''}${x.n!==undefined?`<small>${x.n} attempts</small>`:''}</td><td><b>${x.value===null?'—':x.value+(x.unit||'')}</b> / ${x.target}${x.unit||''}${x.secure!==undefined?`<small>${x.secure} practised, ${x.value} confirmed later</small>`:''}</td></tr>`).join('');
   const body=$('readingBody');
-  body.innerHTML=`<p><strong>Route ${r.route} of ${R.LAST}: ${esc(L.name)}</strong> · expected by now: route ${r.expected} · <b>${r.pace}</b> (target: all routes by ${r.target}, before P1 in January 2028)</p>
-  <p class="muted">This route opens the next when: sounds ${g.graphemes.ok}/${g.graphemes.total} secure · words read alone ${g.words.ok}/${g.words.need} · tricky words ${g.heart.ok}/${g.heart.total} · book ${g.book?'✓':'not yet'}${L.caps?` · capitals ${g.caps.ok}/${g.caps.need}`:''}. “Secure” means two independent successes; “mastered” adds a success on a later day.</p>
+  body.innerHTML=`<p><strong>Route ${r.route} of ${R.LAST}: ${esc(L.name)}</strong> · curriculum pace: route ${r.expected} · <b>${r.pace}</b> (target: all routes by ${r.target}, before P1 in January 2028)</p>
+  <p class="muted">This route opens the next when: sounds ${g.graphemes.ok}/${g.graphemes.total} practised · words read alone ${g.words.ok}/${g.words.need} · tricky words ${g.heart.ok}/${g.heart.total} · book ${g.book?'✓':'not yet'}${L.caps?` · capitals ${g.caps.ok}/${g.caps.need}`:''}. Two independent successes allow more practice; a later-day success confirms retention. Tapping choices does not establish spoken recall.</p>
+  <p class="muted">Curriculum pace is a schedule comparison, not a school-readiness assessment. Listening skills need varied words and success on another day to be marked secure. Adult listening checks separately confirm spoken reading.</p>
   ${profileHTML(s.profile)}
   <table class="journal-table"><tbody>${rows}</tbody></table>
-  <div class="pprow reading-tools"><button class="btn" id="rdAloud">Listen to ${esc(childName||'Jonah')} read</button><button class="btn" id="rdPlace">Redo English check</button>
+  <div class="pprow reading-tools"><button class="btn" id="rdRecall">Check spoken letter sounds</button><button class="btn" id="rdAloud">Listen to ${esc(childName||'Jonah')} read</button><button class="btn" id="rdPlace">Redo English check</button>
   <label>Letter names <select id="rdNames"><option value="auto">On from the start (default)</option><option value="on">On</option><option value="off">Off</option></select></label>
   <label>Move to route <select id="rdMove">${D.ROUTES.map(x=>`<option value="${x.n}" ${x.n===r.route?'selected':''}>${x.n} · ${esc(x.name)}</option>`).join('')}</select></label></div>
   ${state.legacy?`<p class="muted">Imported from the old Poké Reading app: it had reached route ${state.legacy.at} and ${state.legacy.caught.length} Pokémon (added to his collection). Its routes opened on completion rather than mastery, so the reading check decides the starting route.</p>`:''}
-  <details><summary>Record the sounds in your voice</summary><p class="muted">Speech engines add “uh” to sounds like /b/ and /t/, which makes blending harder. Tap ● and say just the sound, short and clean, the way his teacher says it. ★ Start with the starred ones (short vowels and sounds like /b/, /t/): the tablet’s voice gets these least right. Recordings stay on this tablet.</p><div id="rdRecGrid" class="rec-grid"></div></details>`;
+  <details><summary>Record the sounds in your voice</summary><p class="muted">Built-in offline sound clips use phoneme synthesis rather than asking the tablet to say letter approximations. They have a robot voice. Play the starred sounds once and check they are clear on this tablet. You can replace any with your own short, clean sound using ●. Your recordings stay on this tablet.</p><div id="rdRecGrid" class="rec-grid"></div></details>`;
   $('rdNames').value=state.namesAt?(state.names?'on':'off'):'auto';
   $('rdNames').onchange=()=>{const v=$('rdNames').value;if(v==='auto'){state.namesAt=0;state.names=false;}else{state.names=v==='on';state.namesAt=Date.now();}save();};
   $('rdMove').onchange=()=>{const to=+$('rdMove').value;if(!confirm('Move reading to route '+to+'? Routes before it are marked done; later routes are reopened.'))return renderPanel();
    for(let n=1;n<=R.LAST;n++){if(n<to)state.passed[n]=state.passed[n]||Date.now();else delete state.passed[n];}
    state.overrideAt=Date.now();save();renderPanel();};
   $('rdPlace').onclick=()=>{if(!confirm('Run the English check again next time he plays?'))return;state.redoCheckAt=Date.now();save();renderPanel();};
-  $('rdAloud').onclick=aloudCheck;
+  $('rdAloud').onclick=aloudCheck;$('rdRecall').onclick=recallCheck;
   renderRec();
+ }
+ function recallCheck(){
+  const s=st(),gs=R.introduced(sessions(),R.currentRoute(s)).filter(g=>g.length===1).sort((a,b)=>(s.recall?.[a]?.at||0)-(s.recall?.[b]?.at||0)).slice(0,5);let i=0;
+  const draw=()=>{const box=$('readingBody');if(i>=gs.length){box.innerHTML='<p>Spoken observations saved. These are separate from picture-choice scores.</p><button class="btn" id="rdBack">Done</button>';$('rdBack').onclick=renderPanel;return;}
+   const g=gs[i];box.innerHTML='<p>Show the letter. Ask: “What sound does it make?” Listen before marking. Do not play the sound first.</p><div class="aloud-page" style="font-size:80px;text-align:center">'+g+'</div><div class="pprow"><button class="btn" id="rdRecallYes">Said sound unaided</button><button class="btn" id="rdRecallNo">Needed help</button><button class="btn" id="rdRecallSkip">Skip</button></div>';
+   const mark=ok=>{state.recall||={};state.recall[g]={g,ok,at:Date.now(),observer:'grown-up'};save();i++;draw();};$('rdRecallYes').onclick=()=>mark(true);$('rdRecallNo').onclick=()=>mark(false);$('rdRecallSkip').onclick=()=>{i++;draw();};};draw();
  }
  function aloudCheck(){
   const s=st(),n=Math.max(1,Math.min(R.LAST,R.currentRoute(s)-(s.books[R.currentRoute(s)]?0:1)))||1;const L=R.route(n);
@@ -502,7 +565,7 @@ function createReading(){
   const FIRST=['a','e','i','o','u','b','c','d','g','p','t','k','h','j'];
   const gs=[...FIRST,...Object.keys(D.G).filter(g=>(D.G[g][3]!=='end'||g==='ing')&&!FIRST.includes(g)),'id'];
   gs.forEach(g=>{const cell=el('div','rec-cell'+(REC[g]?' has':'')+(FIRST.includes(g)?' first':''));cell.append(el('b','',label(g)));
-   const rec=el('button','btn','●');rec.onclick=()=>record(g,rec);const play=el('button','btn','▶');play.disabled=!REC[g];play.onclick=()=>{stop();sound(g);};
+   const rec=el('button','btn','●');rec.onclick=()=>record(g,rec);const play=el('button','btn','▶');play.disabled=false;play.onclick=()=>{stop();sound(g);};
    const del=el('button','btn','✕');del.disabled=!REC[g];del.onclick=()=>{delete REC[g];try{localStorage.removeItem(REC_PREFIX+g);}catch(e){}renderRec();};
    cell.append(rec,play,del);grid.append(cell);});
  }

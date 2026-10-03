@@ -36,7 +36,7 @@
   const median = xs => { const s = xs.filter(Number.isFinite).sort((a,b)=>a-b); return s.length ? (s[Math.floor((s.length-1)/2)]+s[Math.floor(s.length/2)])/2 : null; };
   const values = x => Object.values(x || {});
   function allQuestions(sessions) { return values(sessions).flatMap(s=>values(s.questions)).sort((a,b)=>(a.completedAt || a.startedAt)-(b.completedAt || b.startedAt)); }
-  function independent(q) { return !!q.completedAt && !q.helped && !q.echo && !q.unverifiedResume && q.responses?.length === 1 && q.responses[0].correct; }
+  function independent(q) { return !!q.completedAt && !q.teach && !q.helped && !q.echo && !q.unverifiedResume && q.responses?.length === 1 && q.responses[0].correct; }
   function factKey(q) { return [q.skill,q.a,q.b,q.expected,q.format].join(':'); }
   function groupKey(q) { return [q.section,q.skill,q.range,q.support,q.format].join('|'); }
   function planFor(section, skill, sessions) {
@@ -76,7 +76,7 @@
       this.now=now; this.id=id; this.sessions=sessions; this.onChange=onChange;
       this.sessionId=String(now())+'_'+id(); this.current=null; this.visible=true; this.blocked=false;
       this.section='home'; this.lastTick=now(); this.lastInteraction=now(); this.idle=false;
-      this.sessions[this.sessionId]={id:this.sessionId,startedAt:now(),updatedAt:now(),rev:0,days:{},questions:{},build:76};
+      this.sessions[this.sessionId]={id:this.sessionId,startedAt:now(),updatedAt:now(),rev:0,days:{},questions:{},build:77};
     }
     changed(sid=this.sessionId) { const s=this.sessions[sid]; s.rev++; s.updatedAt=this.now(); this.onChange(sid); }
     tick() {
@@ -118,7 +118,7 @@
       if(this.lastPracticeAt && this.now()-this.lastPracticeAt>300000){
         const deviceId=this.sessions[this.sessionId].deviceId;
         this.sessionId=String(this.now())+'_'+this.id();
-        this.sessions[this.sessionId]={id:this.sessionId,deviceId,startedAt:this.now(),updatedAt:this.now(),rev:0,days:{},questions:{},build:76};
+        this.sessions[this.sessionId]={id:this.sessionId,deviceId,startedAt:this.now(),updatedAt:this.now(),rev:0,days:{},questions:{},build:77};
         this.lastPracticeAt=this.now();
       }
       if (ref && this.sessions[ref.sid]?.questions?.[ref.qid] && !this.sessions[ref.sid].questions[ref.qid].completedAt) this.current=ref;
@@ -152,7 +152,7 @@
     // Teaching steps (new sounds, book pages) count as active time but not as answers.
     const attempted=qs.filter(q=>q.responses?.length && !q.teach), completed=attempted.filter(q=>q.completedAt);
     const independentQs=attempted.filter(independent);
-    const summary={from,to,practiceMs:0,foregroundMs:0,collectionMs:0,sections:{},attempted:attempted.length,started:qs.length,
+    const summary={from,to,practiceMs:0,foregroundMs:0,collectionMs:0,sections:{},attempted:attempted.length,started:qs.filter(q=>!q.teach).length,teaching:qs.filter(q=>q.teach&&q.completedAt).length,
       completed:completed.length,independent:independentQs.length,helped:attempted.filter(q=>q.helped).length,
       accuracy:attempted.length ? independentQs.length/attempted.length : null,
       medianMs:median(independentQs.map(q=>q.firstResponseMs)),groups:{},mistakes:[],retention:{checked:0,independent:0},fatigue:{sessions:0,early:null,late:null}};

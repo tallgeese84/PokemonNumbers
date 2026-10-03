@@ -36,14 +36,14 @@ function createFoundations(){
  function answer(n){
  const correct=n===task.expected;adventure.respond(n,correct);
  if(!correct){help();return;}
- done=true;phase='reveal';clear();draw();sndGood();addStar(helped?1:2);note(explanation());
- const next=document.createElement('button');next.className='btn foundation-next';next.textContent='▶';next.setAttribute('aria-label','Next question');next.onclick=()=>{if(mode==='foundation'&&!adventure.isPaused()&&readyForNext()){newQuestion();}};$('foundationActions').replaceChildren(next);
+ done=true;phase='reveal';clear();draw();sndGood();!task.teach&&addStar(helped?1:2);note(explanation());
+ const next=document.createElement('button');next.className='btn foundation-next';next.textContent='▶';next.setAttribute('aria-label','Next question');next.onclick=()=>{if(mode==='foundation'&&!adventure.isPaused()&&readyForNext()){if(task.lessonPhase==='guided')start(task.skill,{independent:true});else newQuestion();}};$('foundationActions').replaceChildren(next);
  }
  function draw(){
  const t=task,board=$('foundationBoard'),actions=$('foundationActions');board.replaceChildren();actions.replaceChildren();$('foundationFeedback').textContent='';
  const all=Array.from({length:t.a},(_,i)=>i),remaining=all.filter(i=>!moved.includes(i));
  const reveal=phase==='reveal';
- $('foundationEquation').textContent=done?(t.skill==='groups'?Array(t.a).fill(t.b).join(' + ')+' = '+t.expected:`${t.a} = ${t.b} + ${t.a-t.b}\n${t.a} − ${t.b} = ${t.a-t.b}`):'';
+ $('foundationEquation').textContent=(done||task.lessonPhase==='model')?(t.skill==='groups'?Array(t.a).fill(t.b).join(' + ')+' = '+t.expected:`${t.a} = ${t.b} + ${t.a-t.b}\n${t.a} − ${t.b} = ${t.a-t.b}`):(t.skill==='groups'?Array(t.a).fill(t.b).join(' + ')+' = ?':t.skill==='missing'?`${t.a} − ? = ${t.a-t.b}`:t.skill==='undo'?`${t.a-t.b} + ${t.b} = ?`:t.skill==='patterns'||t.skill==='split'?`${t.b} + ? = ${t.a}`:`${t.a} − ${t.b} = ?`);
  if(t.skill==='groups'){
   phrase=phase==='build'?`Give each Pokémon ${t.b} berries. Tap a bowl to add a berry. Tap minus to take one back.`:'How many berries altogether?';
   $('foundationPrompt').textContent=phase==='build'?`${t.b} each`:'Altogether?';
@@ -71,15 +71,21 @@ function createFoundations(){
  if(done)return;
  if(phase==='build')actions.append(button(t.skill==='predict'?'▶':'✓',t.skill==='predict'?'Predict before checking':'Check my groups',()=>{if(t.skill==='predict'){phase='answer';save();draw();say(phrase,true);}else checkBuild();}));
  else{const pad=document.createElement('div');pad.className='foundation-pad';for(let i=0;i<=t.range;i++)pad.append(button(String(i),'Answer '+i,()=>answer(i)));actions.append(pad);}
- const helpBtn=button('👀','Show me with pictures',help);helpBtn.classList.add('foundation-help');actions.append(helpBtn);
+ const helpBtn=button('Show me','Show me with pictures',help);helpBtn.classList.add('foundation-help');actions.append(helpBtn);
  }
- function start(skill){
+ function start(skill,opts={}){
   if(!adventure.beforeQuestion())return;
   let pendingTask;try{pendingTask=JSON.parse(localStorage.getItem(KEY)||'null');}catch(e){}
-  if(pendingTask?.task&&F.labels[pendingTask.task.skill]&&!pendingTask.done){({task,ref,moved,bowls,phase,helped}=pendingTask);}
-  else {const p=F.plan(skill,adventure.tracker.sessions);task={...F.make(skill,p),mon:pickMon()};ref=null;moved=task.skill==='undo'?Array.from({length:task.b},(_,i)=>i):[];bowls=Array(task.a).fill(0);phase=['split','take','undo','predict','groups'].includes(skill)?'build':'answer';helped=false;}
+  if(!opts.independent&&!opts.guided&&pendingTask?.task&&F.labels[pendingTask.task.skill]&&!pendingTask.done){({task,ref,moved,bowls,phase,helped}=pendingTask);}
+  else {const p=F.plan(skill,adventure.tracker.sessions);const all=PokeLearning.allQuestions(adventure.tracker.sessions),recent=all.filter(q=>q.section==='foundation'&&q.skill===skill).slice(-3).map(PokeLearning.factKey);task=opts.guided||{...F.make(skill,{...p,recent}),mon:pickMon()};
+   if(opts.guided){task={...task,teach:true,lessonPhase:'guided',phase:'guided'};}
+   else if(!opts.independent&&PokeReadingTutor.needsModel(skill,all.filter(q=>q.section==='foundation').map(q=>({...q,kind:q.skill})))){task.teach=true;task.lessonPhase='model';task.phase='model';}
+   ref=null;moved=task.skill==='undo'?Array.from({length:task.b},(_,i)=>i):[];bowls=Array(task.a).fill(0);phase=['split','take','undo','predict','groups'].includes(skill)?'build':'answer';helped=false;}
   done=false;mode='foundation';show('foundation');
-  ref=adventure.begin(task,ref);if(helped)adventure.help('restored visual support');save();draw();say(phrase,true);
+  ref=adventure.begin(task,ref);if(helped)adventure.help('restored visual support');save();draw();
+  if(task.lessonPhase==='model'){help();$('foundationPrompt').textContent='Watch';const n=button('Try together →','Try together',()=>{if(!readyForNext())return;adventure.respond('model complete',true);const model={...task};clear();start(skill,{guided:model});});$('foundationActions').replaceChildren(n);}
+  else if(task.lessonPhase==='guided'){$('foundationFeedback').textContent='Together · use the pictures, then choose the number.';say('Let us try together. '+phrase,true);}
+  else say(phrase,true);
  }
  return {start};
 }
