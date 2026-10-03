@@ -41,12 +41,16 @@ def main():
     k = Kokoro.from_session(rt.InferenceSession(args.model, opts,
         providers=['CPUExecutionProvider']), args.voices)
     out = Path(args.out)
-    (out / 'female').mkdir(parents=True, exist_ok=True)
+    (out / 'female-v81').mkdir(parents=True, exist_ok=True)
     manifest = {'engine': 'Kokoro-82M v1.0 fp16 / kokoro-onnx 0.6.1',
         'voice': 'af_heart', 'language': 'en-US', 'speed': 0.7,
         'modelURL': 'https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/kokoro-v1.0.fp16.onnx',
         'modelSHA256': hashlib.sha256(Path(args.model).read_bytes()).hexdigest(),
         'voicesSHA256': hashlib.sha256(Path(args.voices).read_bytes()).hexdigest(),
+        'envelope': {'shape': 'raised cosine on audible content',
+            'sustainedAttackMs': 40, 'stopAttackMs': 4, 'releaseMs': 90,
+            'leadingSilenceMs': 55, 'trailingSilenceMs': 160,
+            'maxPeak': 0.7, 'targetActiveRms': 0.12},
         'validation': 'Explicit phoneme inputs; finite, audible PCM, duration, peak and hashes checked. Synthetic female voice, not a human pronunciation assessment.',
         'clips': {}}
     for key, ipa in PHONES.items():
@@ -54,26 +58,33 @@ def main():
             is_phonemes=True, trim=False, sentence_pause=0, clause_pause=0)
         if not np.isfinite(samples).all():
             raise ValueError('Non-finite audio: ' + key)
-        # Trim only edge silence; retain a little room for consonant releases.
+        # Find the actual sound. Fading padded silence does not soften a
+        # synthetic voice's abrupt audible onset or ending.
         peak = np.max(np.abs(samples))
         if peak < .005:
             raise ValueError('Inaudible audio: ' + key)
         audible = np.where(np.abs(samples) > max(.0005, peak * .008))[0]
-        start = max(0, int(audible[0]) - int(.025 * sr))
-        end = min(len(samples), int(audible[-1]) + int(.06 * sr))
+        start = int(audible[0])
+        end = int(audible[-1]) + 1
         samples = samples[start:end].copy()
-        # Uniform peak level, with tiny edge fades to prevent clicks.
-        samples *= .82 / np.max(np.abs(samples))
-        fade = min(int(.003 * sr), len(samples) // 4)
-        samples[:fade] *= np.linspace(0, 1, fade)
-        samples[-fade:] *= np.linspace(1, 0, fade)
-        samples = np.pad(samples, (int(.025 * sr), int(.09 * sr)))
+        # Retain the identifying burst of stop consonants. Never time-stretch
+        # these sounds or add a vowel. Sustained sounds get a gentler entrance.
+        attack = min(int((.004 if key in {'b','d','g','k','p','t','ch','j'} else .04) * sr), len(samples) // 4)
+        release = min(int(.09 * sr), len(samples) // 3)
+        samples[:attack] *= .5 - .5 * np.cos(np.linspace(0, np.pi, attack))
+        samples[-release:] *= .5 + .5 * np.cos(np.linspace(0, np.pi, release))
+        rms = float(np.sqrt(np.mean(samples ** 2)))
+        samples *= min(.7 / np.max(np.abs(samples)), .12 / rms)
+        active_samples = len(samples)
+        samples = np.pad(samples, (int(.055 * sr), int(.16 * sr)))
         if not .12 <= len(samples) / sr <= 2.5:
             raise ValueError('Unexpected duration: ' + key)
-        file = out / 'female' / (key + '.wav')
+        file = out / 'female-v81' / (key + '.wav')
         sf.write(file, samples, sr, subtype='PCM_16')
-        manifest['clips'][key] = {'file': 'female/' + key + '.wav',
+        manifest['clips'][key] = {'file': 'female-v81/' + key + '.wav',
             'phoneme': ipa, 'samples': len(samples), 'sampleRate': sr,
+            'activeStart': int(.055 * sr), 'activeSamples': active_samples,
+            'attackSamples': attack, 'releaseSamples': release,
             'durationMs': round(len(samples) / sr * 1000),
             'rms': round(float(np.sqrt(np.mean(samples ** 2))), 5),
             'sha256': hashlib.sha256(file.read_bytes()).hexdigest()}

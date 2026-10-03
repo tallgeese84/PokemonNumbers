@@ -24,11 +24,35 @@ function createReading(){
  const REC={};
  function loadRecs(){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith(REC_PREFIX))REC[k.slice(REC_PREFIX.length)]=localStorage.getItem(k);}}catch(e){}}
  loadRecs();
- let voice=null,gen=0,busy=false,audioEl=null;
+ let voice=null,gen=0,busy=false,audioHandle=null;
  // Same American English voice as the rest of the app (see PokeVoice in index.html).
  function pickVoice(){voice=window.PokeVoice?window.PokeVoice.pick():null;}
  if(window.speechSynthesis){pickVoice();window.speechSynthesis.addEventListener?.('voiceschanged',pickVoice);}
- function stop(){gen++;busy=false;try{audioEl?.pause();}catch(e){}audioEl=null;try{window.speechSynthesis?.cancel();}catch(e){}root.querySelectorAll('.sound-buddy-card').forEach(c=>{c.classList.remove('playing');c.setAttribute('aria-pressed','false');});}
+ function stop(){gen++;busy=false;audioHandle?.stop();audioHandle=null;try{window.speechSynthesis?.cancel();}catch(e){}root.querySelectorAll('.sound-buddy-card').forEach(c=>{c.classList.remove('playing');c.setAttribute('aria-pressed','false');});}
+ // Keep the current waveform continuous while a new tap takes over. The clip
+ // itself has gentle audible edges; interruption needs its own short release.
+ function playClip(src,done,failed){
+  let el,source,gain,closed=false;
+  const dispose=()=>{try{el?.pause();source?.disconnect();gain?.disconnect();}catch(e){}};
+  const finish=fn=>{if(closed)return;closed=true;dispose();if(audioHandle===handle)audioHandle=null;fn?.();};
+  const handle={stop(){
+   if(closed)return;closed=true;
+   if(el){el.onended=null;el.onerror=null;}
+   if(gain){try{const t=gain.context.currentTime;gain.gain.cancelScheduledValues(t);gain.gain.setValueAtTime(gain.gain.value,t);gain.gain.linearRampToValueAtTime(0,t+.075);}catch(e){}}
+   else if(el){const volume=el.volume??1;for(let i=1;i<=4;i++)setTimeout(()=>{try{el.volume=volume*(1-i/4);}catch(e){}},i*18);}
+   setTimeout(dispose,80);
+  }};
+  try{
+   el=new Audio(src);el.preservesPitch=true;
+   // A running Web Audio context gives a reliable fade on iPad as well as
+   // Chrome. Keep native media playback if routing is unavailable/suspended.
+   const ac=audio();if(ac?.state==='running'&&ac.createMediaElementSource&&ac.createGain){
+    try{gain=ac.createGain();source=ac.createMediaElementSource(el);source.connect(gain);gain.connect(ac.destination);}catch(e){if(source)source.connect(ac.destination);gain=null;}
+   }
+   audioHandle=handle;el.onended=()=>finish(done);el.onerror=()=>finish(failed);
+   el.play().catch(()=>finish(failed));
+  }catch(e){finish(failed);}
+ }
  function waitTurn(fn,tries=0){if(speechIdle()||tries>16){if(!speechIdle())shutUp();fn();}else setTimeout(()=>waitTurn(fn,tries+1),250);}
  function speak(text,opts={}){
   const g=gen,done=()=>{if(g===gen){busy=false;opts.done?.();}};
@@ -47,10 +71,10 @@ function createReading(){
   const fin=()=>{if(g===gen){busy=false;done?.();}};
   if(p&&p.cls==='silent'){setTimeout(fin,150);return;}
   if(p&&p.suffix&&p.g==='ed'&&!p.play){speak('id',{rate:.75,done});return;}
-  if(soundOn&&REC[key]){busy=true;waitTurn(()=>{if(g!==gen)return;try{audioEl=new Audio(REC[key]);audioEl.onended=fin;audioEl.onerror=fin;audioEl.play().catch(fin);}catch(e){fin();}});return;}
+  if(soundOn&&REC[key]){busy=true;waitTurn(()=>{if(g!==gen)return;playClip(REC[key],fin,fin);});return;}
   const keys=PokePhonics.clipKeys(p);
   if(soundOn&&keys.every(k=>PokePhonics.clips.includes(k))){busy=true;let at=0,failed=false;
-   const next=()=>{if(g!==gen)return;if(at>=keys.length){fin();return;}try{audioEl=new Audio('assets/phonemes/female/'+keys[at++]+'.wav');audioEl.preservesPitch=true;audioEl.onended=next;audioEl.onerror=()=>{if(failed||g!==gen)return;failed=true;if(run?.ref)help('sound clip unavailable');feedback('Tap listen to try the sound again.');fin();};audioEl.play().catch(audioEl.onerror);}catch(e){fin();}};waitTurn(next);return;
+   const next=()=>{if(g!==gen)return;if(at>=keys.length){fin();return;}playClip('assets/phonemes/female-v81/'+keys[at++]+'.wav',next,()=>{if(failed||g!==gen)return;failed=true;if(run?.ref)help('sound clip unavailable');feedback('Tap listen to try the sound again.');fin();});};waitTurn(next);return;
   }
   const text=(p&&p.magic==='start')?p.sound:(D.G[key]?D.G[key][0]:(p&&p.sound)||key);
   speak(text,{rate:.72,pitch:1,done});
@@ -559,6 +583,9 @@ function createReading(){
   let selected=null;
   const learn=btn('btn read-next','Choose a letter, then practise together',()=>{if(selected)startBuddies([selected.letter]);},'Practise together');learn.disabled=true;
   const playBuddy=(b,card)=>{
+   // The automatic repeat is already queued: another tap on the same playing
+   // letter must not chop its sound into little fragments.
+   if(selected===b&&card.classList.contains('playing'))return;
    stop();shutUp();audio();if(!soundOn)$('soundBtn').click();selected=b;
    grid.querySelectorAll('.sound-buddy-card').forEach(c=>{c.classList.remove('selected','playing');c.setAttribute('aria-pressed','false');});
    card.classList.add('selected','playing');card.setAttribute('aria-pressed','true');
@@ -575,7 +602,7 @@ function createReading(){
    card.append(el('span','buddy-card-letter',b.letter.toUpperCase()+' '+b.letter),buddyImage(b,'buddy-card-mon'),el('span','buddy-card-name',b.name),el('span','buddy-card-status',b.letter==='x'?'box · end sounds':b.letter==='q'?'qu · queen':b.keyword));grid.append(card);}
   $('rdOptions').append(grid);
   $('rdActions').append(learn,btn('btn','Letter writing and other sounds',()=>{stop();openLetterTiles();},'Write & sounds'),el('p','buddy-collection-note',badges+' / 26 remembered in practice'));
-  replay=()=>speak('Tap a letter. Listen, then say the sound.',{rate:.8});replay();
+  replay=()=>speak('Tap a letter. Listen, then say the sound.',{rate:.8});
  }
  function esc(x){return String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 

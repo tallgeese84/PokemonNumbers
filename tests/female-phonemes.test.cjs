@@ -14,3 +14,16 @@ test('all phoneme clips use the slower female voice and valid, non-silent, uncli
   let peak=0;for(let i=44;i<data.length;i+=2)peak=Math.max(peak,Math.abs(data.readInt16LE(i)));assert.ok(peak>1000&&peak<32767,key);
  }
 });
+test('female clips soften the audible ending, including short consonants, and retain quiet playback margins',()=>{
+ for(const [key,c] of Object.entries(m.clips)){
+  const data=fs.readFileSync(path.join(__dirname,'../assets/phonemes',c.file));
+  const samples=Array.from({length:(data.length-44)/2},(_,i)=>data.readInt16LE(44+i*2)/32768);
+  const start=c.activeStart,end=start+c.activeSamples,n=c.sampleRate/100;
+  const rms=a=>Math.sqrt(a.reduce((s,v)=>s+v*v,0)/a.length);
+  assert.ok(start>=c.sampleRate*.05&&samples.length-end>=c.sampleRate*.15,key+' has quiet margins');
+  assert.ok(samples.slice(0,start).every(x=>x===0)&&samples.slice(end).every(x=>x===0),key+' has silent margins');
+  assert.ok(rms(samples.slice(end-n,end))<.012,key+' gently reaches silence over the sound itself');
+  if(!['b','d','g','k','p','t','ch','j'].includes(key))assert.ok(rms(samples.slice(start,start+n))<.025,key+' gently enters');
+  assert.ok(Math.max(...samples.map(Math.abs))<=.701,key+' leaves headroom');
+ }
+});

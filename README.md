@@ -1,3 +1,11 @@
+## v81 · Smoother alphabet audio
+
+The home Pokémon A–Z poster opens quietly. It no longer plays an electronic tap beep or starts an instruction that the first letter tap cuts off. The same slower female phoneme voice now has softer audible entrances and endings, comfortable level headroom, and a short quiet margin around each demonstration. Stop consonant bursts stay brief; phoneme inputs and synthesis speed are unchanged.
+
+Repeating a tap on the currently playing letter lets its two demonstrations finish. Switching letters fades out the old clip over 75 ms and cancels its queued repeat. New versioned offline audio paths prevent old cached files from masking the update. Listening exposure and guided-practice progress rules are unchanged.
+
+Validation: all 12 regression test files pass, including waveform edges, cancellation during playback, both gain-ramp and native-volume fallbacks, rapid repeated taps, Q/X sequences, reporting, sync and offline cache isolation. Audio is still synthetic; waveform/browser checks are not a subjective listening assessment on Jonah’s tablet. Reproduction and audio details: [phoneme assets](assets/phonemes/README.md).
+
 ## v80 · Illustrated home page and alphabet shortcut
 
 The home page now has a prominent **Pokémon A–Z** card directly below the daily Play area. It opens the complete tap-to-hear sound poster in one tap; the previous entry inside Games has moved here. The Games, Pokémon, and Fox destinations keep their existing behaviour with larger illustrations: newly generated learning blocks and fox artwork, plus the original Pikachu artwork.

@@ -5,7 +5,7 @@ const APP='PokéMath learning',CONFIG='pokemath_drive_mirror_v1';
 function validUrl(url){return /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(url||'');}
 function configured(c){return c?.enabled===true&&validUrl(c.url)&&typeof c.secret==='string'&&c.secret.length>=24;}
 function backup({sessions={},settings={},lastCloudSyncAt=0,exportedAt=new Date().toISOString()}={}){
- return {app:APP,version:1,schema:1,build:80,child:'Jonah',timezone:'America/Chicago',exportedAt,lastCloudSyncAt,
+ return {app:APP,version:1,schema:1,build:81,child:'Jonah',timezone:'America/Chicago',exportedAt,lastCloudSyncAt,
   settings:{goalMinutes:[10,15,20,25].includes(settings.goalMinutes)?settings.goalMinutes:15},sessions:JSON.parse(JSON.stringify(sessions)),
   notes:'Estimated active practice; built-in visual support is recorded separately. Other devices may have unsynced activity. Cloud history retrieval covers the most recent 90 days; this mirror retains older sessions already received.'};
 }
