@@ -41,9 +41,9 @@ function createAdventure() {
   dashboard.innerHTML='<h2>Learning journal</h2><p class="muted">Small steps, seen over time · Madison time</p><p>Daily reading: sounds 2 min · blend and build 4 min · read and act 3 min · story 3 min. Each task finishes before the next stage. These are pacing targets, not mastery scores.</p><div hidden><select id="goalMinutes"><option value="12">12 minutes</option></select><input id="enableBonus" type="checkbox"></div><div class="journal-controls"><label>View <select id="journalPeriod"><option value="today">Today</option><option value="yesterday">Yesterday</option><option value="week">Last 7 days</option></select></label><button class="btn" id="exportLearning">Export history</button><button class="btn" id="exportDailyReport">Save daily report</button></div><div id="journalBody"></div><p id="journalSync" class="muted"></p><p class="muted">The clock counts visible questions, thinking and learning aids. It pauses after 60 seconds without interaction, during rewards, in other tabs and in parent settings. Time is an estimate, not a measurement of attention.</p><hr></section>';
   document.querySelector('#parentPanel .parent-head').after(dashboard);
   const extras=document.createElement('details');extras.className='parent-practice-tools';
-  extras.innerHTML='<summary>Grown-up choice: alphabet, maths &amp; collections</summary><p>These activities are outside the daily reading routine.</p><div id="parentPracticeTools"></div>';
+  extras.innerHTML='<summary>Grown-up choice: alphabet, maths &amp; fox</summary><p>These activities are outside the daily reading routine.</p><div id="parentPracticeTools"></div>';
   dashboard.after(extras);
-  for(const id of ['alphabetBtn','gamesBtn','teamBtn','foxBtn'])$('parentPracticeTools').append($(id));
+  for(const id of ['alphabetBtn','gamesBtn','foxBtn'])$('parentPracticeTools').append($(id));
   extras.addEventListener('click',e=>{if(e.target.closest('button'))$('ppClose').click();},true);
   const path=document.createElement('ol');path.id='dailyReadingPath';path.className='daily-reading-path';path.setAttribute('aria-label','Today’s reading path');
   for(const [i,stage] of PokeReadingDaily.STAGES.entries()){
@@ -187,7 +187,7 @@ function createAdventure() {
       const root=cfg.url.replace(/\/+$/,'')+'/fam/'+encodeURIComponent(cfg.code)+'/pokemathAnalytics';
       const upload={};const revisions={};
       for(const id of dirty)if(tracker.sessions[id]){upload['sessions/'+id]=structuredClone(tracker.sessions[id]);revisions[id]=tracker.sessions[id].rev;}
-      upload['devices/'+await deviceId()]={lastSeenAt:Date.now(),build:84,sessionId:tracker.sessionId};
+      upload['devices/'+await deviceId()]={lastSeenAt:Date.now(),build:85,sessionId:tracker.sessionId};
       const r=await fetch(root+'.json',{method:'PATCH',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify(upload),signal:AbortSignal.timeout(15000)});
       if(!r.ok)throw new Error('upload');
       for(const [id,rev] of Object.entries(revisions))if(tracker.sessions[id]?.rev===rev)dirty.delete(id);

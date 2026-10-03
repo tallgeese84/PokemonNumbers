@@ -1,3 +1,7 @@
+## v85 · My Pokémon on the home screen
+
+**My Pokémon** is back on the home screen beneath the daily reading path, with the invitation to browse and choose a buddy. It opens the existing earned collection, where tapping a Pokémon saves it as the buddy. Daily reading remains the main button, and returning from the collection resumes the saved reading stage. Earned Pokémon, shinies, cards, badges and the saved buddy retain their existing storage and sync rules.
+
 ## v84 · Daily reading path
 
 The main **Let’s read** button now leads through four reading stages in order: **Remember sounds (2 min) → Blend & build (4 min) → Read & act (3 min) → Tiny story (3 min)**. These are active-time pacing targets; the current task finishes before the next stage. Returning home or reloading resumes the current stage from the shared question history. A finished routine offers an explicit **Read again**; a new day starts with sounds.

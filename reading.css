@@ -110,7 +110,8 @@ button:disabled.right{opacity:1}
 .sound-boxes .slot.lit{background:#fff4c2}
 .rec-cell.first b::after{content:' ★';color:#e0a400}
 
-/* One guided daily path; no child-facing menu branches. */
+/* Guided daily reading, with the earned collection available from home. */
+.home-choices{grid-template-columns:1fr;max-width:320px}.home-choices #teamBtn{display:flex;flex-direction:row;align-items:center;text-align:left;min-height:90px;padding:10px 18px;gap:14px}.home-choices #teamBtn .home-icon-art{width:66px;height:66px;flex-shrink:0}.home-team-copy{display:flex;flex-direction:column;gap:5px}.home-team-copy small{font-size:12px;line-height:1.4;color:#5b7062}
 .daily-reading-path{list-style:none;max-width:460px;margin:20px auto 30px;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:left}
 .daily-reading-path li{display:flex;align-items:center;gap:10px;padding:14px 12px;border:1px solid #dce5dc;border-radius:18px;background:#f2f6ef;color:#405549;min-height:77px;box-sizing:border-box}
 .daily-reading-path li.current{border-color:#25816c;background:#e5f1e4}.daily-reading-path li.complete{background:#ebf2e9;color:#35684f}
