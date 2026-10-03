@@ -1,6 +1,6 @@
 ## v83 · One sound per tap
 
-Each tap on the Pokémon A–Z poster plays the approved recording once. Tap the same letter again to hear it again. A new tap softly releases any playing sound and starts the requested recording; there are no automatic repetitions. Listening remains exposure, not an independent answer. All 13 regression test files pass, including single playback, repeated taps, complete clip timing, Q/X playback and leaving the poster.
+Each tap on the Pokémon A–Z poster plays the approved recording once. Tap the same letter again to hear it again. A new tap softly releases any playing sound and starts the requested recording; there are no automatic repetitions. Listening remains exposure, not an independent answer. All 13 regression test files pass, including single playback, repeated taps, complete clip timing, Q/X playback and leaving the poster. Live v83 page/player/cache files match the tested files, and a repeated letter tap completed successfully in the deployed poster. [Verified poster preview](docs/v83-single-tap-1791038998123.jpg).
 
 ## v82 · Approved recorded phonics
 
