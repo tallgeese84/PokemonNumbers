@@ -1,353 +1,399 @@
 {
-  "engine": "eSpeak NG, Echogarden Emscripten package 0.3.5",
-  "voice": "en-us",
-  "rate": 120,
-  "pitch": 55,
-  "validation": "Phoneme-event boundaries and non-silent PCM checked. Synthetic voice; not a human pronunciation assessment.",
+  "engine": "Kokoro-82M v1.0 fp16 / kokoro-onnx 0.6.1",
+  "voice": "af_heart",
+  "language": "en-US",
+  "speed": 0.7,
+  "modelURL": "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/kokoro-v1.0.fp16.onnx",
+  "modelSHA256": "f3a290d384fbb27966d462905c71a46cef9e5fd00516b40df32a0b4afe77ac96",
+  "voicesSHA256": "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d",
+  "validation": "Explicit phoneme inputs; finite, audible PCM, duration, peak and hashes checked. Synthetic female voice, not a human pronunciation assessment.",
   "clips": {
     "a": {
-      "source": "cat",
-      "phoneme": "ˈæ",
-      "fromMs": 121,
-      "toMs": 484,
-      "samples": 10650,
-      "sha256": "adff0c3e7daaa8ed79a41d10600b0c8f44767487c8a68adb196b3c4c2f385272"
+      "file": "female/a.wav",
+      "phoneme": "æ",
+      "samples": 15203,
+      "sampleRate": 24000,
+      "durationMs": 633,
+      "rms": 0.10444,
+      "sha256": "e2f070180ffa9102d814e806fb21d493bfab8dbf716a371ab7754739e0482062"
     },
     "e": {
-      "source": "bed",
-      "phoneme": "ˈɛ",
-      "fromMs": 77,
-      "toMs": 429,
-      "samples": 10408,
-      "sha256": "64bcbe19464d58224c161aa534d45332eab0798bc1e64d84627a8cf4ef02db68"
+      "file": "female/e.wav",
+      "phoneme": "ɛ",
+      "samples": 13770,
+      "sampleRate": 24000,
+      "durationMs": 574,
+      "rms": 0.15688,
+      "sha256": "01343da4aed43f6989b0787f38748f1214841c3662aa149fd4a5382e140761e9"
     },
     "i": {
-      "source": "pin",
-      "phoneme": "ˈɪ",
-      "fromMs": 105,
-      "toMs": 378,
-      "samples": 8665,
-      "sha256": "88ada3cbf308c73c355b9d968008ce2a3baee08e9207cf1007199c2d797b61fd"
+      "file": "female/i.wav",
+      "phoneme": "ɪ",
+      "samples": 15098,
+      "sampleRate": 24000,
+      "durationMs": 629,
+      "rms": 0.15094,
+      "sha256": "35859a2dacfd5098db465fa389acafef7b09054398193b87232de369309ffadf"
     },
     "o": {
-      "source": "pot",
-      "phoneme": "ˈɑː",
-      "fromMs": 105,
-      "toMs": 479,
-      "samples": 10892,
-      "sha256": "03fb77c15a5b2640b470204b62bc7afcd73ab8232b4d22d882bdec5dad56dc3e"
+      "file": "female/o.wav",
+      "phoneme": "ɑ",
+      "samples": 15035,
+      "sampleRate": 24000,
+      "durationMs": 626,
+      "rms": 0.13708,
+      "sha256": "1b3b80995eb183b04b484f5e27b152656fa939c65183436c833e2ba7bf0474f6"
     },
     "u": {
-      "source": "cup",
-      "phoneme": "ˈʌ",
-      "fromMs": 121,
-      "toMs": 419,
-      "samples": 9216,
-      "sha256": "9cb03976cc2b96f59f06fabfe3bc089e704f9e52436f770d8d718ae6d7ac3c27"
+      "file": "female/u.wav",
+      "phoneme": "ʌ",
+      "samples": 15702,
+      "sampleRate": 24000,
+      "durationMs": 654,
+      "rms": 0.14475,
+      "sha256": "2ea472c0dccc90d2d43952fee88e2e58264600bbaf9e06722ed5cccf1f712b77"
     },
     "uu": {
-      "source": "book",
-      "phoneme": "ˈʊ",
-      "fromMs": 77,
-      "toMs": 363,
-      "samples": 8953,
-      "sha256": "a4e7187b142d164236f64361d97eabce5cbb4ff4210bcdc6f3c97f5f20277b37"
+      "file": "female/uu.wav",
+      "phoneme": "ʊ",
+      "samples": 15134,
+      "sampleRate": 24000,
+      "durationMs": 631,
+      "rms": 0.12163,
+      "sha256": "9e6af41a33056605f0dc0945e70d925be7df34209b15d806997d8a7033e73704"
     },
     "ee": {
-      "source": "feet",
-      "phoneme": "ˈiː",
-      "fromMs": 117,
-      "toMs": 447,
-      "samples": 9923,
-      "sha256": "8e94de4951eb225281d73fac66e7148e3114a20df4919130d752b1f556aced13"
+      "file": "female/ee.wav",
+      "phoneme": "i",
+      "samples": 13669,
+      "sampleRate": 24000,
+      "durationMs": 570,
+      "rms": 0.14175,
+      "sha256": "c175c58b50b8f610824386f53580ea8999c403cbb9885a353996bd0200b00c39"
     },
     "oo": {
-      "source": "moon",
-      "phoneme": "ˈuː",
-      "fromMs": 179,
-      "toMs": 438,
-      "samples": 8357,
-      "sha256": "d7226906b309ec195cc01d36290c25b1b19cb1ca05141ac8a8fb5bb7b4009067"
+      "file": "female/oo.wav",
+      "phoneme": "u",
+      "samples": 16111,
+      "sampleRate": 24000,
+      "durationMs": 671,
+      "rms": 0.1282,
+      "sha256": "94e9d3b461b71b3ea8f36a73d3ec3e5ec49eab8ed9ca659188f1bcf9e7e69dfb"
     },
     "ay": {
-      "source": "rain",
-      "phoneme": "ˈeɪ",
-      "fromMs": 194,
-      "toMs": 490,
-      "samples": 9173,
-      "sha256": "6332f2c8becc595f191de1483eae3b4a2e8b179d260abf5f8ec47416a05853ab"
+      "file": "female/ay.wav",
+      "phoneme": "eɪ",
+      "samples": 19698,
+      "sampleRate": 24000,
+      "durationMs": 821,
+      "rms": 0.19816,
+      "sha256": "175d9141f921126aca38781631b57194043acf1a66c3016080b4a03e47838b75"
     },
     "oh": {
-      "source": "boat",
-      "phoneme": "ˈoʊ",
-      "fromMs": 72,
-      "toMs": 460,
-      "samples": 11202,
-      "sha256": "3b90590a221b8b499ae6c78bc344fd1cb0976fca5886588b16ebfaa9abe7c167"
+      "file": "female/oh.wav",
+      "phoneme": "oʊ",
+      "samples": 19046,
+      "sampleRate": 24000,
+      "durationMs": 794,
+      "rms": 0.17305,
+      "sha256": "1abf0bd1a6cf8402ce43a62187dba1272486eab7ed0aea092fac2284c429191b"
     },
     "eye": {
-      "source": "bike",
-      "phoneme": "ˈaɪ",
-      "fromMs": 72,
-      "toMs": 470,
-      "samples": 11422,
-      "sha256": "4df7ef9af408aebdba2cfceac0c77096de5e7f6546d1f3cf9c090f6719f8fb49"
+      "file": "female/eye.wav",
+      "phoneme": "aɪ",
+      "samples": 18406,
+      "sampleRate": 24000,
+      "durationMs": 767,
+      "rms": 0.17605,
+      "sha256": "6e7ec743e18bcf25c973b296a8a486941a02a7be7e33a3e7dd4562e7848786b8"
     },
     "ow": {
-      "source": "cow",
-      "phoneme": "ˈaʊ",
-      "fromMs": 121,
-      "toMs": 569,
-      "samples": 12524,
-      "sha256": "9232cee6729316b57bc9afd7a66e777fa93b703068eed36b83cf59cbba33b8e2"
+      "file": "female/ow.wav",
+      "phoneme": "aʊ",
+      "samples": 18559,
+      "sampleRate": 24000,
+      "durationMs": 773,
+      "rms": 0.14619,
+      "sha256": "a28ccaf57127a24c69d858cbd5333327adec562133af27d9b058a9a4f3487b5f"
     },
     "oy": {
-      "source": "coin",
-      "phoneme": "ˈɔɪ",
-      "fromMs": 121,
-      "toMs": 525,
-      "samples": 11554,
-      "sha256": "007d41acc358492917a96963f86495fc0f28856653fe7095a00d8aa10b0190cb"
+      "file": "female/oy.wav",
+      "phoneme": "ɔɪ",
+      "samples": 19470,
+      "sampleRate": 24000,
+      "durationMs": 811,
+      "rms": 0.14063,
+      "sha256": "977495f8d9fb7b9c269bc19e0cb32278edaebcb48fdb8f67327523fa23e75c43"
     },
     "aw": {
-      "source": "saw",
-      "phoneme": "ˈɔː",
-      "fromMs": 113,
-      "toMs": 550,
-      "samples": 12282,
-      "sha256": "106a8de7719bcf5a99ba1363b3185bfe2bee2ec089814833c6f102841e714bfa"
+      "file": "female/aw.wav",
+      "phoneme": "ɔ",
+      "samples": 15331,
+      "sampleRate": 24000,
+      "durationMs": 639,
+      "rms": 0.1132,
+      "sha256": "931d64917b76ce74f55afa2ec6d88577262545d5b24407695711330fd049b0fd"
     },
     "ar": {
-      "source": "car",
-      "phoneme": "ˈɑːɹ",
-      "fromMs": 121,
-      "toMs": 613,
-      "samples": 13494,
-      "sha256": "3e98a2d148a4c6ffa9a8015e48f422417f74522f12173338f22f61169bc8af7a"
+      "file": "female/ar.wav",
+      "phoneme": "ɑɹ",
+      "samples": 17201,
+      "sampleRate": 24000,
+      "durationMs": 717,
+      "rms": 0.14071,
+      "sha256": "5c5df3a5bbd24e208f3979b45e54c9ecfe8b94c949be1e71680c462fa581dfc0"
     },
     "or": {
-      "source": "fork",
-      "phoneme": "ˈɔːɹ",
-      "fromMs": 117,
-      "toMs": 511,
-      "samples": 11334,
-      "sha256": "4eb031df0316c1d63e58980728b81cf3e83272e6a4dac00768953efeba317d76"
+      "file": "female/or.wav",
+      "phoneme": "ɔɹ",
+      "samples": 18682,
+      "sampleRate": 24000,
+      "durationMs": 778,
+      "rms": 0.17944,
+      "sha256": "4311012b11815295837784174abde5cbc8bbb6b0b7bb80fb051365a460f564e8"
     },
     "er": {
-      "source": "bird",
-      "phoneme": "ˈɜː",
-      "fromMs": 83,
-      "toMs": 458,
-      "samples": 10914,
-      "sha256": "a7e92adeb8200cd37f2de3e60b28ab58a7d797ba43bc280ee3e6e1ccc04b1493"
+      "file": "female/er.wav",
+      "phoneme": "ɜɹ",
+      "samples": 18845,
+      "sampleRate": 24000,
+      "durationMs": 785,
+      "rms": 0.16018,
+      "sha256": "b1d6e1a1a4c39ea87bcfcc6804eb8ea138025efcc441e70508510cdc95301f75"
     },
     "ear": {
-      "source": "ear",
-      "phoneme": "ˈɪɹ",
-      "fromMs": 0,
-      "toMs": 522,
-      "samples": 14156,
-      "sha256": "807b30665ab426ad57ad3097dce63e36d1f02a0d68c0110a272605592c120418"
+      "file": "female/ear.wav",
+      "phoneme": "ɪɹ",
+      "samples": 17774,
+      "sampleRate": 24000,
+      "durationMs": 741,
+      "rms": 0.17607,
+      "sha256": "53ce22a7c697580e41389de36cc03e06173a61987cb58f9d43c610ceff5fd21b"
     },
     "air": {
-      "source": "hair",
-      "phoneme": "ˈɛɹ",
-      "fromMs": 100,
-      "toMs": 558,
-      "samples": 12744,
-      "sha256": "34f7e46d8cd7d4c52e4184e46ebc923857c2f436e88ed15cac353b1134fa1cbc"
+      "file": "female/air.wav",
+      "phoneme": "ɛɹ",
+      "samples": 18250,
+      "sampleRate": 24000,
+      "durationMs": 760,
+      "rms": 0.15581,
+      "sha256": "53472d1af66ddae54d1efa1abce6de30be365fa64ad20b76472499c4927efff8"
     },
     "b": {
-      "source": "[[b]]",
+      "file": "female/b.wav",
       "phoneme": "b",
-      "fromMs": 0,
-      "toMs": 36,
-      "samples": 3439,
-      "sha256": "67b5d11d820f10af6a7d8cfe0e3be29454a607ee621586669366b4b0fa018ecb"
+      "samples": 13591,
+      "sampleRate": 24000,
+      "durationMs": 566,
+      "rms": 0.10992,
+      "sha256": "0684ae2ad9f278b93c5e919e913db90bd54a2ba2e93b519820774235e1781bd8"
     },
     "d": {
-      "source": "[[d]]",
+      "file": "female/d.wav",
       "phoneme": "d",
-      "fromMs": 0,
-      "toMs": 36,
-      "samples": 3439,
-      "sha256": "855dd320056e909ff5c04b73089627d240029aff92fc3aee61f16f55297c64ec"
+      "samples": 13468,
+      "sampleRate": 24000,
+      "durationMs": 561,
+      "rms": 0.06568,
+      "sha256": "fa6cb183269d1c5dd3ab2c6f9a6a654290b7c7fa703b162aeefe8e03191ba952"
     },
     "f": {
-      "source": "[[f]]",
+      "file": "female/f.wav",
       "phoneme": "f",
-      "fromMs": 15,
-      "toMs": 154,
-      "samples": 5711,
-      "sha256": "a6b82261a8f2e9b20bce6c8eba475a88feae7c3dee5b21869d9d74f07bab72e3"
+      "samples": 11404,
+      "sampleRate": 24000,
+      "durationMs": 475,
+      "rms": 0.1176,
+      "sha256": "042258bdb6848b45fd874048f82df0d4f7b7226f64bf596656f434ab1949da25"
     },
     "g": {
-      "source": "[[g]]",
+      "file": "female/g.wav",
       "phoneme": "ɡ",
-      "fromMs": 0,
-      "toMs": 55,
-      "samples": 3858,
-      "sha256": "6960d58f10ead1572fb0b5acb72adbbe272128bc99afc6c52064f90143bff453"
+      "samples": 12208,
+      "sampleRate": 24000,
+      "durationMs": 509,
+      "rms": 0.08945,
+      "sha256": "fc1762be0083baac96306ef878dbd4b9269e184d2fa0bec5170707b1f6ef5fd5"
     },
     "h": {
-      "source": "[[h]]",
+      "file": "female/h.wav",
       "phoneme": "h",
-      "fromMs": 15,
-      "toMs": 101,
-      "samples": 4543,
-      "sha256": "a2251dda3a668fdad3ea930e97ea651b76a73e4cef4fda5f98ef2220e56aa1b4"
+      "samples": 12025,
+      "sampleRate": 24000,
+      "durationMs": 501,
+      "rms": 0.09768,
+      "sha256": "c0353d8fcc817519332d0dc9d6d1fc36cb6536a5aa2b1399c9529cdbd4820475"
     },
     "j": {
-      "source": "[[dZ]]",
+      "file": "female/j.wav",
       "phoneme": "dʒ",
-      "fromMs": 0,
-      "toMs": 91,
-      "samples": 4652,
-      "sha256": "a628ce51a51a436b7c3ba26b3bbbc94464dc122f0bafd661e4de97dc70381d6c"
+      "samples": 14073,
+      "sampleRate": 24000,
+      "durationMs": 586,
+      "rms": 0.10435,
+      "sha256": "eef0ac3bce9bf87163883c22cb2c925ee0afb5646ac8d0d9c5b6eb7fc24c6c78"
     },
     "k": {
-      "source": "[[k]]",
+      "file": "female/k.wav",
       "phoneme": "k",
-      "fromMs": 52,
-      "toMs": 107,
-      "samples": 3859,
-      "sha256": "ddcfba3dc208c4aa504c812e1b2f8616383f4d4e5efa8a8d89278c17f1c61040"
+      "samples": 12655,
+      "sampleRate": 24000,
+      "durationMs": 527,
+      "rms": 0.09173,
+      "sha256": "1a6defa24b10df76adfb98843f45096b0046dc78b71869c4ebf5c410cf6caf69"
     },
     "l": {
-      "source": "[[l]]",
+      "file": "female/l.wav",
       "phoneme": "l",
-      "fromMs": 0,
-      "toMs": 52,
-      "samples": 3792,
-      "sha256": "b85eef2593ff50d5964c91a58939945b7c78ac00368d3fb205a680d000a18962"
+      "samples": 14413,
+      "sampleRate": 24000,
+      "durationMs": 601,
+      "rms": 0.11148,
+      "sha256": "af0839f732c5867931c9d4437fb054e4c42ac0c530e99f3cb58fa0f27eb7a641"
     },
     "m": {
-      "source": "[[m]]",
+      "file": "female/m.wav",
       "phoneme": "m",
-      "fromMs": 0,
-      "toMs": 26,
-      "samples": 3219,
-      "sha256": "3c246cd8637f5f9f1a45b58194c9fa8c09b997630a887981eed5464c012afb77"
+      "samples": 9823,
+      "sampleRate": 24000,
+      "durationMs": 409,
+      "rms": 0.16679,
+      "sha256": "49d02e921f00fd8c1b40f1fc153f05d4070a1e19b9c5df01aab9e40324188c36"
     },
     "n": {
-      "source": "[[n]]",
+      "file": "female/n.wav",
       "phoneme": "n",
-      "fromMs": 0,
-      "toMs": 26,
-      "samples": 3219,
-      "sha256": "5f9432d90c15b00909c45f226b1c67939ed6a76bf2b47f668a88050375ff5d9e"
+      "samples": 14535,
+      "sampleRate": 24000,
+      "durationMs": 606,
+      "rms": 0.13366,
+      "sha256": "22ed9a11aa34637093ed1e598662abb3bf76d58ac00691a4b252b5110a8d2395"
     },
     "p": {
-      "source": "[[p]]",
+      "file": "female/p.wav",
       "phoneme": "p",
-      "fromMs": 52,
-      "toMs": 146,
-      "samples": 4719,
-      "sha256": "2149a016f1a755dd44ce643dfd90c50591cb48090eda96615ea0ba7dfa6a399e"
+      "samples": 8827,
+      "sampleRate": 24000,
+      "durationMs": 368,
+      "rms": 0.18067,
+      "sha256": "ad4ffa0b4f16e3751c5f201b5fa355dc7316e5ebc0c49794a696b00f07bb6882"
     },
     "r": {
-      "source": "rain",
+      "file": "female/r.wav",
       "phoneme": "ɹ",
-      "fromMs": 0,
-      "toMs": 194,
-      "samples": 6923,
-      "sha256": "46831c1628dc9f442339f335c1738d565d038930fea4b05f147fbaef26eabccd"
+      "samples": 13409,
+      "sampleRate": 24000,
+      "durationMs": 559,
+      "rms": 0.12216,
+      "sha256": "b8a9a92f9ec9566abe08180bb2152890612d205e80abf480ef6336621c8f0446"
     },
     "s": {
-      "source": "[[s]]",
+      "file": "female/s.wav",
       "phoneme": "s",
-      "fromMs": 15,
-      "toMs": 152,
-      "samples": 5667,
-      "sha256": "dddff28caf80ef914214add0f5341b3215a9c8dea6232f4d58d35cc7ab5a403e"
+      "samples": 14009,
+      "sampleRate": 24000,
+      "durationMs": 584,
+      "rms": 0.10441,
+      "sha256": "1d314079c3d5574426a725513084b6d38feba818c0ac4d914786befc6b989b2e"
     },
     "t": {
-      "source": "[[t]]",
+      "file": "female/t.wav",
       "phoneme": "t",
-      "fromMs": 52,
-      "toMs": 107,
-      "samples": 3859,
-      "sha256": "53677cee608c9152bb2248b6c542a5d68df52d683472817285cc0f7b75751ffc"
+      "samples": 12176,
+      "sampleRate": 24000,
+      "durationMs": 507,
+      "rms": 0.14014,
+      "sha256": "6fb871905f990cd64d579ec4372848aa484fa862d5d417512261d41883074ad7"
     },
     "v": {
-      "source": "[[v]]",
+      "file": "female/v.wav",
       "phoneme": "v",
-      "fromMs": 15,
-      "toMs": 99,
-      "samples": 4498,
-      "sha256": "70cf9efaa684241c499d180cd7d47169df5f4b7b2ef5b2c2d5d4b8d5fd79ce76"
+      "samples": 9770,
+      "sampleRate": 24000,
+      "durationMs": 407,
+      "rms": 0.11746,
+      "sha256": "893408781af5509fe3d761a66f1436844283fd37b5ced1b534498c6e5a718128"
     },
     "w": {
-      "source": "web",
+      "file": "female/w.wav",
       "phoneme": "w",
-      "fromMs": 0,
-      "toMs": 188,
-      "samples": 6791,
-      "sha256": "29091c1dc6c4ac21a0d85e538f17c7b8dbc26554b26286cd185531cac0e702e0"
+      "samples": 12001,
+      "sampleRate": 24000,
+      "durationMs": 500,
+      "rms": 0.14966,
+      "sha256": "0c349020349546129eecbfb82809a5a0ff2108d23ce2371587d5960f38f8f9ac"
     },
     "y": {
-      "source": "yes",
+      "file": "female/y.wav",
       "phoneme": "j",
-      "fromMs": 0,
-      "toMs": 185,
-      "samples": 6725,
-      "sha256": "06a22302f53e6d29440b5b87760475fe57d7e6b16bc1d7720db7601f00db1fab"
+      "samples": 7869,
+      "sampleRate": 24000,
+      "durationMs": 328,
+      "rms": 0.13616,
+      "sha256": "2fa5dca26fcff895690282dcfe0f2bb04b54be5d380bdf184c8f7874f813c7a3"
     },
     "z": {
-      "source": "[[z]]",
+      "file": "female/z.wav",
       "phoneme": "z",
-      "fromMs": 15,
-      "toMs": 117,
-      "samples": 4895,
-      "sha256": "49da6217f28f5854610d9f0f3147642c3540ccc3ccf9d2f26c63a89a39697bc5"
+      "samples": 13523,
+      "sampleRate": 24000,
+      "durationMs": 563,
+      "rms": 0.08931,
+      "sha256": "780c545240045c209042d5fa9523e3110d19c7823356e9e3e5c9ede2f51ce9d3"
     },
     "sh": {
-      "source": "[[S]]",
+      "file": "female/sh.wav",
       "phoneme": "ʃ",
-      "fromMs": 15,
-      "toMs": 152,
-      "samples": 5667,
-      "sha256": "e33871dd9c5c79e023e49d1866a5663a96db231529bab96a6e9fa175820a14eb"
+      "samples": 14007,
+      "sampleRate": 24000,
+      "durationMs": 584,
+      "rms": 0.08752,
+      "sha256": "cf49f6932729198c6f84d6c7f99e57e1a516e9f45992c12ebe910aea648be0ff"
     },
     "ch": {
-      "source": "[[tS]]",
+      "file": "female/ch.wav",
       "phoneme": "tʃ",
-      "fromMs": 52,
-      "toMs": 160,
-      "samples": 5028,
-      "sha256": "99cf25087ede4559e990b49c8b7ad749cf417164464b3af3fcdb127b5951c958"
+      "samples": 15048,
+      "sampleRate": 24000,
+      "durationMs": 627,
+      "rms": 0.08942,
+      "sha256": "b2fc4fd981a33752ed17262d9c772ecc03d76441f1d06e9445dc29d1e2fa93b6"
     },
     "th": {
-      "source": "[[T]]",
+      "file": "female/th.wav",
       "phoneme": "θ",
-      "fromMs": 15,
-      "toMs": 124,
-      "samples": 5050,
-      "sha256": "42aeec1b636126fa740fdaebb46e474b7b8e933ce281bfb23e6a59ff9887559d"
+      "samples": 13825,
+      "sampleRate": 24000,
+      "durationMs": 576,
+      "rms": 0.09854,
+      "sha256": "d4356e55cc5f85b521fbc70ec01177f2b1a3aea46ad1b67957f0b0cda2a3f299"
     },
     "dh": {
-      "source": "[[D]]",
+      "file": "female/dh.wav",
       "phoneme": "ð",
-      "fromMs": 15,
-      "toMs": 98,
-      "samples": 4476,
-      "sha256": "e1f5df8f769b99952afd0bf4eaa3ba4ddd23e58978886fbb0c14f555c3768c8a"
+      "samples": 13427,
+      "sampleRate": 24000,
+      "durationMs": 559,
+      "rms": 0.08197,
+      "sha256": "8fbf7303bf7309ba8e10a5e25b29150ac49b038cb02b2d74f54d67ee6f89752f"
     },
     "ng": {
-      "source": "[[N]]",
+      "file": "female/ng.wav",
       "phoneme": "ŋ",
-      "fromMs": 0,
-      "toMs": 39,
-      "samples": 3505,
-      "sha256": "2a70f3d78d6fe9a3fc93aa747664ce2f43e09837a17a9fe6b8dbcbe6cc876fa7"
+      "samples": 14446,
+      "sampleRate": 24000,
+      "durationMs": 602,
+      "rms": 0.12546,
+      "sha256": "cadc923ba05a1d6c7783bd80473cffec574e8f3c9d61e0b1d0bdeb7b8f7c4a3a"
     },
     "zh": {
-      "source": "[[Z]]",
+      "file": "female/zh.wav",
       "phoneme": "ʒ",
-      "fromMs": 15,
-      "toMs": 107,
-      "samples": 4675,
-      "sha256": "2b662952211a1e1f8bab48c561ecb1618f9165c2cc5ab270af7047d4e45066bf"
+      "samples": 15809,
+      "sampleRate": 24000,
+      "durationMs": 659,
+      "rms": 0.11524,
+      "sha256": "78d1d134fe0cf28bc457f47c4e6a8eed22fa36a52f53eb141df9a10b1e6f12bc"
     }
   }
 }

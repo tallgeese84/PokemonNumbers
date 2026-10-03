@@ -1,3 +1,13 @@
+## v79 · Tap-to-hear Pokémon alphabet
+
+Games → **Pokémon A–Z** shows all 26 letters and actual Pokémon pictures on one responsive page. Tap any letter to hear its sound immediately, twice with a 750 ms pause. A new tap interrupts the previous sound and pending repeat. **Practise [letter] together** opens the existing guided lesson. Smaller screens scroll; there is no alphabet pagination.
+
+All 43 offline phoneme clips now use the free Kokoro American English female voice `af_heart`, generated from explicit phonemes at 70% speed. Buddy instructions are slower too. The clip voice is separate from the device narrator; see `assets/phonemes/README.md` for sources, reproduction and validation limits.
+
+Soundboard taps are saved as listening exposure in the existing Drive history and daily report, with no correct answer, independent score, practice-time credit or reward. They do not skip the first teaching lesson or suppress the daily buddy block. Hearing a sound before a check prevents that check from being labelled later-day recall.
+
+Validation: regression tests cover all 26 cards on one page, immediate audio and repeat timing, interruption, Q/X sounds, slower narration, exposure/report/Drive behaviour, cached files and all 43 audio hashes/PCM levels. Device-specific voice quality and speakers still need an on-device listen.
+
 ## v78 · Pokémon sound buddies
 
 Games → **Sound buddies** opens an A–Z collection with the 26 actual Pokémon images. The original PNGs from PokeAPI’s official-artwork folder are bundled and precached for offline use. `assets/sound-buddies/manifest.json` records source URLs and SHA-256 hashes. Artwork © Nintendo / Creatures Inc. / GAME FREAK inc.; this is an unofficial family learning app.

@@ -28,7 +28,7 @@ function createReading(){
  // Same American English voice as the rest of the app (see PokeVoice in index.html).
  function pickVoice(){voice=window.PokeVoice?window.PokeVoice.pick():null;}
  if(window.speechSynthesis){pickVoice();window.speechSynthesis.addEventListener?.('voiceschanged',pickVoice);}
- function stop(){gen++;busy=false;try{audioEl?.pause();}catch(e){}audioEl=null;try{window.speechSynthesis?.cancel();}catch(e){}}
+ function stop(){gen++;busy=false;try{audioEl?.pause();}catch(e){}audioEl=null;try{window.speechSynthesis?.cancel();}catch(e){}root.querySelectorAll('.sound-buddy-card').forEach(c=>{c.classList.remove('playing');c.setAttribute('aria-pressed','false');});}
  function waitTurn(fn,tries=0){if(speechIdle()||tries>16){if(!speechIdle())shutUp();fn();}else setTimeout(()=>waitTurn(fn,tries+1),250);}
  function speak(text,opts={}){
   const g=gen,done=()=>{if(g===gen){busy=false;opts.done?.();}};
@@ -36,8 +36,9 @@ function createReading(){
   busy=true;
   waitTurn(()=>{if(g!==gen)return;try{window.speechSynthesis.cancel();}catch(e){}
    const u=new SpeechSynthesisUtterance(String(text));if(!voice)pickVoice();if(voice){u.voice=voice;u.lang=voice.lang;}else u.lang='en-US';
-   u.rate=opts.rate||0.82;u.pitch=opts.pitch||1.05;let fin=false;const end=()=>{if(fin)return;fin=true;done();};
-   u.onend=end;u.onerror=end;setTimeout(end,Math.min(9000,1100+String(text).length*95));
+   const slow=root.classList.contains('alphabet-view')||run?.round?.act==='buddies';
+   u.rate=(opts.rate||0.82)*(slow?.85:1);u.pitch=opts.pitch||1.05;let fin=false;const end=()=>{if(fin)return;fin=true;done();};
+   u.onend=end;u.onerror=end;setTimeout(end,Math.min(30000,Math.max(9000,1700+String(text).length*85/u.rate)));
    try{window.speechSynthesis.speak(u);}catch(e){end();}});
  }
  function playKey(p){return typeof p==='string'?p:(p.play||p.g);}
@@ -49,7 +50,7 @@ function createReading(){
   if(soundOn&&REC[key]){busy=true;waitTurn(()=>{if(g!==gen)return;try{audioEl=new Audio(REC[key]);audioEl.onended=fin;audioEl.onerror=fin;audioEl.play().catch(fin);}catch(e){fin();}});return;}
   const keys=PokePhonics.clipKeys(p);
   if(soundOn&&keys.every(k=>PokePhonics.clips.includes(k))){busy=true;let at=0,failed=false;
-   const next=()=>{if(g!==gen)return;if(at>=keys.length){fin();return;}try{audioEl=new Audio('assets/phonemes/'+keys[at++]+'.wav');audioEl.onended=next;audioEl.onerror=()=>{if(failed)return;failed=true;if(run?.ref)help('sound clip unavailable');feedback('Tap listen to try the sound again.');fin();};audioEl.play().catch(audioEl.onerror);}catch(e){fin();}};waitTurn(next);return;
+   const next=()=>{if(g!==gen)return;if(at>=keys.length){fin();return;}try{audioEl=new Audio('assets/phonemes/female/'+keys[at++]+'.wav');audioEl.preservesPitch=true;audioEl.onended=next;audioEl.onerror=()=>{if(failed||g!==gen)return;failed=true;if(run?.ref)help('sound clip unavailable');feedback('Tap listen to try the sound again.');fin();};audioEl.play().catch(audioEl.onerror);}catch(e){fin();}};waitTurn(next);return;
   }
   const text=(p&&p.magic==='start')?p.sound:(D.G[key]?D.G[key][0]:(p&&p.sound)||key);
   speak(text,{rate:.72,pitch:1,done});
@@ -98,7 +99,7 @@ function createReading(){
  const TITLE={buddies:'Sound buddies',reteach:'Sounds again',meet:'New sounds',write:'Writing letters',shapes:'Letter shapes',hunt:'Sound hunt',read:'Read it',build:'Build it',heart:'Tricky words',sentence:'Read and tap',ears:'Sound ears',book:'Book time',name:'Name catch',review:'Remember these',caps:'Capital letters',placement:'Reading check',spell:'Spell it'};
  const INTRO={buddies:'Let us learn with our sound buddies.',reteach:'Let us look at these sounds again.',meet:'Meet a new letter and its sound.',write:'Trace the letter. Start on the green dot.',shapes:'Find the letter that looks the same.',hunt:'Listen. Find the sound.',read:'Tap each sound. Say them fast. Then find the picture.',build:'Listen, then build the word.',heart:'Tricky words. Learn them by heart.',sentence:'Read it, then tap the right picture.',ears:'Listen with your ears.',book:'Let us read a book.',name:'Read the name to catch the Pokémon!',review:'Do you remember these?',caps:'Find the one written the right way.',placement:'Show me what you can read!',spell:'Listen to the word. Find the letter for the sound.'};
  function setHeader(act,n){$('rdTitle').textContent=TITLE[act]||'Reading';const L=R.route(n);$('rdRoute').innerHTML='';const chip=el('span','route-chip','Route '+n);chip.style.setProperty('--route',L.colour);$('rdRoute').append(chip);}
- function enter(){shutUp();mode='read';show('read');}
+ function enter(){root.classList.remove('alphabet-view');shutUp();mode='read';show('read');}
  function startRound(round,onDone){
   stop();
   round=PokeReadingTutor.prepare(round,sessions());
@@ -220,7 +221,7 @@ function createReading(){
  function explainBuddy(b,done){
   const tail=b.letter==='x'?'Listen at the end of box.':b.letter==='q'?'Q works with U. Listen to the sounds at the start of queen.':'Listen to the first sound in '+b.keyword+'.';
   const intro=b.letter==='x'?'This is X. Xatu is our X buddy. Its name starts with a different sound.':b.letter==='q'?'This is Q. Quagsire is our buddy.':'This is the letter '+b.letter.toUpperCase()+'. '+b.name+'. Listen to the first sound.';
-  chain([next=>speak(intro,{done:next}),next=>sound(b.g,next),next=>speak(tail,{done:next}),next=>sound(b.g,next)],140,done);
+  chain([next=>speak(intro,{done:next}),next=>sound(b.g,next),next=>speak(tail,{done:next}),next=>sound(b.g,next)],650,done);
  }
  RENDER.buddyMeet=it=>{
   const b=B.get(it.buddyLetter);$('rdStage').append(buddyCard(b));$('rdPrompt').textContent='';
@@ -543,26 +544,38 @@ function createReading(){
   $('rdOptions').replaceChildren(grid);$('rdActions').append(writeBtn);replay=()=>speak('Tap a sound to hear it.',{rate:.85});replay();
   $('rdActions').append(btn('btn','Sound buddies',openLetters,'Sound buddies'));
  }
- let buddyPage=0;
  function startBuddies(letters){
   const n=R.currentRoute(st()),pool=[...R.available(sessions(),n),...(R.nextBatch(sessions(),n)||[])];
   startRound(B.lesson(letters,sessions(),pool,Date.now()),openLetters);
  }
  function openLetters(){
   stop();enter();run=null;adventure.section?.('cards');setHeader('buddies',R.currentRoute(st()));
-  $('rdTitle').textContent='Pokémon sound buddies';$('rdPrompt').textContent='My sound buddies';
+  root.classList.add('alphabet-view');
+  $('rdTitle').textContent='Pokémon alphabet';$('rdPrompt').textContent='My Pokémon alphabet';
   $('rdStage').replaceChildren();$('rdOptions').replaceChildren();$('rdActions').replaceChildren();$('rdPips').replaceChildren();feedback('');
   const ps=B.progress(sessions()),badges=Object.values(ps).filter(x=>x.badge).length;
-  $('rdStage').append(el('p','buddy-collection-note',badges+' / 26 remembered · tap a buddy to learn'));
-  const grid=el('div','sound-buddy-grid'),page=B.ALL.slice(buddyPage*6,buddyPage*6+6);
-  for(const b of page){const card=btn('sound-buddy-card'+(ps[b.letter].badge?' remembered':''),b.letter.toUpperCase()+', '+b.name+'. '+ps[b.letter].status,()=>startBuddies([b.letter]),'');
-   card.append(el('span','buddy-card-letter',b.letter+' '+b.letter.toUpperCase()),buddyImage(b,'buddy-card-mon'),el('span','buddy-card-name',b.name),el('span','buddy-card-status',ps[b.letter].status));grid.append(card);}
+  $('rdStage').append(el('p','buddy-collection-note','Tap a letter. Listen, then say the sound.'));
+  const grid=el('div','sound-buddy-grid');grid.setAttribute('aria-label','All 26 letter sounds');
+  let selected=null;
+  const learn=btn('btn read-next','Choose a letter, then practise together',()=>{if(selected)startBuddies([selected.letter]);},'Practise together');learn.disabled=true;
+  const playBuddy=(b,card)=>{
+   stop();shutUp();audio();if(!soundOn)$('soundBtn').click();selected=b;
+   grid.querySelectorAll('.sound-buddy-card').forEach(c=>{c.classList.remove('selected','playing');c.setAttribute('aria-pressed','false');});
+   card.classList.add('selected','playing');card.setAttribute('aria-pressed','true');
+   learn.disabled=false;learn.textContent='Practise '+b.letter.toUpperCase()+' together';learn.setAttribute('aria-label',learn.textContent);
+   feedback(b.letter==='x'?'X · hear the end of box. Xatu is our letter buddy.':b.letter==='q'?'Q · q and u work together, as in queen.':b.letter.toUpperCase()+' · '+b.keyword);
+   // Exploration is listening, never an independent answer or badge check.
+   // Interrupting increments gen, cancelling the pending repeat as well.
+   adventure.recordListening?.({section:'read',skill:'buddies',kind:'buddyListen',phase:'explore',item:'g:'+b.g,buddyLetter:b.letter,buddyCue:true});
+   chain([next=>sound(b.g,next),next=>sound(b.g,next)],750,()=>{card.classList.remove('playing');card.setAttribute('aria-pressed','false');});
+   replay=()=>playBuddy(b,card);
+  };
+  for(const b of B.ALL){const card=btn('sound-buddy-card'+(ps[b.letter].badge?' remembered':''),'Hear '+b.letter.toUpperCase()+', '+b.name,card=>playBuddy(b,card),'');
+   card.dataset.letter=b.letter;card.setAttribute('aria-pressed','false');
+   card.append(el('span','buddy-card-letter',b.letter.toUpperCase()+' '+b.letter),buddyImage(b,'buddy-card-mon'),el('span','buddy-card-name',b.name),el('span','buddy-card-status',b.letter==='x'?'box · end sounds':b.letter==='q'?'qu · queen':b.keyword));grid.append(card);}
   $('rdOptions').append(grid);
-  const back=btn('btn','Previous buddies',()=>{buddyPage--;openLetters();},'Back');back.disabled=buddyPage===0;
-  const next=btn('btn','Next buddies',()=>{buddyPage++;openLetters();},'Next');next.disabled=buddyPage===4;
-  const nav=el('div','buddy-pages');nav.append(back,el('span','',page[0].letter.toUpperCase()+'–'+page.at(-1).letter.toUpperCase()),next);
-  $('rdActions').append(nav,btn('btn','Letter writing and other sounds',openLetterTiles,'Write & sounds'));
-  replay=()=>speak('Choose a Pokémon sound buddy.',{rate:.85});replay();
+  $('rdActions').append(learn,btn('btn','Letter writing and other sounds',()=>{stop();openLetterTiles();},'Write & sounds'),el('p','buddy-collection-note',badges+' / 26 remembered in practice'));
+  replay=()=>speak('Tap a letter. Listen, then say the sound.',{rate:.8});replay();
  }
  function esc(x){return String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
@@ -607,7 +620,7 @@ function createReading(){
   <label>Letter names <select id="rdNames"><option value="auto">On from the start (default)</option><option value="on">On</option><option value="off">Off</option></select></label>
   <label>Move to route <select id="rdMove">${D.ROUTES.map(x=>`<option value="${x.n}" ${x.n===r.route?'selected':''}>${x.n} · ${esc(x.name)}</option>`).join('')}</select></label></div>
   ${state.legacy?`<p class="muted">Imported from the old Poké Reading app: it had reached route ${state.legacy.at} and ${state.legacy.caught.length} Pokémon (added to his collection). Its routes opened on completion rather than mastery, so the reading check decides the starting route.</p>`:''}
-  <details><summary>Record the sounds in your voice</summary><p class="muted">Built-in offline sound clips use phoneme synthesis rather than asking the tablet to say letter approximations. They have a robot voice. Play the starred sounds once and check they are clear on this tablet. You can replace any with your own short, clean sound using ●. Your recordings stay on this tablet.</p><div id="rdRecGrid" class="rec-grid"></div></details>`;
+  <details><summary>Listen to or record the sounds</summary><p class="muted">The built-in sounds use a female American English voice at a slower pace. They work offline. This recorded voice differs from the tablet voice that reads instructions. Tap ▶ to preview a sound, or ● to replace it with your own short, clean recording. Your recordings stay on this tablet; ✕ restores the built-in sound.</p><div id="rdRecGrid" class="rec-grid"></div></details>`;
   $('rdNames').value=state.namesAt?(state.names?'on':'off'):'auto';
   $('rdNames').onchange=()=>{const v=$('rdNames').value;if(v==='auto'){state.namesAt=0;state.names=false;}else{state.names=v==='on';state.namesAt=Date.now();}save();};
   $('rdMove').onchange=()=>{const to=+$('rdMove').value;if(!confirm('Move reading to route '+to+'? Routes before it are marked done; later routes are reopened.'))return renderPanel();
@@ -635,7 +648,7 @@ function createReading(){
  }
  function renderRec(){
   const grid=$('rdRecGrid');if(!grid)return;grid.replaceChildren();
-  // The robot voice is least clear on short vowels and on stop sounds (it adds "uh"), so those come first.
+  // Short vowels and brief stop consonants are useful to preview first.
   const FIRST=['a','e','i','o','u','b','c','d','g','p','t','k','h','j'];
   const gs=[...FIRST,...Object.keys(D.G).filter(g=>(D.G[g][3]!=='end'||g==='ing')&&!FIRST.includes(g)),'id'];
   gs.forEach(g=>{const cell=el('div','rec-cell'+(REC[g]?' has':'')+(FIRST.includes(g)?' first':''));cell.append(el('b','',label(g)));

@@ -104,7 +104,7 @@ test('readiness reports honest denominators and pace against the P1 timeline',()
 });
 
 /* ---------- the real UI with a small fake DOM ---------- */
-function harness({teaching=false}={}){
+function harness({teaching=false,audioMocks=false}={}){
  let now=T0;const timers=[];
  class El{constructor(tag='div'){this.tag=tag;this.children=[];this.attrs={};this.dataset={};this.style={setProperty(){}};this._cls=new Set();this.disabled=false;this._text='';
   const c=this._cls;this.classList={add:(...x)=>x.forEach(v=>c.add(v)),remove:(...x)=>x.forEach(v=>c.delete(v)),toggle:(v,f)=>(f??!c.has(v))?c.add(v):c.delete(v),contains:v=>c.has(v)};}
@@ -117,20 +117,21 @@ function harness({teaching=false}={}){
   click(){if(!this.disabled)this.onclick?.();}addEventListener(){}
   all(){return [this,...this.children.flatMap(c=>c.all())];}
   querySelectorAll(sel){return this.all().slice(1).filter(e=>sel.startsWith('.')?e._cls.has(sel.slice(1)):e.tag===sel);}querySelector(sel){return this.querySelectorAll(sel)[0]||null;}}
- const els={},data={},spoken=[],t=new C.Tracker({now:()=>now}),helps=[],answers=[];
- const adventure={recordState(){},get tracker(){return t;},begin:meta=>t.begin(meta),respond:(v,c)=>{answers.push({v,c});t.answer(v,c);},help:k=>{helps.push(k);t.help(k);},isPaused:()=>false,beforeQuestion:()=>true};
+ const els={},data={},spoken=[],utterances=[],played=[],players=[],listened=[],t=new C.Tracker({now:()=>now}),helps=[],answers=[];
+ const adventure={recordState(){},recordListening:meta=>listened.push(meta),get tracker(){return t;},begin:meta=>t.begin(meta),respond:(v,c)=>{answers.push({v,c});t.answer(v,c);},help:k=>{helps.push(k);t.help(k);},isPaused:()=>false,beforeQuestion:()=>true};
  const ctx={PokeSoundBuddies:require('../reading-buddies.js'),PokePhonics:require('../reading-phonics.js'),PokeReadingTutor:teaching?require('../reading-tutor.js'):{prepare:r=>r},PokeReadingCore:R,PokeReadingData:D,PokeLearning:C,PokeReadingAssess:require('../reading-assess.js'),adventure,screens:{},mode:'home',soundOn:true,childName:'Jonah',caught:[],stars:0,
   document:{createElement:tag=>new El(tag),createElementNS:(_,tag)=>new El(tag),createTextNode:s=>{const e=new El('#text');e._text=s;return e;},getElementById:id=>els[id]||=new El(),body:{dataset:{}}},
-  window:{speechSynthesis:{getVoices:()=>[],speak:u=>{spoken.push(u.text);timers.push({at:now+20,f:()=>u.onend?.()});},cancel(){}}},
+  window:{speechSynthesis:{getVoices:()=>[],speak:u=>{spoken.push(u.text);utterances.push(u);timers.push({at:now+20,f:()=>u.onend?.()});},cancel(){}}},
   SpeechSynthesisUtterance:function(text){this.text=text;},
   localStorage:{setItem:(k,v)=>data[k]=v,getItem:k=>data[k]??null,removeItem:k=>delete data[k],key:i=>Object.keys(data)[i],get length(){return Object.keys(data).length;}},
   setTimeout:(f,ms=0)=>{timers.push({at:now+ms,f});return timers.length;},clearTimeout(){},requestAnimationFrame(){},Date:{now:()=>now},
   show(){},shutUp(){},speechIdle:()=>true,sndGood(){},sndOops(){},sndTap(){},burst(){},audio(){},readyForNext:()=>true,schedulePush(){},
   addStar:n=>{ctx.stars+=n;},imgArt:id=>'art'+id,PokeVisuals:{icon:()=>'',ball:()=>''},PokeCatalog:{byId:{}},catchMon(){},beginCeremony(){},pkState(){},renderBuddyHome(){},updateBallPill(){},confirm:()=>true,alert(){},navigator:{}};
+ if(audioMocks)ctx.Audio=class{constructor(src){this.src=src;players.push(this);}play(){played.push({src:this.src,at:now});timers.push({at:now+200,f:()=>{if(!this.paused)this.onended?.();}});return {catch(){}};}pause(){this.paused=true;}};
  vm.createContext(ctx);vm.runInContext(fs.readFileSync(require.resolve('../reading-art.js'),'utf8'),ctx);vm.runInContext(fs.readFileSync(require.resolve('../reading-ui.js'),'utf8')+'\nvar ui=createReading();',ctx);
  const flush=(ms=5000)=>{const end=now+ms;for(let guard=0;guard<5000;guard++){timers.sort((a,b)=>a.at-b.at);const t0=timers[0];if(!t0||t0.at>end)break;timers.shift();now=Math.max(now,t0.at);t0.f();}now=end;};
  const opts=()=>els.rdOptions.children,acts=()=>els.rdActions.children;
- return {ctx,ui:ctx.ui,t,spoken,helps,answers,flush,opts,acts,data};
+ return {ctx,ui:ctx.ui,t,spoken,utterances,played,players,listened,helps,answers,flush,opts,acts,data};
 }
 test('Read it never says the word before he answers; the app sounds out only on request or after a miss',()=>{
  const h=harness();h.ui._round('read',1);h.flush();
@@ -299,11 +300,28 @@ test('asking for a buddy in a no-picture check saves help and cannot earn indepe
  assert.equal(h.ui._current().item.kind,'buddyWord');const q=h.t.question();h.acts().find(x=>x.attrs['aria-label']==='Show my sound buddy').click();h.flush(1000);
  assert.equal(q.helped,true);assert.equal(q.buddyCue,true);h.opts().find(x=>x.dataset.g==='x').click();h.flush(10000);assert.equal(C.independent(q),false);
 });
-test('all 26 buddy cards are accessible and browsing creates no practice answers',()=>{
- const h=harness();h.ui.openLetters();h.flush();const names=[];
- for(let page=0;page<5;page++){
-  const nodes=h.ctx.document.getElementById('rdOptions').all();names.push(...nodes.filter(x=>x.tag==='img').map(x=>x.alt));
-  const next=h.ctx.document.getElementById('rdActions').all().find(x=>x.attrs['aria-label']==='Next buddies');assert.equal(next.disabled,page===4);if(page<4)next.click();h.flush();
- }
- assert.equal(names.length,26);assert.equal(new Set(names).size,26);assert.equal(h.answers.length,0);
+test('one alphabet page shows all 26 Pokémon; a letter tap plays immediately and repeats with a pause',()=>{
+ const h=harness({audioMocks:true});h.ui.openLetters();h.flush();
+ const cards=h.opts()[0].children,names=cards.flatMap(c=>c.all().filter(x=>x.tag==='img').map(x=>x.alt));
+ assert.equal(cards.length,26);assert.equal(names.length,26);assert.equal(new Set(names).size,26);
+ assert.equal(cards.map(c=>c.dataset.letter).join(''),'abcdefghijklmnopqrstuvwxyz');
+ const questions=JSON.stringify(h.t.sessions),p=cards.find(c=>c.dataset.letter==='p'),before=h.spoken.length;
+ p.click();assert.equal(h.played.length,1);assert.match(h.played[0].src,/phonemes\/female\/p.wav$/);
+ assert.equal(h.listened[0].kind,'buddyListen');assert.equal(h.listened[0].buddyLetter,'p');
+ assert.equal(h.ui._current(),null);assert.equal(h.spoken.length,before,'no spoken letter name before the sound');
+ h.flush(900);assert.equal(h.played.length,1);h.flush(60);assert.equal(h.played.length,2);
+ assert.ok(h.played[1].at-h.played[0].at>=950);assert.equal(h.answers.length,0);assert.equal(JSON.stringify(h.t.sessions),questions);
+ assert.ok(h.utterances[0].rate<=.7,'slower spoken instructions');
+ h.acts().find(b=>b.attrs['aria-label']==='Practise P together').click();h.flush(18000);assert.equal(h.ui._current().item.kind,'buddyMeet');
+});
+test('new taps and leaving cancel old audio and pending repetitions; Q and X keep their two sounds',()=>{
+ const h=harness({audioMocks:true});h.ui.openLetters();h.flush();const cards=h.opts()[0].children;
+ cards.find(c=>c.dataset.letter==='p').click();h.flush(220);
+ cards.find(c=>c.dataset.letter==='s').click();h.flush(2200);
+ assert.deepEqual(h.played.map(x=>x.src.split('/').at(-1)),['p.wav','s.wav','s.wav']);assert.ok(h.players[0].paused);
+ h.played.length=0;cards.find(c=>c.dataset.letter==='q').click();h.flush(3000);
+ assert.deepEqual(h.played.map(x=>x.src.split('/').at(-1)),['k.wav','w.wav','k.wav','w.wav']);
+ h.played.length=0;cards.find(c=>c.dataset.letter==='x').click();h.flush(3000);
+ assert.deepEqual(h.played.map(x=>x.src.split('/').at(-1)),['k.wav','s.wav','k.wav','s.wav']);
+ h.played.length=0;cards[0].click();h.ui.leave();h.flush(5000);assert.equal(h.played.length,1);assert.ok(h.players.at(-1).paused);
 });

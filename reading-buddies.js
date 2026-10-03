@@ -45,12 +45,12 @@ function options(g,pool,rnd){
 function lesson(letters,sessions={},pool=letters,now=Date.now(),rnd=Math.random){
  const bs=[...new Set(letters)].map(get).filter(Boolean).slice(0,3),qs=events(sessions),day=C.dayKey(now),models=[],checks=[];
  for(const b of bs){
-  const hist=qs.filter(q=>q.buddyLetter===b.letter),last=hist.at(-1),tries=hist.filter(q=>!q.teach).slice(-2);
+  const hist=qs.filter(q=>q.buddyLetter===b.letter),last=hist.filter(q=>q.kind!=='buddyListen').at(-1),tries=hist.filter(q=>!q.teach).slice(-2);
   const needs=!last||(tries.length===2&&tries.every(q=>!C.independent(q)));
   const base={route:route(b),item:'g:'+b.g,buddyLetter:b.letter,target:b.g,answer:b.g,options:options(b.g,pool,rnd)};
   const priorWords=hist.filter(q=>q.kind==='buddyWord').map(q=>q.word),fresh=b.words.filter(w=>w!==b.keyword);
   const word=[...fresh].sort((a,z)=>priorWords.filter(w=>w===a).length-priorWords.filter(w=>w===z).length)[0];
-  const phase=last&&last.day!==day&&!needs?'retention':'independent';
+  const phase=last&&last.day!==day&&!needs&&!hist.some(q=>q.day===day&&q.teach)?'retention':'independent';
   if(needs){
    models.push({...base,kind:'buddyMeet',teach:true,phase:'buddy-model',buddyCue:true,word:b.keyword},
     {...base,kind:'buddyGuide',teach:true,phase:'guided',buddyCue:true,word:b.keyword});
@@ -62,7 +62,7 @@ function lesson(letters,sessions={},pool=letters,now=Date.now(),rnd=Math.random)
 function select(sessions,candidates,now=Date.now()){
  const stats=progress(sessions),day=C.dayKey(now),letters=[...new Set(candidates.map(g=>get(g)?.letter).filter(Boolean))];
  // At most one automatic buddy block a day; the collection remains available.
- if(events(sessions).some(q=>q.day===day))return [];
+ if(events(sessions).some(q=>q.day===day&&q.kind!=='buddyListen'))return [];
  return letters.sort((a,b)=>Number(stats[a].badge)-Number(stats[b].badge)||stats[a].lastAt-stats[b].lastAt).slice(0,3);
 }
 function report(sessions,day){
@@ -70,8 +70,8 @@ function report(sessions,day){
  const letters=[...new Set(qs.map(q=>q.buddyLetter))];
  if(!letters.length)return 'Pokémon sound buddies: no completed practice recorded for this date.';
  const lines=['Pokémon sound buddies — picture support and cue-free recognition:'];
- for(const l of letters){const xs=qs.filter(q=>q.buddyLetter===l),test=xs.filter(q=>!q.teach),cued=xs.filter(q=>q.buddyCue||q.helped).length;
-  lines.push(`${l.toUpperCase()} · ${BY[l].name}: ${cued} teaching/helped steps; ${test.filter(C.independent).length}/${test.length} first-try checks without picture help. ${ps[l].badge?'Remembered badge confirmed across days.':ps[l].retained?'Later-day recall observed; more varied practice needed.':'Later-day recall not yet confirmed.'}`);
+ for(const l of letters){const xs=qs.filter(q=>q.buddyLetter===l),test=xs.filter(q=>!q.teach),listens=xs.filter(q=>q.kind==='buddyListen').length,cued=xs.filter(q=>q.kind!=='buddyListen'&&(q.buddyCue||q.helped)).length;
+  lines.push(`${l.toUpperCase()} · ${BY[l].name}: ${listens?listens+' soundboard taps; ':''}${cued} teaching/helped steps; ${test.filter(C.independent).length}/${test.length} first-try checks without picture help. ${ps[l].badge?'Remembered badge confirmed across days.':ps[l].retained?'Later-day recall observed; more varied practice needed.':'Later-day recall not yet confirmed.'}`);
  }
  lines.push('Badges measure sound-to-letter recognition, not spoken sound production or reading the Pokémon name.');
  return lines.join('\n');
