@@ -1,3 +1,11 @@
+## v86 · A clearer Pokémon collection
+
+The collection now has large artwork, a featured reading buddy, illustrated Cards/Badges shortcuts and consistent rarity icons with counts. On phones, owned Pokémon appear in a two-column grid. Tap a Pokémon to inspect its full artwork, hear its name, browse with previous/next, and explicitly choose it as the buddy. Shiny artwork is used when available, with standard artwork and a drawn Poké Ball as fallbacks. Search and sorting appear for collections of 12 or more; larger collections load 36 cards at a time.
+
+An empty collection shows a friendly illustration, progress toward the first catch, and a **Read & catch** button that starts/resumes the existing daily reading path. Saved collections refresh if local loading or cloud sync completes while the collection is open. Existing caught IDs, shinies, cards, badges, buddy storage and union-based sync remain unchanged. A zero on a different browser/device still requires the original save or the same family sync; the update does not manufacture or reset catches.
+
+Validation: 134 Node tests pass. Isolated Chromium checks cover empty/populated views, browsing without changing the buddy, explicit buddy selection, reload persistence, all rarity filters, no horizontal overflow at 320/390/690/1024 px, and return to the daily reading path. No page script errors occurred. Screenshots use a synthetic test collection, not Jonah’s saved data: [empty collection](docs/v86-collection-empty.png), [sample collection](docs/v86-collection-sample.png), [Pokémon preview](docs/v86-pokemon-preview.png).
+
 ## v85 · My Pokémon on the home screen
 
 **My Pokémon** is back on the home screen beneath the daily reading path, with the invitation to browse and choose a buddy. It opens the existing earned collection, where tapping a Pokémon saves it as the buddy. Daily reading remains the main button, and returning from the collection resumes the saved reading stage. Earned Pokémon, shinies, cards, badges and the saved buddy retain their existing storage and sync rules.

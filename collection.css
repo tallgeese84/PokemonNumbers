@@ -1,0 +1,91 @@
+/* v86 · A pocket field guide: warm paper, crisp enamel icons and big Pokémon. */
+body[data-screen="team"] .topbar{margin-bottom:8px}
+#scr-team{--collection-green:#28634f;--collection-ink:#294c40;--collection-muted:#64776d;color:var(--collection-ink);padding-bottom:24px}
+#scr-team button,#pokemonPreview button{font-family:inherit;cursor:pointer;-webkit-appearance:none}
+#scr-team button:focus-visible,#pokemonPreview button:focus-visible,#scr-team input:focus-visible,#scr-team select:focus-visible,#scr-team summary:focus-visible{outline:3px solid #448bbe;outline-offset:4px}
+.collection-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:20px}
+.collection-eyebrow{font-size:10px;font-weight:800;letter-spacing:1.6px;color:#587167;margin:0 0 8px}
+.collection-heading h1{font-size:32px;letter-spacing:-1px;margin:0;line-height:1.15;text-shadow:none;filter:none;background:none;text-align:left;color:#294c40}
+#teamHead.collection-total{white-space:nowrap;font-size:13px;font-weight:700;color:#3c6454;background:#e8eee2;border:1px solid #dce5d4;padding:9px 12px;border-radius:24px;align-self:center}
+#scr-team .collection-shortcuts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 18px}
+#scr-team .collection-shortcuts .quiet-choice{display:flex;flex-direction:row;justify-content:flex-start;padding:8px 12px;min-height:64px;border:1px solid #e4e7dc;border-radius:17px;background:#fffdf7;gap:9px}
+#scr-team .collection-shortcuts svg{display:block;width:44px;height:44px}
+#scr-team .collection-shortcuts strong{font-size:15px;font-weight:700}
+.collection-chevron{margin-left:auto;font-size:25px;color:#7b9285}
+.collection-hero{isolation:isolate;position:relative;display:grid;grid-template-columns:1fr 46%;align-items:center;min-height:235px;padding:28px;border-radius:28px;overflow:hidden;background:linear-gradient(135deg,#e8f2ee,#e3eeeb 55%,#e4efd9);border:1px solid #d7e5da}
+.collection-hero:after{content:"";position:absolute;z-index:-1;bottom:-60px;left:32%;width:100%;height:160px;border-radius:50%;background:#c6ddba80;transform:rotate(-12deg)}
+.collection-hero-copy{position:relative;z-index:2}
+.collection-hero h2{font-size:30px;font-weight:800;line-height:1.08;letter-spacing:-.7px;margin:10px 0;color:#294c40;overflow-wrap:anywhere}
+.collection-hero-copy>p:not(.collection-eyebrow){font-size:13px;line-height:1.5;color:#536e60;max-width:190px;margin:0 0 18px}
+.collection-hero-art{position:relative;display:grid;place-items:center;align-self:stretch;min-height:165px}
+.collection-hero-art>img{position:relative;z-index:1;width:115%;max-width:250px;height:210px;object-fit:contain;filter:drop-shadow(0 10px 5px #49604020)}
+.collection-orbit{position:absolute;width:190px;height:190px;border-radius:50%;background:#fffdf377;border:1px solid #ffffffb3;box-shadow:0 0 0 16px #ffffff26}
+.collection-secondary{display:inline-flex;align-items:center;justify-content:center;gap:12px;min-height:44px;border:1px solid #cbdacf;border-radius:13px;background:#fffdf5;color:#365e4c;padding:10px 14px;font-size:13px;font-weight:700;box-shadow:0 2px 0 #365e4c0b}
+.collection-secondary:hover{background:#f3f7ee}
+.collection-feedback{font-size:14px;font-weight:700;text-align:center;color:#28634f;line-height:1.4;min-height:0;margin:0}
+.collection-feedback:not(:empty){margin:16px 0;padding:10px;background:#e8f1e3;border-radius:12px}
+#teamBrowse{scroll-margin-top:20px;margin-top:24px}
+.collection-section-heading{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:13px}
+.collection-section-heading h2{font-size:20px;margin:0;letter-spacing:-.3px}
+.collection-section-heading>span{font-size:11px;color:#64776d}
+.collection-filters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:0 0 16px}
+.collection-filters button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:#fffef9;color:#4b6057;border:1px solid #e1e7da;border-radius:16px;padding:7px 4px;min-height:76px;box-shadow:none}
+.collection-filters svg{display:block;width:29px;height:29px}
+.collection-filters button>span:last-child{font-size:12px;font-weight:700;white-space:nowrap}
+.collection-filters b{font-size:10px;font-weight:500;margin-left:2px}
+.collection-filters [aria-pressed="true"]{background:#e6efdf;color:#294c40;border:2px solid #628b66;padding:6px 3px;box-shadow:0 2px 0 #628b6620}
+.collection-tools{display:flex;gap:8px;margin-bottom:15px}.collection-tools label:first-child{flex:1;min-width:0}.collection-tools input,.collection-tools select{min-height:44px;border:1px solid #d6e0d0;border-radius:12px;color:#3a5c4c;background:#fff;font:inherit;font-size:13px;padding:10px;max-width:100%}.collection-tools input{width:100%}
+#scr-team .tgrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+#scr-team .collection-mon{position:relative;display:flex;flex-direction:column;align-items:center;min-width:0;width:auto;height:auto;border:1px solid #e0e6da;border-radius:22px;padding:10px 10px 15px;background:linear-gradient(155deg,#fffefa,#f2f5eb);box-shadow:0 3px 0 #ccd8c628;overflow:hidden;transition:transform .15s,border-color .15s;outline-offset:3px}
+#scr-team .collection-mon.is-buddy{border:2px solid #71936a;padding:9px 9px 14px;background:linear-gradient(155deg,#f8fbef,#e6efdd)}
+#scr-team .collection-mon:hover{border-color:#83a18a;transform:translateY(-2px)}
+.collection-card-top{display:flex;align-items:center;justify-content:space-between;min-height:23px;width:100%}
+.collection-buddy-tag{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:800;color:#365b46;line-height:1;background:#fff9e8;border:1px solid #e4dec4;border-radius:20px;padding:2px 6px 2px 3px}
+.collection-buddy-tag svg{width:17px;height:17px}
+.collection-shiny-tag svg{width:22px;height:22px;display:block}
+.collection-mon-art{display:grid;place-items:center;width:100%;height:134px;margin:0 0 5px;background:radial-gradient(ellipse at center,#e7edde99,transparent 70%)}
+#scr-team .collection-mon img{display:block;width:100%;max-width:160px;height:134px;object-fit:contain;filter:drop-shadow(0 7px 4px #49604014)}
+.collection-mon strong{font-size:15px;line-height:1.2;color:#294c40;text-wrap:balance;overflow-wrap:anywhere}
+.collection-mon small{font-size:10px;letter-spacing:.2px;margin-top:5px;color:#667b6b}
+.collection-more{display:flex;margin:22px auto 0}
+.collection-next{display:grid;grid-template-columns:64px 1fr;gap:6px 16px;margin-top:24px;padding:20px;border:1px solid #e7dfc9;border-radius:24px;background:#fcf7e9;align-items:center}
+.collection-next-icon svg{display:block;width:64px;height:64px}
+.collection-next h2{font-size:18px;letter-spacing:-.3px;line-height:1.25;margin:0 0 6px;color:#5b533c}
+.collection-next p{font-size:12px;line-height:1.4;margin:0;color:#71654d}
+.collection-catch-progress{height:6px;border-radius:10px;overflow:hidden;background:#e9e0c6;margin-top:10px}
+.collection-catch-progress span{display:block;height:100%;background:#c99f45;border-radius:inherit}
+.collection-primary{display:flex;align-items:center;justify-content:center;gap:10px;min-height:54px;border:0;border-radius:15px;background:#2c6d54;color:#fffef5;padding:12px 17px;font-size:17px;font-weight:700;box-shadow:0 3px 0 #194d3a}
+.collection-primary:hover{background:#245b46}
+.collection-primary svg{width:28px;height:28px}
+.collection-next .collection-primary{grid-column:1/-1;margin-top:13px}
+.collection-next .collection-primary>span:last-child{margin-left:auto}
+.collection-next .collection-primary>span:nth-child(2){flex:1;text-align:left}
+.collection-restore{margin:20px 4px 0;color:#64776d;font-size:12px;line-height:1.6}
+.collection-restore summary{cursor:pointer;min-height:44px;display:list-item;align-content:center}
+.collection-empty-filter{grid-column:1/-1;text-align:center;background:#f1f5eb;border-radius:22px;padding:25px 20px}
+.collection-empty-filter>svg{width:60px;height:60px}
+.collection-empty-filter h3{font-size:18px;line-height:1.3;margin:9px 0;color:#395744}
+.collection-empty-filter p{max-width:300px;font-size:13px;line-height:1.6;margin:0 auto 16px;color:#617260}
+.collection-art-fallback{display:grid;place-items:center;min-height:120px;width:100%}.collection-art-fallback svg{width:100px;height:100px}
+#pokemonPreview{color:#294c40;padding:0;border:1px solid #d4dfd2;border-radius:30px;background:#fafbf5;width:min(440px,calc(100% - 28px));max-height:calc(100dvh - 32px);overflow:auto;box-shadow:0 24px 90px #16352c38}
+#pokemonPreview::backdrop{background:#172f2a80;backdrop-filter:blur(5px)}
+.collection-close{position:absolute;z-index:2;right:14px;top:14px;width:44px;height:44px;display:grid;place-items:center;border:1px solid #ffffffa0;border-radius:50%;background:#fffdfaee;color:#385b4e;font-size:28px!important;line-height:1}
+.pokemon-stage{display:grid;place-items:center;min-height:250px;padding:26px 36px 8px;background:radial-gradient(circle at 50% 60%,#fffdf7 20%,#e7efdd 58%,#dce7d5);border-radius:29px 29px 0 0}
+.pokemon-stage img{display:block;max-width:100%;width:270px;height:245px;object-fit:contain;filter:drop-shadow(0 15px 6px #536c411c)}
+.pokemon-details{text-align:center;padding:22px 26px 14px}
+.pokemon-details h2{font-size:29px;letter-spacing:-.7px;line-height:1.15;margin:7px 0;color:#294c40}
+.pokemon-details .collection-eyebrow{font-size:9px;letter-spacing:1.25px}
+.pokemon-speak{display:flex;align-items:center;justify-content:center;gap:5px;color:#537765;background:none;border:0;min-height:44px;padding:5px 10px;margin:0 auto 12px;font-size:13px!important}
+.pokemon-speak svg{width:23px;height:23px}
+.pokemon-details .collection-primary{width:100%}
+.pokemon-paging{display:flex;justify-content:space-between;align-items:center;margin-top:14px;font-size:12px;color:#64776d}
+.pokemon-paging button{width:48px;height:44px;font-size:28px!important;border:0;border-radius:12px;color:#365e4c;background:#eaf0e3}
+.pokemon-paging button:disabled{opacity:.3;cursor:default}
+@media(max-width:520px){
+ .collection-heading{margin-bottom:16px}.collection-heading h1{font-size:28px}.collection-eyebrow{font-size:9px;letter-spacing:1.35px}#teamHead.collection-total{font-size:12px;padding:8px 11px}
+ .collection-hero{min-height:215px;padding:23px 19px;grid-template-columns:54% 46%;border-radius:24px}.collection-hero h2{font-size:27px}.collection-hero .collection-eyebrow{font-size:8px;letter-spacing:1px}.collection-hero-copy>p:not(.collection-eyebrow){font-size:12px;max-width:145px}.collection-hero-art>img{width:135%;height:173px;max-width:none}.collection-orbit{width:125px;height:125px;box-shadow:0 0 0 12px #ffffff26}.collection-secondary{font-size:12px;padding:9px 11px;gap:7px}
+ #scr-team .tgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.collection-mon-art,#scr-team .collection-mon img{height:129px}.collection-section-heading>span{font-size:10px}.collection-filters{gap:6px}.collection-filters button>span:last-child{font-size:11px}.collection-filters b{font-size:9px;margin-left:1px}
+ .collection-next{padding:17px;gap:6px 12px;grid-template-columns:54px 1fr}.collection-next-icon svg{width:54px;height:54px}.collection-next h2{font-size:17px}.collection-next p{font-size:11px}
+}
+@media(max-width:359px){.collection-hero{padding:19px 15px}.collection-hero h2{font-size:24px}.collection-hero-art>img{height:150px}.collection-section-heading{display:block}.collection-section-heading>span{display:block;margin-top:5px}.collection-filters b{display:none}.collection-tools{flex-direction:column}.collection-tools select{width:100%}.pokemon-stage{min-height:185px}.pokemon-stage img{height:175px}.pokemon-details{padding:18px}}
+@media(prefers-reduced-motion:reduce){#scr-team .collection-mon{transition:none}#scr-team .collection-mon:hover{transform:none}}
