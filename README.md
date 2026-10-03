@@ -21,6 +21,16 @@ and is not included in this repository. Personal, non-commercial project.
 To ship an update, bump `CACHE = 'pokemath-v1'` in `sw.js` (v2, v3, ...) so
 installed tablets pick up the new version.
 
+## v76 — Following Jonah's school reading plan (MMSD, fall K)
+
+His screener put him at the 11th percentile, pre-alphabetic in spelling. The school is working on letter names, letter sounds and hearing sounds in words, so the app now does the same.
+- **American English voice** throughout (en-US voices preferred, British ones avoided); "zee", not "zed".
+- **Letter names from the first route**, alongside sounds: "This is the letter S. S says /s/, as in sun." Two of every five sound-hunt questions are "Find the letter M." On by default; can be turned off in Grown-ups.
+- **Listening ladder** in the school's order: rhymes → first sounds → blending → end sounds → counting sounds → middle sounds → taking a sound away (snail without /s/ → nail) → swapping a sound (cat → hat). Each step opens when the one before is secure (5+ tries, 80% of the last 6 first try); open steps keep coming back.
+- **Step-by-step spelling**: sound boxes for a word he hears; first sound only, then first and last, then whole words (Build it). Only words spelled as they sound, only letters he knows.
+- Recording your own voice: short vowels and stop sounds are starred and listed first.
+- Readiness panel adds letter names, listening steps and spelling.
+
 ## v75 — Faster grown-ups panel
 
 - Reading and Maths readiness now sit at the top of Grown-ups.

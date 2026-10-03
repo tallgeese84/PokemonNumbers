@@ -183,7 +183,7 @@ function createAdventure() {
       const root=cfg.url.replace(/\/+$/,'')+'/fam/'+encodeURIComponent(cfg.code)+'/pokemathAnalytics';
       const upload={};const revisions={};
       for(const id of dirty)if(tracker.sessions[id]){upload['sessions/'+id]=structuredClone(tracker.sessions[id]);revisions[id]=tracker.sessions[id].rev;}
-      upload['devices/'+await deviceId()]={lastSeenAt:Date.now(),build:75,sessionId:tracker.sessionId};
+      upload['devices/'+await deviceId()]={lastSeenAt:Date.now(),build:76,sessionId:tracker.sessionId};
       const r=await fetch(root+'.json',{method:'PATCH',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify(upload),signal:AbortSignal.timeout(15000)});
       if(!r.ok)throw new Error('upload');
       for(const [id,rev] of Object.entries(revisions))if(tracker.sessions[id]?.rev===rev)dirty.delete(id);

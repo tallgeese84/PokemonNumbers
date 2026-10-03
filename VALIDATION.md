@@ -1,3 +1,8 @@
+# v76 school reading plan
+
+- 93 Node tests pass. New: ladder opens in order and each step needs the one before; every listening item has distinct pictures and exactly one right answer; take-away pairs really leave the named word; letter names on by default and in hunts; spelling uses only known sounds and moves from first sound to first-and-last.
+- Browser: played swap, middle, first, last, take-away, rhyme, blend, count, spelling (first-and-last), sound hunt and letter-name screens with no page errors; every spoken line requested an en-US voice; new-letter card says "This is the letter S. S says /s/, as in sun."
+
 # v75 grown-ups panel speed
 
 - 89 Node tests pass, including a new check that cached day lookups match fresh ones across midnights, DST changes and half-hour time zones.

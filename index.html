@@ -776,28 +776,28 @@
     .pad button{ font-size:18px; min-height:42px; }
   }
 </style>
-<link rel="stylesheet" href="adventure.css?v=75">
-<link rel="stylesheet" href="visuals.css?v=75">
-<script src="visuals.js?v=75"></script>
-<script src="assets/pokemon-catalog.js?v=75"></script>
-<script src="learning-core.js?v=75"></script>
-<script src="drive-mirror.js?v=75"></script>
-<script src="adventure.js?v=75"></script>
-<script src="foundations.js?v=75"></script>
-<script src="foundation-ui.js?v=75"></script>
-<script src="reading-data.js?v=75"></script>
-<script src="reading-core.js?v=75"></script>
-<script src="reading-assess.js?v=75"></script>
-<script src="reading-ui.js?v=75"></script>
-<script src="math-path-core.js?v=75"></script>
-<script src="math-path-ui.js?v=75"></script>
-<script src="fox-core.js?v=75"></script>
-<script src="fox-model.js?v=75"></script>
-<script src="fox-ui.js?v=75"></script>
-<link rel="stylesheet" href="foundations.css?v=75">
-<link rel="stylesheet" href="reading.css?v=75">
-<link rel="stylesheet" href="math-path.css?v=75">
-<link rel="stylesheet" href="fox.css?v=75">
+<link rel="stylesheet" href="adventure.css?v=76">
+<link rel="stylesheet" href="visuals.css?v=76">
+<script src="visuals.js?v=76"></script>
+<script src="assets/pokemon-catalog.js?v=76"></script>
+<script src="learning-core.js?v=76"></script>
+<script src="drive-mirror.js?v=76"></script>
+<script src="adventure.js?v=76"></script>
+<script src="foundations.js?v=76"></script>
+<script src="foundation-ui.js?v=76"></script>
+<script src="reading-data.js?v=76"></script>
+<script src="reading-core.js?v=76"></script>
+<script src="reading-assess.js?v=76"></script>
+<script src="reading-ui.js?v=76"></script>
+<script src="math-path-core.js?v=76"></script>
+<script src="math-path-ui.js?v=76"></script>
+<script src="fox-core.js?v=76"></script>
+<script src="fox-model.js?v=76"></script>
+<script src="fox-ui.js?v=76"></script>
+<link rel="stylesheet" href="foundations.css?v=76">
+<link rel="stylesheet" href="reading.css?v=76">
+<link rel="stylesheet" href="math-path.css?v=76">
+<link rel="stylesheet" href="fox.css?v=76">
 </head>
 <body data-screen="home">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
@@ -1202,6 +1202,23 @@ const NUM_WORDS = ['zero','one','two','three','four','five','six','seven','eight
 /* Speech queue — utterances play one after another with a short gap, so a
    question, a praise line and an answer fact can never talk over each other.
    say(text, true) jumps the queue (used when the child taps to repeat). */
+/* American English voice: the family lives in the US and his school teaches US sounds and letter names. */
+const PokeVoice = (() => {
+  let chosen = null;
+  const score = v => {
+    let s = 0; const l = (v.lang || '').replace('_', '-').toLowerCase(), n = (v.name || '').toLowerCase();
+    if (l === 'en-us') s += 50; else if (l.startsWith('en')) s += 8;
+    if (/(samantha|ava|allison|susan|zoe|nicky|google us english|aria|jenny|michelle|emma|ana\b|united states)/.test(n)) s += 12;
+    if (/(natural|premium|enhanced|neural|online)/.test(n)) s += 8;
+    if (/(\buk\b|british|daniel|kate|serena|sonia|libby|arthur|martha|oliver|australia|india|ireland|scotland)/.test(n)) s -= 25;
+    if (/(novelty|whisper|bells|zarvox|trinoids|bad news|good news|albert|jester|bubbles|boing|cellos|organ|superstar|wobble)/.test(n)) s -= 80;
+    return s;
+  };
+  function pick(){ try{ const vs = speechSynthesis.getVoices() || []; if (vs.length) chosen = vs.slice().sort((a, b) => score(b) - score(a))[0] || null; }catch(e){} return chosen; }
+  if ('speechSynthesis' in window){ pick(); try{ speechSynthesis.addEventListener('voiceschanged', pick); }catch(e){} }
+  return { get voice(){ return chosen || pick(); }, score, pick };
+})();
+window.PokeVoice = PokeVoice;
 const speechQ = [];
 let speaking = false, speechTimer = null;
 function say(text, interrupt){
@@ -1217,7 +1234,8 @@ function pumpSpeech(){
   speaking = true;
   try{
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'en'; u.rate = 0.85; u.pitch = 1.15;
+    const v = PokeVoice.voice; if (v){ u.voice = v; u.lang = v.lang; } else u.lang = 'en-US';
+    u.rate = 0.85; u.pitch = 1.15;
     let done = false;
     const finish = () => {
       if (done) return;

@@ -64,7 +64,7 @@ test('a Sound explorer gets listening and letter-sound games, not words, until b
  const st={assessV:2,profile:{pre:true}};
  const intro=R.route(1).add.flatMap(g=>[{...q('meet','g:'+g,true),teach:true},q('shapes','s:'+g,true),q('write','l:'+g,true),q('hunt','g:'+g,true)]);
  const base=[...intro,q('ears','pa:x',true),q('hunt','x',true)];
- for(let i=0;i<6;i++){const a=R.nextActivity(sess(base),st,['ears','hunt'][i%2]==='ears'?['ears']:['hunt']).act;assert.ok(['hunt','ears','review'].includes(a),a);}
+ for(let i=0;i<6;i++){const a=R.nextActivity(sess(base),st,['ears','hunt'][i%2]==='ears'?['ears']:['hunt']).act;assert.ok(['hunt','ears','review','spell'].includes(a),a);}
  assert.equal(R.preReading(sess(base),st),true);
  const secure=['s','a','t','p'].flatMap(g=>[q('hunt','g:'+g,true),q('hunt','g:'+g,true)]);
  const blends=Array.from({length:5},()=>({...q('ears','pa:blend',true),kind:'blend'}));
@@ -198,7 +198,7 @@ test('words wait until he has shown he knows their sounds, not just met them',()
  const met=R.route(1).add.flatMap(g=>[{...q('meet','g:'+g,true),teach:true},q('shapes','s:'+g,true),q('write','l:'+g,true)]);
  const wrong=['p','i','n'].map(g=>q('hunt','g:'+g,false));const right=['s','a','t'].map(g=>q('hunt','g:'+g,true));
  assert.deepEqual(R.readableWords(sess([...met,...wrong,...right]),1).map(R.clean),['sat']);
- assert.ok(['hunt','ears','review'].includes(R.nextActivity(sess([...met,...wrong,...right,q('ears','pa:x',true),q('hunt','x',true)]),st,['ears']).act));
+ assert.ok(['hunt','ears','review','spell'].includes(R.nextActivity(sess([...met,...wrong,...right,q('ears','pa:x',true),q('hunt','x',true)]),st,['ears']).act));
  const more=['p','i','n'].map(g=>q('hunt','g:'+g,true));
  assert.ok(R.readableWords(sess([...met,...wrong,...right,...more]),1).length>=6);
 });
@@ -209,4 +209,57 @@ test('a sound he keeps missing is shown again before more quizzing',()=>{
  const p=R.nextActivity(sess([...met,...miss]),st,['hunt']);assert.equal(p.act,'reteach');
  assert.deepEqual(R.makeRound('reteach',1,sess([...met,...miss]),st).items.map(i=>i.g),['p']);
  assert.notEqual(R.nextActivity(sess([...met,...miss]),st,['reteach']).act,'reteach');
+});
+
+/* ---------- v76: the school's reading plan (letter names, listening ladder, step-by-step spelling) ---------- */
+test('listening steps open in the school plan order, each once the one before is secure', () => {
+ const st={assessV:2,profile:{pre:true}};
+ const ok=(kind,n)=>Array.from({length:n},()=>({...q('ears','pa:'+kind,true),kind}));
+ assert.deepEqual(R.ladder(sess([])).unlocked,['rhyme','first','blend']);
+ assert.deepEqual(R.ladder(sess(ok('blend',5))).unlocked,['rhyme','first','blend','last']);
+ const all=['blend','last','count','middle','delete'].flatMap(k=>ok(k,6));
+ assert.deepEqual(R.ladder(sess(all)).unlocked,R.LADDER);
+ // the newest open step leads the round, earlier secure steps come back for review
+ const round=R.makeRound('ears',1,sess(all),st);
+ assert.equal(round.items[0].kind,'swap');
+ assert.ok(round.items.every(i=>R.LADDER.includes(i.kind)));
+ for(let t=0;t<30;t++){const r=R.makeRound('ears',1,sess(all),{},Math.random);
+  for(const it of r.items){assert.ok(it.options.some(o=>o.w===it.answer||it.kind==='count'),it.kind);
+   if(it.options[0]?.e)assert.equal(new Set(it.options.map(o=>o.e)).size,it.options.length,'pictures must differ: '+it.kind+' '+it.word);
+   if(it.kind==='swap'){const a=R.splitWord(it.word).map(p=>p.g),b=R.splitWord(it.to).map(p=>p.g);assert.equal(a.filter((g,i)=>g!==b[i]).length,1);}
+   if(it.kind==='last')assert.ok(it.options.filter(o=>R.splitWord(o.w).filter(p=>p.cls!=='silent').at(-1).g===it.target.g).length===1,'only one picture ends with the sound');
+   if(it.kind==='middle')assert.ok(it.options.filter(o=>R.splitWord(o.w)[1]?.g===it.target.g).length===1,'only one picture has the middle sound');}}
+});
+test('every take-away pair has pictures and really leaves the named word', () => {
+ for(const [whole,gone,left,where] of D.DELETE){assert.ok(D.ART[whole]&&D.ART[left],whole);
+  const w=R.splitWord(whole).map(p=>p.g),l=R.splitWord(left).map(p=>p.g);
+  const cut=where==='first'?w.slice(1):w.slice(0,-1);
+  // same sounds, different spelling: "bread" without /b/ sounds like "red"
+  const SAME={bread:'red'};if(SAME[whole]!==left)assert.equal(cut.join(''),l.join(''),whole+' → '+left);
+  assert.equal(where==='first'?w[0]:w.at(-1),gone==='c'?'c':gone);}
+});
+test('letter names are on from the start and appear in sound hunts; a grown-up can turn them off', () => {
+ assert.equal(R.namesOn({}),true);assert.equal(R.namesOn({namesAt:1,names:false}),false);
+ const met=R.route(1).add.map(g=>({...q('meet','g:'+g,true),teach:true}));
+ const r=R.makeRound('hunt',1,sess(met),{assessV:2});assert.equal(r.items.filter(i=>i.kind==='lname').length,2);
+ assert.ok(r.items.filter(i=>i.kind==='lname').every(i=>i.item==='ln:'+i.target&&i.options.includes(i.answer)));
+ assert.equal(R.makeRound('hunt',1,sess(met),{assessV:2,namesAt:1,names:false}).items.filter(i=>i.kind==='lname').length,0);
+ assert.equal(D.LETTER_NAME.z,'zee');
+});
+test('spelling builds up: first sound of a word he hears, then first and last, only with sounds he knows', () => {
+ const st={assessV:2,profile:{pre:true}};
+ const know=gs=>gs.flatMap(g=>[{...q('meet','g:'+g,true),teach:true},q('shapes','s:'+g,true),q('write','l:'+g,true),q('hunt','g:'+g,true)]);
+ assert.equal(R.spellStage(sess(know(['s'])),1),0);
+ const k=know(['s','a','t','p','i','n']);
+ assert.equal(R.spellStage(sess(k),1),1);
+ const r=R.makeRound('spell',1,sess(k),st);assert.ok(r.items.length>=3);
+ const known=new Set(R.knownSounds(sess(k),1));
+ for(const it of r.items){assert.equal(it.kind,'spell1');assert.deepEqual(it.ask,[0]);assert.ok(known.has(it.parts[0].g));assert.ok(it.tiles.includes(it.parts[0].g));assert.ok(it.tiles.length<=3);}
+ const good=Array.from({length:6},()=>({...q('spell','pa:spell1',true),kind:'spell1'}));
+ assert.equal(R.spellStage(sess([...k,...good]),1),2);
+ const r2=R.makeRound('spell',1,sess([...k,...good]),st);
+ for(const it of r2.items){assert.equal(it.kind,'spell2');assert.equal(it.ask.length,2);for(const i of it.ask){assert.ok(known.has(it.parts[i].g));assert.ok(it.tiles.includes(it.parts[i].g));}}
+ // a pre-reader rotates listening, letter sounds and spelling
+ const acts=new Set();let recent=['ears','hunt','spell'];for(let i=0;i<9;i++){const a=R.nextActivity(sess([...k,...good,q('ears','pa:x',true),q('hunt','x',true),q('spell','pa:spell1',true)]),st,recent).act;acts.add(a);recent=[...recent,a];}
+ assert.ok(['ears','hunt','spell'].every(a=>acts.has(a)),[...acts].join());
 });

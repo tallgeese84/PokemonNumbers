@@ -25,12 +25,8 @@ function createReading(){
  function loadRecs(){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith(REC_PREFIX))REC[k.slice(REC_PREFIX.length)]=localStorage.getItem(k);}}catch(e){}}
  loadRecs();
  let voice=null,gen=0,busy=false,audioEl=null;
- function pickVoice(){
-  const vs=window.speechSynthesis?.getVoices?.()||[];if(!vs.length)return;
-  const score=v=>{let s=0;const l=(v.lang||'').replace('_','-');if(/^en-(GB|SG|AU|NZ|IE)/.test(l))s+=40;else if(l.startsWith('en'))s+=18;const n=(v.name||'').toLowerCase();
-   if(/(google uk english female|serena|kate|sonia|libby|karen|moira|fiona|samantha)/.test(n))s+=10;if(/(natural|premium|enhanced|neural)/.test(n))s+=8;if(/(novelty|whisper|bells|zarvox|trinoids|bad news|good news|albert|jester)/.test(n))s-=60;return s;};
-  voice=vs.slice().sort((a,b)=>score(b)-score(a))[0]||null;
- }
+ // Same American English voice as the rest of the app (see PokeVoice in index.html).
+ function pickVoice(){voice=window.PokeVoice?window.PokeVoice.pick():null;}
  if(window.speechSynthesis){pickVoice();window.speechSynthesis.addEventListener?.('voiceschanged',pickVoice);}
  function stop(){gen++;busy=false;try{audioEl?.pause();}catch(e){}audioEl=null;try{window.speechSynthesis?.cancel();}catch(e){}}
  function waitTurn(fn,tries=0){if(speechIdle()||tries>16){if(!speechIdle())shutUp();fn();}else setTimeout(()=>waitTurn(fn,tries+1),250);}
@@ -39,7 +35,7 @@ function createReading(){
   if(!soundOn||!window.speechSynthesis||!text){setTimeout(done,opts.silentMs||250);return;}
   busy=true;
   waitTurn(()=>{if(g!==gen)return;try{window.speechSynthesis.cancel();}catch(e){}
-   const u=new SpeechSynthesisUtterance(String(text));if(voice){u.voice=voice;u.lang=voice.lang;}else u.lang='en-GB';
+   const u=new SpeechSynthesisUtterance(String(text));if(!voice)pickVoice();if(voice){u.voice=voice;u.lang=voice.lang;}else u.lang='en-US';
    u.rate=opts.rate||0.82;u.pitch=opts.pitch||1.05;let fin=false;const end=()=>{if(fin)return;fin=true;done();};
    u.onend=end;u.onerror=end;setTimeout(end,Math.min(9000,1100+String(text).length*95));
    try{window.speechSynthesis.speak(u);}catch(e){end();}});
@@ -56,7 +52,7 @@ function createReading(){
  }
  function chain(jobs,gap,done){const g=gen;let i=0;(function step(){if(g!==gen)return;if(i>=jobs.length){done?.();return;}jobs[i++](()=>setTimeout(step,gap));})();}
  function letterName(l){return D.LETTER_NAME[l]||l;}
- const namesOn=()=>state.namesAt?state.names:st().passed?.[11]>0;
+ const namesOn=()=>R.namesOn(state);
 
  /* ---------- helpers ---------- */
  function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;}
@@ -94,8 +90,8 @@ function createReading(){
  /* ---------- round runner ---------- */
  let run=null;            // {round, i, onDone, item, meta, wrong, help, ref}
  const recent=[];
- const TITLE={reteach:'Sounds again',meet:'New sounds',write:'Writing letters',shapes:'Letter shapes',hunt:'Sound hunt',read:'Read it',build:'Build it',heart:'Tricky words',sentence:'Read and tap',ears:'Sound ears',book:'Book time',name:'Name catch',review:'Remember these',caps:'Capital letters',placement:'Reading check'};
- const INTRO={reteach:'Let us look at these sounds again.',meet:'Listen to the new sound.',write:'Trace the letter. Start on the green dot.',shapes:'Find the letter that looks the same.',hunt:'Listen. Find the sound.',read:'Tap each sound. Say them fast. Then find the picture.',build:'Listen, then build the word.',heart:'Tricky words. Learn them by heart.',sentence:'Read it, then tap the right picture.',ears:'Listen with your ears.',book:'Let us read a book.',name:'Read the name to catch the Pokémon!',review:'Do you remember these?',caps:'Find the one written the right way.',placement:'Show me what you can read!'};
+ const TITLE={reteach:'Sounds again',meet:'New sounds',write:'Writing letters',shapes:'Letter shapes',hunt:'Sound hunt',read:'Read it',build:'Build it',heart:'Tricky words',sentence:'Read and tap',ears:'Sound ears',book:'Book time',name:'Name catch',review:'Remember these',caps:'Capital letters',placement:'Reading check',spell:'Spell it'};
+ const INTRO={reteach:'Let us look at these sounds again.',meet:'Meet a new letter and its sound.',write:'Trace the letter. Start on the green dot.',shapes:'Find the letter that looks the same.',hunt:'Listen. Find the sound.',read:'Tap each sound. Say them fast. Then find the picture.',build:'Listen, then build the word.',heart:'Tricky words. Learn them by heart.',sentence:'Read it, then tap the right picture.',ears:'Listen with your ears.',book:'Let us read a book.',name:'Read the name to catch the Pokémon!',review:'Do you remember these?',caps:'Find the one written the right way.',placement:'Show me what you can read!',spell:'Listen to the word. Find the letter for the sound.'};
  function setHeader(act,n){$('rdTitle').textContent=TITLE[act]||'Reading';const L=R.route(n);$('rdRoute').innerHTML='';const chip=el('span','route-chip','Route '+n);chip.style.setProperty('--route',L.colour);$('rdRoute').append(chip);}
  function enter(){shutUp();mode='read';show('read');}
  function startRound(round,onDone){
@@ -154,7 +150,11 @@ function createReading(){
   const e=D.G[it.g];const stage=$('rdStage');
   const card=el('div','meet-card');const t=el('div','meet-tile');const tl=tiles(t,[{g:label(it.g),sound:e[0],cls:clsOf(it.g),play:it.g}]);
   card.append(t,el('div','meet-art',e[2]),el('div','meet-key',e[1]));stage.append(card);
-  const sayIt=()=>sound(it.g,()=>setTimeout(()=>speak(e[1],{rate:.8,done:()=>{if(namesOn()&&it.g.length===1)speak('the letter '+letterName(it.g),{rate:.8});}}),250));
+  // Letter name and sound together, as at school: "This is the letter S. S says /s/, as in sun."
+  const up=it.g.toUpperCase();
+  const sayIt=()=>namesOn()&&it.g.length===1
+   ?speak('This is the letter '+up+'. '+up+' says',{rate:.8,done:()=>sound(it.g,()=>setTimeout(()=>speak('as in '+e[1],{rate:.8}),200))})
+   :sound(it.g,()=>setTimeout(()=>speak(e[1],{rate:.8}),250));
   replay=sayIt;setTimeout(()=>{flash(tl[0]);sayIt();},300);
   $('rdPrompt').textContent='';
   $('rdActions').append(btn('btn read-next','Next',()=>teachDone(),'▶'));
@@ -166,7 +166,7 @@ function createReading(){
  };
  RENDER.upper=it=>{
   const big=el('div','upper-target',it.target);$('rdStage').append(big);$('rdPrompt').textContent='Find the capital';
-  replay=()=>speak('Find the capital letter '+letterName(it.target),{rate:.8});setTimeout(replay,250);
+  replay=()=>speak('Find the capital letter '+it.target.toUpperCase(),{rate:.8});setTimeout(replay,250);
   it.options.forEach(g=>$('rdOptions').append(btn('ltile upper','Capital '+g,b=>{if(g===it.answer)right(b,g);else{wrong(b,g);if(run.wrong>=2)fade($('rdOptions'),x=>x.textContent===it.answer);}},esc(g))));
  };
  RENDER.hunt=it=>{
@@ -253,6 +253,59 @@ function createReading(){
   ear.onclick=replay;setTimeout(()=>speak('Listen and blend.',{rate:.85,done:replay}),250);
   it.options.forEach(o=>{const b=btn('pic','Picture',b=>{if(o.w===it.answer)right(b,o.w,go=>speak(o.w,{rate:.8,done:go}));else{wrong(b,o.w);setTimeout(replay,400);if(run.wrong>=2){help('word spoken');fade($('rdOptions'),x=>x.dataset.w===it.answer);}}},'');b.textContent=o.e;b.dataset.w=o.w;$('rdOptions').append(b);});
  };
+ /* Shared by the listening steps: a target picture or ear, picture choices read aloud */
+ function picChoices(it,onRight,onWrongExtra){
+  it.options.forEach(o=>{const b=btn('pic','Picture',b=>{if(o.w===it.answer)right(b,o.w,go=>onRight(o,go));else{wrong(b,o.w);if(!run.round.placement){speak(o.w,{rate:.8});onWrongExtra?.();if(run.wrong>=2){help('answer shown');fade($('rdOptions'),x=>x.dataset.w===it.answer);}}}},'');b.textContent=o.e;b.dataset.w=o.w;$('rdOptions').append(b);});
+ }
+ const readOptions=next=>chain([...$('rdOptions').children].map(b=>go=>{flash(b);speak(b.dataset.w,{rate:.8,done:go});}),200,next);
+ RENDER.last=it=>{
+  const ear=el('div','hunt-ear');ear.innerHTML=PokeVisuals.icon('listen');ear.onclick=()=>sound(it.target);$('rdStage').append(ear);
+  replay=()=>speak('Which one ends with',{rate:.85,done:()=>sound(it.target,()=>readOptions())});
+  picChoices(it,(o,go)=>speak(o.w+'. It ends with',{rate:.8,done:()=>sound(it.target,go)}));setTimeout(replay,300);
+ };
+ RENDER.middle=it=>{
+  const ear=el('div','hunt-ear');ear.innerHTML=PokeVisuals.icon('listen');ear.onclick=()=>sound(it.target);$('rdStage').append(ear);
+  replay=()=>speak('Which one has',{rate:.85,done:()=>sound(it.target,()=>speak('in the middle?',{rate:.85,done:()=>readOptions()}))});
+  picChoices(it,(o,go)=>{const ps=it.parts||R.splitWord(o.w).filter(p=>p.cls!=='silent');chain(ps.map(p=>next=>sound(p,next)),260,()=>speak(o.w,{rate:.8,done:go}));});setTimeout(replay,300);
+ };
+ RENDER.delete=it=>{
+  const big=el('div','build-art',it.e);big.onclick=()=>speak(it.word,{rate:.78});$('rdStage').append(big);
+  replay=()=>speak('Say '+it.word+'. Now say '+it.word+' without',{rate:.8,done:()=>sound(it.gone,()=>speak('What is left?',{rate:.85,done:()=>readOptions()}))});
+  picChoices(it,(o,go)=>speak(it.word+' without',{rate:.8,done:()=>sound(it.gone,()=>speak('is '+o.w+'!',{rate:.8,done:go}))}));setTimeout(replay,300);
+ };
+ RENDER.swap=it=>{
+  const big=el('div','build-art',it.e);big.onclick=()=>speak(it.word,{rate:.78});$('rdStage').append(big);
+  const pos=['first','middle','last'][it.at];
+  replay=()=>speak('This is '+it.word+'. Change the '+pos+' sound',{rate:.8,done:()=>sound(it.out,()=>speak('to',{rate:.85,done:()=>sound(it.in,()=>speak('What do you get?',{rate:.85,done:()=>readOptions()}))}))});
+  picChoices(it,(o,go)=>speak(it.word+', '+o.w+'!',{rate:.8,done:go}));setTimeout(replay,300);
+ };
+ /* Letter names, as at school: "Find the letter M." */
+ RENDER.lname=it=>{
+  const ear=el('div','hunt-ear');ear.innerHTML=PokeVisuals.icon('listen');$('rdStage').append(ear);
+  const up=it.target.toUpperCase();replay=()=>speak('Find the letter '+up+'.',{rate:.8});ear.onclick=replay;setTimeout(replay,300);
+  it.options.forEach(g=>{const b=btn('ltile','Letter '+g,b=>{if(g===it.answer)right(b,g,go=>speak(up+'. '+up+' says',{rate:.8,done:()=>sound(g,go)}));else{wrong(b,g);setTimeout(replay,450);if(run.wrong>=2)fade($('rdOptions'),x=>x.dataset.g===it.answer);}},esc(g));b.dataset.g=g;$('rdOptions').append(b);});
+ };
+ /* Spelling step by step: sound boxes for the whole word, only the first (then first and last) to fill. */
+ function renderSpell(it){
+  const art=el('div','build-art',it.e);$('rdStage').append(art);
+  const boxes=el('div','build-slots sound-boxes');it.parts.forEach((p,i)=>{const b=el('div','slot'+(it.ask.includes(i)?' ask':' given'));b.dataset.cls=p.cls;boxes.append(b);});$('rdStage').append(boxes);
+  let k=0;const ask=()=>it.ask[k],word=()=>speak(it.word,{rate:.72});
+  const prompt=()=>speak(it.ask.length===1?'What is the first sound?':k===0?'What is the first sound?':'What is the last sound?',{rate:.85});
+  replay=()=>speak(it.word,{rate:.72,done:prompt});art.onclick=word;setTimeout(replay,300);
+  const lightBoxes=done=>chain(it.parts.map((p,i)=>next=>{[...boxes.children].forEach((b,j)=>b.classList.toggle('lit',j===i));sound(p,next);}),220,()=>{[...boxes.children].forEach(b=>b.classList.remove('lit'));done?.();});
+  it.tiles.forEach(g=>{const b=btn('ltile','Letter '+label(g),b=>{
+   if(run.done)return;const want=it.parts[ask()];
+   if(g===want.g&&!b.classList.contains('used')){[...$('rdOptions').children].forEach(x=>x.classList.remove('hint'));const box=boxes.children[ask()];box.textContent=label(g);box.classList.add('filled');b.classList.add('used');b.disabled=true;k++;
+    if(k>=it.ask.length)sound(want,()=>setTimeout(()=>right(boxes,it.word,go=>lightBoxes(()=>speak(it.word,{rate:.75,done:go}))),200));
+    else sound(want,()=>setTimeout(prompt,250));}
+   else{if(!run.wrong)respond(g,false);run.wrong++;sndOops();b.classList.add('wrong');setTimeout(()=>b.classList.remove('wrong'),400);
+    // First miss: stretch the word and say the sound he needs; second: fade the rest and point.
+    setTimeout(()=>speak(it.word,{rate:.6,done:()=>sound(want)}),350);
+    if(run.wrong>=2){help('sound given');[...$('rdOptions').children].forEach(x=>{if(x.dataset.g!==want.g&&!x.classList.contains('used')){x.disabled=true;x.classList.add('faded');}});
+     const next=[...$('rdOptions').children].find(x=>x.dataset.g===want.g&&!x.disabled);if(next){next.classList.remove('hint');void next.offsetWidth;next.classList.add('hint');}}}
+  },esc(label(g)));b.dataset.g=g;$('rdOptions').append(b);});
+ }
+ RENDER.spell1=renderSpell;RENDER.spell2=renderSpell;
  RENDER.count=it=>{
   const art=el('div','build-art',D.ART[it.word]||'🔊');$('rdStage').append(art);
   replay=()=>speak('How many sounds in '+it.word+'?',{rate:.8});art.onclick=()=>speak(it.word,{rate:.75});setTimeout(replay,250);
@@ -378,7 +431,7 @@ function createReading(){
  function openLetters(){
   enter();run=null;setHeader('write',R.currentRoute(st()));$('rdTitle').textContent='My letters';$('rdPrompt').textContent='';$('rdStage').replaceChildren();$('rdActions').replaceChildren();$('rdPips').replaceChildren();feedback('');
   const gs=R.graphemesUpTo(R.currentRoute(st())),grid=el('div','letter-grid');
-  gs.forEach(g=>{const b=btn('ltile','Sound '+label(g),()=>{sound(g);if(namesOn()&&g.length===1)setTimeout(()=>speak('the letter '+letterName(g),{rate:.8}),700);},esc(label(g)));grid.append(b);});
+  gs.forEach(g=>{const b=btn('ltile','Sound '+label(g),()=>{sound(g);if(namesOn()&&g.length===1)setTimeout(()=>speak('the letter '+g.toUpperCase(),{rate:.8}),700);},esc(label(g)));grid.append(b);});
   const writeBtn=btn('btn','Write a letter',()=>{const ls=R.singleLetters(R.currentRoute(st()));startRound({act:'write',route:R.currentRoute(st()),items:ls.slice(-6).map(l=>({route:R.currentRoute(st()),kind:'write',item:'l:'+l,letter:l,teach:true}))},openLetters);},'✏️');
   $('rdOptions').replaceChildren(grid);$('rdActions').append(writeBtn);replay=()=>speak('Tap a sound to hear it.',{rate:.85});replay();
  }
@@ -420,10 +473,10 @@ function createReading(){
   ${profileHTML(s.profile)}
   <table class="journal-table"><tbody>${rows}</tbody></table>
   <div class="pprow reading-tools"><button class="btn" id="rdAloud">Listen to ${esc(childName||'Jonah')} read</button><button class="btn" id="rdPlace">Redo English check</button>
-  <label>Letter names <select id="rdNames"><option value="auto">Automatic (from route 12)</option><option value="on">On</option><option value="off">Off</option></select></label>
+  <label>Letter names <select id="rdNames"><option value="auto">On from the start (default)</option><option value="on">On</option><option value="off">Off</option></select></label>
   <label>Move to route <select id="rdMove">${D.ROUTES.map(x=>`<option value="${x.n}" ${x.n===r.route?'selected':''}>${x.n} · ${esc(x.name)}</option>`).join('')}</select></label></div>
   ${state.legacy?`<p class="muted">Imported from the old Poké Reading app: it had reached route ${state.legacy.at} and ${state.legacy.caught.length} Pokémon (added to his collection). Its routes opened on completion rather than mastery, so the reading check decides the starting route.</p>`:''}
-  <details><summary>Record the sounds in your voice</summary><p class="muted">Speech engines add “uh” to sounds like /b/ and /t/, which makes blending harder. Tap ● and say just the sound, short and clean.</p><div id="rdRecGrid" class="rec-grid"></div></details>`;
+  <details><summary>Record the sounds in your voice</summary><p class="muted">Speech engines add “uh” to sounds like /b/ and /t/, which makes blending harder. Tap ● and say just the sound, short and clean, the way his teacher says it. ★ Start with the starred ones (short vowels and sounds like /b/, /t/): the tablet’s voice gets these least right. Recordings stay on this tablet.</p><div id="rdRecGrid" class="rec-grid"></div></details>`;
   $('rdNames').value=state.namesAt?(state.names?'on':'off'):'auto';
   $('rdNames').onchange=()=>{const v=$('rdNames').value;if(v==='auto'){state.namesAt=0;state.names=false;}else{state.names=v==='on';state.namesAt=Date.now();}save();};
   $('rdMove').onchange=()=>{const to=+$('rdMove').value;if(!confirm('Move reading to route '+to+'? Routes before it are marked done; later routes are reopened.'))return renderPanel();
@@ -445,8 +498,10 @@ function createReading(){
  }
  function renderRec(){
   const grid=$('rdRecGrid');if(!grid)return;grid.replaceChildren();
-  const gs=Object.keys(D.G).filter(g=>D.G[g][3]!=='end'||g==='ing').concat(['id']);
-  gs.forEach(g=>{const cell=el('div','rec-cell'+(REC[g]?' has':''));cell.append(el('b','',label(g)));
+  // The robot voice is least clear on short vowels and on stop sounds (it adds "uh"), so those come first.
+  const FIRST=['a','e','i','o','u','b','c','d','g','p','t','k','h','j'];
+  const gs=[...FIRST,...Object.keys(D.G).filter(g=>(D.G[g][3]!=='end'||g==='ing')&&!FIRST.includes(g)),'id'];
+  gs.forEach(g=>{const cell=el('div','rec-cell'+(REC[g]?' has':'')+(FIRST.includes(g)?' first':''));cell.append(el('b','',label(g)));
    const rec=el('button','btn','●');rec.onclick=()=>record(g,rec);const play=el('button','btn','▶');play.disabled=!REC[g];play.onclick=()=>{stop();sound(g);};
    const del=el('button','btn','✕');del.disabled=!REC[g];del.onclick=()=>{delete REC[g];try{localStorage.removeItem(REC_PREFIX+g);}catch(e){}renderRec();};
    cell.append(rec,play,del);grid.append(cell);});

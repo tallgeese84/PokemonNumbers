@@ -79,3 +79,10 @@ button:disabled.right{opacity:1}
 #scr-read .hint{animation:read-hint 1s ease-in-out 3;border-color:#e6b93c!important;box-shadow:0 0 0 4px #f3ce7577}
 @keyframes read-hint{50%{transform:scale(1.08)}}
 .assess-box{margin:8px 0 12px;padding:8px 12px;border:1px solid #d6e2d9;border-radius:14px;background:#f8fbf6}.assess-box summary{cursor:pointer}
+
+/* v76: sound boxes for spelling, starred recordings */
+.sound-boxes .slot.given{background:#eef3ee;border-style:dashed}
+.sound-boxes .slot.given::after{content:'•';color:#9db3a3;font-size:28px}
+.sound-boxes .slot.ask{border-color:#3CC7B4;box-shadow:0 0 0 3px #3cc7b433}
+.sound-boxes .slot.lit{background:#fff4c2}
+.rec-cell.first b::after{content:' ★';color:#e0a400}

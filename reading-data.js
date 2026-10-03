@@ -58,6 +58,7 @@ const ART={
   lip:'👄',bat:'🦇',fun:'🥳',doll:'🪆',
   jam:'🍯',van:'🚐',fox:'🦊',box:'📦',six:'6️⃣',jet:'✈️',web:'🕸️',wig:'💇',zip:'🤐',
   jug:'🫙',yes:'👍',wax:'🕯️',
+  cap:'🧢',bug:'🐛',pig:'🐷',bee:'🐝',snail:'🐌',nail:'💅',lock:'🔒',bread:'🍞',brain:'🧠',cart:'🛒',
   ship:'🚢',fish:'🐟',chip:'🍟',ring:'💍',king:'🤴',shell:'🐚',shop:'🏪',chin:'😃',
   bath:'🛁',sing:'🎤',dish:'🍽️',moth:'🦋',chick:'🐤',
   frog:'🐸',flag:'🚩',drum:'🥁',hand:'✋',milk:'🥛',tent:'⛺',jump:'🤸',nest:'🪺',
@@ -196,7 +197,12 @@ const ROUTES=[
 
 /* Pictures clear enough to name from sound alone (listening games). */
 /* Pictures a 5-year-old names easily (ambiguous ones such as moth→🦋 or jug→🫙 left out). */
-const EARS=['pin','pan','map','mop','dog','pot','cat','cup','duck','sock','sun','ten','pen','hat','hen','bed','bus','leg','bell','fan','log','bat','van','fox','box','six','web','ship','fish','chip','ring','shell','shop','bath','chick','frog','flag','drum','hand','milk','tent','nest','crab','clock','rain','tree','goat','boat','feet','sheep','coat','train','queen','moon','book','star','car','corn','fork','spoon','shark','foot','cake','bike','kite','snake','five','plate','home','bone','rose','nose','leaf','seal','cow','owl','coin','crown','bird','girl','shirt','clown'];
+const EARS=['cap','bug','pig','bee','snail','nail','lock','cart','pin','pan','map','mop','dog','pot','cat','cup','duck','sock','sun','ten','pen','hat','hen','bed','bus','leg','bell','fan','log','bat','van','fox','box','six','web','ship','fish','chip','ring','shell','shop','bath','chick','frog','flag','drum','hand','milk','tent','nest','crab','clock','rain','tree','goat','boat','feet','sheep','coat','train','queen','moon','book','star','car','corn','fork','spoon','shark','foot','cake','bike','kite','snake','five','plate','home','bone','rose','nose','leaf','seal','cow','owl','coin','crown','bird','girl','shirt','clown'];
+
+/* Taking a sound away: [whole word, sound removed, what is left, where]. Every word has a picture.
+   (Checked by ear in American English: "bear" without /b/ is "air", not "ear", so it is left out.) */
+const DELETE=[['snail','s','nail','first'],['spin','s','pin','first'],['stop','s','top','first'],['train','t','rain','first'],['brain','b','rain','first'],
+ ['farm','f','arm','first'],['clock','c','lock','first'],['bread','b','red','first'],['tent','t','ten','last'],['cart','t','car','last'],['seal','l','sea','last']];
 
 /* Rhyme families with pictures, for listening games. */
 const RHYMES=[['cat','hat','bat'],['dog','log','frog'],['cake','snake','lake'],['moon','spoon'],['goat','boat','coat'],['bell','shell'],['fox','box'],['car','star'],['nose','rose'],['hen','pen','ten'],['bed','sled'],['mop','top']];
@@ -229,6 +235,6 @@ const CONFUSE={
   i:['l','j','t'],l:['i','t','j'],t:['f','l','i'],f:['t','l','r'],s:['z','c','e'],z:['s','x','n'],c:['e','o','s'],e:['c','o','a'],
   o:['c','e','a','g'],a:['e','o','c','d'],g:['q','y','p','a'],y:['g','v','x'],v:['w','y','u'],h:['n','b','k'],k:['h','x','r'],r:['n','f','k'],x:['k','y','z'],j:['i','g','y']
 };
-const LETTER_NAME={a:'ay',b:'bee',c:'see',d:'dee',e:'ee',f:'eff',g:'jee',h:'aitch',i:'eye',j:'jay',k:'kay',l:'ell',m:'em',n:'en',o:'oh',p:'pee',q:'cue',r:'ar',s:'ess',t:'tee',u:'you',v:'vee',w:'double you',x:'ex',y:'why',z:'zed'};
-return {G,LONG,VOWELS,MULTI,ART,ROUTES,DOLCH,EARS,RHYMES,WRITE,CONFUSE,LETTER_NAME};
+const LETTER_NAME={a:'ay',b:'bee',c:'see',d:'dee',e:'ee',f:'eff',g:'jee',h:'aitch',i:'eye',j:'jay',k:'kay',l:'ell',m:'em',n:'en',o:'oh',p:'pee',q:'cue',r:'ar',s:'ess',t:'tee',u:'you',v:'vee',w:'double you',x:'ex',y:'why',z:'zee'};
+return {G,LONG,VOWELS,MULTI,ART,ROUTES,DOLCH,EARS,RHYMES,DELETE,WRITE,CONFUSE,LETTER_NAME};
 });
