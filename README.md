@@ -4,7 +4,7 @@ The home Pokémon A–Z poster opens quietly. It no longer plays an electronic t
 
 Repeating a tap on the currently playing letter lets its two demonstrations finish. Switching letters fades out the old clip over 75 ms and cancels its queued repeat. New versioned offline audio paths prevent old cached files from masking the update. Listening exposure and guided-practice progress rules are unchanged.
 
-Validation: all 12 regression test files pass, including waveform edges, cancellation during playback, both gain-ramp and native-volume fallbacks, rapid repeated taps, Q/X sequences, reporting, sync and offline cache isolation. Audio is still synthetic; waveform/browser checks are not a subjective listening assessment on Jonah’s tablet. Reproduction and audio details: [phoneme assets](assets/phonemes/README.md).
+Validation: all 12 regression test files pass, including waveform edges, cancellation during playback, both gain-ramp and native-volume fallbacks, rapid repeated taps, Q/X sequences, reporting, sync and offline cache isolation. Audio is still synthetic; waveform/browser checks are not a subjective listening assessment on Jonah’s tablet. Reproduction and audio details: [phoneme assets](assets/phonemes/README.md). Live verification: v81 home label, all 26 sound cards, repeated taps and completion without an error message; all 43 deployed WAV hashes plus the page/player/cache script match the tested files. GitHub regression tests and Pages deployment succeeded. [Verified poster preview](docs/v81-smooth-audio-1791036513118.jpg).
 
 ## v80 · Illustrated home page and alphabet shortcut
 
