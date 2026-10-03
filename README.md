@@ -6,7 +6,7 @@ All 43 offline phoneme clips now use the free Kokoro American English female voi
 
 Soundboard taps are saved as listening exposure in the existing Drive history and daily report, with no correct answer, independent score, practice-time credit or reward. They do not skip the first teaching lesson or suppress the daily buddy block. Hearing a sound before a check prevents that check from being labelled later-day recall.
 
-Validation: regression tests cover all 26 cards on one page, immediate audio and repeat timing, interruption, Q/X sounds, slower narration, exposure/report/Drive behaviour, cached files and all 43 audio hashes/PCM levels. Device-specific voice quality and speakers still need an on-device listen.
+Validation: regression tests cover all 26 cards on one page, immediate audio and repeat timing, interruption, Q/X sounds, slower narration, exposure/report/Drive behaviour, cached files and all 43 audio hashes/PCM levels. Device-specific voice quality and speakers still need an on-device listen. Live browser verification also confirmed all 26 images loaded, letter taps stayed on the alphabet page, and the expanded layout had no horizontal overflow. [Verified alphabet preview](docs/v79-pokemon-alphabet-1791033705125.jpg).
 
 ## v78 · Pokémon sound buddies
 
