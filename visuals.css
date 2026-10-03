@@ -192,3 +192,13 @@ body:not([data-screen="home"]) #soundBtn{display:none}
 .subtraction-action{min-width:68px;min-height:56px}
 .subtraction-action svg{width:32px;height:32px}
 @media(max-width:360px){.subtraction-pile .pkspr{max-width:48px;max-height:48px}}
+
+/* v80: the alphabet poster is a home destination, with illustrated activity cards. */
+.home-alphabet{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;max-width:460px;min-height:112px;margin:0 auto 14px;padding:13px 16px;border:1.5px solid #bdd6c3;border-bottom:4px solid #aac9b4;border-radius:23px;background:#eaf4e6;color:#2c4f3c;text-align:left;cursor:pointer;touch-action:manipulation}
+.home-alphabet-copy{display:flex;flex-direction:column;gap:7px;min-width:0}.home-alphabet-copy strong{font-size:23px;line-height:1.15;letter-spacing:-.5px}.home-alphabet-copy small{font-size:12px;line-height:1.4;font-weight:500;color:#54715b;max-width:155px}
+.home-alphabet-preview{display:flex;align-items:center;gap:5px;flex-shrink:0}.home-alphabet-preview>span{display:flex;flex-direction:column;align-items:center;width:53px;padding:5px 0 2px;border-radius:11px;background:#fffdf3;border:1px solid #d8e6cd;box-shadow:0 2px 0 #d2e1c9}.home-alphabet-preview b{font-size:16px;line-height:1.1}.home-alphabet-preview img{display:block;width:52px;height:52px;object-fit:contain}
+.home-alphabet:hover{background:#e0efda}.home-alphabet:focus-visible,.home-art-choice:focus-visible{outline:3px solid #287b64;outline-offset:4px}
+.home-choices{max-width:460px;gap:12px}.home-choices .home-art-choice{min-height:138px;padding:10px 7px 12px;gap:7px;border-bottom-width:3px}.home-icon-art{display:block;width:100%;max-width:112px;height:88px;object-fit:contain}.home-art-choice strong{font-size:16px;font-weight:700}
+#gamesBtn.home-art-choice{background:#edf5f1}#teamBtn.home-art-choice{background:#fff8e6}#foxBtn.home-art-choice{background:#fff1e6}
+@media(max-width:400px){.home-alphabet{padding:12px;gap:8px}.home-alphabet-copy strong{font-size:20px}.home-alphabet-copy small{font-size:11px;max-width:120px}.home-alphabet-preview{gap:3px}.home-alphabet-preview>span{width:43px}.home-alphabet-preview img{width:43px;height:46px}.home-choices{gap:9px}.home-choices .home-art-choice{min-height:123px}.home-icon-art{height:76px}.home-art-choice strong{font-size:14px}}
+@media(max-height:720px) and (min-width:600px){.home-alphabet{min-height:96px;padding-block:8px;margin-bottom:10px}.home-choices .home-art-choice{min-height:114px;padding-block:6px}.home-icon-art{height:72px}.home-progress{margin:12px 0}}

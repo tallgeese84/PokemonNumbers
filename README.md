@@ -1,3 +1,9 @@
+## v80 · Illustrated home page and alphabet shortcut
+
+The home page now has a prominent **Pokémon A–Z** card directly below the daily Play area. It opens the complete tap-to-hear sound poster in one tap; the previous entry inside Games has moved here. The Games, Pokémon, and Fox destinations keep their existing behaviour with larger illustrations: newly generated learning blocks and fox artwork, plus the original Pikachu artwork.
+
+The new PNGs retain transparency and are bundled for offline use. [Artwork sources and generation prompts](assets/home/README.md).
+
 ## v79 · Tap-to-hear Pokémon alphabet
 
 Games → **Pokémon A–Z** shows all 26 letters and actual Pokémon pictures on one responsive page. Tap any letter to hear its sound immediately, twice with a 750 ms pause. A new tap interrupts the previous sound and pending repeat. **Practise [letter] together** opens the existing guided lesson. Smaller screens scroll; there is no alphabet pagination.
