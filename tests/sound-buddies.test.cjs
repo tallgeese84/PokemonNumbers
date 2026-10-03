@@ -43,6 +43,14 @@ test('two unsuccessful checks bring explicit teaching back',()=>{
  const r=B.lesson(['p'],sessions(qs),['s','a','p'],day2);
  assert.equal(r.items[0].kind,'buddyMeet');assert.equal(r.items[1].kind,'buddyGuide');assert.equal(r.items.at(-1).phase,'independent');
 });
+test('soundboard taps sync as exposure, do not skip teaching, and cannot warm up a retention badge',()=>{
+ const tap=event({buddyLetter:'p',kind:'buddyListen',phase:'explore',teach:true,buddyCue:true},day2,{responses:[]});
+ const s=sessions([tap]);assert.equal(C.summarize(s,C.dayKey(day2)).attempted,0);assert.equal(C.independent(tap),false);
+ assert.equal(B.lesson(['p'],s,['s','a','p'],day2).items[0].kind,'buddyMeet');assert.equal(B.select(s,['s','a','p'],day2).length,3);
+ const earlier=B.lesson(['p'],{},['s','a','p'],day1).items.map((it,i)=>event(it,day1+i*10));
+ const warmed=sessions([...earlier,tap]);assert.ok(B.lesson(['p'],warmed,['s','a','p'],day2+100).items.every(x=>x.phase!=='retention'));
+ assert.match(B.report(JSON.parse(JSON.stringify(Mirror.backup({sessions:s}))).sessions,C.dayKey(day2)),/1 soundboard taps; 0 teaching\/helped steps; 0\/0 first-try/);
+});
 test('buddy evidence survives the existing Drive envelope and appears in both daily reports',()=>{
  const qs=B.lesson(['p'],{},['s','a','p'],day1).items.map((it,i)=>event(it,day1+i*10));
  const original=sessions(qs),backup=Mirror.backup({sessions:original}),restored=JSON.parse(JSON.stringify(backup));

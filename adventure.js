@@ -125,6 +125,13 @@ function createAdventure() {
     tracker.setBlocked(blocked());save();render();return ref;
   }
   function recordState(domain,state){if(!tracker)return;const snapshot=JSON.parse(JSON.stringify(state));const slot=tracker.sessions[tracker.sessionId];slot.learningState||={};if(JSON.stringify(slot.learningState[domain]?.state)===JSON.stringify(snapshot))return;slot.learningState[domain]={updatedAt:Date.now(),state:snapshot};tracker.changed();save();}
+  // Listening is exposure, not a response or measured question time.
+  function recordListening(meta){
+    if(!loaded||!tracker)return;
+    const at=Date.now(),id=tracker.id();
+    tracker.sessions[tracker.sessionId].questions[id]={...meta,id,startedAt:at,completedAt:at,day:C.dayKey(at),activeMs:0,responses:[],helps:[],helped:false,teach:true};
+    tracker.changed();save();
+  }
   function respond(value,correct) {if(!loaded)return;const reading=tracker.question()?.section==='read',teaching=tracker.question()?.teach;tracker.answer(value,correct);if(correct && mission.enabled && !reading && !teaching){mission.answered++;try{localStorage.setItem('pokemath_mission_step',String(mission.answered));}catch(e){}}save();render();}
   function help(kind){tracker?.help(kind);save();}
   function section(name){if(['home','games','team','cards','badges'].includes(name))mission.enabled=false;tracker?.setSection(name);save();render();}
@@ -222,5 +229,5 @@ function createAdventure() {
     celebrate();render();if(Date.now()-savedAt>=5000)save();
   },1000);
   setInterval(()=>getSyncCfg().then(sync),30000);
-  return {ready,plan,begin,respond,recordState,help,section,routeMission,cancelMission:()=>{mission.enabled=false;},beforeQuestion,render,journal,sync,get tracker(){return tracker;},isPaused:()=>blocked() || tracker?.idle || document.hidden};
+  return {ready,plan,begin,respond,recordState,recordListening,help,section,routeMission,cancelMission:()=>{mission.enabled=false;},beforeQuestion,render,journal,sync,get tracker(){return tracker;},isPaused:()=>blocked() || tracker?.idle || document.hidden};
 }
