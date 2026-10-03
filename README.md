@@ -10,6 +10,8 @@ Time and page taps are practice evidence, not proof of reading aloud or physical
 
 Validation: 14 regression test files cover stage order/resume, no maths in the daily route, every curriculum route, teaching versus independent checks, book/question pairing, help propagation, illustration coverage, midnight accounting, Drive round trips, report output and the existing audio/offline behaviour.
 
+Live verification: GitHub regression tests and Pages deployment succeeded. The deployed home has one main reading button, four non-clickable stage cards and Grown-ups; starting and returning home preserves progress. The current stage appears in the lesson, and the relocated alphabet opens all 26 sound cards from Grown-ups. [Verified v84 home screen](docs/v84-daily-reading-1791055860901.jpg).
+
 ## v83 · One sound per tap
 
 Each tap on the Pokémon A–Z poster plays the approved recording once. Tap the same letter again to hear it again. A new tap softly releases any playing sound and starts the requested recording; there are no automatic repetitions. Listening remains exposure, not an independent answer. All 13 regression test files pass, including single playback, repeated taps, complete clip timing, Q/X playback and leaving the poster. Live v83 page/player/cache files match the tested files, and a repeated letter tap completed successfully in the deployed poster. [Verified poster preview](docs/v83-single-tap-1791038998123.jpg).
