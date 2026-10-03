@@ -133,7 +133,7 @@ function createReading(){
   sndGood();if(!reduce())burst(target||$('rdStage'),ind?10:7);
   // Quick recognition items earn one star; reading words and sentences earn two.
   if(!run.item.teach&&!run.round.placement){const big=['read','sentence','build','name','quiz'].includes(run.item.kind);const n=big?(ind?2:1):(ind?1:0);if(n)addStar(n);}
-  const line=run.round.placement?'Yes!':run.item.teach?'Well done. We tried it together.':praise(ind);feedback(line+(run.round.placement?'':ind?'  ⭐⭐':'  ⭐'));
+  const line=run.round.placement?'Yes!':run.item.teach?'Well done. We tried it together.':run.item.buddyLetter?(ind?'Yes! You found the sound!':'We found the sound together!'):praise(ind);feedback(line+(run.round.placement?'':run.item.buddyLetter?'  ⭐':ind?'  ⭐⭐':'  ⭐'));
   const after=()=>speak(line,{done:()=>setTimeout(advance,350)});
   if(afterSay&&!run.round.placement)afterSay(after);else after();
  }
