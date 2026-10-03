@@ -192,7 +192,7 @@
     const f=summary.fatigue;
     return {
       focus:weak ? (weak.accuracy<0.8 ? `Practise ${LABELS[weak.section]} (${weak.skill}, within ${weak.range}) with objects, then try one independently later.` : `Keep practising ${LABELS[weak.section]} and check it again on another day.`) : 'Too little evidence for a skill recommendation yet; try a short mix of counting, adding and taking away.',
-      duration:f.sessions>=3 && f.late+0.2<f.early ? 'Accuracy fell late in at least three comparable sessions. Try two shorter sessions; this is a fatigue signal, not a diagnosis.' : 'Keep the 15-minute active goal. Consider a parent-enabled 3-minute bonus only if Jonah wants it and remains comfortable.',
+      duration:f.sessions>=3 && f.late+0.2<f.early ? 'Accuracy fell late in at least three comparable sessions. Try two shorter sessions; this is a fatigue signal, not a diagnosis.' : 'Use the chosen active-practice goal. Consider a parent-enabled 3-minute bonus only if Jonah wants it and remains comfortable.',
       offline:weak?.skill==='sub' ? 'Use five toys: hide some and ask how many are hidden.' : 'Use five toys: make two groups and ask how many altogether.'
     };
   }

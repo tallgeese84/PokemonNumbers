@@ -56,7 +56,7 @@ const pick=(rnd,a)=>a[Math.floor(rnd()*a.length)];
 function shuffle(a,rnd){const b=a.slice();for(let i=b.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
 function nearNums(rnd,ans,lo,hi,n,prefer=[]){const out=[];for(const p of prefer)if(p!==ans&&p>=lo&&p<=hi&&!out.includes(p)&&out.length<n)out.push(p);
  for(let d=1;out.length<n&&d<=hi-lo;d++)for(const x of shuffle([ans-d,ans+d],rnd))if(x>=lo&&x<=hi&&x!==ans&&!out.includes(x)&&out.length<n)out.push(x);return out;}
-const ITEMS=['🍓','🍎','🍌','🍪','⭐','🔵','🌸','🍇'];
+const ITEMS=['🍓','🍎','🍌','🫐','⭐','🍇'];
 const ORD=['1st','2nd','3rd','4th','5th','6th','7th','8th','9th','10th'];
 const ORD_WORD=['first','second','third','fourth','fifth','sixth','seventh','eighth','ninth','tenth'];
 const choice=(answer,values,rnd,extra={})=>({input:'choice',answer,options:shuffle(values,rnd).map(v=>({value:v,...(extra.map?extra.map(v):{label:String(v)})}))});
