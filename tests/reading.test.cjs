@@ -104,7 +104,7 @@ test('readiness reports honest denominators and pace against the P1 timeline',()
 });
 
 /* ---------- the real UI with a small fake DOM ---------- */
-function harness(){
+function harness({teaching=false}={}){
  let now=T0;const timers=[];
  class El{constructor(tag='div'){this.tag=tag;this.children=[];this.attrs={};this.dataset={};this.style={setProperty(){}};this._cls=new Set();this.disabled=false;this._text='';
   const c=this._cls;this.classList={add:(...x)=>x.forEach(v=>c.add(v)),remove:(...x)=>x.forEach(v=>c.delete(v)),toggle:(v,f)=>(f??!c.has(v))?c.add(v):c.delete(v),contains:v=>c.has(v)};}
@@ -118,8 +118,8 @@ function harness(){
   all(){return [this,...this.children.flatMap(c=>c.all())];}
   querySelectorAll(sel){return this.all().slice(1).filter(e=>sel.startsWith('.')?e._cls.has(sel.slice(1)):e.tag===sel);}querySelector(sel){return this.querySelectorAll(sel)[0]||null;}}
  const els={},data={},spoken=[],t=new C.Tracker({now:()=>now}),helps=[],answers=[];
- const adventure={get tracker(){return t;},begin:meta=>t.begin(meta),respond:(v,c)=>{answers.push({v,c});t.answer(v,c);},help:k=>{helps.push(k);t.help(k);},isPaused:()=>false,beforeQuestion:()=>true};
- const ctx={PokeReadingCore:R,PokeReadingData:D,PokeLearning:C,PokeReadingAssess:require('../reading-assess.js'),adventure,screens:{},mode:'home',soundOn:true,childName:'Jonah',caught:[],stars:0,
+ const adventure={recordState(){},get tracker(){return t;},begin:meta=>t.begin(meta),respond:(v,c)=>{answers.push({v,c});t.answer(v,c);},help:k=>{helps.push(k);t.help(k);},isPaused:()=>false,beforeQuestion:()=>true};
+ const ctx={PokePhonics:require('../reading-phonics.js'),PokeReadingTutor:teaching?require('../reading-tutor.js'):{prepare:r=>r},PokeReadingCore:R,PokeReadingData:D,PokeLearning:C,PokeReadingAssess:require('../reading-assess.js'),adventure,screens:{},mode:'home',soundOn:true,childName:'Jonah',caught:[],stars:0,
   document:{createElement:tag=>new El(tag),createElementNS:(_,tag)=>new El(tag),createTextNode:s=>{const e=new El('#text');e._text=s;return e;},getElementById:id=>els[id]||=new El(),body:{dataset:{}}},
   window:{speechSynthesis:{getVoices:()=>[],speak:u=>{spoken.push(u.text);timers.push({at:now+20,f:()=>u.onend?.()});},cancel(){}}},
   SpeechSynthesisUtterance:function(text){this.text=text;},
@@ -127,7 +127,7 @@ function harness(){
   setTimeout:(f,ms=0)=>{timers.push({at:now+ms,f});return timers.length;},clearTimeout(){},requestAnimationFrame(){},Date:{now:()=>now},
   show(){},shutUp(){},speechIdle:()=>true,sndGood(){},sndOops(){},sndTap(){},burst(){},audio(){},readyForNext:()=>true,schedulePush(){},
   addStar:n=>{ctx.stars+=n;},imgArt:id=>'art'+id,PokeVisuals:{icon:()=>'',ball:()=>''},PokeCatalog:{byId:{}},catchMon(){},beginCeremony(){},pkState(){},renderBuddyHome(){},updateBallPill(){},confirm:()=>true,alert(){},navigator:{}};
- vm.createContext(ctx);vm.runInContext(fs.readFileSync(require.resolve('../reading-ui.js'),'utf8')+'\nvar ui=createReading();',ctx);
+ vm.createContext(ctx);vm.runInContext(fs.readFileSync(require.resolve('../reading-art.js'),'utf8'),ctx);vm.runInContext(fs.readFileSync(require.resolve('../reading-ui.js'),'utf8')+'\nvar ui=createReading();',ctx);
  const flush=(ms=5000)=>{const end=now+ms;for(let guard=0;guard<5000;guard++){timers.sort((a,b)=>a.at-b.at);const t0=timers[0];if(!t0||t0.at>end)break;timers.shift();now=Math.max(now,t0.at);t0.f();}now=end;};
  const opts=()=>els.rdOptions.children,acts=()=>els.rdActions.children;
  return {ctx,ui:ctx.ui,t,spoken,helps,answers,flush,opts,acts,data};
@@ -212,9 +212,9 @@ test('a sound he keeps missing is shown again before more quizzing',()=>{
 });
 
 /* ---------- v76: the school's reading plan (letter names, listening ladder, step-by-step spelling) ---------- */
-test('listening steps open in the school plan order, each once the one before is secure', () => {
+test('listening steps open after varied practice, with retention tracked separately', () => {
  const st={assessV:2,profile:{pre:true}};
- const ok=(kind,n)=>Array.from({length:n},()=>({...q('ears','pa:'+kind,true),kind}));
+ const ok=(kind,n)=>Array.from({length:n},(_,i)=>({...q('ears','pa:'+kind,true),kind,word:['cat','dog','sun'][i%3]}));
  assert.deepEqual(R.ladder(sess([])).unlocked,['rhyme','first','blend']);
  assert.deepEqual(R.ladder(sess(ok('blend',5))).unlocked,['rhyme','first','blend','last']);
  const all=['blend','last','count','middle','delete'].flatMap(k=>ok(k,6));
@@ -227,8 +227,8 @@ test('listening steps open in the school plan order, each once the one before is
   for(const it of r.items){assert.ok(it.options.some(o=>o.w===it.answer||it.kind==='count'),it.kind);
    if(it.options[0]?.e)assert.equal(new Set(it.options.map(o=>o.e)).size,it.options.length,'pictures must differ: '+it.kind+' '+it.word);
    if(it.kind==='swap'){const a=R.splitWord(it.word).map(p=>p.g),b=R.splitWord(it.to).map(p=>p.g);assert.equal(a.filter((g,i)=>g!==b[i]).length,1);}
-   if(it.kind==='last')assert.ok(it.options.filter(o=>R.splitWord(o.w).filter(p=>p.cls!=='silent').at(-1).g===it.target.g).length===1,'only one picture ends with the sound');
-   if(it.kind==='middle')assert.ok(it.options.filter(o=>R.splitWord(o.w)[1]?.g===it.target.g).length===1,'only one picture has the middle sound');}}
+   if(it.kind==='last')assert.ok(it.options.filter(o=>require('../reading-phonics.js').parts(o.w).at(-1).g===it.target.g).length===1,'only one picture ends with the sound');
+   if(it.kind==='middle')assert.ok(it.options.filter(o=>require('../reading-phonics.js').parts(o.w)[1]?.g===it.target.g).length===1,'only one picture has the middle sound');}}
 });
 test('every take-away pair has pictures and really leaves the named word', () => {
  for(const [whole,gone,left,where] of D.DELETE){assert.ok(D.ART[whole]&&D.ART[left],whole);
@@ -255,11 +255,29 @@ test('spelling builds up: first sound of a word he hears, then first and last, o
  const r=R.makeRound('spell',1,sess(k),st);assert.ok(r.items.length>=3);
  const known=new Set(R.knownSounds(sess(k),1));
  for(const it of r.items){assert.equal(it.kind,'spell1');assert.deepEqual(it.ask,[0]);assert.ok(known.has(it.parts[0].g));assert.ok(it.tiles.includes(it.parts[0].g));assert.ok(it.tiles.length<=3);}
- const good=Array.from({length:6},()=>({...q('spell','pa:spell1',true),kind:'spell1'}));
+ const good=Array.from({length:6},(_,i)=>({...q('spell','pa:spell1',true),kind:'spell1',word:['pin','sat','tin'][i%3]}));
  assert.equal(R.spellStage(sess([...k,...good]),1),2);
  const r2=R.makeRound('spell',1,sess([...k,...good]),st);
  for(const it of r2.items){assert.equal(it.kind,'spell2');assert.equal(it.ask.length,2);for(const i of it.ask){assert.ok(known.has(it.parts[i].g));assert.ok(it.tiles.includes(it.parts[i].g));}}
  // a pre-reader rotates listening, letter sounds and spelling
  const acts=new Set();let recent=['ears','hunt','spell'];for(let i=0;i<9;i++){const a=R.nextActivity(sess([...k,...good,q('ears','pa:x',true),q('hunt','x',true),q('spell','pa:spell1',true)]),st,recent).act;acts.add(a);recent=[...recent,a];}
  assert.ok(['ears','hunt','spell'].every(a=>acts.has(a)),[...acts].join());
+});
+
+test('new reading lesson models, guides, then tests a different word without speaking its answer',()=>{
+ const h=harness({teaching:true});h.ui._round('read',1);h.flush(12000);let it=h.ui._current().item;
+ assert.equal(it.phase,'model');const word=R.clean(it.word),model=h.t.question();assert.ok(h.spoken.some(x=>x.includes('Join the sounds. '+word)));
+ h.acts().find(b=>b.attrs['aria-label']==='Try together').click();h.flush(12000);assert.equal(h.ui._current().item.phase,'guided');
+ const guide=h.t.question();h.opts().find(b=>b.dataset.w===word).click();h.flush(12000);
+ const next=h.ui._current().item;assert.notEqual(R.clean(next.word),word);assert.equal(next.teach,undefined);assert.equal(C.independent(model),false);assert.equal(C.independent(guide),false);
+ assert.ok(!h.spoken.includes(R.clean(next.word)),'fresh answer was not given away');
+});
+test('two first-sound errors in spelling never disable the final-sound answer',()=>{
+ const h=harness(),qs=[];for(const g of R.route(1).add)qs.push(q('hunt','g:'+g,true),q('hunt','g:'+g,true));
+ for(let i=0;i<6;i++)qs.push(q('spell','pa:spell1',true,{kind:'spell1',word:['pin','sat','tin'][i%3]}));
+ const s=h.t.sessions[h.t.sessionId];s.questions=Object.fromEntries(qs.map((x,i)=>['pre'+i,{...x,id:'pre'+i}]));
+ h.ui._round('spell',1);h.flush(8000);const it=h.ui._current().item,question=h.t.question();assert.equal(it.kind,'spell2');
+ const first=it.parts[it.ask[0]].g,last=it.parts[it.ask[1]].g,wrong=h.opts().find(x=>x.dataset.g!==first);wrong.click();h.flush(1000);wrong.click();h.flush(1000);
+ h.opts().find(x=>x.dataset.g===first&&!x.disabled).click();h.flush(1000);
+ const final=h.opts().find(x=>x.dataset.g===last&&!x.disabled);assert.ok(final,'last sound remains available');final.click();h.flush(6000);assert.ok(question.completedAt);assert.equal(C.independent(question),false);
 });

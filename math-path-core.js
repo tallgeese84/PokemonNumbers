@@ -155,7 +155,7 @@ const levelsOf=id=>BY[id].levels||1;
 
 /* ---------- evidence ---------- */
 const indep=q=>C.independent(q);
-function pathQs(sessions,skill){return C.allQuestions(sessions).filter(q=>q.section==='path'&&q.skill===skill&&q.completedAt&&!q.teach);}
+function pathQs(sessions,skill){return C.allQuestions(sessions).filter(q=>q.section==='path'&&q.skill===skill&&q.completedAt&&!q.teach).map(q=>{const m=String(q.format||'').match(new RegExp('^'+skill+':(\\d+)$'));return m?{...q,level:Number(m[1])}:q;});}
 /* 5 of the last 6 independently correct across at least 4 different questions, latest 3 correct (as elsewhere in the app). */
 function windowOK(win){const ok=win.filter(indep);return win.length>=6&&ok.length>=5&&win.slice(-3).every(indep)&&new Set(ok.map(C.factKey)).size>=4;}
 function newSkillPlan(id,sessions){
@@ -213,7 +213,14 @@ function route(skill,answered){
 function next(sessions,state={},pos=0,answered=0,now=Date.now()){
  if(!state.checkedAt&&needsCheck(sessions))return {type:'check'};
  const status=statusAll(sessions,state);
- const fr=frontier(status),rev=dueReviews(status,now).filter(id=>!fr.includes(id));
+ // Every block bridges a visual relationship to symbols while small-number arithmetic develops.
+ if(!status.bond5.secure||!status.addsub10.secure){
+  const completed=C.allQuestions(sessions).filter(q=>q.section==='foundation'&&!q.teach&&q.completedAt).length;
+  if(pos===0)return {type:'foundation',skill:['take','patterns','split','missing','undo','predict','groups'][completed%7]};
+  if(pos===2){const quizzes=C.allQuestions(sessions).filter(q=>['add','sub'].includes(q.section)&&!q.teach&&q.completedAt).length;return {type:'quiz',mode:quizzes%2?'sub':'add',skill:'addsub10'};}
+ }
+ const warmupDone=F.countWarmupDone(sessions,C.dayKey(now));
+ const fr=frontier(status).filter(id=>id!=='count10'||!warmupDone),rev=dueReviews(status,now).filter(id=>!fr.includes(id)&&(id!=='count10'||!warmupDone));
  const firstNew=fr.find(id=>!BY[id].delegate);
  let skill;
  if(pos===3&&rev.length)skill=rev[0];
@@ -237,6 +244,8 @@ function mergeState(a,b){a=a||freshState();b=b||freshState();const mx=(x,y)=>{co
  const redoAt=Math.max(a.redoAt||0,b.redoAt||0),keep=x=>Object.fromEntries(Object.entries(x).filter(([,v])=>v>redoAt));
  return {v:1,placed:keep(mx(a.placed,b.placed)),badges:mx(a.badges,b.badges),checkedAt:Math.max(a.checkedAt||0,b.checkedAt||0)>redoAt?Math.max(a.checkedAt||0,b.checkedAt||0):0,redoAt};}
 function withSessions(state,sessions){
+ const snapshots=Object.values(sessions||{}).map(s=>s.learningState?.math).filter(Boolean).sort((a,b)=>(a.updatedAt||0)-(b.updatedAt||0));
+ state=snapshots.reduce((s,x)=>mergeState(s,x.state),state||freshState());
  const st={...freshState(),...(state||{})};st.placed={...st.placed};
  for(const q of C.allQuestions(sessions||{}))if(q.section==='path'&&q.skill==='checked'&&q.completedAt>(st.redoAt||0)){st.checkedAt=Math.max(st.checkedAt||0,q.completedAt);(q.placed||[]).forEach(id=>st.placed[id]=Math.max(st.placed[id]||0,q.completedAt));}
  return st;
@@ -257,7 +266,7 @@ function readiness(sessions,state={},now=Date.now()){
 function report(sessions,state,day){
  const r=readiness(sessions,state,Date.parse(day+'T20:00:00Z'));
  const s=C.summarize(sessions,day),g=Object.values(s.groups).filter(x=>x.section==='path');
- const lines=[`Maths path — ${GYMS[r.current-1].name} (${GYMS[r.current-1].title}); expected by now: Gym ${r.expected} → ${r.pace}. Badges: ${r.gyms.filter(x=>x.done).length}/8.`];
+ const lines=[`Maths path — ${GYMS[r.current-1].name} (${GYMS[r.current-1].title}); curriculum pace: Gym ${r.expected} → ${r.pace} (a schedule comparison, not a readiness verdict). Badges: ${r.gyms.filter(x=>x.done).length}/8.`];
  for(const x of g)lines.push(`Maths path · ${BY[x.skill]?.label||x.skill}: ${x.independent}/${x.n} first-try without help, ${x.helped} helped.`);
  if(!g.length)lines.push('Maths path: no new-skill questions recorded for this date (part-whole and adding games are reported above).');
  lines.push('P1 strands secure: '+r.strands.map(x=>`${x.label} ${x.secure}/${x.total}`).join('; ')+'.');

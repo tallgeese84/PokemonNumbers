@@ -1,0 +1,353 @@
+{
+  "engine": "eSpeak NG, Echogarden Emscripten package 0.3.5",
+  "voice": "en-us",
+  "rate": 120,
+  "pitch": 55,
+  "validation": "Phoneme-event boundaries and non-silent PCM checked. Synthetic voice; not a human pronunciation assessment.",
+  "clips": {
+    "a": {
+      "source": "cat",
+      "phoneme": "ˈæ",
+      "fromMs": 121,
+      "toMs": 484,
+      "samples": 10650,
+      "sha256": "adff0c3e7daaa8ed79a41d10600b0c8f44767487c8a68adb196b3c4c2f385272"
+    },
+    "e": {
+      "source": "bed",
+      "phoneme": "ˈɛ",
+      "fromMs": 77,
+      "toMs": 429,
+      "samples": 10408,
+      "sha256": "64bcbe19464d58224c161aa534d45332eab0798bc1e64d84627a8cf4ef02db68"
+    },
+    "i": {
+      "source": "pin",
+      "phoneme": "ˈɪ",
+      "fromMs": 105,
+      "toMs": 378,
+      "samples": 8665,
+      "sha256": "88ada3cbf308c73c355b9d968008ce2a3baee08e9207cf1007199c2d797b61fd"
+    },
+    "o": {
+      "source": "pot",
+      "phoneme": "ˈɑː",
+      "fromMs": 105,
+      "toMs": 479,
+      "samples": 10892,
+      "sha256": "03fb77c15a5b2640b470204b62bc7afcd73ab8232b4d22d882bdec5dad56dc3e"
+    },
+    "u": {
+      "source": "cup",
+      "phoneme": "ˈʌ",
+      "fromMs": 121,
+      "toMs": 419,
+      "samples": 9216,
+      "sha256": "9cb03976cc2b96f59f06fabfe3bc089e704f9e52436f770d8d718ae6d7ac3c27"
+    },
+    "uu": {
+      "source": "book",
+      "phoneme": "ˈʊ",
+      "fromMs": 77,
+      "toMs": 363,
+      "samples": 8953,
+      "sha256": "a4e7187b142d164236f64361d97eabce5cbb4ff4210bcdc6f3c97f5f20277b37"
+    },
+    "ee": {
+      "source": "feet",
+      "phoneme": "ˈiː",
+      "fromMs": 117,
+      "toMs": 447,
+      "samples": 9923,
+      "sha256": "8e94de4951eb225281d73fac66e7148e3114a20df4919130d752b1f556aced13"
+    },
+    "oo": {
+      "source": "moon",
+      "phoneme": "ˈuː",
+      "fromMs": 179,
+      "toMs": 438,
+      "samples": 8357,
+      "sha256": "d7226906b309ec195cc01d36290c25b1b19cb1ca05141ac8a8fb5bb7b4009067"
+    },
+    "ay": {
+      "source": "rain",
+      "phoneme": "ˈeɪ",
+      "fromMs": 194,
+      "toMs": 490,
+      "samples": 9173,
+      "sha256": "6332f2c8becc595f191de1483eae3b4a2e8b179d260abf5f8ec47416a05853ab"
+    },
+    "oh": {
+      "source": "boat",
+      "phoneme": "ˈoʊ",
+      "fromMs": 72,
+      "toMs": 460,
+      "samples": 11202,
+      "sha256": "3b90590a221b8b499ae6c78bc344fd1cb0976fca5886588b16ebfaa9abe7c167"
+    },
+    "eye": {
+      "source": "bike",
+      "phoneme": "ˈaɪ",
+      "fromMs": 72,
+      "toMs": 470,
+      "samples": 11422,
+      "sha256": "4df7ef9af408aebdba2cfceac0c77096de5e7f6546d1f3cf9c090f6719f8fb49"
+    },
+    "ow": {
+      "source": "cow",
+      "phoneme": "ˈaʊ",
+      "fromMs": 121,
+      "toMs": 569,
+      "samples": 12524,
+      "sha256": "9232cee6729316b57bc9afd7a66e777fa93b703068eed36b83cf59cbba33b8e2"
+    },
+    "oy": {
+      "source": "coin",
+      "phoneme": "ˈɔɪ",
+      "fromMs": 121,
+      "toMs": 525,
+      "samples": 11554,
+      "sha256": "007d41acc358492917a96963f86495fc0f28856653fe7095a00d8aa10b0190cb"
+    },
+    "aw": {
+      "source": "saw",
+      "phoneme": "ˈɔː",
+      "fromMs": 113,
+      "toMs": 550,
+      "samples": 12282,
+      "sha256": "106a8de7719bcf5a99ba1363b3185bfe2bee2ec089814833c6f102841e714bfa"
+    },
+    "ar": {
+      "source": "car",
+      "phoneme": "ˈɑːɹ",
+      "fromMs": 121,
+      "toMs": 613,
+      "samples": 13494,
+      "sha256": "3e98a2d148a4c6ffa9a8015e48f422417f74522f12173338f22f61169bc8af7a"
+    },
+    "or": {
+      "source": "fork",
+      "phoneme": "ˈɔːɹ",
+      "fromMs": 117,
+      "toMs": 511,
+      "samples": 11334,
+      "sha256": "4eb031df0316c1d63e58980728b81cf3e83272e6a4dac00768953efeba317d76"
+    },
+    "er": {
+      "source": "bird",
+      "phoneme": "ˈɜː",
+      "fromMs": 83,
+      "toMs": 458,
+      "samples": 10914,
+      "sha256": "a7e92adeb8200cd37f2de3e60b28ab58a7d797ba43bc280ee3e6e1ccc04b1493"
+    },
+    "ear": {
+      "source": "ear",
+      "phoneme": "ˈɪɹ",
+      "fromMs": 0,
+      "toMs": 522,
+      "samples": 14156,
+      "sha256": "807b30665ab426ad57ad3097dce63e36d1f02a0d68c0110a272605592c120418"
+    },
+    "air": {
+      "source": "hair",
+      "phoneme": "ˈɛɹ",
+      "fromMs": 100,
+      "toMs": 558,
+      "samples": 12744,
+      "sha256": "34f7e46d8cd7d4c52e4184e46ebc923857c2f436e88ed15cac353b1134fa1cbc"
+    },
+    "b": {
+      "source": "[[b]]",
+      "phoneme": "b",
+      "fromMs": 0,
+      "toMs": 36,
+      "samples": 3439,
+      "sha256": "67b5d11d820f10af6a7d8cfe0e3be29454a607ee621586669366b4b0fa018ecb"
+    },
+    "d": {
+      "source": "[[d]]",
+      "phoneme": "d",
+      "fromMs": 0,
+      "toMs": 36,
+      "samples": 3439,
+      "sha256": "855dd320056e909ff5c04b73089627d240029aff92fc3aee61f16f55297c64ec"
+    },
+    "f": {
+      "source": "[[f]]",
+      "phoneme": "f",
+      "fromMs": 15,
+      "toMs": 154,
+      "samples": 5711,
+      "sha256": "a6b82261a8f2e9b20bce6c8eba475a88feae7c3dee5b21869d9d74f07bab72e3"
+    },
+    "g": {
+      "source": "[[g]]",
+      "phoneme": "ɡ",
+      "fromMs": 0,
+      "toMs": 55,
+      "samples": 3858,
+      "sha256": "6960d58f10ead1572fb0b5acb72adbbe272128bc99afc6c52064f90143bff453"
+    },
+    "h": {
+      "source": "[[h]]",
+      "phoneme": "h",
+      "fromMs": 15,
+      "toMs": 101,
+      "samples": 4543,
+      "sha256": "a2251dda3a668fdad3ea930e97ea651b76a73e4cef4fda5f98ef2220e56aa1b4"
+    },
+    "j": {
+      "source": "[[dZ]]",
+      "phoneme": "dʒ",
+      "fromMs": 0,
+      "toMs": 91,
+      "samples": 4652,
+      "sha256": "a628ce51a51a436b7c3ba26b3bbbc94464dc122f0bafd661e4de97dc70381d6c"
+    },
+    "k": {
+      "source": "[[k]]",
+      "phoneme": "k",
+      "fromMs": 52,
+      "toMs": 107,
+      "samples": 3859,
+      "sha256": "ddcfba3dc208c4aa504c812e1b2f8616383f4d4e5efa8a8d89278c17f1c61040"
+    },
+    "l": {
+      "source": "[[l]]",
+      "phoneme": "l",
+      "fromMs": 0,
+      "toMs": 52,
+      "samples": 3792,
+      "sha256": "b85eef2593ff50d5964c91a58939945b7c78ac00368d3fb205a680d000a18962"
+    },
+    "m": {
+      "source": "[[m]]",
+      "phoneme": "m",
+      "fromMs": 0,
+      "toMs": 26,
+      "samples": 3219,
+      "sha256": "3c246cd8637f5f9f1a45b58194c9fa8c09b997630a887981eed5464c012afb77"
+    },
+    "n": {
+      "source": "[[n]]",
+      "phoneme": "n",
+      "fromMs": 0,
+      "toMs": 26,
+      "samples": 3219,
+      "sha256": "5f9432d90c15b00909c45f226b1c67939ed6a76bf2b47f668a88050375ff5d9e"
+    },
+    "p": {
+      "source": "[[p]]",
+      "phoneme": "p",
+      "fromMs": 52,
+      "toMs": 146,
+      "samples": 4719,
+      "sha256": "2149a016f1a755dd44ce643dfd90c50591cb48090eda96615ea0ba7dfa6a399e"
+    },
+    "r": {
+      "source": "rain",
+      "phoneme": "ɹ",
+      "fromMs": 0,
+      "toMs": 194,
+      "samples": 6923,
+      "sha256": "46831c1628dc9f442339f335c1738d565d038930fea4b05f147fbaef26eabccd"
+    },
+    "s": {
+      "source": "[[s]]",
+      "phoneme": "s",
+      "fromMs": 15,
+      "toMs": 152,
+      "samples": 5667,
+      "sha256": "dddff28caf80ef914214add0f5341b3215a9c8dea6232f4d58d35cc7ab5a403e"
+    },
+    "t": {
+      "source": "[[t]]",
+      "phoneme": "t",
+      "fromMs": 52,
+      "toMs": 107,
+      "samples": 3859,
+      "sha256": "53677cee608c9152bb2248b6c542a5d68df52d683472817285cc0f7b75751ffc"
+    },
+    "v": {
+      "source": "[[v]]",
+      "phoneme": "v",
+      "fromMs": 15,
+      "toMs": 99,
+      "samples": 4498,
+      "sha256": "70cf9efaa684241c499d180cd7d47169df5f4b7b2ef5b2c2d5d4b8d5fd79ce76"
+    },
+    "w": {
+      "source": "web",
+      "phoneme": "w",
+      "fromMs": 0,
+      "toMs": 188,
+      "samples": 6791,
+      "sha256": "29091c1dc6c4ac21a0d85e538f17c7b8dbc26554b26286cd185531cac0e702e0"
+    },
+    "y": {
+      "source": "yes",
+      "phoneme": "j",
+      "fromMs": 0,
+      "toMs": 185,
+      "samples": 6725,
+      "sha256": "06a22302f53e6d29440b5b87760475fe57d7e6b16bc1d7720db7601f00db1fab"
+    },
+    "z": {
+      "source": "[[z]]",
+      "phoneme": "z",
+      "fromMs": 15,
+      "toMs": 117,
+      "samples": 4895,
+      "sha256": "49da6217f28f5854610d9f0f3147642c3540ccc3ccf9d2f26c63a89a39697bc5"
+    },
+    "sh": {
+      "source": "[[S]]",
+      "phoneme": "ʃ",
+      "fromMs": 15,
+      "toMs": 152,
+      "samples": 5667,
+      "sha256": "e33871dd9c5c79e023e49d1866a5663a96db231529bab96a6e9fa175820a14eb"
+    },
+    "ch": {
+      "source": "[[tS]]",
+      "phoneme": "tʃ",
+      "fromMs": 52,
+      "toMs": 160,
+      "samples": 5028,
+      "sha256": "99cf25087ede4559e990b49c8b7ad749cf417164464b3af3fcdb127b5951c958"
+    },
+    "th": {
+      "source": "[[T]]",
+      "phoneme": "θ",
+      "fromMs": 15,
+      "toMs": 124,
+      "samples": 5050,
+      "sha256": "42aeec1b636126fa740fdaebb46e474b7b8e933ce281bfb23e6a59ff9887559d"
+    },
+    "dh": {
+      "source": "[[D]]",
+      "phoneme": "ð",
+      "fromMs": 15,
+      "toMs": 98,
+      "samples": 4476,
+      "sha256": "e1f5df8f769b99952afd0bf4eaa3ba4ddd23e58978886fbb0c14f555c3768c8a"
+    },
+    "ng": {
+      "source": "[[N]]",
+      "phoneme": "ŋ",
+      "fromMs": 0,
+      "toMs": 39,
+      "samples": 3505,
+      "sha256": "2a70f3d78d6fe9a3fc93aa747664ce2f43e09837a17a9fe6b8dbcbe6cc876fa7"
+    },
+    "zh": {
+      "source": "[[Z]]",
+      "phoneme": "ʒ",
+      "fromMs": 15,
+      "toMs": 107,
+      "samples": 4675,
+      "sha256": "2b662952211a1e1f8bab48c561ecb1618f9165c2cc5ab270af7047d4e45066bf"
+    }
+  }
+}

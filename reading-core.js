@@ -1,7 +1,7 @@
 /* Reading engine: segmentation, decodability, per-item mastery with spaced
    review, route gates, round building, placement and P1 readiness.
    Pure functions over the shared learning sessions (section 'read'). */
-(function(root,factory){if(typeof module==='object'&&module.exports)module.exports=factory(require('./reading-data.js'),require('./learning-core.js'));else root.PokeReadingCore=factory(root.PokeReadingData,root.PokeLearning);})(typeof globalThis!=='undefined'?globalThis:this,function(D,C){
+(function(root,factory){if(typeof module==='object'&&module.exports)module.exports=factory(require('./reading-data.js'),require('./learning-core.js'),require('./reading-phonics.js'));else root.PokeReadingCore=factory(root.PokeReadingData,root.PokeLearning,root.PokePhonics);})(typeof globalThis!=='undefined'?globalThis:this,function(D,C,P){
 'use strict';
 const {G,LONG,VOWELS,MULTI,ART,ROUTES,DOLCH}=D;
 const LAST=ROUTES.length, DAY=86400000;
@@ -137,11 +137,14 @@ function readBookDone(stats,n){return Object.values(stats).some(s=>s.item.starts
 /* Route passes and placement are also written into the shared sessions, so
    any device (and the email report) can rebuild where he is. */
 function withSessions(state,sessions){
+  const snapshots=Object.values(sessions||{}).map(s=>s.learningState?.reading).filter(Boolean).sort((a,b)=>(a.updatedAt||0)-(b.updatedAt||0));
+  state=snapshots.reduce((s,x)=>mergeState(s,x.state),state||freshState());
   const st={...freshState(),...(state||{})};st.passed={...(st.passed||{})};st.books={...(st.books||{})};
   for(const q of C.allQuestions(sessions||{})){
     if(q.section!=='read'||!q.completedAt)continue;
     if((q.skill==='advance'||q.skill==='placed')&&q.completedAt<(st.resetAt||0))continue;   // superseded by a newer English check
     if(q.skill==='advance'&&q.route)st.passed[q.route]=Math.max(st.passed[q.route]||0,q.completedAt);
+    if(q.skill==='placed'&&q.completedAt>(st.placedAt||0)){st.passed={};st.resetAt=Math.max(st.resetAt||0,q.assessmentStartedAt||q.startedAt);if(q.profile){st.profile=q.profile;st.assessV=2;}}
     if(q.skill==='placed'){for(let n=1;n<=(q.route||0);n++)st.passed[n]=Math.max(st.passed[n]||0,q.completedAt);if(q.completedAt>(st.placedAt||0)){st.placedAt=q.completedAt;st.placedRoute=q.route||0;}}
     if(q.skill==='book'&&q.kind==='book')st.books[q.route]=Math.max(st.books[q.route]||0,q.completedAt);
   }
@@ -237,26 +240,30 @@ function pendingTeach(sessions,n,kind){
 /* ---------- listening ladder (phonemic awareness) ----------
    In the order his school's reading plan teaches it: rhymes, first sounds and blending first;
    then end sounds, counting sounds, middle sounds, taking a sound away, swapping a sound.
-   A step opens when the step before it is secure (5 or more tries, 80% of the last 6 first try
-   without help); every open step keeps coming back for review. */
+   A step opens after varied independent practice (5+ attempts, 80% of the last 8, three words);
+   secure adds a later-day success. Teaching and echoes are excluded; every open step keeps coming back for review. */
 const PA_LABEL={rhyme:'rhymes',first:'first sounds',blend:'blending',last:'end sounds',count:'counting sounds',middle:'middle sounds',delete:'taking a sound away',swap:'swapping a sound'};
 const LADDER=['rhyme','first','blend','last','count','middle','delete','swap'];
 const SPELL=['spell1','spell2'];
-function kindStats(sessions,kinds){const by={};for(const q of readQuestions(sessions)){if(!kinds.includes(q.kind)||!q.responses?.length||q.teach)continue;(by[q.kind]||=[]).push(indep(q));}
-  const out={};for(const k of kinds){const all=by[k]||[],xs=all.slice(-6),ok=xs.filter(Boolean).length;out[k]={n:all.length,acc:xs.length?ok/xs.length:null,secure:xs.length>=5&&ok/xs.length>=.8};}return out;}
+function kindStats(sessions,kinds){const by={};for(const q of readQuestions(sessions)){if(!kinds.includes(q.kind)||!q.responses?.length||q.teach)continue;(by[q.kind]||=[]).push(q);}
+  const out={};for(const k of kinds){const all=by[k]||[],xs=all.slice(-8),ok=xs.filter(indep),acc=xs.length?ok.length/xs.length:null;
+    const words=new Set(ok.map(q=>q.word||q.target||q.item).filter(x=>x&&!String(x).startsWith('pa:'))).size,days=new Set(ok.map(q=>q.day)).size;
+    const provisional=xs.length>=5&&acc>=.8&&words>=3;
+    out[k]={n:all.length,acc,words,days,provisional,secure:provisional&&days>=2};}return out;}
+
 function ladder(sessions){
   const st=kindStats(sessions,LADDER);let open=3;
-  while(open<LADDER.length&&st[LADDER[open-1]].secure)open++;
+  while(open<LADDER.length&&st[LADDER[open-1]].provisional)open++;
   const unlocked=LADDER.slice(0,open);
   return {stats:st,unlocked,frontier:unlocked.filter(f=>!st[f].secure),next:LADDER[open]||null};
 }
 /* Picture words for listening games, and sound swaps between them (cat→hat, pin→pan, bus→bug). */
-const lastSound=w=>splitWord(w,LAST).filter(p=>p.cls!=='silent').at(-1);
+const lastSound=w=>P.parts(w).at(-1);
 const CONS_END=g=>G[g]&&(G[g][3]==='cons'||['sh','ch','th','ck','ll','ss','ff','zz','ng'].includes(g));
 let SWAPS=null;
 function swaps(){
   if(SWAPS)return SWAPS;SWAPS=[];
-  const ws=[...new Set(D.EARS)].filter(w=>ART[w]),sp=w=>splitWord(w,LAST);
+  const ws=[...new Set(D.EARS)].filter(w=>ART[w]),sp=w=>P.parts(w);
   const ok=w=>{const p=sp(w);return p.length===3&&p.every(x=>x.cls!=='silent'&&!x.magic&&G[x.g])&&('aeiou'.includes(p[1].g));};
   for(const a of ws)for(const b of ws){if(a===b||ART[a]===ART[b]||!ok(a)||!ok(b))continue;const x=sp(a),y=sp(b),d=[0,1,2].filter(i=>x[i].g!==y[i].g);
     if(d.length===1)SWAPS.push({from:a,to:b,at:d[0],out:x[d[0]],in:y[d[0]]});}
@@ -268,7 +275,7 @@ const namesOn=state=>state?.namesAt?!!state.names:true;
    the first sound of a word he hears, then the first and last, then whole words (Build it). */
 function spellWords(sessions,n,stage){
   const k=new Set(knownSounds(sessions,n).filter(g=>!DOUBLES.includes(g)));
-  return [...new Set(D.EARS)].filter(w=>{if(!ART[w])return false;const p=splitWord(w,LAST).filter(x=>x.cls!=='silent');if(p.length<2||p.length>4)return false;
+  return [...new Set(D.EARS)].filter(w=>{if(!ART[w]||!P.has(w))return false;const p=splitWord(w,LAST).filter(x=>x.cls!=='silent');if(P.parts(w).length!==p.length)return false;if(p.length<2||p.length>4)return false;
     // only words spelled the way they sound (no silent letters, no magic e: "nose" ends in s but sounds /z/)
     if(splitWord(w,LAST).some(x=>x.cls==='silent'||x.magic))return false;
     const f=p[0],l=p.at(-1);if(!k.has(f.g))return false;return stage===1||(k.has(l.g)&&!l.magic&&CONS_END(l.g)&&l.g!==f.g);});
@@ -277,7 +284,7 @@ function spellStage(sessions,n){
   // needs a few known sounds, so there is a real choice of letters
   if(knownSounds(sessions,n).filter(g=>g.length===1).length<3)return 0;
   const st=kindStats(sessions,SPELL),two=spellWords(sessions,n,2);
-  if(st.spell1.secure&&two.length>=4)return 2;
+  if(st.spell1.provisional&&two.length>=4)return 2;
   return spellWords(sessions,n,1).length>=3?1:0;
 }
 const needsCheck=(state,sessions)=>state.assessV!==2||(state.redoCheckAt||0)>(state.profile?.at||0);
@@ -382,7 +389,7 @@ function makeRound(act,n,sessions,state={},rnd=Math.random){
   // Few sounds known: two big choices; more choices as his set grows
   const hc=pre||av.length<=6?2:av.length<=12?3:c;
   const huntItem=(g,from)=>{const others=shuffle(av.filter(x=>x!==g&&!DOUBLES.includes(x)),rnd).slice(0,hc-1);return {...base,route:from||n,kind:'hunt',item:gKey(g),target:g,options:shuffle([g,...others],rnd),answer:g};};
-  const readItem=(w,from)=>{const ws=nearWords(w,Math.max(n,from||n),2,rnd);return {...base,route:from||n,kind:'read',item:wKey(w),word:w,parts:splitWord(w,n),options:shuffle([w,...ws],rnd).map(x=>({w:x,e:ART[clean(x)]})),answer:clean(w)};};
+  const readItem=(w,from)=>{const ws=nearWords(w,Math.max(n,from||n),2,rnd);return {...base,route:from||n,kind:'read',item:wKey(w),word:w,parts:P.annotate(clean(w),splitWord(w,n)),options:shuffle([w,...ws],rnd).map(x=>({w:x,e:ART[clean(x)]})),answer:clean(w)};};
   const heartItem=w=>({...base,kind:'heart',item:hKey(w),word:w,options:wordChoices(w,heartPool(n),Math.max(1,c-1),rnd),answer:w});
   if(act==='hunt'){
     const intro=introduced(sessions,n).filter(g=>!DOUBLES.includes(g));
@@ -403,7 +410,7 @@ function makeRound(act,n,sessions,state={},rnd=Math.random){
   if(act==='build'){
     const rw=readableWords(sessions,n);
     const words=weakFirst(rw.length?rw:[...new Set([...L.build,...L.blend])],stats,rnd).slice(0,n<=2?3:4);
-    words.forEach(w=>{const parts=splitWord(w,n);const need=parts.map(p=>p.g);
+    words.forEach(w=>{const parts=P.annotate(clean(w),splitWord(w,n));const need=parts.map(p=>p.g);
       const extra=shuffle(av.filter(g=>!need.includes(g)&&G[g]?.[3]!=='end'&&!DOUBLES.includes(g)),rnd).slice(0,n<=2?1:2);
       items.push({...base,kind:'build',item:'sp:'+clean(w),word:w,parts,tiles:shuffle([...need,...extra],rnd),answer:clean(w)});});
   }
@@ -429,7 +436,7 @@ function makeRound(act,n,sessions,state={},rnd=Math.random){
     });
   }
   if(act==='ears'){
-    const pool=[...new Set(D.EARS)].filter(w=>ART[w]&&(!pre||splitWord(w,LAST).filter(p=>p.cls!=='silent').length<=3));
+    const pool=[...new Set(D.EARS)].filter(w=>ART[w]&&P.has(w)&&(!pre||P.parts(w).length<=3));
     const lad=ladder(sessions),front=lad.frontier.length?lad.frontier:lad.unlocked,review=lad.unlocked.filter(f=>!front.includes(f));
     // newest step most often, with earlier steps mixed in for review
     const order=[...front].reverse();const fmts=[];
@@ -441,14 +448,14 @@ function makeRound(act,n,sessions,state={},rnd=Math.random){
     function paItem(fmt){
       if(fmt==='rhyme'){const set=shuffle(D.RHYMES,rnd).find(x=>!used.has(x[0]))||D.RHYMES[0];used.add(set[0]);const [t,m]=shuffle(set,rnd);const others=shuffle(D.RHYMES.filter(x=>x!==set).map(x=>x[0]),rnd).slice(0,2);
         return {...base,kind:'rhyme',item:'pa:rhyme',word:t,e:ART[t],options:pics([m,...others]),answer:m};}
-      if(fmt==='count'){const w=pick(pool);const parts=splitWord(w,LAST).filter(p=>p.cls!=='silent');return {...base,kind:'count',item:'pa:count',word:w,answer:parts.length,options:[2,3,4,5].filter(x=>x<=Math.max(4,parts.length))};}
-      if(fmt==='first'||fmt==='blend'){const w=pick(pool),parts=splitWord(w,LAST).filter(p=>p.cls!=='silent');
-        const others=shuffle(pool.filter(x=>x!==w&&ART[x]!==ART[w]&&(fmt!=='first'||splitWord(x,LAST)[0].g!==parts[0].g)),rnd).slice(0,2);
+      if(fmt==='count'){const w=pick(pool);const parts=P.parts(w);return {...base,kind:'count',item:'pa:count',word:w,answer:parts.length,options:[1,2,3,4,5].filter(x=>x<=Math.max(4,parts.length))};}
+      if(fmt==='first'||fmt==='blend'){const w=pick(pool),parts=P.parts(w);
+        const others=shuffle(pool.filter(x=>x!==w&&ART[x]!==ART[w]&&(fmt!=='first'||P.parts(x)[0].g!==parts[0].g)),rnd).slice(0,2);
         return {...base,kind:fmt,item:'pa:'+fmt,word:w,parts,options:pics([w,...others]),answer:w};}
       if(fmt==='last'){const lp=pool.filter(w=>CONS_END(lastSound(w).g));const w=pick(lp),end=lastSound(w);
-        const others=shuffle(lp.filter(x=>x!==w&&ART[x]!==ART[w]&&lastSound(x).g!==end.g&&splitWord(x,LAST)[0].g!==end.g),rnd).filter((x,i,a)=>a.findIndex(y=>lastSound(y).g===lastSound(x).g)===i).slice(0,2);
+        const others=shuffle(lp.filter(x=>x!==w&&ART[x]!==ART[w]&&lastSound(x).g!==end.g&&P.parts(x)[0].g!==end.g),rnd).filter((x,i,a)=>a.findIndex(y=>lastSound(y).g===lastSound(x).g)===i).slice(0,2);
         return {...base,kind:'last',item:'pa:last',word:w,target:end,options:pics([w,...others]),answer:w};}
-      if(fmt==='middle'){const mid=w=>{const p=splitWord(w,LAST).filter(x=>x.cls!=='silent');return p.length===3&&'aeiou'.includes(p[1].g)&&!p.some(x=>x.magic)?p[1]:null;};
+      if(fmt==='middle'){const mid=w=>{const p=P.parts(w);return p.length===3&&'aeiou'.includes(p[1].g)&&!p.some(x=>x.magic)?p[1]:null;};
         const mp=pool.filter(mid);const w=pick(mp),m=mid(w);
         const others=shuffle(mp.filter(x=>x!==w&&ART[x]!==ART[w]&&mid(x).g!==m.g),rnd).filter((x,i,a)=>a.findIndex(y=>mid(y).g===mid(x).g)===i).slice(0,2);
         return {...base,kind:'middle',item:'pa:middle',word:w,target:m,options:pics([w,...others]),answer:w};}
@@ -467,7 +474,7 @@ function makeRound(act,n,sessions,state={},rnd=Math.random){
   if(act==='spell'){
     const stage=spellStage(sessions,n)||1,words=shuffle(spellWords(sessions,n,stage),rnd).slice(0,4);
     const known=knownSounds(sessions,n).filter(g=>!DOUBLES.includes(g)&&G[g]?.[3]!=='end');
-    words.forEach(w=>{const parts=splitWord(w,LAST).filter(p=>p.cls!=='silent'),ask=stage===1?[0]:[0,parts.length-1];
+    words.forEach(w=>{const parts=P.annotate(w,splitWord(w,LAST)).filter(p=>p.cls!=='silent'),ask=stage===1?[0]:[0,parts.length-1];
       const need=ask.map(i=>parts[i].g),extra=shuffle(known.filter(g=>!need.includes(g)),rnd).slice(0,stage===1?(known.length<=6?1:2):1);
       items.push({...base,kind:'spell'+stage,item:'pa:spell'+stage,word:w,e:ART[w],parts,ask,tiles:shuffle([...need,...extra],rnd),answer:w});});
   }
@@ -511,14 +518,15 @@ function placementResult(results){
 const PROBE_COUNT=PROBES.length;
 
 /* ---------- state (synced, merge-safe) ---------- */
-function freshState(){return {v:1,passed:{},placedAt:0,placedRoute:0,books:{},aloud:{},legacy:null,names:false,assessV:0,resetAt:0,profile:null};}
+function freshState(){return {v:1,passed:{},placedAt:0,placedRoute:0,books:{},aloud:{},recall:{},legacy:null,names:false,assessV:0,resetAt:0,profile:null};}
 function mergeState(a,b){
   a=a||freshState();b=b||freshState();
   const maxMap=(x,y)=>{const o={...(x||{})};for(const [k,v] of Object.entries(y||{}))o[k]=Math.max(o[k]||0,v||0);return o;};
   const aloud={...(a.aloud||{})};for(const [k,v] of Object.entries(b.aloud||{}))if(!aloud[k]||(v?.at||0)>(aloud[k].at||0))aloud[k]=v;
   const resetAt=Math.max(a.resetAt||0,b.resetAt||0),newer=(a.profile?.at||0)>=(b.profile?.at||0)?a:b;
   const passed=Object.fromEntries(Object.entries(maxMap(a.passed,b.passed)).filter(([,v])=>v>=resetAt));
-  return {v:1,passed,books:maxMap(a.books,b.books),aloud,resetAt,assessV:Math.max(a.assessV||0,b.assessV||0),redoCheckAt:Math.max(a.redoCheckAt||0,b.redoCheckAt||0),profile:newer.profile||a.profile||b.profile||null,
+  const recall={...(a.recall||{})};for(const [k,v] of Object.entries(b.recall||{}))if(!recall[k]||v.at>recall[k].at)recall[k]=v;
+  return {v:1,passed,recall,books:maxMap(a.books,b.books),aloud,resetAt,assessV:Math.max(a.assessV||0,b.assessV||0),redoCheckAt:Math.max(a.redoCheckAt||0,b.redoCheckAt||0),profile:newer.profile||a.profile||b.profile||null,
     placedAt:Math.max(a.placedAt||0,b.placedAt||0),placedRoute:(a.placedAt||0)>=(b.placedAt||0)?(a.placedRoute||0):(b.placedRoute||0),
     legacy:a.legacy||b.legacy||null,names:(a.namesAt||0)>=(b.namesAt||0)?!!a.names:!!b.names,namesAt:Math.max(a.namesAt||0,b.namesAt||0)};
 }
@@ -561,7 +569,8 @@ function readiness(sessions,state={},now=Date.now()){
     {key:'names',label:'Letter names (finds the letter by its name)',value:letters.filter(l=>box('ln:'+l)>=2).length,target:26},
     {key:'ladder',label:'Listening steps secure (rhyme → first → blend → end → count → middle → take away → swap)',value:LADDER.filter(f=>lad.stats[f].secure).length,target:LADDER.length,note:lad.frontier.length?'working on: '+lad.frontier.map(f=>PA_LABEL[f]).join(', '):'all secure'},
     ...SPELL.map((k,i)=>{const x=kindStats(sessions,SPELL)[k];return {key:k,label:i?'Spells the first and last sounds of a word he hears':'Spells the first sound of a word he hears',value:x.acc===null?null:Math.round(x.acc*100),target:80,unit:'%',n:x.n};}),
-        {key:'caps',label:'Capital letters matched',value:letters.filter(l=>box(uKey(l))>=2).length,target:26},
+        {key:'recall',label:'Letter sounds recalled aloud to a grown-up',value:Object.values(state.recall||{}).filter(x=>x.ok).length,target:26,note:'Adult-observed production; separate from tapping a choice'},
+    {key:'caps',label:'Capital letters matched',value:letters.filter(l=>box(uKey(l))>=2).length,target:26},
     {key:'aloud',label:'Reading aloud to a grown-up (latest check)',value:aloud?Math.round(aloud.ok/Math.max(1,aloud.total)*100):null,target:90,unit:'%',note:aloud?('route '+aloud.route+', '+C.dayKey(aloud.at)):'not checked yet'}
   ];
   const pace=n>exp?'ahead':n===exp?'on track':n>=exp-1?'slightly behind':'behind';
@@ -570,11 +579,11 @@ function readiness(sessions,state={},now=Date.now()){
 function report(sessions,state,day){
   const r=readiness(sessions,state,Date.parse(day+'T20:00:00Z'));
   const s=C.summarize(sessions,day);const g=Object.values(s.groups).filter(x=>x.section==='read');
-  const lines=[`Reading — route ${r.route} of ${LAST} (${route(r.route).name}); expected by now: route ${r.expected} → ${r.pace}.`];
+  const lines=[`Reading — route ${r.route} of ${LAST} (${route(r.route).name}); curriculum pace: route ${r.expected} → ${r.pace} (schedule comparison only).`];
   if(g.length)for(const x of g)lines.push(`Reading · ${x.format} · route ${x.range}: ${x.independent}/${x.n} first-try without help, ${x.helped} helped.`);
   else lines.push('Reading: no attempts recorded for this date.');
   const gt=gate(r.route,itemStats(sessions),state);
-  lines.push(`Route ${r.route} gate: sounds ${gt.graphemes.ok}/${gt.graphemes.total} secure, words ${gt.words.ok}/${gt.words.need}, heart words ${gt.heart.ok}/${gt.heart.total}, book ${gt.book?'read':'not yet'}.`);
+  lines.push(`Route ${r.route} gate: sounds ${gt.graphemes.ok}/${gt.graphemes.total} practised, words ${gt.words.ok}/${gt.words.need}, heart words ${gt.heart.ok}/${gt.heart.total}, book ${gt.book?'read':'not yet'}.`);
   lines.push('P1 readiness: '+r.rows.map(x=>`${x.label} ${x.value===null?'—':x.value+(x.unit||'')}/${x.target}${x.unit||''}`).join('; ')+'.');
   lines.push('Correct answers after the app sounds a word out count as helped, not independent reading.');
   return lines.join('\n\n');

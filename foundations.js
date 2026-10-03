@@ -16,7 +16,7 @@ function stages(skill){
 }
 function plan(skill,sessions){
  const ss=stages(skill);let level=0,window=[],changes=[];
- const qs=C.allQuestions(sessions).filter(q=>q.section==='foundation'&&q.skill===skill&&q.completedAt);
+ const qs=C.allQuestions(sessions).filter(q=>q.section==='foundation'&&q.skill===skill&&q.completedAt&&!q.teach);
  for(const q of qs){if(q.level!==level||q.range!==ss[level].range||q.support!==ss[level].support)continue;
  window.push(q);window=window.slice(-6);
  if(level&&window.length>=5&&window.slice(-5).filter(q=>!C.independent(q)).length>=3){changes.push({at:q.completedAt,from:level,to:0,reason:'Restore smaller groups and visual support'});level=0;window=[];continue;}
@@ -42,6 +42,7 @@ function dailyReport(sessions,day,lastSync=0,dirty=false){
  const text=[`Jonah’s daily progress — ${day} (Madison time)`,`Estimated active practice: ${(s.practiceMs/60000).toFixed(1)} minutes. ${s.attempted} questions attempted; ${s.completed} completed.`,`First-try success without extra help: ${s.independent}/${s.attempted} (${pct(s.accuracy)}). Extra help: ${s.helped}.`,`Built-in visual tasks show supported understanding, not proof of mental arithmetic or a particular strategy.`];
  for(const g of Object.values(s.groups))text.push(`${labels[g.skill]||C.LABELS[g.section]||g.skill} · within ${g.range} · ${g.support}: ${g.independent}/${g.n} first-try, ${g.helped} helped; typical independent response ${g.medianMs===null?'not yet available':(g.medianMs/1000).toFixed(1)+' seconds'}.`);
  if(!s.attempted)text.push('No attempts in the available records for this date. This does not prove no practice occurred on an unsynced device.');
+ text.push(`Teaching steps completed: ${s.teaching}. Models and guided tries are excluded from independent accuracy.`);
  text.push(`Later-day checks: ${s.retention.independent}/${s.retention.checked} successful without extra help.`,'Weekly comparison (matching skills, ranges and pictures):');
  for(const x of C.comparisons(week,prev))text.push(`${labels[x.skill]||C.LABELS[x.section]} (${x.range}, ${x.support}): ${x.accuracyChange===null?'too little data':(x.accuracyChange>=0?'+':'')+Math.round(x.accuracyChange*100)+' percentage points'}; ${x.n} vs ${x.previousN} attempts.`);
  const changes=Object.keys(labels).flatMap(skill=>plan(skill,sessions).changes.filter(c=>C.dayKey(c.at)===day).map(c=>`${labels[skill]}: step ${c.from+1} → ${c.to+1}.`));
@@ -49,7 +50,7 @@ function dailyReport(sessions,day,lastSync=0,dirty=false){
  const weak=Object.values(week.groups).filter(g=>g.section==='foundation'&&g.n>=5).sort((a,b)=>a.accuracy-b.accuracy)[0];
  text.push('Next practice: '+(weak?(weak.accuracy<.8?'Revisit ':'Check with a different arrangement: ')+labels[weak.skill]+'.':'Keep exploring small parts and wholes; too little evidence yet to choose a weak skill.'));
  text.push('Offline idea: split five toys into two groups, hide one group, then bring it back. Ask what changed and what stayed the same.');
- text.push('Keep the 15-minute active goal; offer shorter sessions if he is tired. Response speed is not an advancement gate.');
+ text.push('Use the chosen active-practice goal; offer shorter sessions if he is tired. Response speed is not an advancement gate.');
  text.push(lastSync?'Last confirmed device upload: '+new Date(lastSync).toLocaleString('en-US',{timeZone:C.ZONE})+'.':'No confirmed cloud upload on this device.');
  if(dirty)text.push('Local changes are waiting to sync. Other devices may have missing activity.');
  return text.join('\n\n');

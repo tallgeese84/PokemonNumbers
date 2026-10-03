@@ -236,5 +236,8 @@ const CONFUSE={
   o:['c','e','a','g'],a:['e','o','c','d'],g:['q','y','p','a'],y:['g','v','x'],v:['w','y','u'],h:['n','b','k'],k:['h','x','r'],r:['n','f','k'],x:['k','y','z'],j:['i','g','y']
 };
 const LETTER_NAME={a:'ay',b:'bee',c:'see',d:'dee',e:'ee',f:'eff',g:'jee',h:'aitch',i:'eye',j:'jay',k:'kay',l:'ell',m:'em',n:'en',o:'oh',p:'pee',q:'cue',r:'ar',s:'ess',t:'tee',u:'you',v:'vee',w:'double you',x:'ex',y:'why',z:'zee'};
+// Scene subjects make book art explicit, including expressions previously rendered as emoji.
+const SCENES={'😤':'huff','😅':'mess','😋':'jam','💨':'zip','💥':'drum','👀':'child','✨':'star','😲':'face','📜':'note','🌻':'soil','🌞':'sun','🛋️':'couch','🏡':'home','🧺':'picnic','😀':'face'};
+for(const r of ROUTES)for(const p of r.book.pages)if(!p.m)p.picture=SCENES[p.a]||Object.keys(ART).find(w=>ART[w]===p.a);
 return {G,LONG,VOWELS,MULTI,ART,ROUTES,DOLCH,EARS,RHYMES,DELETE,WRITE,CONFUSE,LETTER_NAME};
 });

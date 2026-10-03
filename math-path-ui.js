@@ -5,7 +5,7 @@ function createMathPath(){
  const M=PokeMathPath,$=id=>document.getElementById(id),KEY='pokemath_path_v1';
  let state=M.freshState();try{state=M.mergeState(state,JSON.parse(localStorage.getItem(KEY)||'null'));}catch(e){}
  const sessions=()=>adventure.tracker?.sessions||{},st=()=>M.withSessions(state,sessions());
- function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}if(typeof schedulePush==='function')schedulePush();}
+ function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}adventure.recordState('math',state);if(typeof schedulePush==='function')schedulePush();}
  const reduce=()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
  const root=document.createElement('div');root.id='scr-path';root.className='screen';
@@ -15,13 +15,15 @@ function createMathPath(){
  let phrase='';$('mpListen').onclick=()=>{audio();if(!soundOn)$('soundBtn').click();say(phrase,true);};
 
  /* ---------- small DOM helpers ---------- */
+ const mathPicture=(word)=>{const h=document.createElement('span');h.className='math-art';PokeReadingArt.paint(h,word);return h;};
+ const EMOJI={'🫐':'berry','⭐':'sticker','🍎':'apple','🍌':'banana','🍇':'grapes','🍓':'strawberry','🐚':'shell','🃏':'card','🔮':'marble'};
  const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;};
  const active=()=>mode==='path'&&!adventure.isPaused();
  function btn(cls,label,fn,html){const b=el('button',cls);b.type='button';b.setAttribute('aria-label',label);if(html!=null)b.innerHTML=html;b.onclick=()=>{if(active())fn(b);};return b;}
  const NS='http://www.w3.org/2000/svg';
  const svg=(w,h,body,cls='')=>`<svg xmlns="${NS}" viewBox="0 0 ${w} ${h}" class="${cls}" role="img" aria-hidden="true">${body}</svg>`;
  function frames(n,emoji='🔵',numbers=false){const wrap=el('div','mp-frames');const f=Math.max(1,Math.ceil(n/10));
-  for(let k=0;k<f;k++){const fr=el('div','mp-frame');for(let c=0;c<10;c++){const i=k*10+c,cell=el('div','mp-cell');if(i<n){cell.textContent=emoji;if(numbers)cell.append(el('small','',String(i+1)));}fr.append(cell);}wrap.append(fr);}return wrap;}
+  for(let k=0;k<f;k++){const fr=el('div','mp-frame');for(let c=0;c<10;c++){const i=k*10+c,cell=el('div','mp-cell');if(i<n){cell.textContent=emoji;if(EMOJI[emoji]){cell.replaceChildren(mathPicture(EMOJI[emoji]));}else if(['🔵','🟠'].includes(emoji)){cell.textContent='●';cell.style.color=emoji==='🔵'?'#4e83b5':'#db8c48';}if(numbers)cell.append(el('small','',String(i+1)));}fr.append(cell);}wrap.append(fr);}return wrap;}
  function blocks(t,o,label=false){const W=t*26+(o?Math.ceil(o/5)*24+10:0)+10,H=150;let b='';
   for(let i=0;i<t;i++){b+=`<g transform="translate(${6+i*26},6)"><rect width="20" height="130" rx="3" fill="#6fb38f" stroke="#2f6b51"/>`;for(let c=1;c<10;c++)b+=`<line x1="0" x2="20" y1="${c*13}" y2="${c*13}" stroke="#2f6b51" stroke-width=".8"/>`;b+=(label?`<text x="10" y="148" font-size="11" text-anchor="middle" fill="#2f4a40">${(i+1)*10}</text>`:'')+'</g>';}
   for(let j=0;j<o;j++){const x=6+t*26+10+Math.floor(j/5)*24,y=6+(j%5)*24+52;b+=`<rect x="${x}" y="${y}" width="18" height="18" rx="3" fill="#f3c86b" stroke="#a27a2a"/>`+(label?`<text x="${x+9}" y="${y+13}" font-size="10" text-anchor="middle">${j+1}</text>`:'');}
@@ -45,12 +47,12 @@ function createMathPath(){
   b+=`<rect x="10" y="10" width="${len*28}" height="24" rx="8" fill="#d24a7a"/><text x="452" y="76" font-size="13" fill="#5a4512">cm</text>`;
   const d=el('div','mp-ruler');d.innerHTML=svg(470,90,b);return d;}
  function bar(v,max=15){const d=el('div','mp-bar');const r=el('span');r.style.width=(v/max*100)+'%';d.append(r);return d;}
- function graph(it,nums=false){const t=el('div','mp-graph');it.show.cats.forEach((c,i)=>{const row=el('div','mp-grow');row.append(el('span','mp-gcat',c));const icons=el('span','mp-gicons');for(let k=0;k<it.show.counts[i];k++)icons.append(el('span','mp-gi','🙂'));row.append(icons);if(nums)row.append(el('b','mp-gnum',String(it.show.counts[i])));t.append(row);});
-  t.append(el('small','mp-gkey','Each 🙂 stands for 1 child'));return t;}
- function groupsView(it,labels=false){const g=el('div','mp-groups'+(it.show.array?' array':''));for(let i=0;i<it.show.groups;i++){const c=el('div','mp-group');for(let k=0;k<it.show.each;k++)c.append(el('span','',it.show.emoji));if(labels)c.append(el('small','',String((i+1)*it.show.each)));g.append(c);}return g;}
+ function graph(it,nums=false){const t=el('div','mp-graph');it.show.cats.forEach((c,i)=>{const row=el('div','mp-grow');row.append(mathPicture(EMOJI[c]));const icons=el('span','mp-gicons');for(let k=0;k<it.show.counts[i];k++)icons.append(el('span','mp-gi'));row.append(icons);if(nums)row.append(el('b','mp-gnum',String(it.show.counts[i])));t.append(row);});
+  t.append(el('small','mp-gkey','Each dot stands for 1 child'));return t;}
+ function groupsView(it,labels=false){const g=el('div','mp-groups'+(it.show.array?' array':''));for(let i=0;i<it.show.groups;i++){const c=el('div','mp-group');for(let k=0;k<it.show.each;k++)c.append(EMOJI[it.show.emoji]?mathPicture(EMOJI[it.show.emoji]):el('span','','●'));if(labels)c.append(el('small','',String((i+1)*it.show.each)));g.append(c);}return g;}
  function shareView(it,dealt=false){const d=el('div','mp-share');const n=it.show.n,k=it.show.plates||Math.round(n/it.show.per);
-  if(!dealt){const pile=el('div','mp-pile');for(let i=0;i<n;i++)pile.append(el('span','','🫐'));d.append(pile);if(it.show.plates){const row=el('div','mp-plates');for(let i=0;i<k;i++){const p=el('div','mp-plate');p.append(Object.assign(el('img'),{src:imgArt(pickMon()),alt:''}));row.append(p);}d.append(row);}return d;}
-  const row=el('div','mp-plates');for(let i=0;i<k;i++){const p=el('div','mp-plate');for(let j=0;j<n/k;j++)p.append(el('span','','🫐'));row.append(p);}d.append(row);return d;}
+  if(!dealt){const pile=el('div','mp-pile');for(let i=0;i<n;i++)pile.append(mathPicture('berry'));d.append(pile);if(it.show.plates){const row=el('div','mp-plates');for(let i=0;i<k;i++){const p=el('div','mp-plate');p.append(Object.assign(el('img'),{src:imgArt(pickMon()),alt:''}));row.append(p);}d.append(row);}return d;}
+  const row=el('div','mp-plates');for(let i=0;i<k;i++){const p=el('div','mp-plate');for(let j=0;j<n/k;j++)p.append(mathPicture('berry'));row.append(p);}d.append(row);return d;}
  function barModel(bm){const d=el('div','mp-barmodel');
   if(bm.compare){const [a,b]=bm.compare;d.innerHTML=svg(320,96,`<rect x="10" y="10" width="300" height="30" fill="#cfe3f6" stroke="#2f4a40"/><text x="160" y="31" text-anchor="middle" font-size="15">${a}</text><rect x="10" y="56" width="${300*b/a}" height="30" fill="#f6dccf" stroke="#2f4a40"/><text x="${10+150*b/a}" y="77" text-anchor="middle" font-size="15">${b}</text><rect x="${10+300*b/a}" y="56" width="${300-300*b/a}" height="30" fill="none" stroke="#c0533b" stroke-dasharray="5 4"/><text x="${10+300*b/a+(300-300*b/a)/2}" y="77" text-anchor="middle" font-size="18" fill="#c0533b">?</text>`);return d;}
   const [p,q]=bm.parts,whole=bm.whole??(p+q),wp=Math.max(40,Math.min(260,300*(p??(whole-q))/whole));
@@ -71,7 +73,7 @@ function createMathPath(){
   if(s.eq)show.append(el('div','mp-eq',s.eq));
   if(it.kind==='blocks')show.append(blocks(s.tens,s.ones));
   if(it.kind==='vertical'){const v=el('div','mp-vertical');v.append(el('div','',String(s.top)),el('div','',s.op+' '+s.bottom),el('div','mp-vline'),el('div','mp-vq','?'));show.append(v);}
-  if(it.kind==='story'){show.append(el('p','mp-story',s.text));if(s.small){const pic=el('div','mp-storypic');const e={berries:'🫐',stickers:'⭐',shells:'🐚',cards:'🃏',marbles:'🔮'}[s.emoji]||'⭐';pic.textContent=e.repeat(s.small.a);if(s.small.t==='join')pic.textContent+='  +  '+e.repeat(s.small.b);show.append(pic);}}
+  if(it.kind==='story'){show.append(el('p','mp-story',s.text));if(s.small){const pic=el('div','mp-storypic');const e={berries:'🫐',stickers:'⭐',shells:'🐚',cards:'🃏',marbles:'🔮'}[s.emoji]||'⭐';for(let i=0;i<s.small.a;i++)pic.append(mathPicture(EMOJI[e]));if(s.small.t==='join'){pic.append(el('span','',' + '));for(let i=0;i<s.small.b;i++)pic.append(mathPicture(EMOJI[e]));}show.append(pic);}}
   if(it.kind==='groups')show.append(groupsView(it));
   if(it.kind==='share')show.append(shareView(it));
   if(it.kind==='money')show.append(money(it));
@@ -83,12 +85,12 @@ function createMathPath(){
   if(it.kind==='hearNumber'){const ear=el('div','mp-ear');ear.innerHTML=PokeVisuals.icon('listen');ear.onclick=()=>say(phrase,true);show.append(ear);}
   if(it.input==='choice'&&it.kind!=='ordinalTap'){
    it.options.forEach(o=>{const b=btn('mp-opt','Choice',b=>answer(o.value,b),'');b.dataset.v=String(o.value);
-    if(o.frame!=null)b.append(frames(o.frame,'🔵'));else if(o.bar!=null){b.classList.add('wide');b.append(bar(o.bar));}else if(o.shape)b.innerHTML=shapeSvg(o.shape,o.rot,o.hue);else b.append(el('span','mp-optl',o.label));
+    if(o.frame!=null)b.append(frames(o.frame,'🔵'));else if(o.bar!=null){b.classList.add('wide');b.append(bar(o.bar));}else if(o.shape)b.innerHTML=shapeSvg(o.shape,o.rot,o.hue);else if(EMOJI[o.label])b.append(mathPicture(EMOJI[o.label]));else b.append(el('span','mp-optl',o.label));
     $('mpOptions').append(b);});
   }
   if(it.input==='pad')drawPad(it);
-  if(!cur.check)$('mpActions').append(btn('btn mp-helpbtn','Show me',()=>help(),PokeVisuals.icon?'👀':'👀'));
-  setTimeout(()=>say(phrase,true),250);
+  if(!cur.check)$('mpActions').append(btn('btn mp-helpbtn','Show me',()=>help(),'Show me'));
+  if(!cur.teach)setTimeout(()=>say(phrase,true),250);
  }
  function drawPad(it){
   const box=$('mpEntry');box.replaceChildren();
@@ -106,8 +108,8 @@ function createMathPath(){
   if(ok){cur.done=true;b?.classList.add('right');[...$('mpOptions').querySelectorAll('button'),...$('mpEntry').querySelectorAll('button')].forEach(x=>x.disabled=true);
    if(cur.check&&cur.first===undefined)cur.first=true;
    const ind=!cur.wrong&&!cur.helped;sndGood();if(!reduce())burst(b||$('mpShow'),ind?10:7);
-   if(!cur.check)addStar(ind?2:1);
-   const line=cur.check?'Yes!':praiseLine(ind);$('mpFeedback').textContent=line+(cur.check?'':ind?'  ⭐⭐':'  ⭐');
+   if(!cur.check&&!cur.teach)addStar(ind?2:1);
+   const line=cur.check?'Yes!':cur.teach?'Well done. We tried it together.':praiseLine(ind);$('mpFeedback').textContent=line+(cur.check?'':ind?'  ⭐⭐':'  ⭐');
    say(line+(cur.check?'':' '+confirmLine(it)),true);
    waitThen(()=>finishItem());return;}
   cur.wrong++;sndOops();if(b){b.classList.add('wrong');setTimeout(()=>{b.classList.remove('wrong');if(it.input==='choice')b.disabled=true;},420);}clear?.();
@@ -141,7 +143,7 @@ function createMathPath(){
    case 'clock':h.append(clockSvg(s.h,s.m,true));line='The short hand shows the hour. The long hand counts minutes by 5s.';break;
    case 'bars':line='Look at where each ribbon ends.';break;
    case 'ruler':h.append(ruler(s.len,true));line='Look at the number where the ribbon ends.';break;
-   case 'graph':h.append(graph(it,true));line='Count the faces in each row.';break;
+   case 'graph':h.append(graph(it,true));line='Count the dots in each row.';break;
    case 'ordinalTap':case 'ordinalName':h.append(ordinalLine(s.line,s.mark??-1,true));line='Start counting from the flag: first, second, third…';break;
   }
   if(line){$('mpFeedback').textContent='';say(line,true);}
@@ -150,11 +152,21 @@ function createMathPath(){
  function startItem(it,onDone,opts={}){
   if(!adventure.beforeQuestion()){setTimeout(()=>{if(mode==='path'||opts.enter)startItem(it,onDone,opts);},400);return;}
   shutUp();mode='path';show('path');
-  cur={item:it,wrong:0,helped:false,done:false,onDone,check:!!opts.check};
-  cur.ref=adventure.begin({section:'path',skill:it.skill,kind:it.kind,level:it.level,range:it.range,support:opts.check?'check':'path',format:it.format,a:it.a,b:it.b,expected:String(it.expected),check:!!opts.check});
+  const qs=PokeLearning.allQuestions(sessions()).filter(q=>q.section==='path'&&q.skill===it.skill&&q.level===it.level).map(q=>({...q,kind:it.skill}));
+  const model=!opts.check&&!opts.guided&&!opts.independent&&PokeReadingTutor.needsModel(it.skill,qs);
+  cur={item:it,wrong:0,helped:false,done:false,onDone,check:!!opts.check,teach:model||!!opts.guided,model};
+  cur.ref=adventure.begin({section:'path',skill:it.skill,kind:it.kind,level:it.level,range:it.range,teach:cur.teach,phase:model?'model':opts.guided?'guided':'independent',support:opts.check?'check':'path',format:it.format,a:it.a,b:it.b,expected:String(it.expected),check:!!opts.check});
   showItem(it);
+  if(cur.teach){
+   help(true);$('mpShow').prepend(el('div','tutor-phase',model?'Watch':'Together'));
+   const rawAnswer=it.options?.find(o=>String(o.value)===String(it.answer))?.label??it.answer,answerText=EMOJI[rawAnswer]||rawAnswer;
+   const explanation=PokeMathTutor.explain(it);$('mpHelpView').append(el('p','tutor-caption',explanation||(it.show.eq?it.show.eq.replace('?',String(it.answer)):'The answer is '+answerText)+'.'));
+   if(model){$('mpOptions').replaceChildren();$('mpEntry').replaceChildren();$('mpActions').replaceChildren(btn('btn','Try together',()=>{if(!readyForNext())return;adventure.respond('model complete',true);startItem(it,onDone,{guided:true});},'Try together →'));say('Watch. '+(explanation||it.say+' The answer is '+answerText+'.'),true);}
+   else{for(const b of $('mpOptions').children)if(b.dataset.v===String(it.answer))b.classList.add('tutor-guided');}
+  }else if(!cur.check)$('mpShow').prepend(el('div','tutor-phase','Your turn'));
  }
  function finishItem(){const c=cur;cur=null;if(!c)return;if(c.check){c.onDone?.(c.first===true);return;}
+  if(c.teach){let next;for(let i=0;i<12;i++){next=M.make(c.item.skill,c.item.level);if(PokeLearning.factKey(next)!==PokeLearning.factKey(c.item))break;}startItem(next,c.onDone,{independent:true});return;}
   const newly=badgeCheck();if(newly){celebrateGym(newly,()=>c.onDone?.());return;}c.onDone?.();}
 
  /* ---------- Gym badges ---------- */
@@ -217,8 +229,8 @@ function createMathPath(){
   const r=M.readiness(sessions(),st()),g=M.GYMS[r.current-1];
   const strands=r.strands.map(x=>`<tr><td>${esc(x.label)}</td><td><b>${x.secure}</b> / ${x.total}<small>${x.mastered} mastered</small></td></tr>`).join('');
   const gyms=r.gyms.map(G=>`<details><summary>${G.done?'🏅':'○'} Gym ${G.n} · ${esc(G.name)} — ${esc(G.title)}</summary><table class="journal-table"><tbody>${G.skills.map(s=>`<tr><td>${esc(s.label)}${s.p1?'':'<small>K2 groundwork</small>'}</td><td><span class="mp-stage ${s.stage}">${STAGE[s.stage]}</span><small>${s.n||0} answers${s.delegate?' (existing games)':''}</small></td></tr>`).join('')}</tbody></table></details>`).join('');
-  $('mathPathBody').innerHTML=`<p><strong>${esc(g.name)} (${esc(g.title)})</strong> · expected by now: Gym ${r.expected} · <b>${r.pace}</b> (target: all 8 Gyms by ${r.target})</p>
-   <p class="muted">A skill is <b>secure</b> after 5 of 6 recent answers right first time across varied questions (latest 3 right), and <b>mastered</b> after a later-day success. Later skills open when the skills they build on are secure. Secure skills come back for review.</p>
+  $('mathPathBody').innerHTML=`<p><strong>${esc(g.name)} (${esc(g.title)})</strong> · curriculum pace: Gym ${r.expected} · <b>${r.pace}</b> (target: all 8 Gyms by ${r.target})</p>
+   <p class="muted">Curriculum pace compares progress with a calendar goal; it is not a school-readiness assessment.</p><p class="muted">A skill is <b>secure</b> after 5 of 6 recent answers right first time across varied questions (latest 3 right), and <b>mastered</b> after a later-day success. Later skills open when the skills they build on are secure. Secure skills come back for review.</p>
    ${r.focus.length?`<p><b>Working on:</b> ${r.focus.map(f=>esc(f.label)).join(' · ')}<br><span class="muted">Try at home: ${esc(r.focus[0].offline)}</span></p>`:''}
    <table class="journal-table"><tbody><tr><th>P1 strand</th><th>Skills secure</th></tr>${strands}</tbody></table>${gyms}
    <div class="pprow reading-tools"><button class="btn" id="mpRedo">Redo maths check</button><label>Mark as known <select id="mpMark"><option value="">choose a skill…</option>${M.SKILLS.filter(s=>!s.delegate).map(s=>`<option value="${s.id}">${esc(s.label)}</option>`).join('')}</select></label></div>`;
