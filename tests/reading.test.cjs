@@ -119,7 +119,7 @@ function harness({teaching=false}={}){
   querySelectorAll(sel){return this.all().slice(1).filter(e=>sel.startsWith('.')?e._cls.has(sel.slice(1)):e.tag===sel);}querySelector(sel){return this.querySelectorAll(sel)[0]||null;}}
  const els={},data={},spoken=[],t=new C.Tracker({now:()=>now}),helps=[],answers=[];
  const adventure={recordState(){},get tracker(){return t;},begin:meta=>t.begin(meta),respond:(v,c)=>{answers.push({v,c});t.answer(v,c);},help:k=>{helps.push(k);t.help(k);},isPaused:()=>false,beforeQuestion:()=>true};
- const ctx={PokePhonics:require('../reading-phonics.js'),PokeReadingTutor:teaching?require('../reading-tutor.js'):{prepare:r=>r},PokeReadingCore:R,PokeReadingData:D,PokeLearning:C,PokeReadingAssess:require('../reading-assess.js'),adventure,screens:{},mode:'home',soundOn:true,childName:'Jonah',caught:[],stars:0,
+ const ctx={PokeSoundBuddies:require('../reading-buddies.js'),PokePhonics:require('../reading-phonics.js'),PokeReadingTutor:teaching?require('../reading-tutor.js'):{prepare:r=>r},PokeReadingCore:R,PokeReadingData:D,PokeLearning:C,PokeReadingAssess:require('../reading-assess.js'),adventure,screens:{},mode:'home',soundOn:true,childName:'Jonah',caught:[],stars:0,
   document:{createElement:tag=>new El(tag),createElementNS:(_,tag)=>new El(tag),createTextNode:s=>{const e=new El('#text');e._text=s;return e;},getElementById:id=>els[id]||=new El(),body:{dataset:{}}},
   window:{speechSynthesis:{getVoices:()=>[],speak:u=>{spoken.push(u.text);timers.push({at:now+20,f:()=>u.onend?.()});},cancel(){}}},
   SpeechSynthesisUtterance:function(text){this.text=text;},
@@ -280,4 +280,30 @@ test('two first-sound errors in spelling never disable the final-sound answer',(
  const first=it.parts[it.ask[0]].g,last=it.parts[it.ask[1]].g,wrong=h.opts().find(x=>x.dataset.g!==first);wrong.click();h.flush(1000);wrong.click();h.flush(1000);
  h.opts().find(x=>x.dataset.g===first&&!x.disabled).click();h.flush(1000);
  const final=h.opts().find(x=>x.dataset.g===last&&!x.disabled);assert.ok(final,'last sound remains available');final.click();h.flush(6000);assert.ok(question.completedAt);assert.equal(C.independent(question),false);
+});
+
+test('sound buddy UI teaches with actual artwork then removes cues for fresh-word checks',()=>{
+ const h=harness({teaching:true});h.ui.startBuddies(['p']);h.flush(14000);
+ const all=()=>h.ctx.document.getElementById('rdStage').all();
+ assert.equal(h.ui._current().item.kind,'buddyMeet');assert.ok(all().some(x=>x.tag==='img'&&x.src==='assets/sound-buddies/25.png'));
+ h.acts().find(b=>b.attrs['aria-label']==='Try together').click();h.flush(8000);
+ assert.equal(h.ui._current().item.kind,'buddyGuide');const guided=h.t.question();h.opts().find(x=>x.dataset.g==='p').click();h.flush(10000);
+ const it=h.ui._current().item;assert.equal(it.kind,'buddyWord');assert.notEqual(it.word,'pin');assert.equal(C.independent(guided),false);
+ assert.ok(!all().some(x=>x.tag==='img'||x.classList.contains('sound-buddy-letter')));assert.ok(h.opts().every(x=>!x.classList.contains('tutor-guided')));
+ assert.ok(h.spoken.some(x=>x.startsWith('Listen to '+it.word+'.')));const check=h.t.question();h.opts().find(x=>x.dataset.g==='p').click();h.flush(10000);
+ assert.equal(C.independent(check),true);assert.equal(check.buddyCue,false);assert.equal(h.ui._current(),null);
+});
+test('asking for a buddy in a no-picture check saves help and cannot earn independent credit',()=>{
+ const h=harness();h.ui.startBuddies(['x']);h.flush(14000);assert.ok(h.spoken.some(x=>x.includes('name starts with a different sound')));
+ h.acts().find(b=>b.attrs['aria-label']==='Try together').click();h.flush(5000);h.opts().find(x=>x.dataset.g==='x').click();h.flush(10000);
+ assert.equal(h.ui._current().item.kind,'buddyWord');const q=h.t.question();h.acts().find(x=>x.attrs['aria-label']==='Show my sound buddy').click();h.flush(1000);
+ assert.equal(q.helped,true);assert.equal(q.buddyCue,true);h.opts().find(x=>x.dataset.g==='x').click();h.flush(10000);assert.equal(C.independent(q),false);
+});
+test('all 26 buddy cards are accessible and browsing creates no practice answers',()=>{
+ const h=harness();h.ui.openLetters();h.flush();const names=[];
+ for(let page=0;page<5;page++){
+  const nodes=h.ctx.document.getElementById('rdOptions').all();names.push(...nodes.filter(x=>x.tag==='img').map(x=>x.alt));
+  const next=h.ctx.document.getElementById('rdActions').all().find(x=>x.attrs['aria-label']==='Next buddies');assert.equal(next.disabled,page===4);if(page<4)next.click();h.flush();
+ }
+ assert.equal(names.length,26);assert.equal(new Set(names).size,26);assert.equal(h.answers.length,0);
 });

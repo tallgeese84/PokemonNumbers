@@ -1,3 +1,16 @@
+## v78 · Pokémon sound buddies
+
+Games → **Sound buddies** opens an A–Z collection with the 26 actual Pokémon images. The original PNGs from PokeAPI’s official-artwork folder are bundled and precached for offline use. `assets/sound-buddies/manifest.json` records source URLs and SHA-256 hashes. Artwork © Nintendo / Creatures Inc. / GAME FREAK inc.; this is an unofficial family learning app.
+
+The daily reading adventure introduces or reviews up to three buddies once per day, following the current reading route. Each new target has a narrated model and guided choice, followed by a different spoken everyday word with the Pokémon, keyword picture and answer highlighting removed. The collection also allows exploration of any letter. Errors or **Help me** bring the teaching cue back and record help. Letter writing and the existing sound tiles remain under **Write & sounds**.
+
+- **Q** teaches **qu** with /k/ + /w/. **X** uses the last /k/ + /s/ sounds in box, fox and six; Xatu is explicitly a letter companion whose name starts with a different sound. C and K are never competing answers to the same sound question.
+- Buddies use fresh-word checks and isolated-sound checks. Two unsuccessful checks trigger another model. Later-day checks come before teaching for that letter.
+- A **Remembered** badge requires at least five checks, at least 80% first-try success across the latest eight, two everyday words, an isolated-sound success and two successful days, including later-day recall before teaching/help that day. These are adjustable practice rules, not a diagnostic assessment or proof of spoken production.
+- Grown-ups, the in-app daily report, the report script and the existing Drive JSON distinguish teaching/helped steps from no-picture recognition. No relay change is needed. Badge progress is rebuilt from the shared question history; it does not depend on a separate device-only counter.
+
+Validation: the regression suite covers image hashes, A–Z/keyword/clip coverage, Q/X rules, ambiguous C/K choices, guided-to-independent UI transitions, help logging, later-day badges, automatic scheduling and Drive/report round trips.
+
 # PokéMath Adventure
 
 A personal math practice game for my son (age 5). Number writing, counting,

@@ -1,0 +1,344 @@
+{
+  "source": "PokeAPI sprites: official-artwork (original PNGs, no generated replacements)",
+  "credit": "Pok\u00e9mon character artwork \u00a9 Nintendo / Creatures Inc. / GAME FREAK inc.",
+  "images": [
+    {
+      "letter": "a",
+      "name": "Absol",
+      "id": 359,
+      "file": "assets/sound-buddies/359.png",
+      "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/359.png",
+      "size": [
+        475,
+        475
+      ],
+      "bytes": 109932,
+      "sha256": "19f0b71d2bdd3cba966bff5a8a6f8e00e254bfff0b0524967e45eab3d002ba87"
+    },
+    {
+      "letter": "b",
+      "name": "Bulbasaur",
+      "id": 1,
+      "file": "assets/sound-buddies/1.png",
+      "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png",
+      "size": [
+        475,
+        475
+      ],
+      "bytes": 203385,
+      "sha256": "7233d8d8b03b5fa91d835a3069d25769155db93c9ef91b6066e215ed3895e9d8"
+    },
+    {
+      "letter": "c",
+      "name": "Caterpie",
+      "id": 10,
+      "file": "assets/sound-buddies/10.png",
+      "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/10.png",
+      "size": [
+        475,
+        475
+      ],
+      "bytes": 174430,
+      "sha256": "49eb7f6c88d65d65e938d42df61d5cf47dd46f01c08603b6df620eb003a37457"
+    },
+    {
+      "letter": "d",
+      "name": "Diglett",
+      "id": 50,
+      "file": "assets/sound-buddies/50.png",
+      "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/50.png",
+      "size": [
+        475,
+        475
+      ],
+      "bytes": 163664,
+      "sha256": "f7e2775b5ec38e79323bd045ce20045fc4cdd6c382eb83d1105c94e36332b7c1"
+    },
+    {
+      "letter": "e",
+      "name": "Elekid",
+      "id": 239,
+      "file": "assets/sound-buddies/239.png",
+      "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/239.png",
+      "size": [
+        475,
+        475
+      ],
+      "bytes": 97472,
+      "sha256": "3cca5e07f0378ad13f25a9af2b1a02f37a1e54643a1725d876410a20b116fcf3"
+    },
+    {
+      "letter": "f",
+      "name": "Fennekin",
+      "id": 653,
+      "file": "assets/sound-buddies/653.png",
+      "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/653.png",
+      "size": [
+        475,
+        475
+      ],
+      "bytes": 128146,
+      "sha256": "539b597e2b752af79f9fc42ab22aab75d950fac2fc187f90a86e909261b5e60c"
+    },
+    {
+      "letter": "g",
+      "name": "Gastly",
+      "id": 92,
+      "file": "assets/sound-buddies/92.png",
+      "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/92.png",
+      "size": [
+        475,
+        475
+      ],
+      "bytes": 176993,
+      "sha256": "23c69f67ece1dd1724666a4bb94ebea14d53045c6f406faa2963db4f04bd5f4b"
+    },
+    {
+      "letter": "h",
+      "name": "Horsea",
+      "id": 116,
+      "file": "assets/sound-buddies/116.png",
+      "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/116.png",
+      "size": [
+        475,
+        475
+      ],
+      "bytes": 140766,
+      "sha256": "4b610c3adf68de8dfc96756bab275b55cfab2b1a9a507514c64fe97255b7c761"
+    },
+    {
+      "letter": "i",
+      "name": "Igglybuff",
+      "id": 174,
+      "file": "assets/sound-buddies/174.png",
+      "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/174.png",
+      "size": [
+        475,
+        475
+      ],
+      "bytes": 123129,
+      "sha256": "5b3e852ac3e41f1abb51663b9d59638afca40dd6427ddab540533e19d7ff62ce"
+    },
+    {
+      "letter": "j",
+      "name": "Jigglypuff",
+      "id": 39,
+      "file": "assets/sound-buddies/39.png",
+      "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/39.png",
+      "size": [
+        475,
+        475
+      ],
+      "bytes": 147602,
+      "sha256": "2d8fa64258727708417495b5ca4d28a148628d962709f58235b9e0837eb41365"
+    },
+    {
+      "letter": "k",
+      "name": "Koffing",
+      "id": 109,
+      "file": "assets/sound-buddies/109.png",
+      "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/109.png",
+      "size": [
+        475,
+        475
+      ],
+      "bytes": 153356,
+      "sha256": "fafb96d013ab7b44989cd86501e3ea78c43c42e0baec37a3c1da826859ec7cac"
+    },
+    {
+      "letter": "l",
+      "name": "Lapras",
+      "id": 131,
+      "file": "assets/sound-buddies/131.png",
+      "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/131.png",
+      "size": [
+        475,
+        475
+      ],
+      "bytes": 135952,
+      "sha256": "ffd98849dee0a265bb109d9798dbfd18b35346a1c21ca01aa0dab60a72defbc6"
+    },
+    {
+      "letter": "m",
+      "name": "Mew",
+      "id": 151,
+      "file": "assets/sound-buddies/151.png",
+      "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/151.png",
+      "size": [
+        475,
+        475
+      ],
+      "bytes": 133175,
+      "sha256": "9991aee5181178b604b99aec636533b0c5a52a321ce246dd3b9c33243a342a64"
+    },
+    {
+      "letter": "n",
+      "name": "Nidoran",
+      "id": 29,
+      "file": "assets/sound-buddies/29.png",
+      "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/29.png",
+      "size": [
+        475,
+        475
+      ],
+      "bytes": 178682,
+      "sha256": "1fa164a62793e12dbdbd006b3c2b8f81cf6b32a42c02e255575f2184cc56aaef"
+    },
+    {
+      "letter": "o",
+      "name": "Oddish",
+      "id": 43,
+      "file": "assets/sound-buddies/43.png",
+      "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/43.png",
+      "size": [
+        475,
+        475
+      ],
+      "bytes": 134223,
+      "sha256": "035edf8e0e79148c86ac89fada5b4b6ccd01f6dcbaf7a73b4f086e83d4502b7b"
+    },
+    {
+      "letter": "p",
+      "name": "Pikachu",
+      "id": 25,
+      "file": "assets/sound-buddies/25.png",
+      "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png",
+      "size": [
+        475,
+        475
+      ],
+      "bytes": 118057,
+      "sha256": "759ceafdb4b8d637dfcfe673cf672bc3c472354a3b2e7e0835d9cdcacd8d195d"
+    },
+    {
+      "letter": "q",
+      "name": "Quagsire",
+      "id": 195,
+      "file": "assets/sound-buddies/195.png",
+      "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/195.png",
+      "size": [
+        475,
+        475
+      ],
+      "bytes": 131733,
+      "sha256": "20433eb75bbed9a1d113ae24ba2b60b5ed5241026ae61cbc75ceaaaf448e76f6"
+    },
+    {
+      "letter": "r",
+      "name": "Riolu",
+      "id": 447,
+      "file": "assets/sound-buddies/447.png",
+      "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/447.png",
+      "size": [
+        475,
+        475
+      ],
+      "bytes": 127824,
+      "sha256": "5f5b983173bc197f4ddd93e3520dbb5fbbbaec29fa3d7e79fbb3efc6a278ed17"
+    },
+    {
+      "letter": "s",
+      "name": "Sandshrew",
+      "id": 27,
+      "file": "assets/sound-buddies/27.png",
+      "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/27.png",
+      "size": [
+        475,
+        475
+      ],
+      "bytes": 173758,
+      "sha256": "6d1a14b1b658a37e766951d75636fc96b95431c4faca96deb6b6f85dfa5fd31d"
+    },
+    {
+      "letter": "t",
+      "name": "Togepi",
+      "id": 175,
+      "file": "assets/sound-buddies/175.png",
+      "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/175.png",
+      "size": [
+        475,
+        475
+      ],
+      "bytes": 186166,
+      "sha256": "f07f20755be6232738af651fccd2524c6dbb47590f7d06613124d539448fa3ee"
+    },
+    {
+      "letter": "u",
+      "name": "Umbreon",
+      "id": 197,
+      "file": "assets/sound-buddies/197.png",
+      "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/197.png",
+      "size": [
+        475,
+        475
+      ],
+      "bytes": 99819,
+      "sha256": "8d7f18f7b323269dff84480f1ee8873a5d47a3eb3fd4b2ac1d2bbf0cf45a6ddd"
+    },
+    {
+      "letter": "v",
+      "name": "Vulpix",
+      "id": 37,
+      "file": "assets/sound-buddies/37.png",
+      "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/37.png",
+      "size": [
+        475,
+        475
+      ],
+      "bytes": 157357,
+      "sha256": "cded4e96e175c05c19380a1226e825f3fb2a0b889f3c011d74570e7503853555"
+    },
+    {
+      "letter": "w",
+      "name": "Wooper",
+      "id": 194,
+      "file": "assets/sound-buddies/194.png",
+      "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/194.png",
+      "size": [
+        475,
+        475
+      ],
+      "bytes": 125101,
+      "sha256": "25911b07e4a73988baa0ed305559ac63f12bec2a8f538189aa58a3a84c646fc2"
+    },
+    {
+      "letter": "x",
+      "name": "Xatu",
+      "id": 178,
+      "file": "assets/sound-buddies/178.png",
+      "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/178.png",
+      "size": [
+        475,
+        475
+      ],
+      "bytes": 117946,
+      "sha256": "08b3d80e60b1f9b41cac31b5f6aaa3ec3f52545f68ceb25a8871d07238c3e0ca"
+    },
+    {
+      "letter": "y",
+      "name": "Yamper",
+      "id": 835,
+      "file": "assets/sound-buddies/835.png",
+      "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/835.png",
+      "size": [
+        475,
+        475
+      ],
+      "bytes": 110032,
+      "sha256": "7568bf8dbcd181dd65624cfa24f3bc1a9b0578366c2fdae36abe105e99864c34"
+    },
+    {
+      "letter": "z",
+      "name": "Zubat",
+      "id": 41,
+      "file": "assets/sound-buddies/41.png",
+      "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/41.png",
+      "size": [
+        475,
+        475
+      ],
+      "bytes": 107570,
+      "sha256": "249cd65089f552f51c8da681bb13af267c01c99c2f9d70fdcb3415a82f7c6912"
+    }
+  ]
+}

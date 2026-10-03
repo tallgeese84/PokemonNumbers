@@ -2,7 +2,7 @@
    answers unless he asks for help, and asking is recorded as help. */
 function createReading(){
  'use strict';
- const R=PokeReadingCore,D=PokeReadingData,$=id=>document.getElementById(id);
+ const R=PokeReadingCore,D=PokeReadingData,B=PokeSoundBuddies,$=id=>document.getElementById(id);
  const STATE_KEY='pokemath_reading_v1',REC_PREFIX='poke_reading_rec_',LEGACY_KEY='poke_reading_v1';
  const reduce=()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
  let state=R.freshState();
@@ -95,11 +95,12 @@ function createReading(){
  /* ---------- round runner ---------- */
  let run=null;            // {round, i, onDone, item, meta, wrong, help, ref}
  const recent=[];
- const TITLE={reteach:'Sounds again',meet:'New sounds',write:'Writing letters',shapes:'Letter shapes',hunt:'Sound hunt',read:'Read it',build:'Build it',heart:'Tricky words',sentence:'Read and tap',ears:'Sound ears',book:'Book time',name:'Name catch',review:'Remember these',caps:'Capital letters',placement:'Reading check',spell:'Spell it'};
- const INTRO={reteach:'Let us look at these sounds again.',meet:'Meet a new letter and its sound.',write:'Trace the letter. Start on the green dot.',shapes:'Find the letter that looks the same.',hunt:'Listen. Find the sound.',read:'Tap each sound. Say them fast. Then find the picture.',build:'Listen, then build the word.',heart:'Tricky words. Learn them by heart.',sentence:'Read it, then tap the right picture.',ears:'Listen with your ears.',book:'Let us read a book.',name:'Read the name to catch the Pokémon!',review:'Do you remember these?',caps:'Find the one written the right way.',placement:'Show me what you can read!',spell:'Listen to the word. Find the letter for the sound.'};
+ const TITLE={buddies:'Sound buddies',reteach:'Sounds again',meet:'New sounds',write:'Writing letters',shapes:'Letter shapes',hunt:'Sound hunt',read:'Read it',build:'Build it',heart:'Tricky words',sentence:'Read and tap',ears:'Sound ears',book:'Book time',name:'Name catch',review:'Remember these',caps:'Capital letters',placement:'Reading check',spell:'Spell it'};
+ const INTRO={buddies:'Let us learn with our sound buddies.',reteach:'Let us look at these sounds again.',meet:'Meet a new letter and its sound.',write:'Trace the letter. Start on the green dot.',shapes:'Find the letter that looks the same.',hunt:'Listen. Find the sound.',read:'Tap each sound. Say them fast. Then find the picture.',build:'Listen, then build the word.',heart:'Tricky words. Learn them by heart.',sentence:'Read it, then tap the right picture.',ears:'Listen with your ears.',book:'Let us read a book.',name:'Read the name to catch the Pokémon!',review:'Do you remember these?',caps:'Find the one written the right way.',placement:'Show me what you can read!',spell:'Listen to the word. Find the letter for the sound.'};
  function setHeader(act,n){$('rdTitle').textContent=TITLE[act]||'Reading';const L=R.route(n);$('rdRoute').innerHTML='';const chip=el('span','route-chip','Route '+n);chip.style.setProperty('--route',L.colour);$('rdRoute').append(chip);}
  function enter(){shutUp();mode='read';show('read');}
  function startRound(round,onDone){
+  stop();
   round=PokeReadingTutor.prepare(round,sessions());
   run={round,i:0,onDone};recent.push(round.act);while(recent.length>8)recent.shift();
   enter();setHeader(round.act,round.route);feedback('');
@@ -116,10 +117,10 @@ function createReading(){
   if(!adventure.beforeQuestion()){waitReady(nextItem);return;}
   const it=run.round.items[run.i];run.item=it;run.wrong=0;run.helped=false;run.done=false;
   if(run.round.lazy){const pr=run.round.lazy.progress();pips(pr.sections,pr.section);}else pips(run.round.items.length,run.i);feedback('');$('rdOptions').replaceChildren();$('rdActions').replaceChildren();$('rdStage').replaceChildren();$('rdPrompt').replaceChildren();
-  run.ref=adventure.begin({section:'read',skill:run.round.placement?'placement':run.round.act,kind:it.kind,item:it.item,route:it.route,range:it.route,support:it.phase||'independent',word:it.word||it.target||it.item,phase:it.phase||'independent',format:it.kind,level:it.route,teach:!!it.teach,a:it.route,b:0,expected:String(it.answer??it.item)});
+  run.ref=adventure.begin({section:'read',skill:run.round.placement?'placement':run.round.act,kind:it.kind,item:it.item,route:it.route,range:it.route,support:it.buddyLetter?(it.buddyCue?'Pokémon picture help':'no picture help'):(it.phase||'independent'),word:it.word||it.target||it.item,phase:it.phase||'independent',format:it.kind,level:it.route,teach:!!it.teach,...(it.buddyLetter?{buddyLetter:it.buddyLetter,buddyCue:!!it.buddyCue}:{}),a:it.route,b:0,expected:String(it.answer??it.item)});
   if(it.phase==='model'){renderModel(it);return;}
   (RENDER[it.kind]||RENDER.unknown)(it);
-  if(!run.round.placement){const phase=el('div','tutor-phase',it.phase==='guided'?'Together':'Your turn');$('rdStage').prepend(phase);if(it.phase==='guided'){run.helped=true;highlightGuide(it);}}
+  if(!run.round.placement){const phase=el('div','tutor-phase',it.phase==='buddy-model'?'Meet your buddy':it.phase==='guided'?'Together':it.phase==='retention'?'Remember it':'Your turn');$('rdStage').prepend(phase);if(it.phase==='guided'){run.helped=true;highlightGuide(it);}}
  }
  function respond(value,correct){adventure.respond(value,correct);}
  function help(kind){if(!run.helped)run.helped=true;adventure.help(kind);}
@@ -202,6 +203,53 @@ function createReading(){
  /* ---------- renderers ---------- */
  const RENDER={};
  RENDER.unknown=()=>advance();
+ /* Sound buddies use the real, locally bundled official Pokémon artwork. */
+ function buddyImage(b,cls='sound-buddy-mon'){
+  const im=el('img',cls);im.src=b.image;im.alt=b.name;im.width=180;im.height=180;
+  im.onerror=()=>{im.onerror=null;im.src=imgArt(b.id);};return im;
+ }
+ function buddyCard(b){
+  const card=el('div','sound-buddy-lesson');
+  const pair=el('div','sound-buddy-letter');pair.append(el('strong','',b.letter),el('span','',b.letter.toUpperCase()));
+  card.append(pair,buddyImage(b),el('div','sound-buddy-name',b.name));
+  const keyword=el('div','sound-buddy-keyword');keyword.append(picture('buddy-key-art',b.keyword),el('span','',b.keyword));card.append(keyword);
+  if(b.letter==='q')card.append(el('p','buddy-note','q works with u: qu'));
+  if(b.letter==='x')card.append(el('p','buddy-note','Listen at the end of box.'));
+  return card;
+ }
+ function explainBuddy(b,done){
+  const tail=b.letter==='x'?'Listen at the end of box.':b.letter==='q'?'Q works with U. Listen to the sounds at the start of queen.':'Listen to the first sound in '+b.keyword+'.';
+  const intro=b.letter==='x'?'This is X. Xatu is our X buddy. Its name starts with a different sound.':b.letter==='q'?'This is Q. Quagsire is our buddy.':'This is the letter '+b.letter.toUpperCase()+'. '+b.name+'. Listen to the first sound.';
+  chain([next=>speak(intro,{done:next}),next=>sound(b.g,next),next=>speak(tail,{done:next}),next=>sound(b.g,next)],140,done);
+ }
+ RENDER.buddyMeet=it=>{
+  const b=B.get(it.buddyLetter);$('rdStage').append(buddyCard(b));$('rdPrompt').textContent='';
+  replay=()=>explainBuddy(b);setTimeout(()=>{if(run?.item===it)replay();},250);
+  $('rdActions').append(btn('btn read-next','Try together',()=>{stop();teachDone();},'Try together'));
+ };
+ function renderBuddyChoice(it){
+  const b=B.get(it.buddyLetter),guided=it.kind==='buddyGuide';
+  $('rdPrompt').textContent=guided?'Find our sound':it.kind==='buddyWord'?(b.letter==='x'?'Listen at the end':'Listen at the start'):'Listen. Find the sound.';
+  if(guided)$('rdStage').append(buddyCard(b));
+  else{const ear=btn('hunt-ear','Listen again',()=>replay(),PokeVisuals.icon('listen'));$('rdStage').append(ear);}
+  // The fresh spoken word is the question. No Pokémon, keyword picture,
+  // printed word, highlighted answer or modelled target sound is shown.
+  replay=()=>it.kind==='buddyWord'?speak('Listen to '+it.word+'. '+(b.letter==='x'?'Find the letters for the last sounds.':b.letter==='q'?'Find the letters for the first sounds.':'Find the letter for the first sound.'),{rate:.8}):sound(b.g);
+  setTimeout(()=>{if(run?.item===it)replay();},300);
+  const showHelp=()=>{
+   if(run?.item!==it||run.done)return;
+   help('Pokémon sound buddy shown');const q=adventure.tracker.question();if(q){q.buddyCue=true;adventure.tracker.changed(run.ref.sid);}
+   if(!$('rdStage').querySelector('.sound-buddy-lesson'))$('rdStage').append(buddyCard(b));
+   for(const button of $('rdOptions').children)if(button.dataset.g===b.g)button.classList.add('tutor-guided');
+   stop();explainBuddy(b);
+  };
+  it.options.forEach(g=>{const button=btn('ltile','Letters '+g,button=>{
+   if(g===it.answer){stop();right(button,g);}
+   else{wrong(button,g);setTimeout(showHelp,450);}
+  },esc(g));button.dataset.g=g;$('rdOptions').append(button);});
+  if(!guided)$('rdActions').append(btn('btn read-help','Show my sound buddy',showHelp,'Help me'));
+ }
+ RENDER.buddyGuide=renderBuddyChoice;RENDER.buddySound=renderBuddyChoice;RENDER.buddyWord=renderBuddyChoice;
  RENDER.meet=it=>{
   const e=D.G[it.g];const stage=$('rdStage');
   const card=el('div','meet-card');const t=el('div','meet-tile');const tl=tiles(t,[{g:label(it.g),sound:e[0],cls:clsOf(it.g),play:it.g}]);
@@ -446,6 +494,9 @@ function createReading(){
   const s=st(),plan=R.nextActivity(sessions(),s,recent);
   if(plan.act==='placement'){startPlacement(onDone);return;}
   if(plan.act==='advance'){passRoute(plan.route,onDone);return;}
+  const candidates=[...R.available(sessions(),plan.route),...(R.nextBatch(sessions(),plan.route)||[])];
+  const buddies=B.select(sessions(),candidates,Date.now());
+  if(buddies.length){startRound(B.lesson(buddies,sessions(),candidates,Date.now()),onDone);return;}
   startRound(R.makeRound(plan.act,plan.route,sessions(),s),onDone);
  }
  function passRoute(n,onDone){
@@ -484,12 +535,34 @@ function createReading(){
    const m=L.book.pages.find(p=>p.m);if(m)b.append(monImg(m.m));b.append(el('span','',L.book.title));if(s.books[L.n])b.classList.add('read');shelf.append(b);});
   $('rdOptions').replaceChildren(shelf);replay=()=>speak('Choose a book.',{rate:.85});replay();
  }
- function openLetters(){
+ function openLetterTiles(){
   enter();run=null;setHeader('write',R.currentRoute(st()));$('rdTitle').textContent='My letters';$('rdPrompt').textContent='';$('rdStage').replaceChildren();$('rdActions').replaceChildren();$('rdPips').replaceChildren();feedback('');
   const gs=R.graphemesUpTo(R.currentRoute(st())),grid=el('div','letter-grid');
   gs.forEach(g=>{const b=btn('ltile','Sound '+label(g),()=>{sound(g);if(namesOn()&&g.length===1)setTimeout(()=>speak('the letter '+g.toUpperCase(),{rate:.8}),700);},esc(label(g)));grid.append(b);});
-  const writeBtn=btn('btn','Write a letter',()=>{const ls=R.singleLetters(R.currentRoute(st()));startRound({act:'write',route:R.currentRoute(st()),items:ls.slice(-6).map(l=>({route:R.currentRoute(st()),kind:'write',item:'l:'+l,letter:l,teach:true}))},openLetters);},'✏️');
+  const writeBtn=btn('btn','Write a letter',()=>{const ls=R.singleLetters(R.currentRoute(st()));startRound({act:'write',route:R.currentRoute(st()),items:ls.slice(-6).map(l=>({route:R.currentRoute(st()),kind:'write',item:'l:'+l,letter:l,teach:true}))},openLetterTiles);},'✏️');
   $('rdOptions').replaceChildren(grid);$('rdActions').append(writeBtn);replay=()=>speak('Tap a sound to hear it.',{rate:.85});replay();
+  $('rdActions').append(btn('btn','Sound buddies',openLetters,'Sound buddies'));
+ }
+ let buddyPage=0;
+ function startBuddies(letters){
+  const n=R.currentRoute(st()),pool=[...R.available(sessions(),n),...(R.nextBatch(sessions(),n)||[])];
+  startRound(B.lesson(letters,sessions(),pool,Date.now()),openLetters);
+ }
+ function openLetters(){
+  stop();enter();run=null;adventure.section?.('cards');setHeader('buddies',R.currentRoute(st()));
+  $('rdTitle').textContent='Pokémon sound buddies';$('rdPrompt').textContent='My sound buddies';
+  $('rdStage').replaceChildren();$('rdOptions').replaceChildren();$('rdActions').replaceChildren();$('rdPips').replaceChildren();feedback('');
+  const ps=B.progress(sessions()),badges=Object.values(ps).filter(x=>x.badge).length;
+  $('rdStage').append(el('p','buddy-collection-note',badges+' / 26 remembered · tap a buddy to learn'));
+  const grid=el('div','sound-buddy-grid'),page=B.ALL.slice(buddyPage*6,buddyPage*6+6);
+  for(const b of page){const card=btn('sound-buddy-card'+(ps[b.letter].badge?' remembered':''),b.letter.toUpperCase()+', '+b.name+'. '+ps[b.letter].status,()=>startBuddies([b.letter]),'');
+   card.append(el('span','buddy-card-letter',b.letter+' '+b.letter.toUpperCase()),buddyImage(b,'buddy-card-mon'),el('span','buddy-card-name',b.name),el('span','buddy-card-status',ps[b.letter].status));grid.append(card);}
+  $('rdOptions').append(grid);
+  const back=btn('btn','Previous buddies',()=>{buddyPage--;openLetters();},'Back');back.disabled=buddyPage===0;
+  const next=btn('btn','Next buddies',()=>{buddyPage++;openLetters();},'Next');next.disabled=buddyPage===4;
+  const nav=el('div','buddy-pages');nav.append(back,el('span','',page[0].letter.toUpperCase()+'–'+page.at(-1).letter.toUpperCase()),next);
+  $('rdActions').append(nav,btn('btn','Letter writing and other sounds',openLetterTiles,'Write & sounds'));
+  replay=()=>speak('Choose a Pokémon sound buddy.',{rate:.85});replay();
  }
  function esc(x){return String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
@@ -521,13 +594,14 @@ function createReading(){
    <p class="muted">One try per question with no help, so a few lucky guesses are possible. Each part stops after a few misses so he is never stuck on things he has not learned.</p></details>`;
  }
  function renderPanel(){
-  const s=st(),r=R.readiness(sessions(),s),g=R.gate(r.route,R.itemStats(sessions()),s),L=R.route(r.route);
+  const s=st(),r=R.readiness(sessions(),s),g=R.gate(r.route,R.itemStats(sessions()),s),L=R.route(r.route),bp=B.progress(sessions());
   const rows=r.rows.map(x=>`<tr><td>${esc(x.label)}${x.note?`<small>${esc(x.note)}</small>`:''}${x.n!==undefined?`<small>${x.n} attempts</small>`:''}</td><td><b>${x.value===null?'—':x.value+(x.unit||'')}</b> / ${x.target}${x.unit||''}${x.secure!==undefined?`<small>${x.secure} practised, ${x.value} confirmed later</small>`:''}</td></tr>`).join('');
   const body=$('readingBody');
   body.innerHTML=`<p><strong>Route ${r.route} of ${R.LAST}: ${esc(L.name)}</strong> · curriculum pace: route ${r.expected} · <b>${r.pace}</b> (target: all routes by ${r.target}, before P1 in January 2028)</p>
   <p class="muted">This route opens the next when: sounds ${g.graphemes.ok}/${g.graphemes.total} practised · words read alone ${g.words.ok}/${g.words.need} · tricky words ${g.heart.ok}/${g.heart.total} · book ${g.book?'✓':'not yet'}${L.caps?` · capitals ${g.caps.ok}/${g.caps.need}`:''}. Two independent successes allow more practice; a later-day success confirms retention. Tapping choices does not establish spoken recall.</p>
   <p class="muted">Curriculum pace is a schedule comparison, not a school-readiness assessment. Listening skills need varied words and success on another day to be marked secure. Adult listening checks separately confirm spoken reading.</p>
   ${profileHTML(s.profile)}
+  <details class="assess-box"><summary>Pokémon sound buddies · ${Object.values(bp).filter(x=>x.badge).length}/26 remembered</summary><p class="muted">A badge requires at least five no-picture checks, 80% first-try success across the latest eight, two everyday words, an isolated sound check, and success across days including a later-day check before teaching. This is recognition, not a test of saying the sound aloud.</p><table><tbody>${B.ALL.filter(b=>bp[b.letter].met).map(b=>{const x=bp[b.letter];return `<tr><td>${b.letter.toUpperCase()} · ${b.name}<small>${x.cued} teaching/helped steps</small></td><td>${x.independent}/${x.n} without picture help<small>${x.status}</small></td></tr>`;}).join('')||'<tr><td>No sound-buddy practice yet.</td></tr>'}</tbody></table></details>
   <table class="journal-table"><tbody>${rows}</tbody></table>
   <div class="pprow reading-tools"><button class="btn" id="rdRecall">Check spoken letter sounds</button><button class="btn" id="rdAloud">Listen to ${esc(childName||'Jonah')} read</button><button class="btn" id="rdPlace">Redo English check</button>
   <label>Letter names <select id="rdNames"><option value="auto">On from the start (default)</option><option value="on">On</option><option value="off">Off</option></select></label>
@@ -583,7 +657,7 @@ function createReading(){
  // read-only hook for the browser regression script; children never see it
  const _current=()=>run&&{item:run.item,act:run.round.act,i:run.i,placement:!!run.round.placement};
  const _round=(act,n)=>startRound(R.makeRound(act,n,sessions(),st()),()=>{});
- return {_current,_round,startBlock,startFree,openShelf,openLetters,leave,importLegacy,renderPanel,
+ return {_current,_round,startBuddies,startBlock,startFree,openShelf,openLetters,leave,importLegacy,renderPanel,
   get state(){return state;},applyState(m){if(!m)return;state=R.mergeState(state,m);save();},
   payload:()=>state,isReading:()=>mode==='read'};
 }
