@@ -1,3 +1,7 @@
+## v87 · Jonah's blue theme
+
+Pale blue backgrounds and deeper blue buttons, reading-stage cards, progress indicators and collection highlights reflect Jonah's favourite colour. The v86 collection and buddy picker are retained. Pokémon artwork and instructional vowel/team colours keep their meaning. Theme changes do not alter earned collections or learning history.
+
 ## v86 · A clearer Pokémon collection
 
 The collection now has large artwork, a featured reading buddy, illustrated Cards/Badges shortcuts and consistent rarity icons with counts. On phones, owned Pokémon appear in a two-column grid. Tap a Pokémon to inspect its full artwork, hear its name, browse with previous/next, and explicitly choose it as the buddy. Shiny artwork is used when available, with standard artwork and a drawn Poké Ball as fallbacks. Search and sorting appear for collections of 12 or more; larger collections load 36 cards at a time.

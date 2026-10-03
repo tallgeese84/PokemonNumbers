@@ -1,0 +1,54 @@
+/* Jonah's blue theme. Illustration and phonics meaning colours stay intact. */
+:root{--ink:#203e63;--cream:#fff;--paper:#f0f7ff;--mint:#2466bd;--mint-d:#194d93;--sky:#78b7ed;--edge:#cbdff3;--quiet:#526b88;--shadow:0 8px 28px #204e8210;--blue:#2466bd;--blue-dark:#194d93;--blue-soft:#e5f1ff;--blue-line:#c2d9ef}
+body{background:#f4f9ff;color:var(--ink)}
+.btn,.quiet-choice{color:var(--ink);border-color:var(--blue-line)}
+.btn:hover:not(:disabled),.quiet-choice:hover{background:#e7f2ff}
+#startAdventure{background:var(--blue);border-color:var(--blue-dark);box-shadow:0 4px 0 #16477f;color:#fff}
+#startAdventure:hover{background:#2058a3}#startAdventure:active{box-shadow:0 1px 0 #16477f}
+#adventureRing{border-color:#a6c8eb;background:conic-gradient(#3689db var(--progress),#dfecfa 0)}
+.adventure-ring span{background:#f4f9ff;color:#526b88}
+.home-footer #cloudBtn,.home-footer .build-label,.home-team-copy small{color:#526b88}
+#teamBtn.home-art-choice{background:#e7f2ff;border-color:#b8d3ef;color:#203e63}
+#teamBtn.home-art-choice:hover{background:#dcebff}
+.daily-reading-path li{background:#edf5ff;border-color:#cfdef0;color:#294867}
+.daily-reading-path li.current{background:#dcecff;border-color:#347ec9}
+.daily-reading-path li.complete{background:#e0efff;color:#215b96}
+.daily-reading-path small{color:#526b88}.daily-step-status,.daily-reading-view .read-route{color:#235d9e}
+.daily-step-number{color:#235d9e;background:#fff}
+.home-alphabet{background:#e7f2ff;border-color:#b7d2ed;color:#234d7a}.home-alphabet:hover{background:#dbeaff}
+.home-alphabet-copy small{color:#526b88}
+.read-card{background:#fff;border-color:var(--blue-line);color:var(--ink)}
+.route-chip{background:#edf5ff;border-color:var(--blue-line);color:#294867}
+.read-pips span,.ear-dots span{background:#dbe8f7}.read-pips span.on{background:#438ad0}
+.read-next,.adventure-dialog .btn{background:var(--blue)!important;border-color:var(--blue-dark)!important;box-shadow:0 3px 0 #16477f!important;color:#fff!important}
+.read-help,.adventure-dialog .secondary{background:#eaf3ff!important;color:#294867!important}
+.read-feedback,.meet-key,.pic small,.buddy-collection-note{color:#365f87}
+.gtile,.ltile,.pic,.wchoice,.slot,.count-choice{border-color:var(--blue-line)}
+.gtile:not([data-cls]),.gtile[data-cls="consonant"],.ltile:not([data-cls]),.wchoice{color:#203e63}
+.ltile,.slot.filled{background:#f2f7ff}.hunt-ear{background:#e5f1ff;color:#2466bd}
+.sound-boxes .slot.ask{border-color:#438ad0;box-shadow:0 0 0 3px #438ad033}
+.daily-story-word.supplied-word{text-decoration-color:#438ad0}
+.home-alphabet:focus-visible,.home-art-choice:focus-visible,.daily-story-word:focus-visible{outline-color:#2466bd}
+.buddy-card.selected,.buddy-card.playing{border-color:#438ad0}
+#scr-team{--collection-green:#2466bd;--collection-ink:#203e63;--collection-muted:#526b88}
+.collection-heading h1,.collection-hero h2,.collection-mon strong,.pokemon-details h2{color:#203e63}
+.collection-eyebrow,.collection-section-heading>span,.collection-mon small,.collection-restore,.pokemon-paging{color:#526b88}
+#teamHead.collection-total{color:#235d9e;background:#e3efff;border-color:#c2d9ef}
+.collection-hero{background:linear-gradient(135deg,#e7f3ff,#dcecff 55%,#d8ebff);border-color:#bfd8f0}
+.collection-hero:after{background:#a4cff580}.collection-hero-copy>p:not(.collection-eyebrow){color:#496987}
+#scr-team .collection-shortcuts .quiet-choice{background:#fff;border-color:#cbdff3}
+.collection-secondary{background:#fff;color:#235d9e;border-color:#bfd8f0}.collection-secondary:hover{background:#e8f3ff}
+.collection-feedback{color:#235d9e}.collection-feedback:not(:empty){background:#e3efff}
+.collection-filters button{background:#fff;color:#365675;border-color:#cbdff3}
+.collection-filters [aria-pressed="true"]{background:#dcecff;color:#203e63;border-color:#438ad0;box-shadow:0 2px 0 #438ad020}
+.collection-tools input,.collection-tools select{color:#294867;border-color:#c2d9ef}
+#scr-team .collection-mon{border-color:#cbdff3;background:linear-gradient(155deg,#fff,#edf5ff);box-shadow:0 3px 0 #b7d1ec28}
+#scr-team .collection-mon.is-buddy{border-color:#438ad0;background:linear-gradient(155deg,#f4f9ff,#dcecff)}
+#scr-team .collection-mon:hover{border-color:#438ad0}.collection-mon-art{background:radial-gradient(ellipse at center,#d6eaff99,transparent 70%)}
+.collection-buddy-tag{color:#235d9e;background:#eef6ff;border-color:#c2d9ef}
+.collection-primary{background:var(--blue);box-shadow:0 3px 0 #16477f;color:#fff}.collection-primary:hover{background:#2058a3}
+.collection-empty-filter{background:#e7f2ff}.collection-empty-filter h3{color:#294867}.collection-empty-filter p{color:#526b88}
+#pokemonPreview{color:#203e63;background:#f4f9ff;border-color:#bfd8f0;box-shadow:0 24px 90px #163d7038}
+#pokemonPreview::backdrop{background:#172f5080}.pokemon-stage{background:radial-gradient(circle at 50% 60%,#fff 20%,#e4f1ff 58%,#cfe5fc)}
+.collection-close,.pokemon-speak{color:#235d9e}.pokemon-paging button{color:#235d9e;background:#e0eeff}
+.journal-day.today .bar-fill,.journal-bar meter{accent-color:#3689db}.journal-next{background:#eaf3ff}
