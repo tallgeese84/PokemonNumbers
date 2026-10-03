@@ -2,7 +2,7 @@
 
 The home page now has a prominent **Pokémon A–Z** card directly below the daily Play area. It opens the complete tap-to-hear sound poster in one tap; the previous entry inside Games has moved here. The Games, Pokémon, and Fox destinations keep their existing behaviour with larger illustrations: newly generated learning blocks and fox artwork, plus the original Pikachu artwork.
 
-The new PNGs retain transparency and are bundled for offline use. [Artwork sources and generation prompts](assets/home/README.md).
+The new PNGs retain transparency and are bundled for offline use. [Artwork sources and generation prompts](assets/home/README.md). All 12 regression test files passed. Live verification confirmed every home illustration loaded, no horizontal overflow, and the home A–Z button opened all 26 sound cards. [Verified home preview](docs/v80-home-1791035117401.jpg).
 
 ## v79 · Tap-to-hear Pokémon alphabet
 
