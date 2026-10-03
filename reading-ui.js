@@ -583,18 +583,15 @@ function createReading(){
   let selected=null;
   const learn=btn('btn read-next','Choose a letter, then practise together',()=>{if(selected)startBuddies([selected.letter]);},'Practise together');learn.disabled=true;
   const playBuddy=(b,card)=>{
-   // The automatic repeat is already queued: another tap on the same playing
-   // letter must not chop its sound into little fragments.
-   if(selected===b&&card.classList.contains('playing'))return;
+   // Each tap requests one playback, including another tap on the same letter.
    stop();shutUp();audio();if(!soundOn)$('soundBtn').click();selected=b;
    grid.querySelectorAll('.sound-buddy-card').forEach(c=>{c.classList.remove('selected','playing');c.setAttribute('aria-pressed','false');});
    card.classList.add('selected','playing');card.setAttribute('aria-pressed','true');
    learn.disabled=false;learn.textContent='Practise '+b.letter.toUpperCase()+' together';learn.setAttribute('aria-label',learn.textContent);
    feedback(b.letter==='x'?'X · hear the end of box. Xatu is our letter buddy.':b.letter==='q'?'Q · q and u work together, as in queen.':b.letter.toUpperCase()+' · '+b.keyword);
    // Exploration is listening, never an independent answer or badge check.
-   // Interrupting increments gen, cancelling the pending repeat as well.
    adventure.recordListening?.({section:'read',skill:'buddies',kind:'buddyListen',phase:'explore',item:'g:'+b.g,buddyLetter:b.letter,buddyCue:true});
-   chain([next=>sound(b.g,next),next=>sound(b.g,next)],750,()=>{card.classList.remove('playing');card.setAttribute('aria-pressed','false');});
+   sound(b.g,()=>{card.classList.remove('playing');card.setAttribute('aria-pressed','false');});
    replay=()=>playBuddy(b,card);
   };
   for(const b of B.ALL){const card=btn('sound-buddy-card'+(ps[b.letter].badge?' remembered':''),'Hear '+b.letter.toUpperCase()+', '+b.name,card=>playBuddy(b,card),'');

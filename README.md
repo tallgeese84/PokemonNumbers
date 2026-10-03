@@ -1,3 +1,7 @@
+## v83 · One sound per tap
+
+Each tap on the Pokémon A–Z poster plays the approved recording once. Tap the same letter again to hear it again. A new tap softly releases any playing sound and starts the requested recording; there are no automatic repetitions. Listening remains exposure, not an independent answer. All 13 regression test files pass, including single playback, repeated taps, complete clip timing, Q/X playback and leaving the poster.
+
 ## v82 · Approved recorded phonics
 
 The Pokémon A–Z poster now uses the parent-approved Buzzphonics recordings at their natural pace. All letters have recorded audio, including complete qu and x examples. The same files are used in guided letter practice, sound tiles and letter-writing feedback; ch, sh and ng also use directly mapped recordings. Original clip timing is preserved, with only the level adjustment used in the approved sample. Copyright and the MIT licence are bundled and credited in Grown-ups.

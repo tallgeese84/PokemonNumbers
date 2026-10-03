@@ -776,34 +776,34 @@
     .pad button{ font-size:18px; min-height:42px; }
   }
 </style>
-<link rel="stylesheet" href="adventure.css?v=82">
-<link rel="stylesheet" href="visuals.css?v=82">
-<script src="visuals.js?v=82"></script>
-<script src="assets/pokemon-catalog.js?v=82"></script>
-<script src="learning-core.js?v=82"></script>
-<script src="drive-mirror.js?v=82"></script>
-<script src="adventure.js?v=82"></script>
-<script src="foundations.js?v=82"></script>
-<script src="foundation-ui.js?v=82"></script>
-<script src="reading-data.js?v=82"></script>
-<script src="reading-phonics.js?v=82"></script>
-<script src="reading-art.js?v=82"></script>
-<script src="reading-tutor.js?v=82"></script>
-<script src="reading-buddies.js?v=82"></script>
-<script src="reading-core.js?v=82"></script>
-<script src="reading-assess.js?v=82"></script>
-<script src="reading-ui.js?v=82"></script>
-<script src="math-path-core.js?v=82"></script>
-<script src="math-tutor.js?v=82"></script>
-<script src="math-path-ui.js?v=82"></script>
-<script src="fox-core.js?v=82"></script>
-<script src="fox-model.js?v=82"></script>
-<script src="fox-ui.js?v=82"></script>
-<link rel="stylesheet" href="foundations.css?v=82">
-<link rel="stylesheet" href="reading.css?v=82">
-<link rel="stylesheet" href="reading-art.css?v=82">
-<link rel="stylesheet" href="math-path.css?v=82">
-<link rel="stylesheet" href="fox.css?v=82">
+<link rel="stylesheet" href="adventure.css?v=83">
+<link rel="stylesheet" href="visuals.css?v=83">
+<script src="visuals.js?v=83"></script>
+<script src="assets/pokemon-catalog.js?v=83"></script>
+<script src="learning-core.js?v=83"></script>
+<script src="drive-mirror.js?v=83"></script>
+<script src="adventure.js?v=83"></script>
+<script src="foundations.js?v=83"></script>
+<script src="foundation-ui.js?v=83"></script>
+<script src="reading-data.js?v=83"></script>
+<script src="reading-phonics.js?v=83"></script>
+<script src="reading-art.js?v=83"></script>
+<script src="reading-tutor.js?v=83"></script>
+<script src="reading-buddies.js?v=83"></script>
+<script src="reading-core.js?v=83"></script>
+<script src="reading-assess.js?v=83"></script>
+<script src="reading-ui.js?v=83"></script>
+<script src="math-path-core.js?v=83"></script>
+<script src="math-tutor.js?v=83"></script>
+<script src="math-path-ui.js?v=83"></script>
+<script src="fox-core.js?v=83"></script>
+<script src="fox-model.js?v=83"></script>
+<script src="fox-ui.js?v=83"></script>
+<link rel="stylesheet" href="foundations.css?v=83">
+<link rel="stylesheet" href="reading.css?v=83">
+<link rel="stylesheet" href="reading-art.css?v=83">
+<link rel="stylesheet" href="math-path.css?v=83">
+<link rel="stylesheet" href="fox.css?v=83">
 </head>
 <body data-screen="home">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
@@ -915,7 +915,7 @@
       <button class="quiet-choice home-art-choice" id="teamBtn" aria-label="My Pokémon"><img class="home-icon-art" src="assets/sound-buddies/25.png" alt="" width="112" height="88"><strong>Pokémon</strong><small id="teamTally" hidden></small></button>
       <button class="quiet-choice home-art-choice" id="foxBtn" aria-label="My fox"><img class="home-icon-art" src="assets/home/fox-v80.png" alt="" width="112" height="88"><strong>Fox</strong></button>
     </div>
-    <footer class="home-footer"><span id="parentEntry"></span><span class="build-label">v82</span></footer>
+    <footer class="home-footer"><span id="parentEntry"></span><span class="build-label">v83</span></footer>
   </div>
 
   <!-- The other activities stay available, three pictures at a time. -->
@@ -4446,7 +4446,7 @@ document.addEventListener('visibilitychange', () => {
       ['maths path', typeof PokeMathPath === 'object' && PokeMathPath.SKILLS.length === 28]
     ];
     document.getElementById('ppVer').textContent =
-      'build v82 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
+      'build v83 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
     showPraise(praiseLine(true));
     say(praiseLine(true));
   });

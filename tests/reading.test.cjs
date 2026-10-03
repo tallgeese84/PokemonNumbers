@@ -303,7 +303,7 @@ test('asking for a buddy in a no-picture check saves help and cannot earn indepe
  assert.equal(h.ui._current().item.kind,'buddyWord');const q=h.t.question();h.acts().find(x=>x.attrs['aria-label']==='Show my sound buddy').click();h.flush(1000);
  assert.equal(q.helped,true);assert.equal(q.buddyCue,true);h.opts().find(x=>x.dataset.g==='x').click();h.flush(10000);assert.equal(C.independent(q),false);
 });
-test('one alphabet page shows all 26 Pokémon; a letter tap plays immediately and repeats with a pause',()=>{
+test('one alphabet page shows all 26 Pokémon; each tap plays once without an automatic repeat',()=>{
  const h=harness({audioMocks:true});h.ui.openLetters();h.flush();
  assert.equal(h.spoken.length,0,'poster opens quietly without narration to interrupt');
  const cards=h.opts()[0].children,names=cards.flatMap(c=>c.all().filter(x=>x.tag==='img').map(x=>x.alt));
@@ -314,44 +314,46 @@ test('one alphabet page shows all 26 Pokémon; a letter tap plays immediately an
  p.click();assert.equal(h.played.length,1);assert.match(h.played[0].src,/phonemes\/recorded-v82\/p.wav$/);
  assert.equal(h.listened[0].kind,'buddyListen');assert.equal(h.listened[0].buddyLetter,'p');
  assert.equal(h.ui._current(),null);assert.equal(h.spoken.length,before,'no spoken letter name before the sound');
- h.flush(900);assert.equal(h.played.length,1);h.flush(60);assert.equal(h.played.length,2);
- assert.ok(h.played[1].at-h.played[0].at>=950);assert.equal(h.answers.length,0);assert.equal(JSON.stringify(h.t.sessions),questions);
+ h.flush(5000);assert.equal(h.played.length,1);assert.equal(p.classList.contains('playing'),false);
+ p.click();assert.equal(h.played.length,2);h.flush(5000);assert.equal(h.played.length,2);
+ assert.equal(h.answers.length,0);assert.equal(JSON.stringify(h.t.sessions),questions);
  h.acts().find(b=>b.attrs['aria-label']==='Practise P together').click();h.flush(18000);assert.equal(h.ui._current().item.kind,'buddyMeet');
 });
-test('rapid taps on the same letter let its two demonstrations finish and log only one exposure',()=>{
+test('each new tap on the same letter plays once and records listening only',()=>{
  const h=harness({audioMocks:true});h.ui.openLetters();const p=h.opts()[0].children.find(c=>c.dataset.letter==='p');
  p.click();h.flush(40);p.click();h.flush(40);p.click();
- assert.equal(h.played.length,1);assert.equal(h.players[0].paused,undefined);assert.equal(h.listened.length,1);
- h.flush(2200);assert.equal(h.played.length,2);assert.equal(p.classList.contains('playing'),false);
- p.click();assert.equal(h.played.length,3);assert.equal(h.listened.length,2);
+ assert.equal(h.played.length,3);assert.equal(h.listened.length,3);
+ h.flush(2200);assert.equal(h.played.length,3);assert.equal(p.classList.contains('playing'),false);assert.ok(h.players.every(p=>p.paused));
+ p.click();assert.equal(h.played.length,4);assert.equal(h.listened.length,4);assert.equal(h.answers.length,0);
 });
 test('switching letters releases the playing clip over 75ms, then stops it without interrupting the next clip',()=>{
  for(const gainMocks of [false,true]){
   const h=harness({audioMocks:true,gainMocks});h.ui.openLetters();const cards=h.opts()[0].children;
   cards[0].click();h.flush(40);const old=h.players[0];cards[1].click();
-  assert.equal(old.paused,undefined,'no immediate hard stop');assert.equal(old.onended,null,'cancelled completion cannot start a repeat');
+  assert.equal(old.paused,undefined,'no immediate hard stop');assert.equal(old.onended,null,'cancelled completion cannot change the new playback');
   if(gainMocks){assert.equal(h.ramps.length,1);assert.equal(h.ramps[0].value,0);assert.ok(Math.abs(h.ramps[0].at-h.ramps[0].started-.075)<.001);}
   h.flush(40);assert.equal(old.paused,undefined);if(!gainMocks)assert.ok(old.volume<1&&old.volume>0);
   h.flush(45);assert.equal(old.paused,true);assert.equal(h.players[1].paused,undefined);
-  h.flush(2200);assert.deepEqual(h.played.map(x=>x.src.split('/').at(-1)),['a.wav','b.wav','b.wav']);
+  h.flush(2200);assert.deepEqual(h.played.map(x=>x.src.split('/').at(-1)),['a.wav','b.wav']);
  }
 });
-test('new taps and leaving cancel old audio and pending repetitions; Q and X use complete recordings',()=>{
+test('new taps and leaving cancel old audio; Q and X each play one complete recording',()=>{
  const h=harness({audioMocks:true});h.ui.openLetters();h.flush();const cards=h.opts()[0].children;
  cards.find(c=>c.dataset.letter==='p').click();h.flush(220);
  cards.find(c=>c.dataset.letter==='s').click();h.flush(2200);
- assert.deepEqual(h.played.map(x=>x.src.split('/').at(-1)),['p.wav','s.wav','s.wav']);assert.ok(h.players[0].paused);
+ assert.deepEqual(h.played.map(x=>x.src.split('/').at(-1)),['p.wav','s.wav']);assert.ok(h.players[0].paused);
  h.played.length=0;cards.find(c=>c.dataset.letter==='q').click();h.flush(3000);
- assert.deepEqual(h.played.map(x=>x.src.split('/').at(-1)),['qu.wav','qu.wav']);
+ assert.deepEqual(h.played.map(x=>x.src.split('/').at(-1)),['qu.wav']);
  h.played.length=0;cards.find(c=>c.dataset.letter==='x').click();h.flush(3000);
- assert.deepEqual(h.played.map(x=>x.src.split('/').at(-1)),['x.wav','x.wav']);
+ assert.deepEqual(h.played.map(x=>x.src.split('/').at(-1)),['x.wav']);
  h.played.length=0;cards[0].click();h.ui.leave();h.flush(5000);assert.equal(h.played.length,1);assert.ok(h.players.at(-1).paused);
 });
-test('longer natural recordings finish before the repeat, with no speed change or premature restart',()=>{
+test('a natural recording finishes once at its original speed and can be replayed by tapping',()=>{
  const h=harness({audioMocks:true,audioDuration:1942});h.ui.openLetters();const m=h.opts()[0].children.find(c=>c.dataset.letter==='m');m.click();
- h.flush(1900);m.click();assert.equal(h.played.length,1);assert.equal(h.players[0].paused,undefined);
- h.flush(791);assert.equal(h.played.length,1);h.flush(1);assert.equal(h.played.length,2);
- assert.equal(h.played[1].at-h.played[0].at,1942+750);
+ h.flush(1941);assert.equal(h.played.length,1);assert.equal(h.players[0].paused,undefined);assert.equal(m.classList.contains('playing'),true);
+ h.flush(1);assert.equal(h.players[0].paused,true);assert.equal(m.classList.contains('playing'),false);
+ h.flush(5000);assert.equal(h.played.length,1);m.click();assert.equal(h.played.length,2);
+ h.flush(5000);assert.equal(h.played.length,2);
  assert.equal(h.players[0].playbackRate,undefined,'native speed is retained');
 });
 test('letter tile names wait for the full recording, and parent recordings still take priority',()=>{
