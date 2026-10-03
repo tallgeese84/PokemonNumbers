@@ -146,7 +146,7 @@ function withSessions(state,sessions){
     if(q.skill==='advance'&&q.route)st.passed[q.route]=Math.max(st.passed[q.route]||0,q.completedAt);
     if(q.skill==='placed'&&q.completedAt>(st.placedAt||0)){st.passed={};st.resetAt=Math.max(st.resetAt||0,q.assessmentStartedAt||q.startedAt);if(q.profile){st.profile=q.profile;st.assessV=2;}}
     if(q.skill==='placed'){for(let n=1;n<=(q.route||0);n++)st.passed[n]=Math.max(st.passed[n]||0,q.completedAt);if(q.completedAt>(st.placedAt||0)){st.placedAt=q.completedAt;st.placedRoute=q.route||0;}}
-    if(q.skill==='book'&&q.kind==='book')st.books[q.route]=Math.max(st.books[q.route]||0,q.completedAt);
+    if(q.skill==='book'&&(q.kind==='book'||q.kind==='dailyStory'))st.books[q.route]=Math.max(st.books[q.route]||0,q.completedAt);
   }
   return st;
 }

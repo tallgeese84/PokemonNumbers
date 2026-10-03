@@ -118,10 +118,11 @@ function createReading(){
  const praise=ind=>{const n=childName||'';const a=ind?['Brilliant reading, '+n+'!','You read it yourself!','Super sounding out!','Yes! Great reading!']:['You got it, '+n+'!','Well done!','Good thinking!'];return a[Math.floor(Math.random()*a.length)];};
 
  /* ---------- round runner ---------- */
+ let lastDailyStage=null;
  let run=null;            // {round, i, onDone, item, meta, wrong, help, ref}
  const recent=[];
- const TITLE={buddies:'Sound buddies',reteach:'Sounds again',meet:'New sounds',write:'Writing letters',shapes:'Letter shapes',hunt:'Sound hunt',read:'Read it',build:'Build it',heart:'Tricky words',sentence:'Read and tap',ears:'Sound ears',book:'Book time',name:'Name catch',review:'Remember these',caps:'Capital letters',placement:'Reading check',spell:'Spell it'};
- const INTRO={buddies:'Let us learn with our sound buddies.',reteach:'Let us look at these sounds again.',meet:'Meet a new letter and its sound.',write:'Trace the letter. Start on the green dot.',shapes:'Find the letter that looks the same.',hunt:'Listen. Find the sound.',read:'Tap each sound. Say them fast. Then find the picture.',build:'Listen, then build the word.',heart:'Tricky words. Learn them by heart.',sentence:'Read it, then tap the right picture.',ears:'Listen with your ears.',book:'Let us read a book.',name:'Read the name to catch the Pokémon!',review:'Do you remember these?',caps:'Find the one written the right way.',placement:'Show me what you can read!',spell:'Listen to the word. Find the letter for the sound.'};
+ const TITLE={actions:'Read and act',buddies:'Sound buddies',reteach:'Sounds again',meet:'New sounds',write:'Writing letters',shapes:'Letter shapes',hunt:'Sound hunt',read:'Read it',build:'Build it',heart:'Tricky words',sentence:'Read and tap',ears:'Sound ears',book:'Book time',name:'Name catch',review:'Remember these',caps:'Capital letters',placement:'Reading check',spell:'Spell it'};
+ const INTRO={actions:'Read the word. Choose its action.',buddies:'Let us learn with our sound buddies.',reteach:'Let us look at these sounds again.',meet:'Meet a new letter and its sound.',write:'Trace the letter. Start on the green dot.',shapes:'Find the letter that looks the same.',hunt:'Listen. Find the sound.',read:'Tap each sound. Say them fast. Then find the picture.',build:'Listen, then build the word.',heart:'Tricky words. Learn them by heart.',sentence:'Read it, then tap the right picture.',ears:'Listen with your ears.',book:'Let us read a book.',name:'Read the name to catch the Pokémon!',review:'Do you remember these?',caps:'Find the one written the right way.',placement:'Show me what you can read!',spell:'Listen to the word. Find the letter for the sound.'};
  function setHeader(act,n){$('rdTitle').textContent=TITLE[act]||'Reading';const L=R.route(n);$('rdRoute').innerHTML='';const chip=el('span','route-chip','Route '+n);chip.style.setProperty('--route',L.colour);$('rdRoute').append(chip);}
  function enter(){root.classList.remove('alphabet-view');shutUp();mode='read';show('read');}
  function startRound(round,onDone){
@@ -129,7 +130,11 @@ function createReading(){
   round=PokeReadingTutor.prepare(round,sessions());
   run={round,i:0,onDone};recent.push(round.act);while(recent.length>8)recent.shift();
   enter();setHeader(round.act,round.route);feedback('');
+  root.classList.toggle('daily-reading-view',!!round.daily);
+  if(round.daily){const stage=PokeReadingDaily.STAGES.find(x=>x.id===round.daily.stage),i=PokeReadingDaily.STAGES.indexOf(stage);$('rdRoute').textContent=(i+1)+' of 4 · '+stage.label;}
   if(!round.items.length){finishRound();return;}
+  const dailyKey=round.daily&&[round.daily.day,round.daily.cycle,round.daily.stage].join(':');
+  if(dailyKey&&dailyKey===lastDailyStage){nextItem();return;}lastDailyStage=dailyKey;
   speak(INTRO[round.act],{rate:.85,done:()=>nextItem()});
  }
  function nextItem(){
@@ -137,13 +142,16 @@ function createReading(){
   if(run.round.lazy&&run.i>=run.round.items.length){const nx=run.round.lazy.next();if(nx)run.round.items.push(nx);}
   if(run.i>=run.round.items.length){finishRound();return;}
   const upcoming=run.round.items[run.i];
+  if(run.round.daily&&upcoming.phase!=='guided'){const status=adventure.dailyStatus();if(status.day!==run.round.daily.day||status.stage?.id!==run.round.daily.stage){finishRound();return;}}
   if(upcoming.intro&&!upcoming._introSaid){upcoming._introSaid=true;$('rdOptions').replaceChildren();$('rdStage').replaceChildren();$('rdActions').replaceChildren();$('rdPrompt').textContent='';feedback('');
    speak(upcoming.intro,{rate:.85,done:()=>setTimeout(nextItem,250)});return;}
   if(!adventure.beforeQuestion()){waitReady(nextItem);return;}
   const it=run.round.items[run.i];run.item=it;run.wrong=0;run.helped=false;run.done=false;
   if(run.round.lazy){const pr=run.round.lazy.progress();pips(pr.sections,pr.section);}else pips(run.round.items.length,run.i);feedback('');$('rdOptions').replaceChildren();$('rdActions').replaceChildren();$('rdStage').replaceChildren();$('rdPrompt').replaceChildren();
-  run.ref=adventure.begin({section:'read',skill:run.round.placement?'placement':run.round.act,kind:it.kind,item:it.item,route:it.route,range:it.route,support:it.buddyLetter?(it.buddyCue?'Pokémon picture help':'no picture help'):(it.phase||'independent'),word:it.word||it.target||it.item,phase:it.phase||'independent',format:it.kind,level:it.route,teach:!!it.teach,...(it.buddyLetter?{buddyLetter:it.buddyLetter,buddyCue:!!it.buddyCue}:{}),a:it.route,b:0,expected:String(it.answer??it.item)});
+  run.ref=adventure.begin({section:'read',skill:run.round.placement?'placement':run.round.act,kind:it.kind,item:it.item,route:it.route,range:it.route,support:it.buddyLetter?(it.buddyCue?'Pokémon picture help':'no picture help'):(it.phase||'independent'),word:it.word||it.target||it.item,phase:it.phase||'independent',format:it.kind,level:it.route,teach:!!it.teach,...(it.buddyLetter?{buddyLetter:it.buddyLetter,buddyCue:!!it.buddyCue}:{}),...(run.round.daily?{dailyVersion:1,dailyDay:run.round.daily.day,dailyCycle:run.round.daily.cycle,dailyStage:run.round.daily.stage}:{}),...(it.storyId?{storyId:it.storyId}:{}),...(it.storyHelped?{support:'listening/supported comprehension'}:{}),a:it.route,b:0,expected:String(it.answer??it.item)});
+  if(it.storyHelped)help('story words supplied or read aloud');
   if(it.phase==='model'){renderModel(it);return;}
+  if(it.phase==='guided'){run.helped=true;adventure.help('guided practice');}
   (RENDER[it.kind]||RENDER.unknown)(it);
   if(!run.round.placement){const phase=el('div','tutor-phase',it.phase==='buddy-model'?'Meet your buddy':it.phase==='guided'?'Together':it.phase==='retention'?'Remember it':'Your turn');$('rdStage').prepend(phase);if(it.phase==='guided'){run.helped=true;highlightGuide(it);}}
  }
@@ -158,7 +166,7 @@ function createReading(){
   sndGood();if(!reduce())burst(target||$('rdStage'),ind?10:7);
   // Quick recognition items earn one star; reading words and sentences earn two.
   if(!run.item.teach&&!run.round.placement){const big=['read','sentence','build','name','quiz'].includes(run.item.kind);const n=big?(ind?2:1):(ind?1:0);if(n)addStar(n);}
-  const line=run.round.placement?'Yes!':run.item.teach?'Well done. We tried it together.':run.item.buddyLetter?(ind?'Yes! You found the sound!':'We found the sound together!'):praise(ind);feedback(line+(run.round.placement?'':run.item.buddyLetter?'  ⭐':ind?'  ⭐⭐':'  ⭐'));
+  const line=run.round.placement?'Yes!':run.item.teach?'Well done. We tried it together.':run.item.kind==='dailyQuiz'?'You understood the story!':run.item.kind==='dailyAction'?'You found the action!':run.item.buddyLetter?(ind?'Yes! You found the sound!':'We found the sound together!'):praise(ind);feedback(line+(run.round.placement?'':run.item.buddyLetter?'  ⭐':ind?'  ⭐⭐':'  ⭐'));
   const after=()=>speak(line,{done:()=>setTimeout(advance,350)});
   if(afterSay&&!run.round.placement)afterSay(after);else after();
  }
@@ -306,7 +314,7 @@ function createReading(){
  /* The core change: he decodes; the app never says the word first. */
  RENDER.read=it=>{
   const wordBox=el('div','sound-word');$('rdStage').append(wordBox);
-  const tl=tiles(wordBox,it.parts,{onTap:()=>{}});
+  const tl=tiles(wordBox,it.parts,{onTap:()=>{if(run?.round.daily)help('letter sound played');}});
   let level=0;
   replay=()=>speak('Tap each sound. Say them fast. Find the picture.',{rate:.85});
   const helpBtn=btn('btn read-help','Help me sound it out',()=>{
@@ -463,7 +471,50 @@ function createReading(){
  RENDER.quiz=it=>{
   const q=it.quiz;$('rdPrompt').textContent=q.q;replay=()=>speak(q.q,{rate:.85});setTimeout(replay,250);
   q.o.forEach((o,k)=>{const b=btn('pic quiz-pic','Answer '+(k+1),b=>{if(k===it.answer)right(b,k,go=>speak(o.t,{rate:.8,done:go}));else{wrong(b,k);if(run.wrong>=1)fade($('rdOptions'),x=>+x.dataset.k===it.answer);}},'');
-   b.dataset.k=k;if(o.m)b.append(monImg(o.m));else{const art=el('span','pic-e',o.e);PokeReadingArt.emoji(art,o.e,D.ART);b.append(art);}b.append(el('small','',o.t));$('rdOptions').append(b);});
+   b.dataset.k=k;if(o.m)b.append(monImg(o.m));else{const art=el('span','pic-e',o.e||'');if(o.w)PokeReadingArt.paint(art,o.w);else PokeReadingArt.emoji(art,o.e,D.ART);b.append(art);}b.append(el('small','',o.t));$('rdOptions').append(b);});
+ };
+ RENDER.dailyAction=it=>{
+  $('rdPrompt').textContent='Read it. Choose the action.';
+  const word=el('div','sound-word');$('rdStage').append(word);
+  const tl=tiles(word,it.parts,{onTap:()=>help('letter sound played')});
+  replay=()=>speak('Read the word. Which picture shows the action?',{rate:.8});
+  const model=()=>{if(run?.item!==it||run.done)return;help('action word modelled');stop();blendOut(tl,it.parts,it.word);};
+  $('rdActions').append(btn('btn read-help','Help me read the action',model,'Help me'));
+  it.options.forEach((o,i)=>{
+   const b=btn('pic daily-action-choice','Action picture '+(i+1),b=>{
+    if(o.w===it.answer){stop();right(b,o.w,done=>{
+      const scene=el('div','daily-action-scene'),mon=monImg(25,'daily-action-mon daily-move-'+it.word);scene.append(mon);$('rdStage').append(scene);
+      speak(it.word+'. Your turn. '+it.word+'.',{rate:.8,done:()=>setTimeout(done,1800)});
+    });}else{wrong(b,o.w);setTimeout(model,450);}
+   },'');b.dataset.w=o.w;PokeReadingArt.paint(b,o.w);$('rdOptions').append(b);
+  });
+  if(it.phase==='guided')model();else replay();
+ };
+ RENDER.dailyQuiz=it=>RENDER.quiz(it);
+ RENDER.dailyStory=it=>{
+  let page=0;const book=it.book,question=adventure.tracker.question();
+  const draw=()=>{
+   stop();const pg=book.pages[page];pips(book.pages.length,page);$('rdPrompt').textContent=book.title;
+   $('rdStage').replaceChildren();$('rdOptions').replaceChildren();$('rdActions').replaceChildren();
+   const text=el('div','book-text daily-story-text');
+   pg.t.split(/(\s+)/).forEach(tok=>{
+    if(/^\s+$/.test(tok)){text.append(document.createTextNode(tok));return;}
+    const clean=tok.replace(/[^A-Za-z]/g,'').toLowerCase(),w=btn('daily-story-word','Hear word '+tok,()=>{help('story word read aloud');recordAction('word tap',clean);stop();speak(clean,{rate:.75});},esc(tok));
+    if(it.supplied.includes(clean))w.classList.add('supplied-word');text.append(w);
+   });
+   $('rdStage').append(monImg(25,'daily-story-buddy'),text);
+   const supplied=[...new Set((pg.t.match(/[A-Za-z]+/g)||[]).filter(w=>it.supplied.includes(w.toLowerCase())))];
+   const readPage=()=>{help('story page read aloud');recordAction('page read aloud',page);stop();speak(pg.t,{rate:.75});};
+   $('rdActions').append(btn('btn read-help','Read this page to me',readPage,'Read with me'));
+   $('rdActions').append(btn('btn read-next',page===book.pages.length-1?'Answer the story question':'Next story page',()=>{
+    stop();recordAction('page finished',page);
+    if(page<book.pages.length-1){page++;draw();}
+    else{const quiz=run.round.items[run.i+1];if(quiz?.kind==='dailyQuiz')quiz.storyHelped=!!question.helped||it.supplied.length>0;state.books[it.route]=Date.now();save();teachDone();}
+   },page===book.pages.length-1?'Story question':'Next page'));
+   replay=()=>speak('Read this little page. Tap a word if you need help.',{rate:.8});
+   if(supplied.length){help('untaught story words supplied');$('rdStage').append(el('p','buddy-collection-note','I’ll help with the underlined words.'));speak('I will help with these words. '+supplied.join('. ')+'. Now read together.',{rate:.78});}
+   else replay();
+  };draw();
  };
  RENDER.book=it=>{
   const bk=it.book;let p=0,taps=0;
@@ -515,6 +566,11 @@ function createReading(){
  };
 
  /* ---------- blocks, placement and routes ---------- */
+ function startDailyBlock(status,onDone){
+  const s=st(),n=R.currentRoute(s);
+  if(R.gate(n,R.itemStats(sessions()),s).met&&!R.allPassed(s)){passRoute(n,onDone);return;}
+  startRound(PokeReadingDaily.round(sessions(),s,status),onDone);
+ }
  function startBlock(onDone){
   const s=st(),plan=R.nextActivity(sessions(),s,recent);
   if(plan.act==='placement'){startPlacement(onDone);return;}
@@ -690,11 +746,11 @@ function createReading(){
   catch(e){alert('Microphone not available on this device.');}
  }
 
- function leave(){stop();run=null;}
+ function leave(){stop();run=null;root.classList.remove('daily-reading-view');}
  // read-only hook for the browser regression script; children never see it
  const _current=()=>run&&{item:run.item,act:run.round.act,i:run.i,placement:!!run.round.placement};
  const _round=(act,n)=>startRound(R.makeRound(act,n,sessions(),st()),()=>{});
- return {_current,_round,startBuddies,startBlock,startFree,openShelf,openLetters,leave,importLegacy,renderPanel,
+ return {_current,_round,startBuddies,startDailyBlock,startBlock,startFree,openShelf,openLetters,leave,importLegacy,renderPanel,
   get state(){return state;},applyState(m){if(!m)return;state=R.mergeState(state,m);save();},
   payload:()=>state,isReading:()=>mode==='read'};
 }

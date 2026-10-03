@@ -118,8 +118,8 @@ function harness({teaching=false,audioMocks=false,gainMocks=false,audioDuration=
   all(){return [this,...this.children.flatMap(c=>c.all())];}
   querySelectorAll(sel){return this.all().slice(1).filter(e=>sel.startsWith('.')?e._cls.has(sel.slice(1)):e.tag===sel);}querySelector(sel){return this.querySelectorAll(sel)[0]||null;}}
  const els={},data={...recordings},spoken=[],utterances=[],played=[],players=[],listened=[],t=new C.Tracker({now:()=>now}),helps=[],answers=[];
- const adventure={recordState(){},recordListening:meta=>listened.push(meta),get tracker(){return t;},begin:meta=>t.begin(meta),respond:(v,c)=>{answers.push({v,c});t.answer(v,c);},help:k=>{helps.push(k);t.help(k);},isPaused:()=>false,beforeQuestion:()=>true};
- const ctx={PokeSoundBuddies:require('../reading-buddies.js'),PokePhonics:require('../reading-phonics.js'),PokeReadingTutor:teaching?require('../reading-tutor.js'):{prepare:r=>r},PokeReadingCore:R,PokeReadingData:D,PokeLearning:C,PokeReadingAssess:require('../reading-assess.js'),adventure,screens:{},mode:'home',soundOn:true,childName:'Jonah',caught:[],stars:0,
+ const adventure={dailyStatus:()=>require('../reading-daily.js').progress(t.sessions,C.dayKey(now)),recordState(){},recordListening:meta=>listened.push(meta),get tracker(){return t;},begin:meta=>t.begin(meta),respond:(v,c)=>{answers.push({v,c});t.answer(v,c);},help:k=>{helps.push(k);t.help(k);},isPaused:()=>false,beforeQuestion:()=>true};
+ const ctx={PokeReadingDaily:require('../reading-daily.js'),PokeSoundBuddies:require('../reading-buddies.js'),PokePhonics:require('../reading-phonics.js'),PokeReadingTutor:teaching?require('../reading-tutor.js'):{prepare:r=>r},PokeReadingCore:R,PokeReadingData:D,PokeLearning:C,PokeReadingAssess:require('../reading-assess.js'),adventure,screens:{},mode:'home',soundOn:true,childName:'Jonah',caught:[],stars:0,
   document:{createElement:tag=>new El(tag),createElementNS:(_,tag)=>new El(tag),createTextNode:s=>{const e=new El('#text');e._text=s;return e;},getElementById:id=>els[id]||=new El(),body:{dataset:{}}},
   window:{speechSynthesis:{getVoices:()=>[],speak:u=>{spoken.push(u.text);utterances.push(u);timers.push({at:now+20,f:()=>u.onend?.()});},cancel(){}}},
   SpeechSynthesisUtterance:function(text){this.text=text;},
@@ -362,4 +362,34 @@ test('letter tile names wait for the full recording, and parent recordings still
  h.flush(900);assert.ok(!h.spoken.includes('the letter S'));h.flush(1010);assert.ok(h.spoken.includes('the letter S'));
  const custom='data:audio/webm;base64,parent-recording';
  const parent=harness({audioMocks:true,recordings:{poke_reading_rec_p:custom}});parent.ui.openLetters();parent.opts()[0].children.find(c=>c.dataset.letter==='p').click();assert.equal(parent.played[0].src,custom);
+});
+
+function seedDailyStages(h,count){
+ const Daily=require('../reading-daily.js'),slot=h.t.sessions[h.t.sessionId];
+ for(const stage of Daily.STAGES.slice(0,count))for(let i=0;i<2;i++){
+  const id='daily-seed-'+stage.id+i;slot.questions[id]={id,section:'read',dailyVersion:1,dailyDay:day,dailyCycle:0,dailyStage:stage.id,kind:'hunt',item:'test',day,activeMs:stage.minutes*30000,startedAt:T0-1000,completedAt:T0-500,responses:[{correct:true}]};
+ }
+}
+test('daily sound routine uses existing level without forcing a new placement or free-choice menu',()=>{
+ const h=harness({audioMocks:true}),Daily=require('../reading-daily.js');
+ h.ui.startDailyBlock(Daily.progress(h.t.sessions,day),()=>{});h.flush(10000);
+ assert.ok(h.ui._current());assert.equal(h.ui._current().placement,false);
+ const q=h.t.question();assert.equal(q.dailyStage,'sounds');assert.equal(q.dailyDay,day);assert.equal(q.dailyCycle,0);
+ assert.ok(!h.acts().some(b=>/Write & sounds|Sound buddies|Choose a game/.test(b.textContent)));
+});
+test('daily read-and-act withholds the word until help or an answer, and help is recorded',()=>{
+ const h=harness({audioMocks:true}),Daily=require('../reading-daily.js');seedDailyStages(h,2);
+ const slot=h.t.sessions[h.t.sessionId];
+ for(const g of R.route(1).add)for(let i=0;i<2;i++){const id='sound-'+g+i;slot.questions[id]={...q('hunt','g:'+g,true),id,completedAt:T0-1000+i,day};}
+ h.ui.startDailyBlock(Daily.progress(h.t.sessions,day),()=>{});h.flush(3000);const it=h.ui._current().item,current=h.t.question();
+ assert.equal(it.kind,'dailyAction');assert.equal(current.dailyStage,'actions');assert.equal(it.teach,undefined);
+ assert.ok(!h.spoken.includes(it.word+'.'));h.acts().find(b=>b.attrs['aria-label']==='Help me read the action').click();h.flush(6000);
+ assert.equal(current.helped,true);h.opts().find(b=>b.dataset.w===it.answer).click();h.flush(4000);assert.equal(C.independent(current),false);
+});
+test('tiny story page completion is teaching and read-aloud support follows its comprehension question',()=>{
+ const h=harness(),Daily=require('../reading-daily.js');seedDailyStages(h,3);
+ h.ui.startDailyBlock(Daily.progress(h.t.sessions,day),()=>{});h.flush(3000);const book=h.t.question();assert.equal(book.kind,'dailyStory');assert.equal(book.teach,true);
+ for(let i=0;i<3;i++){h.acts().find(b=>['Next story page','Answer the story question'].includes(b.attrs['aria-label'])).click();h.flush(3000);}
+ const quiz=h.t.question();assert.equal(quiz.kind,'dailyQuiz');assert.equal(quiz.helped,true);assert.equal(quiz.support,'listening/supported comprehension');assert.equal(C.independent(book),false);
+ const it=h.ui._current().item;h.opts().find(b=>Number(b.dataset.k)===it.answer).click();h.flush(3000);assert.equal(C.independent(quiz),false);
 });

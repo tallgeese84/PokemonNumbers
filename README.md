@@ -1,3 +1,15 @@
+## v84 · Daily reading path
+
+The main **Let’s read** button now leads through four reading stages in order: **Remember sounds (2 min) → Blend & build (4 min) → Read & act (3 min) → Tiny story (3 min)**. These are active-time pacing targets; the current task finishes before the next stage. Returning home or reloading resumes the current stage from the shared question history. A finished routine offers an explicit **Read again**; a new day starts with sounds.
+
+The home stage cards show progress and cannot skip ahead. Free-choice alphabet, maths, Pokémon collections and Fox activities have moved into **Grown-ups → Grown-up choice**. Help, replay, pause and home remain available during reading. Approved recorded phonics and one playback per tap are unchanged.
+
+Word practice uses the saved reading route, recalls taught sounds, models new material, alternates decoding and word-building, and includes tricky-word teaching. Read-and-act pairs printed words with illustrated actions, then invites the child to do the action. Three short story pages include tap-to-hear words, explicit support for untaught/irregular words, and a comprehension question. Stage times, help and independent checks are included in the journal, daily report and existing Drive JSON without changing the relay. Reports now recommend the reading path.
+
+Time and page taps are practice evidence, not proof of reading aloud or physical actions. A story question answered after supplied words or read-aloud help is labelled listening/supported comprehension. Completing the daily path does not bypass the existing curriculum mastery gates.
+
+Validation: 14 regression test files cover stage order/resume, no maths in the daily route, every curriculum route, teaching versus independent checks, book/question pairing, help propagation, illustration coverage, midnight accounting, Drive round trips, report output and the existing audio/offline behaviour.
+
 ## v83 · One sound per tap
 
 Each tap on the Pokémon A–Z poster plays the approved recording once. Tap the same letter again to hear it again. A new tap softly releases any playing sound and starts the requested recording; there are no automatic repetitions. Listening remains exposure, not an independent answer. All 13 regression test files pass, including single playback, repeated taps, complete clip timing, Q/X playback and leaving the poster. Live v83 page/player/cache files match the tested files, and a repeated letter tap completed successfully in the deployed poster. [Verified poster preview](docs/v83-single-tap-1791038998123.jpg).

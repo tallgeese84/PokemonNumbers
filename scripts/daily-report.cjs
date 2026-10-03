@@ -9,7 +9,7 @@ function report(sessions,devices,date){
   const week=C.summarize(sessions,C.shiftDay(date,-6),date);
   const previous=C.summarize(sessions,C.shiftDay(date,-13),C.shiftDay(date,-7));
   const previousDays=C.summarize(sessions,C.shiftDay(date,-7),C.shiftDay(date,-1));
-  const advice=C.guidance(week);
+  const advice=require('../reading-daily.js').guidance(sessions,date);
   const deviceTimes=Object.values(devices || {}).map(d=>d.lastSeenAt || 0);
   const lastSync=Math.max(0,...deviceTimes);
   const syncLine=lastSync ? new Date(lastSync).toLocaleString('en-US',{timeZone:C.ZONE})+' Madison time' : 'No device heartbeat received';
@@ -37,7 +37,7 @@ function report(sessions,devices,date){
     'Offline activity appears in later reports and rolling weekly totals after upload. Already-sent daily emails are not revised.',
     '', 'Timing counts visible questions and thinking, pauses after 60 seconds without interaction, and excludes rewards and collection browsing. It estimates activity, not attention. Independent means no extra help; built-in pictures and manipulatives are compared separately. Guided tracing completion is not freehand handwriting mastery.',
     'Difficulty thresholds are adjustable design rules (8/10 across varied questions plus 3 independent, varied later-day checks), not validated diagnostic cutoffs.');
-  lines.push('',require('../reading-buddies.js').report(sessions,date));
+  lines.push('',require('../reading-daily.js').report(sessions,date),'',require('../reading-buddies.js').report(sessions,date));
   const text=lines.join('\n');
   return {subject:`PokéMath daily adventure · ${date}`,text,html:`<!doctype html><html><body style="font:16px/1.6 system-ui,sans-serif;color:#253858;max-width:720px;margin:auto;padding:24px"><h1 style="font-size:25px">PokéMath learning journal</h1><div style="white-space:pre-wrap">${esc(text)}</div></body></html>`};
 }
