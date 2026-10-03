@@ -11,5 +11,13 @@ function annotate(word,spelling){const phones=parts(word);if(!phones.length)retu
 const audioKeys=p=>{const key=typeof p==='string'?p:(p.audio||p.play||p.g);const value=Array.isArray(key)?key:SPELL_AUDIO[key]||key;return Array.isArray(value)?value:[value];};
 const clips=["a", "e", "i", "o", "u", "uu", "ee", "oo", "ay", "oh", "eye", "ow", "oy", "aw", "ar", "or", "er", "ear", "air", "b", "d", "f", "g", "h", "j", "k", "l", "m", "n", "p", "r", "s", "t", "v", "w", "y", "z", "sh", "ch", "th", "dh", "ng", "zh"];
 const clipKeys=p=>audioKeys(p).flatMap(k=>({ing:['i','ng'],id:['i','d']}[k]||[k]));
-return {clips,clipKeys,ROWS,parts,has:w=>!!ROWS[String(w).toLowerCase()],annotate,audioKeys};
+// Phoneme counts still use clipKeys. Playback can use one complete recording
+// for qu=/k w/ and x=/k s/, avoiding a splice between their two sounds.
+const recordedClips=['a','e','i','o','u','b','d','f','g','h','j','k','l','m','n','p','r','s','t','v','w','y','z','sh','ch','ng','qu','x'];
+function clipFiles(p){
+ const keys=clipKeys(p),joined=keys.join(' '),whole=joined==='k w'?'qu':joined==='k s'?'x':null;
+ if(whole)return ['assets/phonemes/recorded-v82/'+whole+'.wav'];
+ return keys.map(k=>'assets/phonemes/'+(recordedClips.includes(k)?'recorded-v82/':'female-v81/')+k+'.wav');
+}
+return {clips,clipKeys,clipFiles,recordedClips,ROWS,parts,has:w=>!!ROWS[String(w).toLowerCase()],annotate,audioKeys};
 });

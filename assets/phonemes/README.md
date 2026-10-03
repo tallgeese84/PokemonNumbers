@@ -1,15 +1,28 @@
-# Offline female phoneme clips
+# Offline phoneme clips
 
-The built-in clips use **Kokoro-82M v1.0, American English female voice `af_heart`**, generated at **0.7 speed** with explicit IPA input. They replace the old eSpeak male clips. The model is Apache-2.0 and the kokoro-onnx wrapper is MIT; neither is downloaded or run by the child’s app. Only the resulting audio is bundled. There is no paid voice service or per-play request.
+## Approved recordings (v82)
 
-Reproduce with `tools/build-female-phonemes.py`. Model and voices: https://github.com/thewh1teagle/kokoro-onnx/releases/tag/model-files-v1.1 . Voice reference: https://huggingface.co/hexgrad/Kokoro-82M/blob/main/VOICES.md . The manifest records model/voice-file hashes, exact phoneme inputs, audio hashes, sample counts and duration. Output is checked for finite, non-silent, unclipped PCM. It remains synthetic speech; these checks are not human listening validation.
+All A–Z letter sounds, plus **ch, sh and ng**, use prerecorded Buzzphonics audio. The parent approved a sample of M, S, P, A, T and SH before this update. The original project is for UK English phonics; its vowel models differ from the previous US English synthesis.
 
-The alphabet board plays the sound immediately, then repeats after a 750 ms pause. Stop consonants remain brief; no written “buh” or “puh” is sent to text-to-speech. Q uses /k/ + /w/ and X uses /k/ + /s/. All clips and Pokémon pictures are precached for offline playback.
+Source: https://github.com/hellodeborahuk/buzzphonics at commit `f51eeb71cba61334328a37e6eda9733a89ffcb82`.
+Copyright (c) 2022 Debbie Dann. The upstream README explicitly describes Phonics sounds as MIT licensed. The complete notice is retained in [recorded-v82/LICENSE.txt](recorded-v82/LICENSE.txt) and linked from Grown-ups → Reading → Listen to or record the sounds.
 
-In v81, `female-v81/` replaces the previous clips so existing caches cannot serve the old sound. A raised-cosine envelope shapes the **audible portion**, rather than its surrounding silence: 40 ms entrance for sustained sounds, 4 ms for stop/affricate bursts, and an ending up to 90 ms (at most one third of the sound). Levels target 0.12 active RMS with a 0.7 peak ceiling; 55 ms lead and 160 ms tail silence provide room around each example. Phonemes and synthesis speed are unchanged. The manifest includes sample boundaries and fade lengths; PCM tests check quiet margins and low energy at the audible edges.
+`tools/build-recorded-phonemes.py /path/to/buzzphonics` reproduces the 28 WAVs from the reviewed source checkout with ffmpeg and numpy. Whole recordings are decoded to mono 24 kHz PCM16. Constant gain is `min(6, 0.65 / peak)`, the same treatment as the approved sample. There is no trimming, audible-edge fading, time-stretching, synthetic phoneme generation or added vowel. The original lead/tail timing is retained and incidental recorder metadata is omitted. Each file's source URL, source hash, output hash, sample count and gain are recorded in `recorded-v82/manifest.json`.
 
-The home poster opens without a beep or automatic speech. Tapping the current playing letter again lets it finish. Switching letters cancels its queued repeat and fades its audio out over 75 ms before pausing it. This uses a Web Audio gain ramp when available, with a native-volume fallback. Parent-recorded clips keep their content and also use the soft interruption. Subjective naturalness still requires an on-device listen.
+C and K share the source C recording. Q uses the complete **qu** recording and X the complete **x** recording; their two-phoneme decomposition remains intact for sound-counting activities. Playback resolves explicit pronunciation overrides before the spelling, so an A representing long /ay/ does not accidentally play short A.
 
-The tablet’s selected female-preferred voice still reads instructions. It is a separate voice: browser speech synthesis cannot export its narrator as isolated-phoneme audio. Grown-up recordings still override individual built-in sounds and can be removed in Grown-ups → Reading → Listen to or record the sounds.
+The poster plays a recording twice, waiting for its natural end plus a 750 ms pause before the repeat. Repeated taps on the same playing card do not restart it. Switching letters cancels queued repetitions and releases the old audio over 75 ms. Guided letter lessons, sound tiles and letter-writing feedback use the same recordings; follow-on letter names and writing transitions wait for completion. All files are precached for offline playback.
 
-Auditory word pronunciations in `reading-phonics.js` derive from the CMU Pronouncing Dictionary (https://github.com/cmusphinx/cmudict); its license is included. R-controlled sequences are grouped as teaching units; spelling units remain distinct from spoken sounds.
+## Advanced-sound fallback
+
+Other vowel teams and **th/dh/zh** retain the Kokoro-82M v1.0 American English female voice `af_heart` at 0.7 speed. These have not been presented as part of the approved Buzzphonics replacement. The two `oo` source files and advanced UK vowel/r correspondences need separate listening/mapping review before replacing the US phoneme inventory.
+
+`tools/build-female-phonemes.py` reproduces these fallback clips. Model and voices: https://github.com/thewh1teagle/kokoro-onnx/releases/tag/model-files-v1.1 . Voice reference: https://huggingface.co/hexgrad/Kokoro-82M/blob/main/VOICES.md . The model is Apache-2.0 and the wrapper MIT. Only audio is bundled; no model download or paid voice service runs in the child's app. `manifest.json` records the model/voice hashes and exact IPA inputs.
+
+The v81 fallback clips have an audible-content envelope, level headroom and quiet margins. PCM and hash checks establish file integrity, not human pronunciation quality.
+
+## Parent recordings and narration
+
+A grown-up's custom recording still overrides its built-in sound. Recordings stay on the tablet and can be removed in Grown-ups → Reading → Listen to or record the sounds. The device narrator reads instructions using its existing female-preferred voice; the clips are separate recordings.
+
+Auditory word pronunciations in `reading-phonics.js` derive from the CMU Pronouncing Dictionary (https://github.com/cmusphinx/cmudict); its licence is included. R-controlled sequences are grouped as teaching units; spelling units remain distinct from spoken sounds.

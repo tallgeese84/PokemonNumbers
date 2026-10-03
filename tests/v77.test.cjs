@@ -28,7 +28,7 @@ test('session snapshots survive the existing Drive envelope and clear obsolete p
  const mirrored=JSON.parse(JSON.stringify({app:backup.app,version:backup.version,sessions:backup.sessions,settings:backup.settings}));
  const restored=R.withSessions({...R.freshState(),placedAt:100,passed:{1:100,2:100}},mirrored.sessions);
  assert.deepEqual(restored.passed,{});assert.equal(restored.profile.pre,true);assert.equal(restored.assessV,2);assert.equal(restored.recall.s.ok,true);
- assert.equal(M.withSessions({},mirrored.sessions).placed.teens,501);assert.equal(backup.build,81);assert.equal(backup.settings.goalMinutes,25);
+ assert.equal(M.withSessions({},mirrored.sessions).placed.teens,501);assert.equal(backup.build,82);assert.equal(backup.settings.goalMinutes,25);
  const fromEvent=R.withSessions({...R.freshState(),placedAt:100,passed:{1:100}},sess([{skill:'placed',kind:'placed',route:0,teach:true,assessmentStartedAt:400,completedAt:501,profile:current.profile}]));assert.deepEqual(fromEvent.passed,{});assert.equal(fromEvent.assessV,2);
 });
 test('new path history repairs the old generic level from its skill format',()=>{

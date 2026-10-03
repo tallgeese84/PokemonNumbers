@@ -72,9 +72,9 @@ function createReading(){
   if(p&&p.cls==='silent'){setTimeout(fin,150);return;}
   if(p&&p.suffix&&p.g==='ed'&&!p.play){speak('id',{rate:.75,done});return;}
   if(soundOn&&REC[key]){busy=true;waitTurn(()=>{if(g!==gen)return;playClip(REC[key],fin,fin);});return;}
-  const keys=PokePhonics.clipKeys(p);
+  const keys=PokePhonics.clipKeys(p),files=PokePhonics.clipFiles(p);
   if(soundOn&&keys.every(k=>PokePhonics.clips.includes(k))){busy=true;let at=0,failed=false;
-   const next=()=>{if(g!==gen)return;if(at>=keys.length){fin();return;}playClip('assets/phonemes/female-v81/'+keys[at++]+'.wav',next,()=>{if(failed||g!==gen)return;failed=true;if(run?.ref)help('sound clip unavailable');feedback('Tap listen to try the sound again.');fin();});};waitTurn(next);return;
+   const next=()=>{if(g!==gen)return;if(at>=files.length){fin();return;}playClip(files[at++],next,()=>{if(failed||g!==gen)return;failed=true;if(run?.ref)help('sound clip unavailable');feedback('Tap listen to try the sound again.');fin();});};waitTurn(next);return;
   }
   const text=(p&&p.magic==='start')?p.sound:(D.G[key]?D.G[key][0]:(p&&p.sound)||key);
   speak(text,{rate:.72,pitch:1,done});
@@ -496,7 +496,7 @@ function createReading(){
   const draw=()=>{
    svg.replaceChildren(svgEl('line',{x1:5,y1:56,x2:95,y2:56,class:'wguide'}),svgEl('line',{x1:5,y1:112,x2:95,y2:112,class:'wbase'}));
    strokes.forEach(d=>svg.append(svgEl('path',{d,class:'wghost'})));for(let i=0;i<k;i++)svg.append(svgEl('path',{d:strokes[i],class:'wdone'}));
-   if(k>=strokes.length){sndGood();addStar(1);sound(it.letter);hint.textContent='';setTimeout(()=>teachDone(),900);return;}
+   if(k>=strokes.length){sndGood();addStar(1);hint.textContent='';sound(it.letter,()=>setTimeout(()=>{if(run?.item===it)teachDone();},350));return;}
    const guide=svgEl('path',{d:strokes[k],class:'wnext'});svg.append(guide);const ink=svgEl('path',{d:'',class:'wink'});svg.append(ink);
    const len=guide.getTotalLength?guide.getTotalLength():0;const pts=[];for(let i=0;i<SAMPLES;i++){const p=guide.getPointAtLength?guide.getPointAtLength(len*i/(SAMPLES-1)):{x:0,y:0};pts.push({x:p.x,y:p.y});}
    svg.append(svgEl('circle',{cx:pts[0].x,cy:pts[0].y,r:7,class:'wstart'}));
@@ -563,7 +563,7 @@ function createReading(){
  function openLetterTiles(){
   enter();run=null;setHeader('write',R.currentRoute(st()));$('rdTitle').textContent='My letters';$('rdPrompt').textContent='';$('rdStage').replaceChildren();$('rdActions').replaceChildren();$('rdPips').replaceChildren();feedback('');
   const gs=R.graphemesUpTo(R.currentRoute(st())),grid=el('div','letter-grid');
-  gs.forEach(g=>{const b=btn('ltile','Sound '+label(g),()=>{sound(g);if(namesOn()&&g.length===1)setTimeout(()=>speak('the letter '+g.toUpperCase(),{rate:.8}),700);},esc(label(g)));grid.append(b);});
+  gs.forEach(g=>{const b=btn('ltile','Sound '+label(g),()=>{stop();sound(g,()=>{if(namesOn()&&g.length===1)speak('the letter '+g.toUpperCase(),{rate:.8});});},esc(label(g)));grid.append(b);});
   const writeBtn=btn('btn','Write a letter',()=>{const ls=R.singleLetters(R.currentRoute(st()));startRound({act:'write',route:R.currentRoute(st()),items:ls.slice(-6).map(l=>({route:R.currentRoute(st()),kind:'write',item:'l:'+l,letter:l,teach:true}))},openLetterTiles);},'✏️');
   $('rdOptions').replaceChildren(grid);$('rdActions').append(writeBtn);replay=()=>speak('Tap a sound to hear it.',{rate:.85});replay();
   $('rdActions').append(btn('btn','Sound buddies',openLetters,'Sound buddies'));
@@ -647,7 +647,7 @@ function createReading(){
   <label>Letter names <select id="rdNames"><option value="auto">On from the start (default)</option><option value="on">On</option><option value="off">Off</option></select></label>
   <label>Move to route <select id="rdMove">${D.ROUTES.map(x=>`<option value="${x.n}" ${x.n===r.route?'selected':''}>${x.n} · ${esc(x.name)}</option>`).join('')}</select></label></div>
   ${state.legacy?`<p class="muted">Imported from the old Poké Reading app: it had reached route ${state.legacy.at} and ${state.legacy.caught.length} Pokémon (added to his collection). Its routes opened on completion rather than mastery, so the reading check decides the starting route.</p>`:''}
-  <details><summary>Listen to or record the sounds</summary><p class="muted">The built-in sounds use a female American English voice at a slower pace. They work offline. This recorded voice differs from the tablet voice that reads instructions. Tap ▶ to preview a sound, or ● to replace it with your own short, clean recording. Your recordings stay on this tablet; ✕ restores the built-in sound.</p><div id="rdRecGrid" class="rec-grid"></div></details>`;
+  <details><summary>Listen to or record the sounds</summary><p class="muted">A–Z, ch, sh and ng use the approved Buzzphonics recordings at their natural pace (UK English). Other advanced sounds still use the slower female American English model. Both work offline; the tablet voice reads instructions. Tap ▶ to preview a sound, or ● to replace it with your own short, clean recording. Your recordings stay on this tablet; ✕ restores the built-in sound.</p><p class="muted">Recorded sounds © 2022 Debbie Dann, Buzzphonics. <a href="assets/phonemes/recorded-v82/LICENSE.txt" target="_blank" rel="noopener">MIT licence</a> · <a href="https://github.com/hellodeborahuk/buzzphonics" target="_blank" rel="noopener">Source</a></p><div id="rdRecGrid" class="rec-grid"></div></details>`;
   $('rdNames').value=state.namesAt?(state.names?'on':'off'):'auto';
   $('rdNames').onchange=()=>{const v=$('rdNames').value;if(v==='auto'){state.namesAt=0;state.names=false;}else{state.names=v==='on';state.namesAt=Date.now();}save();};
   $('rdMove').onchange=()=>{const to=+$('rdMove').value;if(!confirm('Move reading to route '+to+'? Routes before it are marked done; later routes are reopened.'))return renderPanel();

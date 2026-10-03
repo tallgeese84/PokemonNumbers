@@ -104,7 +104,7 @@ test('readiness reports honest denominators and pace against the P1 timeline',()
 });
 
 /* ---------- the real UI with a small fake DOM ---------- */
-function harness({teaching=false,audioMocks=false,gainMocks=false}={}){
+function harness({teaching=false,audioMocks=false,gainMocks=false,audioDuration=200,recordings={}}={}){
  let now=T0;const timers=[];
  class El{constructor(tag='div'){this.tag=tag;this.children=[];this.attrs={};this.dataset={};this.style={setProperty(){}};this._cls=new Set();this.disabled=false;this._text='';
   const c=this._cls;this.classList={add:(...x)=>x.forEach(v=>c.add(v)),remove:(...x)=>x.forEach(v=>c.delete(v)),toggle:(v,f)=>(f??!c.has(v))?c.add(v):c.delete(v),contains:v=>c.has(v)};}
@@ -117,7 +117,7 @@ function harness({teaching=false,audioMocks=false,gainMocks=false}={}){
   click(){if(!this.disabled)this.onclick?.();}addEventListener(){}
   all(){return [this,...this.children.flatMap(c=>c.all())];}
   querySelectorAll(sel){return this.all().slice(1).filter(e=>sel.startsWith('.')?e._cls.has(sel.slice(1)):e.tag===sel);}querySelector(sel){return this.querySelectorAll(sel)[0]||null;}}
- const els={},data={},spoken=[],utterances=[],played=[],players=[],listened=[],t=new C.Tracker({now:()=>now}),helps=[],answers=[];
+ const els={},data={...recordings},spoken=[],utterances=[],played=[],players=[],listened=[],t=new C.Tracker({now:()=>now}),helps=[],answers=[];
  const adventure={recordState(){},recordListening:meta=>listened.push(meta),get tracker(){return t;},begin:meta=>t.begin(meta),respond:(v,c)=>{answers.push({v,c});t.answer(v,c);},help:k=>{helps.push(k);t.help(k);},isPaused:()=>false,beforeQuestion:()=>true};
  const ctx={PokeSoundBuddies:require('../reading-buddies.js'),PokePhonics:require('../reading-phonics.js'),PokeReadingTutor:teaching?require('../reading-tutor.js'):{prepare:r=>r},PokeReadingCore:R,PokeReadingData:D,PokeLearning:C,PokeReadingAssess:require('../reading-assess.js'),adventure,screens:{},mode:'home',soundOn:true,childName:'Jonah',caught:[],stars:0,
   document:{createElement:tag=>new El(tag),createElementNS:(_,tag)=>new El(tag),createTextNode:s=>{const e=new El('#text');e._text=s;return e;},getElementById:id=>els[id]||=new El(),body:{dataset:{}}},
@@ -129,7 +129,7 @@ function harness({teaching=false,audioMocks=false,gainMocks=false}={}){
   addStar:n=>{ctx.stars+=n;},imgArt:id=>'art'+id,PokeVisuals:{icon:()=>'',ball:()=>''},PokeCatalog:{byId:{}},catchMon(){},beginCeremony(){},pkState(){},renderBuddyHome(){},updateBallPill(){},confirm:()=>true,alert(){},navigator:{}};
  const ramps=[];
  if(gainMocks){const ac={state:'running',get currentTime(){return now/1000;},destination:{},createMediaElementSource(){return {connect(){},disconnect(){}};},createGain(){return {context:ac,connect(){},disconnect(){},gain:{value:1,cancelScheduledValues(){},setValueAtTime(){},linearRampToValueAtTime(value,at){ramps.push({value,at,started:now/1000});}}};}};ctx.audio=()=>ac;}
- if(audioMocks)ctx.Audio=class{constructor(src){this.src=src;this.volume=1;players.push(this);}play(){played.push({src:this.src,at:now});timers.push({at:now+200,f:()=>{if(!this.paused)this.onended?.();}});return {catch(){}};}pause(){this.paused=true;}};
+ if(audioMocks)ctx.Audio=class{constructor(src){this.src=src;this.volume=1;players.push(this);}play(){played.push({src:this.src,at:now});timers.push({at:now+audioDuration,f:()=>{if(!this.paused)this.onended?.();}});return {catch(){}};}pause(){this.paused=true;}};
  else ctx.Audio=class{play(){this.onended?.();return {catch(){}};}pause(){}};
  vm.createContext(ctx);vm.runInContext(fs.readFileSync(require.resolve('../reading-art.js'),'utf8'),ctx);vm.runInContext(fs.readFileSync(require.resolve('../reading-ui.js'),'utf8')+'\nvar ui=createReading();',ctx);
  const flush=(ms=5000)=>{const end=now+ms;for(let guard=0;guard<5000;guard++){timers.sort((a,b)=>a.at-b.at);const t0=timers[0];if(!t0||t0.at>end)break;timers.shift();now=Math.max(now,t0.at);t0.f();}now=end;};
@@ -311,7 +311,7 @@ test('one alphabet page shows all 26 Pokémon; a letter tap plays immediately an
  assert.equal(cards.map(c=>c.dataset.letter).join(''),'abcdefghijklmnopqrstuvwxyz');
  h.ctx.document.getElementById('rdListen').click();h.flush();assert.ok(h.utterances[0].rate<=.7,'slower spoken instructions on request');
  const questions=JSON.stringify(h.t.sessions),p=cards.find(c=>c.dataset.letter==='p'),before=h.spoken.length;
- p.click();assert.equal(h.played.length,1);assert.match(h.played[0].src,/phonemes\/female-v81\/p.wav$/);
+ p.click();assert.equal(h.played.length,1);assert.match(h.played[0].src,/phonemes\/recorded-v82\/p.wav$/);
  assert.equal(h.listened[0].kind,'buddyListen');assert.equal(h.listened[0].buddyLetter,'p');
  assert.equal(h.ui._current(),null);assert.equal(h.spoken.length,before,'no spoken letter name before the sound');
  h.flush(900);assert.equal(h.played.length,1);h.flush(60);assert.equal(h.played.length,2);
@@ -336,14 +336,28 @@ test('switching letters releases the playing clip over 75ms, then stops it witho
   h.flush(2200);assert.deepEqual(h.played.map(x=>x.src.split('/').at(-1)),['a.wav','b.wav','b.wav']);
  }
 });
-test('new taps and leaving cancel old audio and pending repetitions; Q and X keep their two sounds',()=>{
+test('new taps and leaving cancel old audio and pending repetitions; Q and X use complete recordings',()=>{
  const h=harness({audioMocks:true});h.ui.openLetters();h.flush();const cards=h.opts()[0].children;
  cards.find(c=>c.dataset.letter==='p').click();h.flush(220);
  cards.find(c=>c.dataset.letter==='s').click();h.flush(2200);
  assert.deepEqual(h.played.map(x=>x.src.split('/').at(-1)),['p.wav','s.wav','s.wav']);assert.ok(h.players[0].paused);
  h.played.length=0;cards.find(c=>c.dataset.letter==='q').click();h.flush(3000);
- assert.deepEqual(h.played.map(x=>x.src.split('/').at(-1)),['k.wav','w.wav','k.wav','w.wav']);
+ assert.deepEqual(h.played.map(x=>x.src.split('/').at(-1)),['qu.wav','qu.wav']);
  h.played.length=0;cards.find(c=>c.dataset.letter==='x').click();h.flush(3000);
- assert.deepEqual(h.played.map(x=>x.src.split('/').at(-1)),['k.wav','s.wav','k.wav','s.wav']);
+ assert.deepEqual(h.played.map(x=>x.src.split('/').at(-1)),['x.wav','x.wav']);
  h.played.length=0;cards[0].click();h.ui.leave();h.flush(5000);assert.equal(h.played.length,1);assert.ok(h.players.at(-1).paused);
+});
+test('longer natural recordings finish before the repeat, with no speed change or premature restart',()=>{
+ const h=harness({audioMocks:true,audioDuration:1942});h.ui.openLetters();const m=h.opts()[0].children.find(c=>c.dataset.letter==='m');m.click();
+ h.flush(1900);m.click();assert.equal(h.played.length,1);assert.equal(h.players[0].paused,undefined);
+ h.flush(791);assert.equal(h.played.length,1);h.flush(1);assert.equal(h.played.length,2);
+ assert.equal(h.played[1].at-h.played[0].at,1942+750);
+ assert.equal(h.players[0].playbackRate,undefined,'native speed is retained');
+});
+test('letter tile names wait for the full recording, and parent recordings still take priority',()=>{
+ const h=harness({audioMocks:true,audioDuration:1900});h.ui.openLetters();h.acts().find(b=>b.attrs['aria-label']==='Letter writing and other sounds').click();h.flush();
+ h.opts()[0].children.find(b=>b.attrs['aria-label']==='Sound s').click();
+ h.flush(900);assert.ok(!h.spoken.includes('the letter S'));h.flush(1010);assert.ok(h.spoken.includes('the letter S'));
+ const custom='data:audio/webm;base64,parent-recording';
+ const parent=harness({audioMocks:true,recordings:{poke_reading_rec_p:custom}});parent.ui.openLetters();parent.opts()[0].children.find(c=>c.dataset.letter==='p').click();assert.equal(parent.played[0].src,custom);
 });

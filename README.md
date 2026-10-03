@@ -1,3 +1,13 @@
+## v82 · Approved recorded phonics
+
+The Pokémon A–Z poster now uses the parent-approved Buzzphonics recordings at their natural pace. All letters have recorded audio, including complete qu and x examples. The same files are used in guided letter practice, sound tiles and letter-writing feedback; ch, sh and ng also use directly mapped recordings. Original clip timing is preserved, with only the level adjustment used in the approved sample. Copyright and the MIT licence are bundled and credited in Grown-ups.
+
+Each demonstration finishes before its repeat or follow-on instruction. Same-letter taps do not restart the playing example; changing letters still softly releases the previous sound and cancels queued repeats. New audio files are bundled offline, and parent-recorded overrides remain intact.
+
+The source is UK English. Advanced vowel teams and th/dh/zh retain the previous female US English model until their recordings/mappings are reviewed; this update does not claim a complete replacement of all 43 phonemes. Listening taps and guided/helped answers keep their existing progress-report rules.
+
+Validation: all 13 regression test files pass. New checks cover A–Z recording coverage, complete Q/X playback while retaining two-phoneme counting, explicit pronunciation overrides, full clip duration, source hashes, offline caching, longer-clip repeat timing, parent recordings and completion before letter names. [Audio sources, licence and reproduction](assets/phonemes/README.md).
+
 ## v81 · Smoother alphabet audio
 
 The home Pokémon A–Z poster opens quietly. It no longer plays an electronic tap beep or starts an instruction that the first letter tap cuts off. The same slower female phoneme voice now has softer audible entrances and endings, comfortable level headroom, and a short quiet margin around each demonstration. Stop consonant bursts stay brief; phoneme inputs and synthesis speed are unchanged.
