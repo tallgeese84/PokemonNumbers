@@ -75,6 +75,7 @@ button:disabled.right{opacity:1}
 
 /* v78: official-artwork sound buddies, with quiet cue-free checks. */
 .sound-buddy-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;width:100%}
+#app:has(#scr-read.alphabet-view.on){max-width:1128px}
 .alphabet-view .read-card{max-width:1100px;padding:16px}
 .alphabet-view .read-pips{display:none}.alphabet-view .read-feedback{margin:10px 0 4px}
 .alphabet-view .sound-buddy-grid{grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
