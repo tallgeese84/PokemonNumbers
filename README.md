@@ -6,7 +6,7 @@ Each demonstration finishes before its repeat or follow-on instruction. Same-let
 
 The source is UK English. Advanced vowel teams and th/dh/zh retain the previous female US English model until their recordings/mappings are reviewed; this update does not claim a complete replacement of all 43 phonemes. Listening taps and guided/helped answers keep their existing progress-report rules.
 
-Validation: all 13 regression test files pass. New checks cover A–Z recording coverage, complete Q/X playback while retaining two-phoneme counting, explicit pronunciation overrides, full clip duration, source hashes, offline caching, longer-clip repeat timing, parent recordings and completion before letter names. [Audio sources, licence and reproduction](assets/phonemes/README.md).
+Validation: all 13 regression test files pass. New checks cover A–Z recording coverage, complete Q/X playback while retaining two-phoneme counting, explicit pronunciation overrides, full clip duration, source hashes, offline caching, longer-clip repeat timing, parent recordings and completion before letter names. [Audio sources, licence and reproduction](assets/phonemes/README.md). Live verification: v82 is visible; the poster has all 26 cards; repeated M taps and P/Q/X playback complete without unavailable-audio feedback. All 28 deployed WAV hashes and the live page/player/cache scripts match the tested files. GitHub regression tests and Pages deployment succeeded. [Verified v82 preview](docs/v82-recorded-phonics-1791038444058.jpg).
 
 ## v81 · Smoother alphabet audio
 
