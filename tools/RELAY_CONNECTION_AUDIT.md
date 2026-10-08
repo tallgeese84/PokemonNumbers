@@ -1,48 +1,62 @@
 # Relay connection audit — 2026-10-08
 
-The owner's Apps Script screenshot shows two projects: **Mochi-drive-mirror**
-and **Hana-drive-mirror**. The subsequently supplied saved source establishes:
+## Confirmed active shared deployment
 
-| Project source | Uploads | Retention | Plan reader |
+The owner identified Jonah's saved app endpoint and matched it to the active
+**Family learning mirror: Euna, Jonah and Hana** deployment in
+**Mochi-drive-mirror**. The deployment screenshot shows **Version 4**, dated
+September 27, 2026, 10:04 PM as displayed. Retain Version 4 as the rollback target.
+
+A public GET to that endpoint returned `family-learning-mirror`, all three app
+names and `writeOnly:true`. This establishes its advertised interface, not
+successful authenticated uploads or plan delivery. No POST was sent.
+
+The owner then supplied Code.gs from Version 4. Its text exactly matches
+`family-relay-tests/family-original.gs` in all three review branches:
+SHA-256 `16b0b660547f21c75e8ff729179430578ba6b1180401298ae9f946d5b15bc559`.
+Relay 1.2.0 retains that baseline's upload block and all upload helpers
+byte-for-byte. The 102 synthetic relay tests passed again after this comparison.
+
+| Source or deployment | Uploads | Retention | Plan reader |
 |---|---|---|---|
-| Mochi | Accepts Euna/Mochi only | Latest plus weekly files | Existing readNextSession for Euna |
-| Hana | Accepts Hana only | Latest plus daily UTC files; LAST_EXPORT_AT ordering | Missing until the standalone addition is installed |
-| Jonah | Not yet identified | Do not infer from another project's source | Live route unknown |
+| Active shared Version 4 in Mochi-drive-mirror | Euna, Hana and Jonah | Latest plus weekly; Hana export ordering; Jonah session/revision merge | None |
+| Current saved Mochi editor source supplied earlier | Euna only | Latest plus weekly, with different helpers | Euna only |
+| Saved Hana-drive-mirror source supplied earlier | Hana only | Latest plus daily UTC files; LAST_EXPORT_AT ordering | None |
+| Prepared shared relay 1.2.0 | Same upload behavior as active shared Version 4 | Same as Version 4 | Fixed private readers for all three children |
 
-These are saved-source observations, not verification of published deployment
-versions or device connection settings. Both supplied handlers reject Jonah's
-uploads. This does not prove Jonah's deployed upload endpoint is broken: a
-different published version, project or account may be in use.
+Do not deploy the current Euna-only editor source to the shared deployment.
+It would reject sibling uploads. A separate Jonah Apps Script project is not
+needed for the endpoint the owner identified.
 
-## Corrected upgrade path
+## Upgrade path and remaining evidence
 
-Keep each existing project, deployment URL, secret, folder and historical files.
-The shared family 1.2.0 template was tested against the repository's shared-family
-baseline; it is **not** a byte-identical upload replacement for either supplied
-standalone source. In particular, Hana's daily snapshots and LAST_EXPORT_AT are
-different from the shared template's weekly snapshots and file-based ordering.
-Euna's original duplicate-file cleanup and week-date implementation also differ.
+Use the tested `family-drive-mirror.gs` to prepare the shared Version 4 upgrade,
+keeping the existing deployment URL, secret, folder properties and access setting.
+Retain the current saved source too; the Euna-only source supplied by the owner is
+already archived as `family-relay-tests/euna-only-v7.7.0.gs`.
 
-For Hana, the HanaP3Math review branch now contains a supplemental
-hana-nightly-reader.gs plus a single authenticated dispatch-line addition.
-The original upload file and the owner's initializer remain unchanged.
-See that repository's tools/HANA_STANDALONE_NIGHTLY_SETUP.md.
-The app already uses the saved per-device connection; no secret copying or
-connection migration is required.
+Only missing fixed plan-document properties should be added after approval.
+`checkFamilyRelayReadOnly` checks saved source/configuration; it does not prove
+published endpoint access, browser CORS, device receipt or session adoption.
+Complete that check and resolve errors before publishing a new version of the
+same deployment. Do not send synthetic learning uploads to production.
 
-Euna already has a reader in the supplied source. Verify the plan property,
-document access and the existing deployment before replacing any source.
-The shared-relay source in these review branches remains an alternative only for
-an installation whose existing shared behavior has been confirmed and approved.
+The actual saved endpoints on Euna's and Hana's usual devices still need matching.
+Shared Version 4 supports Hana, but that does not prove her app uses it. Preserve
+Hana-drive-mirror until this is resolved. If Hana uses that standalone deployment,
+apply the supplemental reader and single dispatch line documented in HanaP3Math's
+`tools/HANA_STANDALONE_NIGHTLY_SETUP.md`. Preserve its daily snapshots,
+LAST_EXPORT_AT, original initializer and other settings. Do not migrate it to
+shared weekly storage merely because a shared endpoint exists.
 
-## Next read-only check
+## Status
 
-Compare the saved mirror /exec URL in each child's usual app/browser with the
-active Web app URL under each project's Manage deployments screen. Record which
-deployment matches; do not copy secrets into chat or repository files.
-Identify Jonah's actual endpoint before recommending changes to it.
-Do not conclude an unused folder means the child's entire learning history is absent.
+Implementation and app integrations are on the existing draft review branches.
+No app PR has been merged or deployed by this work. Shared relay 1.2.0 has not
+been deployed. No Google properties, permissions, secrets, plan documents,
+nightly schedules or learner data were changed. Actual authenticated uploads,
+live plan delivery, app adoption and subsequent practice remain separate checks.
 
 Google deployment, permission/property changes, scheduled plan writes and
-learner-data writes still require the owner's explicit approval.
-Nothing in this audit changes those live resources.
+learner-data writes still require the owner's explicit approval. Daily plans
+remain private data and require no daily GitHub commits or app-version changes.

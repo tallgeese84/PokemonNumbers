@@ -2,14 +2,15 @@
 
 ## Current installation: inspect before replacing source
 
-The owner has supplied separate Euna-only and Hana-only source. This shared
-template is not a drop-in preservation upgrade for those scripts. Hana's daily
-snapshots and LAST_EXPORT_AT must be retained with the standalone reader addition.
-See [the current connection audit](RELAY_CONNECTION_AUDIT.md). Jonah's actual
-device endpoint is not yet identified. Do not migrate connections or change
-Google settings on the strength of the template tests below.
+The owner has now matched Jonah's endpoint to the active shared deployment in
+Mochi-drive-mirror, Version 4. Its supplied source exactly matches our preserved
+shared-family baseline. Relay 1.2.0 is the tested preservation upgrade for that
+version; retain Version 4 for rollback. The current Euna-only editor source must
+not be deployed to that shared endpoint. Euna's and Hana's saved device endpoints
+still need matching. Preserve Hana's separate daily-snapshot relay if she uses it.
+See [the current connection audit](RELAY_CONNECTION_AUDIT.md).
 
-Prepared 2026-10-08; not deployed. Source changes are staged on a review branch.
+Prepared 2026-10-08; not deployed. Source changes are committed and pushed on a draft review branch.
 The existing upload block and all its helpers are byte-for-byte identical to the
 original shared family relay. All 102 synthetic relay tests pass.
 Run: `node --test tools/family-relay-tests/family-relay.test.cjs`.
