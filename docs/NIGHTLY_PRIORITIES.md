@@ -1,9 +1,10 @@
 # Jonah nightly priorities — v88
 
-Prepared and tested on a review branch; not deployed. The existing saved
+The v88 release adds the receiver and activity integration. The existing saved
 `pokemath_drive_mirror_v1` connection must be enabled. Authenticated POST
 `readJonahNextSession` uses its existing body secret. Family relay 1.2.0 reads only
-`JONAH_NIGHTLY_PLAN_DOC_ID`, an optional property configured after owner approval.
+`JONAH_NIGHTLY_PLAN_DOC_ID`, the private document configured by the owner. The shared relay is already live as
+Google Version 5 (relay 1.2.0); no further Google deployment is needed for v88.
 
 Synthetic schema example (not Jonah's assessment or a published plan):
 ```json
@@ -56,8 +57,13 @@ collection, reading, maths, storage/sync, phonics and service-worker checks.
 finishes its model, receives a newer plan without replacing the task, opens a real
 Gym task and verifies old sessions, caught Pokémon, shinies, buddy, other apps'
 storage and the mirrored receipt. All relay traffic is mocked.
-`npm run test:relay` — 100 three-child relay regression tests.
+`npm run test:relay` — 102 three-child relay regression tests.
 
-Pending approval: private Doc configuration/publication, scheduler write activation,
-Google relay deployment; app merge/release and real-device acceptance also pending.
+The owner approved publication and completed the shared Google relay setup.
+Hana h22 has a confirmed ordinary upload and authenticated empty-plan response;
+her first plan is now published and her midnight reviewer enabled.
+For Jonah, verify the released v88 in Grown-ups → Nightly reading and maths
+priorities → Check plan connection on his usual device. Publication, device
+receipt, safe adoption and completed practice remain separate acceptance checks.
+A successful upload alone does not prove that a dated plan was received.
 Daily plans require no daily GitHub commits or software-version increments.

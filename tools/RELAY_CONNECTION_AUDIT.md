@@ -1,5 +1,15 @@
 # Relay connection audit — 2026-10-08
 
+## Stage 2 verification — October 8, 2026, 6:48 PM America/Chicago
+
+Hana h22 is published. Her usual device displayed “Drive confirmed: review saved”
+and “No plan published; built-in learning continues.” This verifies a normal
+upload and successful authenticated empty-plan read through the saved family
+connection. The complete current Hana mirror was then read from the shared folder;
+her first dated plan was validated, published to her existing private Doc and read
+back. Her midnight Chicago reviewer is enabled. Actual nonempty-plan receipt and
+subsequent practice remain pending device evidence. Jonah v88 is the next stage.
+
 ## Live verification — October 8, 2026, 5:40 PM America/Chicago
 
 The owner deployed family relay 1.2.0 as Google **Version 5**, retaining the
@@ -75,7 +85,7 @@ apply the supplemental reader and single dispatch line documented in HanaP3Math'
 LAST_EXPORT_AT, original initializer and other settings. Do not migrate it to
 shared weekly storage merely because a shared endpoint exists.
 
-## Status
+## Historical status before the approved deployment
 
 Implementation and app integrations are on the existing draft review branches.
 No app PR has been merged or deployed by this work. Shared relay 1.2.0 has not

@@ -2,15 +2,15 @@
 
 ## Current installation: inspect before replacing source
 
-The owner has now matched Jonah's endpoint to the active shared deployment in
-Mochi-drive-mirror, Version 4. Its supplied source exactly matches our preserved
-shared-family baseline. Relay 1.2.0 is the tested preservation upgrade for that
-version; retain Version 4 for rollback. The current Euna-only editor source must
-not be deployed to that shared endpoint. Euna's and Hana's saved device endpoints
-still need matching. Preserve Hana's separate daily-snapshot relay if she uses it.
-See [the current connection audit](RELAY_CONNECTION_AUDIT.md).
+The owner deployed the tested shared relay 1.2.0 as Google Version 5 on
+2026-10-08, preserving its existing URL, secret, folders and upload behavior.
+Version 4 remains the rollback reference. The fixed private plan readers are
+configured for all three children. Euna's actual device received her October 8
+plan; Hana h22 confirmed a normal upload and authenticated empty-plan response.
+Hana's first plan is now published and her midnight reviewer is enabled. Jonah
+v88 is the third app release; no further Google deployment is required for it.
+See [the connection audit](RELAY_CONNECTION_AUDIT.md) for evidence and history.
 
-Prepared 2026-10-08; not deployed. Source changes are committed and pushed on a draft review branch.
 The existing upload block and all its helpers are byte-for-byte identical to the
 original shared family relay. All 102 synthetic relay tests pass.
 Run: `node --test tools/family-relay-tests/family-relay.test.cjs`.
@@ -30,12 +30,14 @@ are not separate Google-account identities. No permissions or secrets are change
 Euna whole-snapshot storage, Hana older-export skipping/allowlist, Jonah session
 union/revision merging, existing latest/weekly filenames, folder fallback and
 locks are unchanged. This does not retroactively fix the original snapshot
-retention limitations for Euna or Hana. No learner data or deployment was touched.
+retention limitations for Euna or Hana. Tests use synthetic files only and never submit learner uploads to production.
 Plan reads do not obtain the upload lock or write properties, Docs, or backups.
 
-## Approval and live acceptance still required
+## Change boundary and live acceptance
 
-Do not run setup, edit Script Properties, change access, or deploy until CJ approves.
+The approved owner-run setup/deployment is complete. Further changes to Script
+Properties, permissions, secrets, folders or the live Google deployment still
+require explicit approval.
 Before deployment, retain the saved source and current deployment version for rollback.
 Configure only missing child plan IDs to verified owner-controlled private machine
 Docs; preserve all existing properties, URL, secret and sharing. Replace the current
