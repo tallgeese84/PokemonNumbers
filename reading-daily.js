@@ -45,14 +45,16 @@ function story(sessions,state,n,known,rnd){
  return {act:'book',route:n,items:[{route:n,kind:'dailyStory',item:'daily-book:'+book.id,storyId:book.id,book,supplied,teach:true},
   {route:n,kind:'dailyQuiz',item:'daily-understand:'+book.id,storyId:book.id,quiz:{q:book.quiz?.q||book.question,o:choices},answer}]};
 }
-function round(sessions,state,status,rnd=Math.random){
+function round(sessions,state,status,rnd=Math.random,priorities=null){
  const stage=status.stage.id,n=R.currentRoute(state),stats=R.itemStats(sessions),known=new Set(R.knownSounds(sessions,n)),av=R.available(sessions,n);
  const qs=events(sessions,status.day).filter(q=>q.dailyCycle===status.cycle&&q.dailyStage===stage);
  const recentWords=qs.filter(q=>q.completedAt).slice(-10).map(q=>q.word);
+ const used=new Set(events(sessions,status.day).map(q=>q.nightlyTarget).filter(Boolean));
+ const wanted=(kind,value)=>!!priorities&&priorities[kind==='sound'?'sounds':'words'].includes(value)&&!used.has(kind+':'+value);
  let r;
  if(stage==='sounds'){
   const pool=[...new Set([...av,...(R.nextBatch(sessions,n)||[])])];
-  const targets=shuffle(pool.length?pool:R.route(n).add.slice(0,3),rnd).sort((a,b)=>(stats['g:'+a]?.lastAt||0)-(stats['g:'+b]?.lastAt||0));
+  const targets=shuffle(pool.length?pool:R.route(n).add.slice(0,3),rnd).sort((a,b)=>Number(wanted('sound',b))-Number(wanted('sound',a))||(stats['g:'+a]?.lastAt||0)-(stats['g:'+b]?.lastAt||0));
   const buddy=B.get(targets[0]);
   if(R.route(n).caps&&!qs.some(q=>q.kind==='upper'))r=R.makeRound('caps',n,sessions,state,rnd);
   else if(buddy)r=B.lesson([buddy.letter],sessions,pool,Date.now(),rnd);
@@ -60,7 +62,7 @@ function round(sessions,state,status,rnd=Math.random){
  }else if(stage==='story')r=story(sessions,state,n,known,rnd);
  else{
   const pool=stage==='actions'?ACTIONS.filter(w=>R.missing(w,n).length===0):[...new Set(D.ROUTES.slice(Math.max(0,n-2),n).flatMap(r=>[...r.blend,...r.build]))].filter(w=>A.has(R.clean(w)));
-  const selected=shuffle(pool,rnd).sort((a,b)=>Number(!taughtWord(a,n,known))-Number(!taughtWord(b,n,known))||recentWords.filter(w=>w===a).length-recentWords.filter(w=>w===b).length).slice(0,3);
+  const selected=shuffle(pool,rnd).sort((a,b)=>Number(!taughtWord(a,n,known))-Number(!taughtWord(b,n,known))||Number(wanted('word',b))-Number(wanted('word',a))||recentWords.filter(w=>w===a).length-recentWords.filter(w=>w===b).length).slice(0,3);
   const items=[];
   // A few essential untaught sounds get an explicit introduction, never an unannounced test.
   const needed=[...new Set(selected.flatMap(w=>graphemes(w,n)).filter(g=>!av.includes(g)&&D.G[g]))].slice(0,3);
@@ -85,6 +87,12 @@ function round(sessions,state,status,rnd=Math.random){
   }
   r={act:stage==='actions'?'actions':'read',route:n,items};
  }
+ // Tag only real selected targets, never add unfamiliar curriculum or bypass teaching.
+ if(priorities)r.items=r.items.map(it=>{
+  const sound=it.g||(it.item?.startsWith('g:')?it.item.slice(2):null)||it.buddyLetter,word=it.word;
+  const target=sound&&wanted('sound',sound)?'sound:'+sound:word&&wanted('word',word)?'word:'+word:null;
+  return target?{...it,nightlyTarget:target}:it;
+ });
  return {...r,daily:{day:status.day,cycle:status.cycle,stage}};
 }
 function report(sessions,day){

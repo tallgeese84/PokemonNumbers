@@ -91,6 +91,7 @@ function createAdventure() {
     if(typeof reading!=='undefined')recordState('reading',PokeReadingCore.withSessions(reading.state,tracker.sessions));
     if(typeof mathPath!=='undefined')recordState('math',PokeMathPath.withSessions(mathPath.state,tracker.sessions));
     mirror=PokeMirror.mount(()=>({sessions:tracker.sessions,settings,lastCloudSyncAt:lastSync}));
+    window.JonahNightly?.mount(report=>recordState('nightlyPlan',report));
   })();
   async function deviceId(){let d=await store.get('pokemath_device');if(!d){d=crypto.randomUUID();await store.set('pokemath_device',d);}return d;}
   function plan(section, skill=section) {
@@ -187,7 +188,7 @@ function createAdventure() {
       const root=cfg.url.replace(/\/+$/,'')+'/fam/'+encodeURIComponent(cfg.code)+'/pokemathAnalytics';
       const upload={};const revisions={};
       for(const id of dirty)if(tracker.sessions[id]){upload['sessions/'+id]=structuredClone(tracker.sessions[id]);revisions[id]=tracker.sessions[id].rev;}
-      upload['devices/'+await deviceId()]={lastSeenAt:Date.now(),build:85,sessionId:tracker.sessionId};
+      upload['devices/'+await deviceId()]={lastSeenAt:Date.now(),build:88,sessionId:tracker.sessionId};
       const r=await fetch(root+'.json',{method:'PATCH',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify(upload),signal:AbortSignal.timeout(15000)});
       if(!r.ok)throw new Error('upload');
       for(const [id,rev] of Object.entries(revisions))if(tracker.sessions[id]?.rev===rev)dirty.delete(id);

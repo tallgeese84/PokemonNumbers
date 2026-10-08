@@ -155,7 +155,8 @@ function createMathPath(){
   const qs=PokeLearning.allQuestions(sessions()).filter(q=>q.section==='path'&&q.skill===it.skill&&q.level===it.level).map(q=>({...q,kind:it.skill}));
   const model=!opts.check&&!opts.guided&&!opts.independent&&PokeReadingTutor.needsModel(it.skill,qs);
   cur={item:it,wrong:0,helped:false,done:false,onDone,check:!!opts.check,teach:model||!!opts.guided,model};
-  cur.ref=adventure.begin({section:'path',skill:it.skill,kind:it.kind,level:it.level,range:it.range,teach:cur.teach,phase:model?'model':opts.guided?'guided':'independent',support:opts.check?'check':'path',format:it.format,a:it.a,b:it.b,expected:String(it.expected),check:!!opts.check});
+  cur.ref=adventure.begin({...(it.nightlyPlan?{nightlyPlan:it.nightlyPlan}:{}),section:'path',skill:it.skill,kind:it.kind,level:it.level,range:it.range,teach:cur.teach,phase:model?'model':opts.guided?'guided':'independent',support:opts.check?'check':'path',format:it.format,a:it.a,b:it.b,expected:String(it.expected),check:!!opts.check});
+  if(it.nightlyPlan)window.JonahNightly?.started(it.nightlyPlan);
   showItem(it);
   if(cur.teach){
    help(true);$('mpShow').prepend(el('div','tutor-phase',model?'Watch':'Together'));
@@ -166,7 +167,7 @@ function createMathPath(){
   }else if(!cur.check)$('mpShow').prepend(el('div','tutor-phase','Your turn'));
  }
  function finishItem(){const c=cur;cur=null;if(!c)return;if(c.check){c.onDone?.(c.first===true);return;}
-  if(c.teach){let next;for(let i=0;i<12;i++){next=M.make(c.item.skill,c.item.level);if(PokeLearning.factKey(next)!==PokeLearning.factKey(c.item))break;}startItem(next,c.onDone,{independent:true});return;}
+  if(c.teach){let next;for(let i=0;i<12;i++){next=M.make(c.item.skill,c.item.level);if(PokeLearning.factKey(next)!==PokeLearning.factKey(c.item))break;}startItem({...next,...(c.item.nightlyPlan?{nightlyPlan:c.item.nightlyPlan}:{})},c.onDone,{independent:true});return;}
   const newly=badgeCheck();if(newly){celebrateGym(newly,()=>c.onDone?.());return;}c.onDone?.();}
 
  /* ---------- Gym badges ---------- */
@@ -196,10 +197,10 @@ function createMathPath(){
 
  /* ---------- Play routing: called for each maths question in a Play block ---------- */
  function route(pos,answered){
-  const r=M.next(sessions(),st(),pos,answered);
+  let r=M.next(sessions(),st(),pos,answered);const plan=window.JonahNightly?.adopt();if(plan)r=JonahNightly.mathRoute(r,plan,sessions(),st(),M,PokeLearning);
   if(r.type==='check')return {type:'path',start:done=>runCheck(done)};
   if(r.type==='path'){const plan=M.newSkillPlan(r.skill,sessions());const lvl=r.review?plan.top:Math.min(plan.level,M.levelsOf(r.skill)-1);
-   return {type:'path',start:done=>startItem(M.make(r.skill,lvl),()=>done())};}
+   return {type:'path',start:done=>startItem({...M.make(r.skill,lvl),...(r.nightlyPlan?{nightlyPlan:r.nightlyPlan}:{})},()=>done())};}
   return r;
  }
 
@@ -215,7 +216,13 @@ function createMathPath(){
   const status=M.statusAll(sessions(),st());const ids=M.SKILLS.filter(s=>s.gym===n&&!s.delegate&&status[s.id].unlocked).map(s=>s.id);
   if(!ids.length){phrase='Keep playing to open this Gym!';say(phrase,true);$('mpFeedback').textContent='🔒';return;}
   const pickId=()=>{const s=M.statusAll(sessions(),st());return ids.find(id=>!s[id].known)||ids[Math.floor(Math.random()*ids.length)];};
-  const loop=()=>{if(mode!=='path')return;const id=pickId(),p=M.newSkillPlan(id,sessions());startItem(M.make(id,Math.min(p.level,M.levelsOf(id)-1)),loop);};loop();
+  const loop=()=>{
+   if(mode!=='path')return;
+   const current=st(),now=Date.now(),due=M.dueReviews(M.statusAll(sessions(),current),now).find(id=>ids.includes(id));
+   let r={type:'path',skill:due||pickId(),review:!!due};
+   const plan=window.JonahNightly?.adopt();if(plan)r=JonahNightly.mathRoute(r,plan,sessions(),current,M,PokeLearning,now,ids);
+   const p=M.newSkillPlan(r.skill,sessions());startItem({...M.make(r.skill,Math.min(p.level,M.levelsOf(r.skill)-1)),...(r.nightlyPlan?{nightlyPlan:r.nightlyPlan}:{})},loop);
+  };loop();
  }
 
  /* ---------- grown-ups ---------- */
