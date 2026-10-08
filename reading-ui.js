@@ -148,7 +148,8 @@ function createReading(){
   if(!adventure.beforeQuestion()){waitReady(nextItem);return;}
   const it=run.round.items[run.i];run.item=it;run.wrong=0;run.helped=false;run.done=false;
   if(run.round.lazy){const pr=run.round.lazy.progress();pips(pr.sections,pr.section);}else pips(run.round.items.length,run.i);feedback('');$('rdOptions').replaceChildren();$('rdActions').replaceChildren();$('rdStage').replaceChildren();$('rdPrompt').replaceChildren();
-  run.ref=adventure.begin({section:'read',skill:run.round.placement?'placement':run.round.act,kind:it.kind,item:it.item,route:it.route,range:it.route,support:it.buddyLetter?(it.buddyCue?'Pokémon picture help':'no picture help'):(it.phase||'independent'),word:it.word||it.target||it.item,phase:it.phase||'independent',format:it.kind,level:it.route,teach:!!it.teach,...(it.buddyLetter?{buddyLetter:it.buddyLetter,buddyCue:!!it.buddyCue}:{}),...(run.round.daily?{dailyVersion:1,dailyDay:run.round.daily.day,dailyCycle:run.round.daily.cycle,dailyStage:run.round.daily.stage}:{}),...(it.storyId?{storyId:it.storyId}:{}),...(it.storyHelped?{support:'listening/supported comprehension'}:{}),a:it.route,b:0,expected:String(it.answer??it.item)});
+  run.ref=adventure.begin({...(it.nightlyPlan?{nightlyPlan:it.nightlyPlan,nightlyTarget:it.nightlyTarget}:{}),section:'read',skill:run.round.placement?'placement':run.round.act,kind:it.kind,item:it.item,route:it.route,range:it.route,support:it.buddyLetter?(it.buddyCue?'Pokémon picture help':'no picture help'):(it.phase||'independent'),word:it.word||it.target||it.item,phase:it.phase||'independent',format:it.kind,level:it.route,teach:!!it.teach,...(it.buddyLetter?{buddyLetter:it.buddyLetter,buddyCue:!!it.buddyCue}:{}),...(run.round.daily?{dailyVersion:1,dailyDay:run.round.daily.day,dailyCycle:run.round.daily.cycle,dailyStage:run.round.daily.stage}:{}),...(it.storyId?{storyId:it.storyId}:{}),...(it.storyHelped?{support:'listening/supported comprehension'}:{}),a:it.route,b:0,expected:String(it.answer??it.item)});
+  if(it.nightlyPlan)window.JonahNightly?.started(it.nightlyPlan);
   if(it.storyHelped)help('story words supplied or read aloud');
   if(it.phase==='model'){renderModel(it);return;}
   if(it.phase==='guided'){run.helped=true;adventure.help('guided practice');}
@@ -569,7 +570,7 @@ function createReading(){
  function startDailyBlock(status,onDone){
   const s=st(),n=R.currentRoute(s);
   if(R.gate(n,R.itemStats(sessions()),s).met&&!R.allPassed(s)){passRoute(n,onDone);return;}
-  startRound(PokeReadingDaily.round(sessions(),s,status),onDone);
+  const plan=window.JonahNightly?.adopt();startRound(window.JonahNightly?JonahNightly.readingRound(sessions(),s,status,plan,PokeReadingDaily):PokeReadingDaily.round(sessions(),s,status),onDone);
  }
  function startBlock(onDone){
   const s=st(),plan=R.nextActivity(sessions(),s,recent);

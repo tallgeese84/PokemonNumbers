@@ -5,7 +5,7 @@ const APP='PokéMath learning',CONFIG='pokemath_drive_mirror_v1';
 function validUrl(url){return /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(url||'');}
 function configured(c){return c?.enabled===true&&validUrl(c.url)&&typeof c.secret==='string'&&c.secret.length>=24;}
 function backup({sessions={},settings={},lastCloudSyncAt=0,exportedAt=new Date().toISOString()}={}){
- return {app:APP,version:1,schema:1,build:85,child:'Jonah',timezone:'America/Chicago',exportedAt,lastCloudSyncAt,
+ return {app:APP,version:1,schema:1,build:88,child:'Jonah',timezone:'America/Chicago',exportedAt,lastCloudSyncAt,
   settings:{goalMinutes:[10,12,15,20,25].includes(settings.goalMinutes)?settings.goalMinutes:12},sessions:JSON.parse(JSON.stringify(sessions)),
   notes:'Estimated active practice; built-in visual support is recorded separately. Other devices may have unsynced activity. Cloud history retrieval covers the most recent 90 days; this mirror retains older sessions already received.'};
 }
@@ -46,7 +46,7 @@ function mount(snapshot){
  $('pmMirrorReuse').onclick=()=>{const url=localStorage.getItem('mochi_drive_mirror_url_v1')||'',secret=localStorage.getItem('mochi_drive_mirror_secret_v1')||'';if(!validUrl(url)||secret.length<24){$('pmMirrorStatus').textContent='Euna’s connection is not saved in this browser. Copy the URL and mirror secret from Mochi’s grown-up settings on her device.';return;}$('pmMirrorUrl').value=url;$('pmMirrorSecret').value=secret;$('pmMirrorEnabled').checked=false;$('pmMirrorStatus').textContent='Connection copied into these fields. Update the Google script to accept Jonah, then enable and save.';};
  $('pmMirrorGenerate').onclick=()=>{$('pmMirrorSecret').value=Array.from(crypto.getRandomValues(new Uint8Array(24)),b=>b.toString(16).padStart(2,'0')).join('');$('pmMirrorStatus').textContent='New secret prepared. For a NEW relay, use this as MIRROR_SECRET. Keep the existing secret when upgrading Euna’s relay.';};
  $('pmMirrorReveal').onclick=()=>{const hide=$('pmMirrorSecret').type==='text';$('pmMirrorSecret').type=hide?'password':'text';$('pmMirrorReveal').textContent=hide?'Show secret':'Hide secret';};
- $('pmMirrorSave').onclick=()=>{try{client.saveConfig({url:$('pmMirrorUrl').value,secret:$('pmMirrorSecret').value,enabled:$('pmMirrorEnabled').checked});client.schedule();}catch(e){$('pmMirrorStatus').textContent=e.message;}};
+ $('pmMirrorSave').onclick=()=>{try{client.saveConfig({url:$('pmMirrorUrl').value,secret:$('pmMirrorSecret').value,enabled:$('pmMirrorEnabled').checked});window.dispatchEvent(new Event('jonah:mirror-settings'));client.schedule();}catch(e){$('pmMirrorStatus').textContent=e.message;}};
  $('pmMirrorSend').onclick=()=>{if(!configured(client.getConfig())){$('pmMirrorStatus').textContent='Enable and save the mirror settings first.';return;}client.send('manual');};
  window.addEventListener('online',()=>client.send('online'));
  window.addEventListener('pagehide',()=>client.send('pagehide'));
