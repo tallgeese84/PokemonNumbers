@@ -1,5 +1,31 @@
 # Relay connection audit — 2026-10-08
 
+## Live verification — October 8, 2026, 5:40 PM America/Chicago
+
+The owner deployed family relay 1.2.0 as Google **Version 5**, retaining the
+existing deployment URL. Its live public GET returns HTTP 200, relayVersion 1.2.0,
+planApi 1 and writeOnly false. Version 4 remains the rollback reference.
+
+Owner-run saved-source checks successfully read the configured private plan Docs
+for all three children. Hana and Jonah returned readOk true and state empty.
+The owner then supplied a screenshot from Euna's actual app showing:
+"Nightly priorities received and available to Daily Quests. Plan 2026-10-08,
+revision 1." This verifies delivery through that device's saved connection.
+It does not by itself establish completed practice or a subsequent upload receipt.
+
+An independent server POST using a credential read from a screenshot returned
+Unauthorized; that credential extraction was not independently verified. Do not
+infer Euna's saved app connection is broken from that test; her subsequent device
+receipt establishes that it works. No test sent learning uploads or changed data.
+
+Hana's app connection and ordinary upload remain unverified: no Hana latest mirror
+was found in the shared configured folder or the accessible Drive filename search.
+Keep her existing connection if configured; otherwise establish a family connection
+on her usual device. Her app release, nightly task activation and live receipts are
+tracked in stage 2. Jonah remains stage 3. Daily plans need no GitHub commits.
+
+Earlier sections below are the audit trail, not the current deployment status.
+
 ## Confirmed active shared deployment
 
 The owner identified Jonah's saved app endpoint and matched it to the active
