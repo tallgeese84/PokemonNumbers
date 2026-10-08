@@ -40,7 +40,7 @@ const read=e=>e.request({secret:SECRET,action:'readNextSession'});
 const filename={Euna:'euna-mochi-latest.json',Hana:'hana-learning-latest.json',Jonah:'jonah-pokemath-latest.json'};
 function value(e,child,separate=true){const id=separate?{Euna:'fixture-euna',Hana:'fixture-hana',Jonah:'fixture-jonah'}[child]:'fixture-euna';return JSON.parse(e.folders.get(id).get(filename[child]).text);}
 
-test('Baseline exactly matches the live family script in both sibling repositories',()=>{const b=Buffer.from(original);assert.equal(crypto.createHash('sha1').update(Buffer.concat([Buffer.from(`blob ${b.length}\0`),b])).digest('hex'),'550a1e88f5e0409f734b24459188e9e947470c41');});
+test('Pinned shared-family template baseline matches the repository source',()=>{const b=Buffer.from(original);assert.equal(crypto.createHash('sha1').update(Buffer.concat([Buffer.from(`blob ${b.length}\0`),b])).digest('hex'),'550a1e88f5e0409f734b24459188e9e947470c41');});
 test('All original upload validators, merge helpers and filenames remain byte-for-byte unchanged',()=>{assert(corrected.includes(original.slice(original.indexOf('function validateHana_'))));const a=original.slice(original.indexOf('  var b=body.backup'),original.indexOf('function validateHana_'));assert(corrected.includes(a));});
 for(const child of ['Hana','Jonah'])test(`Negative control: supplied Euna-only relay rejects ${child}`,()=>{assert.equal(post(env(eunaOnly),backups()[child]).error,'Invalid Mochi backup.');});
 test('Negative control: old family relay does not understand nightly reads',()=>{assert.equal(read(env(original)).error,'Unsupported learning backup.');});
