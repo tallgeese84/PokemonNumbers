@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow, noarchive, noimageindex">
 <title>PokéMath Adventure</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#f5f6ef">
@@ -776,40 +777,41 @@
     .pad button{ font-size:18px; min-height:42px; }
   }
 </style>
-<link rel="stylesheet" href="adventure.css?v=88">
-<link rel="stylesheet" href="visuals.css?v=88">
-<script src="visuals.js?v=88"></script>
-<script src="collection.js?v=88"></script>
-<script src="assets/pokemon-catalog.js?v=88"></script>
-<script src="learning-core.js?v=88"></script>
-<script src="drive-mirror.js?v=88"></script>
-<script src="adventure.js?v=88"></script>
-<script src="foundations.js?v=88"></script>
-<script src="foundation-ui.js?v=88"></script>
-<script src="reading-data.js?v=88"></script>
-<script src="reading-phonics.js?v=88"></script>
-<script src="reading-art.js?v=88"></script>
-<script src="reading-tutor.js?v=88"></script>
-<script src="reading-buddies.js?v=88"></script>
-<script src="reading-core.js?v=88"></script>
-<script src="reading-daily.js?v=88"></script>
-<script src="reading-assess.js?v=88"></script>
-<script src="reading-ui.js?v=88"></script>
-<script src="math-path-core.js?v=88"></script>
-<script src="math-tutor.js?v=88"></script>
-<script src="math-path-ui.js?v=88"></script>
-<script src="fox-core.js?v=88"></script>
-<script src="fox-model.js?v=88"></script>
-<script src="fox-ui.js?v=88"></script>
-<script src="nightly-priority-core.js?v=88"></script>
-<script src="nightly-plan.js?v=88"></script>
-<link rel="stylesheet" href="foundations.css?v=88">
-<link rel="stylesheet" href="reading.css?v=88">
-<link rel="stylesheet" href="reading-art.css?v=88">
-<link rel="stylesheet" href="math-path.css?v=88">
-<link rel="stylesheet" href="fox.css?v=88">
-<link rel="stylesheet" href="collection.css?v=88">
-<link rel="stylesheet" href="theme-blue.css?v=88">
+<link rel="stylesheet" href="adventure.css?v=89">
+<link rel="stylesheet" href="visuals.css?v=89">
+<script src="grownup-gate.js?v=89"></script>
+<script src="visuals.js?v=89"></script>
+<script src="collection.js?v=89"></script>
+<script src="assets/pokemon-catalog.js?v=89"></script>
+<script src="learning-core.js?v=89"></script>
+<script src="drive-mirror.js?v=89"></script>
+<script src="adventure.js?v=89"></script>
+<script src="foundations.js?v=89"></script>
+<script src="foundation-ui.js?v=89"></script>
+<script src="reading-data.js?v=89"></script>
+<script src="reading-phonics.js?v=89"></script>
+<script src="reading-art.js?v=89"></script>
+<script src="reading-tutor.js?v=89"></script>
+<script src="reading-buddies.js?v=89"></script>
+<script src="reading-core.js?v=89"></script>
+<script src="reading-daily.js?v=89"></script>
+<script src="reading-assess.js?v=89"></script>
+<script src="reading-ui.js?v=89"></script>
+<script src="math-path-core.js?v=89"></script>
+<script src="math-tutor.js?v=89"></script>
+<script src="math-path-ui.js?v=89"></script>
+<script src="fox-core.js?v=89"></script>
+<script src="fox-model.js?v=89"></script>
+<script src="fox-ui.js?v=89"></script>
+<script src="nightly-priority-core.js?v=89"></script>
+<script src="nightly-plan.js?v=89"></script>
+<link rel="stylesheet" href="foundations.css?v=89">
+<link rel="stylesheet" href="reading.css?v=89">
+<link rel="stylesheet" href="reading-art.css?v=89">
+<link rel="stylesheet" href="math-path.css?v=89">
+<link rel="stylesheet" href="fox.css?v=89">
+<link rel="stylesheet" href="collection.css?v=89">
+<link rel="stylesheet" href="theme-blue.css?v=89">
 </head>
 <body data-screen="home">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
@@ -919,9 +921,9 @@
     <div class="home-choices">
       <button class="quiet-choice home-art-choice" id="gamesBtn" aria-label="Choose a game"><img class="home-icon-art" src="assets/home/games-v80.png" alt="" width="112" height="88"><strong>Games</strong></button>
       <button class="quiet-choice home-art-choice" id="teamBtn" aria-label="My Pokémon"><img class="home-icon-art" src="assets/sound-buddies/25.png" alt="" width="112" height="88"><span class="home-team-copy"><strong>My Pokémon</strong><small>Browse &amp; choose your buddy</small></span><small id="teamTally" hidden></small></button>
-      <button class="quiet-choice home-art-choice" id="foxBtn" aria-label="My fox"><img class="home-icon-art" src="assets/home/fox-v80.png" alt="" width="112" height="88"><strong>Fox</strong></button>
+      <button class="quiet-choice home-art-choice" id="foxBtn" aria-label="My fox"><img class="home-icon-art" src="assets/home/fox-v80.png" alt="" width="112" height="88"><span class="home-team-copy"><strong>My fox</strong><small>Play and teach tricks</small></span></button>
     </div>
-    <footer class="home-footer"><span id="parentEntry"></span><span class="build-label">v88</span></footer>
+    <footer class="home-footer"><span id="parentEntry"></span><span class="build-label">v89</span></footer>
   </div>
 
   <!-- The other activities stay available, three pictures at a time. -->
@@ -4297,9 +4299,12 @@ document.addEventListener('visibilitychange', () => {
   document.querySelector('h1').addEventListener('click', () => {
     const now = Date.now();
     taps = taps.filter(t => now - t < 1200); taps.push(now);
-    if (taps.length >= 3){ taps = []; openPanel(); }
+    if (taps.length >= 3){ taps = []; document.getElementById('cloudBtn').click(); }
   });
   document.getElementById('cloudBtn').addEventListener('click', openPanel);
+  // v89: Grown-ups opens only after a grown-up check (capture phase, so every path through #cloudBtn is covered).
+  window.grownupGate = GrownupGate.create({mode:'sum', key:'pokemath_grownup_gate_v1', accent:'#2466bd'});
+  window.grownupGate.protect(['#cloudBtn']);
   async function openPanel(){
     adventure.tracker?.setBlocked(true);
     const data = {};
@@ -4418,7 +4423,7 @@ document.addEventListener('visibilitychange', () => {
       ['maths path', typeof PokeMathPath === 'object' && PokeMathPath.SKILLS.length === 28]
     ];
     document.getElementById('ppVer').textContent =
-      'build v88 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
+      'build v89 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
     showPraise(praiseLine(true));
     say(praiseLine(true));
   });

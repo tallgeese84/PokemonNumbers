@@ -1,3 +1,7 @@
+## v89 · Grown-ups check, Fox on home
+
+**Grown-ups** now asks a two-digit × one-digit multiplication before the journal, settings and grown-up choices open. Every route in (the Grown-ups button, the collection's sync shortcut and the hidden title triple-tap) goes through the same check. It stays open for two minutes, then asks again; reloading also locks it. **My fox** is back on the home screen beneath My Pokémon, so Jonah can visit Buddy himself. Grown-up choice keeps the alphabet and maths games. The page now tells search engines not to index it (`noindex`). Learning history, Pokémon, Buddy's points and sync are unchanged.
+
 ## v87 · Jonah's blue theme
 
 Pale blue backgrounds and deeper blue buttons, reading-stage cards, progress indicators and collection highlights reflect Jonah's favourite colour. The v86 collection and buddy picker are retained. Pokémon artwork and instructional vowel/team colours keep their meaning. Theme changes do not alter earned collections or learning history.
