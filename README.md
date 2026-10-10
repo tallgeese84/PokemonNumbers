@@ -1,3 +1,7 @@
+## v90 · Safer 3D fox on iPad
+
+The 3D fox den now uses less graphics memory on retina tablets (at most 2× pixels, no extra antialiasing, a 1024 px shadow map); the fox model and its textures are unchanged. A crash guard records when the den starts. If Safari ends the page before the den settles, or drops its 3D context, the next visit shows Buddy's picture instead of retrying 3D, so the app cannot crash the same way twice. Treats, toys, leaves and tricks still work in picture mode. **Grown-ups → Jonah's fox → Try the 3D fox again** clears the guard on that device.
+
 ## v89 · Grown-ups check, Fox on home
 
 **Grown-ups** now asks a two-digit × one-digit multiplication before the journal, settings and grown-up choices open. Every route in (the Grown-ups button, the collection's sync shortcut and the hidden title triple-tap) goes through the same check. It stays open for two minutes, then asks again; reloading also locks it. **My fox** is back on the home screen beneath My Pokémon, so Jonah can visit Buddy himself. Grown-up choice keeps the alphabet and maths games. The page now tells search engines not to index it (`noindex`). Learning history, Pokémon, Buddy's points and sync are unchanged.

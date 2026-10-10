@@ -2,6 +2,7 @@
 .fox-den{max-width:640px;margin:auto;text-align:center}
 .fox-stage{position:relative;border-radius:26px;overflow:hidden;background:#a9c79a;border:1px solid #d8e3d9;box-shadow:var(--shadow)}
 #foxCanvas{display:block;width:100%;touch-action:none;cursor:grab}
+.fox-picture{display:block;width:100%;max-height:540px;object-fit:contain;padding:24px;box-sizing:border-box}
 .fox-fx{position:absolute;inset:0;pointer-events:none}.fox-heart{position:absolute;bottom:35%;font-size:30px;animation:fox-float 1.6s ease-out forwards}
 @keyframes fox-float{from{transform:translateY(0) scale(.6);opacity:0}20%{opacity:1}to{transform:translateY(-170px) scale(1.15);opacity:0}}
 .fox-note{position:absolute;left:0;right:0;bottom:12px;font-weight:700;color:#4b6a5d}

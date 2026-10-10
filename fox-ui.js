@@ -29,6 +29,22 @@ function createFox(){
 
  /* ---------- 3D ---------- */
  let T=null,renderer,scene,camera,fox,parts={},raf=0,clock0=0,anim={},sprites=[];
+ /* v90 crash guard. iPad Safari ends a page whose 3D drawing uses too much memory and
+    shows "A problem repeatedly occurred" if it happens twice. A marker is saved while the
+    3D den starts; if the page dies before it settles, the next visit shows Buddy's picture
+    instead, so the app can never crash the same way twice. Grown-ups can retry 3D. */
+ const GUARD='pokemath_fox_3d_guard_v1';
+ const guardGet=()=>{try{return JSON.parse(localStorage.getItem(GUARD)||'null');}catch(e){return null;}};
+ const guardSet=v=>{try{if(v)localStorage.setItem(GUARD,JSON.stringify(v));else localStorage.removeItem(GUARD);}catch(e){}};
+ const pictureOnly=()=>{const g=guardGet();return !!g&&(g.state==='picture'||g.state==='starting');};
+ function pictureMode(why){
+  if(raf){cancelAnimationFrame(raf);raf=0;}T=null;
+  guardSet({state:'picture',why,at:Date.now()});
+  const st=$('foxStage');if(!st)return;$('foxCanvas').style.display='none';
+  if(!$('foxPicture')){const img=document.createElement('img');img.id='foxPicture';img.className='fox-picture';img.alt='';img.src='assets/home/fox-v80.png';img.onclick=()=>{hearts(3);sndTap();};st.prepend(img);}
+  $('foxNote').textContent='';
+ }
+ window.addEventListener('pagehide',()=>{const g=guardGet();if(g&&g.state==='starting')guardSet(null);});
  function script(src){return new Promise((ok,fail)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=fail;document.head.append(s);});}
  async function loadThree(){if(!window.THREE)await script('assets/vendor/three-r128.min.js?v=76');if(!THREE.GLTFLoader)await script('assets/vendor/three-GLTFLoader-r128.js?v=76');if(!THREE.SkeletonUtils)await script('assets/vendor/three-SkeletonUtils-r128.js?v=76');}
  let model=null;
@@ -52,15 +68,19 @@ function createFox(){
   if(T)return true;
   try{await loadThree();}catch(e){$('foxNote').textContent='Connect to the internet once to wake your fox.';return false;}
   const canvas=$('foxCanvas');
-  try{renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});}catch(e){$('foxNote').textContent='This tablet cannot show 3D right now.';return false;}
-  renderer.setPixelRatio(Math.min(3,window.devicePixelRatio||1));
+  guardSet({state:'starting',at:Date.now()});
+  // Retina tablets: no extra antialiasing and at most 2× pixels; this keeps graphics memory modest.
+  const dpr=window.devicePixelRatio||1;
+  try{renderer=new THREE.WebGLRenderer({canvas,antialias:dpr<2,alpha:true,powerPreference:'low-power'});}catch(e){pictureMode('no-webgl');return false;}
+  renderer.setPixelRatio(Math.min(2,dpr));
+  canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();pictureMode('context-lost');},false);
   // Lit like the author's Sketchfab scene: one strong key light with a real shadow, gentle fill, no film tone curve
   renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.NoToneMapping;
   renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   scene=new THREE.Scene();camera=new THREE.PerspectiveCamera(30,1,.1,60);camera.position.set(0,1.25,4.6);camera.lookAt(0,.8,0);
   scene.background=forestBackdrop();
   scene.add(new THREE.HemisphereLight(0xffffff,0x8a8f99,.45));
-  const key=new THREE.DirectionalLight(0xffffff,1.4);key.position.set(-2.2,4.5,3.2);key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.radius=4;key.shadow.bias=-.0005;
+  const key=new THREE.DirectionalLight(0xffffff,1.4);key.position.set(-2.2,4.5,3.2);key.castShadow=true;key.shadow.mapSize.set(1024,1024);key.shadow.radius=4;key.shadow.bias=-.0005;
   Object.assign(key.shadow.camera,{left:-2,right:2,top:2.5,bottom:-1,near:.5,far:12});scene.add(key);
   const fill=new THREE.DirectionalLight(0xdfe8ff,.35);fill.position.set(3,2,2);scene.add(fill);
   const rim=new THREE.DirectionalLight(0xffffff,.35);rim.position.set(0,3,-4);scene.add(rim);
@@ -76,7 +96,7 @@ function createFox(){
   const fc=document.createElement('canvas');fc.width=fc.height=64;{const x=fc.getContext('2d'),g=x.createRadialGradient(32,32,0,32,32,32);g.addColorStop(0,'rgba(255,248,170,1)');g.addColorStop(.2,'rgba(245,225,90,.85)');g.addColorStop(1,'rgba(240,220,80,0)');x.fillStyle=g;x.fillRect(0,0,64,64);}
   const ft=new THREE.CanvasTexture(fc);flies=[];for(let i=0;i<22;i++){const m=new THREE.Sprite(new THREE.SpriteMaterial({map:ft,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
    const f={m,x:(Math.random()-.5)*5.5,y:.3+Math.random()*2.6,z:-2.6+Math.random()*2.4,p:Math.random()*10,s:.04+Math.random()*.06};m.scale.setScalar(f.s);scene.add(m);flies.push(f);}
-  try{await buildFox();}catch(e){$('foxNote').textContent='Buddy is still on his way. Connect to the internet once.';return false;}
+  try{await buildFox();}catch(e){guardSet(null);$('foxNote').textContent='Buddy is still on his way. Connect to the internet once.';return false;}
   fox.rotation.y=-.75;parts.shadow=shadow;shadow.visible=false;T=true;sizeRenderer();window.addEventListener('resize',()=>{if(mode==='fox')sizeRenderer();});
   // drag to turn, tap to play
   let down=null;canvas.addEventListener('pointerdown',e=>{down={x:e.clientX,r:fox.rotation.y,moved:false};try{canvas.setPointerCapture?.(e.pointerId);}catch(_){}});
@@ -96,13 +116,15 @@ function createFox(){
   model.update(reduce()?dt*.5:dt);
   sprites=sprites.filter(sp=>{const k=(t-sp.t0)/sp.dur;if(k>=1){scene.remove(sp.obj);return false;}sp.step(k,sp.obj);return true;});
   renderer.render(scene,camera);
+  if(!settled&&t-startedAt>4000){settled=true;guardSet({state:'ok',at:Date.now()});}
  }
+ let settled=false,startedAt=0;
  function emojiSprite(e,size=.5){const cv=document.createElement('canvas');cv.width=cv.height=128;const c=cv.getContext('2d');c.font='100px serif';c.textAlign='center';c.textBaseline='middle';c.fillText(e,64,70);
   const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv),transparent:true}));sp.scale.set(size,size,size);return sp;}
  function hearts(n=5){const fx=$('foxFx');for(let i=0;i<n;i++){const h=document.createElement('span');h.className='fox-heart';h.textContent=['💛','✨','🧡'][i%3];h.style.left=(35+Math.random()*30)+'%';h.style.animationDelay=(i*.12)+'s';fx.append(h);setTimeout(()=>h.remove(),1800);}}
  function hop(){if(!T)return;model.play(pick(X.tricks(progressCached().points)).clip);sndTap();hearts(3);if(Math.random()<.35)say(pick(['Yip yip!','Hello '+(childName||'Jonah')+'!','Again! Again!']),true);}
  const pick=a=>a[Math.floor(Math.random()*a.length)];
- function useItem(it){const t0=performance.now();
+ function useItem(it){if(!T){hearts(6);sndGood();say(it.kind==='treat'?pick(['Yum!','Mmm, thank you!','Delicious!']):'Wheee!',true);return;}const t0=performance.now();
   if(it.kind==='treat'){const sp=emojiSprite(it.emoji,.45);scene.add(sp);sprites.push({obj:sp,t0,dur:1900,step:(k,o)=>{o.position.set(0,.18,.75);const s=.45*(1-Math.max(0,k-.5)*2);o.scale.set(s,s,s);}});model.play('Fox_Sit_Yes');setTimeout(()=>{hearts(6);sndGood();},1500);say(pick(['Yum!','Mmm, thank you!','Delicious!']),true);}
   if(it.id==='ball'){const sp=emojiSprite(it.emoji,.35);scene.add(sp);sprites.push({obj:sp,t0,dur:2600,step:(k,o)=>{o.position.set(Math.sin(k*Math.PI*2)*1.2,.2+Math.abs(Math.sin(k*Math.PI*5))*.4,.9);}});setTimeout(()=>model.play('Fox_Somersault_InPlace'),500);setTimeout(()=>hearts(5),2300);say('Catch!',true);}
   if(it.id==='bubbles'){for(let i=0;i<7;i++){const sp=emojiSprite('🫧',.25+Math.random()*.15);scene.add(sp);const x0=(Math.random()-.5)*1.8;sprites.push({obj:sp,t0:t0+i*180,dur:2400,step:(k,o)=>{o.position.set(x0+Math.sin(k*6+i)*.15,.3+k*2.2,.6);}});}setTimeout(()=>model.play('Fox_Jump_Pivot_InPlace'),600);say('Pop! Pop!',true);}
@@ -126,22 +148,27 @@ function createFox(){
  }
  async function open(){
   progCache=null;shutUp();mode='fox';show('fox');drawUI();
-  if(!await init3d())return;wear();
+  if(pictureOnly()){pictureMode(guardGet()?.why||'previous-crash');}
+  else await init3d();
+  if(T)wear();
   const p=progress(),tails=X.tails(p.points);
-  if(tails>(state.tailsSeen||1)){const tr=X.TRICKS[tails-1];setTimeout(()=>model.play(tr.clip),600);
+  if(tails>(state.tailsSeen||1)){const tr=X.TRICKS[tails-1];if(T)setTimeout(()=>model.play(tr.clip),600);
    phrase='Wow! '+foxName()+' learned a new trick: '+tr.name+'! All your reading and maths taught him. Tap him to see his tricks.';
    state.tailsSeen=tails;save();setTimeout(()=>{hearts(10);sndGood();say(phrase,true);},400);}
   else{phrase='This is '+foxName()+'. Tap to play. Use your leaves for treats and toys.';say(phrase,true);}
   updateHomeBadge();
-  if(!raf)raf=requestAnimationFrame(loop);
+  if(T&&!raf){settled=false;guardSet({state:'starting',at:Date.now()});startedAt=performance.now();raf=requestAnimationFrame(loop);}
  }
  /* Home: the Fox button sparkles when a new trick is waiting. */
  function updateHomeBadge(){const b=$('foxBtn');if(!b)return;const t=X.tails(progress().points);b.classList.toggle('fox-new',t>(state.tailsSeen||1));}
- function leave(){if(raf){cancelAnimationFrame(raf);raf=0;}}
+ function leave(){if(raf){cancelAnimationFrame(raf);raf=0;}const g=guardGet();if(g&&g.state==='starting')guardSet(null);}
  // grown-ups: name the fox
- const panel=document.createElement('details');panel.className='parent-settings';panel.innerHTML='<summary>Jonah’s fox</summary><p class="muted">Buddy grows bigger as Jonah learns, and learns a new trick at each of nine milestones: reading routes passed, plus two points for each maths Gym badge. The ninth trick comes when both paths are finished. Every star he earns also gives Buddy a leaf to spend on treats, toys and things to wear. The fox is never hungry or sad.</p><p class="muted">3D fox: “Fox” by pxltiger (sketchfab.com/pxltiger), licensed CC BY 4.0. Accessories added.</p><label>Name <input class="syinput" id="foxNameIn" maxlength="14" placeholder="Buddy"></label> <button class="btn" id="foxNameSave">Save</button><p class="muted" id="foxStatus"></p>';
+ const panel=document.createElement('details');panel.className='parent-settings';panel.innerHTML='<summary>Jonah’s fox</summary><p class="muted">Buddy grows bigger as Jonah learns, and learns a new trick at each of nine milestones: reading routes passed, plus two points for each maths Gym badge. The ninth trick comes when both paths are finished. Every star he earns also gives Buddy a leaf to spend on treats, toys and things to wear. The fox is never hungry or sad.</p><p class="muted">3D fox: “Fox” by pxltiger (sketchfab.com/pxltiger), licensed CC BY 4.0. Accessories added.</p><label>Name <input class="syinput" id="foxNameIn" maxlength="14" placeholder="Buddy"></label> <button class="btn" id="foxNameSave">Save</button><p class="muted" id="foxStatus"></p><p class="muted" id="fox3dStatus"></p><button class="btn" id="fox3dRetry" hidden>Try the 3D fox again</button>';
  ($('mathPathPanel')||$('learningDashboard')).after(panel);
  panel.addEventListener('toggle',()=>{if(!panel.open)return;$('foxNameIn').value=state.name||'';const p=progress(),nt=X.nextTail(p.points);$('foxStatus').textContent=`${X.tails(p.points)} of 9 tricks · ${p.routes} reading routes + ${p.badges} Gym badges = ${p.points} of ${X.MAX_POINTS} points${nt?` · next trick at ${nt.at}`:''} · ${X.balance(state)} leaves to spend (${state.earned} earned).`;});
+ const show3d=()=>{const g=guardGet(),on=!!g&&g.state==='picture';$('fox3dStatus').textContent=on?'Buddy is showing as a picture on this tablet because the 3D fox stopped unexpectedly'+(g.why==='context-lost'?' (graphics memory).':'.')+' Close other Safari tabs, then try again.':'';$('fox3dRetry').hidden=!on;};
+ panel.addEventListener('toggle',()=>{if(panel.open)show3d();});
+ $('fox3dRetry').onclick=()=>{guardSet(null);show3d();$('foxStatus').textContent='3D will be tried next time Buddy opens. Reload the app first if it was just closed.';};
  $('foxNameSave').onclick=()=>{state.name=$('foxNameIn').value.trim().slice(0,14);save();$('foxStatus').textContent='Saved.';};
  return {_model:()=>model,open,leave,earn,updateHomeBadge,get state(){return state;},payload:()=>state,applyState(m){if(m){state=X.mergeState(state,m);save();}}};
 }

@@ -1,6 +1,6 @@
 {
   "name": "pokemon-reading-math",
-  "version": "89.0.0",
+  "version": "90.0.0",
   "private": true,
   "scripts": {
     "test": "node --test tests/*.test.cjs",
