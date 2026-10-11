@@ -555,7 +555,8 @@ function readiness(sessions,state={},now=Date.now()){
   const cvc=recent.filter(q=>q.skill==='read'&&q.route<=6&&q.responses?.length);
   const dolchKnown=DOLCH.filter(w=>box(hKey(w))>=2||box(wKey(w))>=2);
   const books=ROUTES.filter(L=>readBookDone(stats,L.n)||state.books?.[L.n]).length;
-  const quiz=recent.filter(q=>q.skill==='book'&&q.kind==='quiz');
+  const quiz=recent.filter(q=>q.skill==='book'&&['quiz','dailyQuiz'].includes(q.kind)&&q.responses?.length);
+  const unaidedQuiz=quiz.filter(q=>q.support!=='listening/supported comprehension'),supportedQuiz=quiz.filter(q=>q.support==='listening/supported comprehension');
   const aloud=Object.values(state.aloud||{}).sort((a,b)=>b.at-a.at)[0]||null;
   const n=currentRoute(state),exp=expectedRoute(state,now);
   const rows=[
@@ -564,14 +565,15 @@ function readiness(sessions,state={},now=Date.now()){
     {key:'cvc',label:'Reads short words alone (cat, ship), last 30 days',value:cvc.length?Math.round(cvc.filter(indep).length/cvc.length*100):null,target:90,unit:'%',n:cvc.length},
     {key:'dolch',label:'P1 sight words (Dolch pre-primer + primer)',value:dolchKnown.length,target:DOLCH.length},
     {key:'books',label:'Decodable books read',value:books,target:LAST},
-    {key:'comp',label:'Story questions right first time, last 30 days',value:quiz.length?Math.round(quiz.filter(indep).length/quiz.length*100):null,target:80,unit:'%',n:quiz.length},
+    {key:'comp',label:'Story comprehension without read-aloud support, last 30 days',value:unaidedQuiz.length?Math.round(unaidedQuiz.filter(indep).length/unaidedQuiz.length*100):null,target:80,unit:'%',n:unaidedQuiz.length},
+    {key:'supportedComp',label:'Supported story comprehension: first response correct',value:supportedQuiz.length?Math.round(supportedQuiz.filter(q=>q.responses[0].correct).length/supportedQuiz.length*100):null,target:80,unit:'%',n:supportedQuiz.length,note:'Supplied words or read-aloud help; separate from independent reading'},
     {key:'ears',label:'Hearing sounds in words, last 30 days',value:acc('ears').p===null?null:Math.round(acc('ears').p*100),target:85,unit:'%',n:acc('ears').n},
     {key:'names',label:'Letter names (finds the letter by its name)',value:letters.filter(l=>box('ln:'+l)>=2).length,target:26},
     {key:'ladder',label:'Listening steps secure (rhyme → first → blend → end → count → middle → take away → swap)',value:LADDER.filter(f=>lad.stats[f].secure).length,target:LADDER.length,note:lad.frontier.length?'working on: '+lad.frontier.map(f=>PA_LABEL[f]).join(', '):'all secure'},
     ...SPELL.map((k,i)=>{const x=kindStats(sessions,SPELL)[k];return {key:k,label:i?'Spells the first and last sounds of a word he hears':'Spells the first sound of a word he hears',value:x.acc===null?null:Math.round(x.acc*100),target:80,unit:'%',n:x.n};}),
         {key:'recall',label:'Letter sounds recalled aloud to a grown-up',value:Object.values(state.recall||{}).filter(x=>x.ok).length,target:26,note:'Adult-observed production; separate from tapping a choice'},
     {key:'caps',label:'Capital letters matched',value:letters.filter(l=>box(uKey(l))>=2).length,target:26},
-    {key:'aloud',label:'Reading aloud to a grown-up (latest check)',value:aloud?Math.round(aloud.ok/Math.max(1,aloud.total)*100):null,target:90,unit:'%',note:aloud?('route '+aloud.route+', '+C.dayKey(aloud.at)):'not checked yet'}
+    {key:'aloud',label:'Reading aloud to a grown-up (latest check)',value:aloud?Math.round(aloud.ok/Math.max(1,aloud.total)*100):null,target:90,unit:'%',note:aloud?(aloud.total+'-page grown-up observation · route '+aloud.route+', '+C.dayKey(aloud.at)):'not checked yet'}
   ];
   const pace=n>exp?'ahead':n===exp?'on track':n>=exp-1?'slightly behind':'behind';
   return {route:n,expected:exp,pace,rows,target:P1_TARGET};

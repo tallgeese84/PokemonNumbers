@@ -5,7 +5,7 @@ function createAdventure() {
   const KEY='pokemath_learning_v1', SETTINGS='pokemath_learning_settings';
   let mirror=null;
   let tracker, dirty=new Set(), savedAt=0, syncing=false, lastSync=0, syncMessage='Not connected — saved on this device';
-  let settings={goalMinutes:12,bonusEnabled:false}, goalShown={}, bonusDay=null, modal=false, loaded=false;
+  let settings={goalMinutes:12,bonusEnabled:false}, goalShown={}, breakShown={}, bonusDay=null, modal=false, loaded=false;
   const mission={enabled:false,day:null,cycle:0};
   const plans={}; let leaseId=crypto.randomUUID(), leaseOwned=true;
   const timer=document.createElement('div'); timer.id='adventureTimer'; timer.className='adventure-timer';
@@ -34,11 +34,14 @@ function createAdventure() {
   const idle=document.createElement('div');idle.id='adventureIdle';idle.className='adventure-modal';idle.hidden=true;
   idle.innerHTML='<div class="adventure-dialog" role="dialog" aria-modal="true" aria-labelledby="idleTitle"><h2 id="idleTitle">Paused</h2><button class="btn" id="adventureResume" aria-label="Keep playing">'+PokeVisuals.icon('play')+'<span>Play</span></button><button class="btn secondary" id="adventureRest" aria-label="Finish and go home">'+PokeVisuals.icon('home')+'<span>Home</span></button></div>';
   document.body.append(idle);
+  const readingBreak=document.createElement('div');readingBreak.id='readingBreak';readingBreak.className='adventure-modal';readingBreak.hidden=true;
+  readingBreak.innerHTML='<div class="adventure-dialog reading-break-dialog" role="dialog" aria-modal="true" aria-labelledby="readingBreakTitle"><div class="adventure-hero" aria-hidden="true">☁️</div><h2 id="readingBreakTitle">A good place to rest</h2><p>Sounds and words are done! Your actions and story are saved for later today.</p><button class="btn" id="readingBreakHome">Take a break</button><button class="btn secondary" id="readingBreakContinue">Keep reading</button></div>';
+  document.body.append(readingBreak);
   const goal=document.createElement('div');goal.id='adventureGoal';goal.className='adventure-modal';goal.hidden=true;
   goal.innerHTML='<div class="adventure-dialog goal-dialog" role="dialog" aria-modal="true" aria-labelledby="goalTitle"><div class="goal-sparkles" aria-hidden="true">★</div><div class="trainer-scene"><img class="trainer-avatar" src="assets/jonah-avatar.webp" alt="Jonah’s avatar" width="900" height="900"><img id="goalPokemon" alt="Your Pokémon celebrates" class="goal-pokemon trainer-buddy" onerror="this.style.display=\'none\'"></div><h2 id="goalTitle">You did it!</h2><p id="goalMessage"></p><button class="btn" id="adventureFinish" aria-label="Finish for today">'+PokeVisuals.icon('home')+'<span>Done</span></button><button class="btn secondary" id="adventureBonus" aria-label="Play three bonus minutes" hidden>'+PokeVisuals.icon('play')+'<span>+3 min</span></button></div>';
   document.body.append(goal);
   const dashboard=document.createElement('section');dashboard.id='learningDashboard';dashboard.className='learning-dashboard';
-  dashboard.innerHTML='<h2>Learning journal</h2><p class="muted">Small steps, seen over time · Madison time</p><p>Daily reading: sounds 2 min · blend and build 4 min · read and act 3 min · story 3 min. Each task finishes before the next stage. These are pacing targets, not mastery scores.</p><div hidden><select id="goalMinutes"><option value="12">12 minutes</option></select><input id="enableBonus" type="checkbox"></div><div class="journal-controls"><label>View <select id="journalPeriod"><option value="today">Today</option><option value="yesterday">Yesterday</option><option value="week">Last 7 days</option></select></label><button class="btn" id="exportLearning">Export history</button><button class="btn" id="exportDailyReport">Save daily report</button></div><div id="journalBody"></div><p id="journalSync" class="muted"></p><p class="muted">The clock counts visible questions, thinking and learning aids. It pauses after 60 seconds without interaction, during rewards, in other tabs and in parent settings. Time is an estimate, not a measurement of attention.</p><hr></section>';
+  dashboard.innerHTML='<h2>Learning journal</h2><p class="muted">Small steps, seen over time · Madison time</p><p>Daily reading stays at 12 active minutes. First sitting: sounds 2 + blend/build 4; second sitting: read/act 3 + story 3. Take the optional break between completed tasks and resume the saved stage later today. These are pacing targets, not mastery scores.</p><div hidden><select id="goalMinutes"><option value="12">12 minutes</option></select><input id="enableBonus" type="checkbox"></div><div class="journal-controls"><label>View <select id="journalPeriod"><option value="today">Today</option><option value="yesterday">Yesterday</option><option value="week">Last 7 days</option></select></label><button class="btn" id="exportLearning">Export history</button><button class="btn" id="exportDailyReport">Save daily report</button></div><div id="journalBody"></div><p id="journalSync" class="muted"></p><p class="muted">The clock counts visible questions, thinking and learning aids. It pauses after 60 seconds without interaction, during rewards, in other tabs and in parent settings. Time is an estimate, not a measurement of attention.</p><hr></section>';
   document.querySelector('#parentPanel .parent-head').after(dashboard);
   const extras=document.createElement('details');extras.className='parent-practice-tools';
   extras.innerHTML='<summary>Grown-up choice: alphabet &amp; maths</summary><p>These activities are outside the daily reading routine.</p><div id="parentPracticeTools"></div>';
@@ -50,7 +53,8 @@ function createAdventure() {
     const li=document.createElement('li');li.dataset.stage=stage.id;
     li.innerHTML='<span class="daily-step-number">'+(i+1)+'</span><span><b>'+stage.label+'</b><small>About '+stage.minutes+' min</small></span><span class="daily-step-status"></span>';path.append(li);
   }
-  $('homeProgress').after(path);
+  const nextNote=document.createElement('p');nextNote.id='dailyReadingNext';nextNote.className='daily-reading-note';
+  $('homeProgress').after(nextNote,path);
 
   const fmt=ms=>`${Math.floor(ms/60000)}:${String(Math.floor(ms/1000)%60).padStart(2,'0')}`;
   const mins=ms=>(ms/60000).toFixed(1);
@@ -63,7 +67,7 @@ function createAdventure() {
   const blocked=()=>parentOpen() || modal || !$('adventureIdle').hidden || rewardPending() || !leaseOwned;
   function save() {
     if(!tracker)return;
-    try { localStorage.setItem(KEY,JSON.stringify({sessions:tracker.sessions,dirty:[...dirty],lastSync,goalShown,bonusDay})); savedAt=Date.now(); mirror?.schedule(); }
+    try { localStorage.setItem(KEY,JSON.stringify({sessions:tracker.sessions,dirty:[...dirty],lastSync,goalShown,breakShown,bonusDay})); savedAt=Date.now(); mirror?.schedule(); }
     catch(e){syncMessage='Storage is full or unavailable. Keep this tab open and sync/export your history.';}
   }
   function saveSettings(){try{localStorage.setItem(SETTINGS,JSON.stringify(settings));}catch(e){syncMessage='Settings could not be saved on this device.';}render();}
@@ -81,7 +85,7 @@ function createAdventure() {
     try{settings={...settings,...JSON.parse(localStorage.getItem(SETTINGS)||'{}')};}catch(e){}
     settings.goalMinutes=12;settings.bonusEnabled=false;settings.dailyReadingVersion=1;
     try{localStorage.setItem(SETTINGS,JSON.stringify(settings));}catch(e){}
-    goalShown=data.goalShown || {};bonusDay=data.bonusDay || null;lastSync=data.lastSync || 0;
+    goalShown=data.goalShown || {};breakShown=data.breakShown || {};bonusDay=data.bonusDay || null;lastSync=data.lastSync || 0;
     dirty=new Set(data.dirty || []);
     tracker=new C.Tracker({id:()=>crypto.randomUUID(),sessions:data.sessions || {},onChange:sid=>dirty.add(sid)});
     // A fresh page has its own session ID. Completed events are never counted twice on upload.
@@ -134,17 +138,26 @@ function createAdventure() {
     for(let i=0;i<4;i++)setTimeout(()=>burst([innerWidth*(0.2+i*0.2),innerHeight*0.35],15),i*160);
     return true;
   }
-  function beforeQuestion(){if(!loaded||modal)return false;if(mission.enabled&&dailyStatus().complete){celebrate();return false;}return true;}
+  function offerReadingBreak(){
+    const status=dailyStatus(),key=today()+':'+status.cycle;
+    if(!mission.enabled||!PokeReadingDaily.sitting(status).breakReady||breakShown[key]||tracker.current||blocked()||!speechIdle())return false;
+    breakShown[key]=true;modal=true;readingBreak.hidden=false;tracker.setBlocked(true);save();render();$('readingBreakHome').focus();
+    say('Sounds and words are done. Take a break, or keep reading. Your next part is saved.');return true;
+  }
+  function beforeQuestion(){if(!loaded||modal)return false;if(mission.enabled&&dailyStatus().complete){celebrate();return false;}if(offerReadingBreak())return false;return true;}
   function render() {
     $('app').inert=parentOpen() || modal || !idle.hidden;
     const ms=total(),target=goalMs();
     const dp=dailyStatus();
-    const label=dp.complete?'Read again':dp.ms>0?'Keep reading':'Let’s read';
+    const sitting=PokeReadingDaily.sitting(dp);
+    const label=dp.complete?'Read again':sitting.part===2?'Finish reading':dp.ms>0?'Keep reading':'Let’s read';
     missionButton.querySelector('span').textContent=label;
     missionButton.setAttribute('aria-label',dp.complete?'Read the four stages again':dp.ms>0?'Continue today’s reading':'Start today’s reading');
+    nextNote.textContent=dp.complete?'Today’s reading is done. Come back tomorrow, or choose Read again.':(sitting.part===1?'First sitting: sounds and words.':'Second sitting: actions and a story.')+' Next: '+dp.stage.label+' · '+(sitting.remainingMs?'about '+Math.ceil(sitting.remainingMs/60000)+' min left today.':'finish the last task.');
     for(const [i,li] of [...path.children].entries()){
       const stage=dp.stages[i];li.classList.toggle('complete',stage.complete);li.classList.toggle('current',dp.index===i);
       li.querySelector('.daily-step-status').textContent=stage.complete?'✓':dp.index===i?'Next':'';
+      li.querySelector('small').textContent=stage.complete?'Done':stage.ms>=stage.target?'Finish task':'About '+Math.ceil((stage.target-stage.ms)/60000)+' min left';
       if(dp.index===i)li.setAttribute('aria-current','step');else li.removeAttribute('aria-current');
     }
 
@@ -188,7 +201,7 @@ function createAdventure() {
       const root=cfg.url.replace(/\/+$/,'')+'/fam/'+encodeURIComponent(cfg.code)+'/pokemathAnalytics';
       const upload={};const revisions={};
       for(const id of dirty)if(tracker.sessions[id]){upload['sessions/'+id]=structuredClone(tracker.sessions[id]);revisions[id]=tracker.sessions[id].rev;}
-      upload['devices/'+await deviceId()]={lastSeenAt:Date.now(),build:90,sessionId:tracker.sessionId};
+      upload['devices/'+await deviceId()]={lastSeenAt:Date.now(),build:91,sessionId:tracker.sessionId};
       const r=await fetch(root+'.json',{method:'PATCH',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify(upload),signal:AbortSignal.timeout(15000)});
       if(!r.ok)throw new Error('upload');
       for(const [id,rev] of Object.entries(revisions))if(tracker.sessions[id]?.rev===rev)dirty.delete(id);
@@ -202,8 +215,10 @@ function createAdventure() {
   }
   $('adventurePause').onclick=()=>{tracker.tick();tracker.idle=true;idle.hidden=false;tracker.setBlocked(true);$('adventureResume').focus();render();};
   $('adventureResume').onclick=()=>{idle.hidden=true;tracker.resume();tracker.setBlocked(blocked());render();};
-  function home(){modal=false;goal.hidden=true;idle.hidden=true;shutUp();reading.leave();if(typeof mathPath!=='undefined')mathPath.leave();if(typeof fox!=='undefined')fox.leave();stopZap();stopRace();lnStopLoop();abStopLoop();stopHide();mode='home';show('home');renderBuddyHome();tracker?.setBlocked(false);save();}
+  function home(){modal=false;goal.hidden=true;idle.hidden=true;readingBreak.hidden=true;shutUp();reading.leave();if(typeof mathPath!=='undefined')mathPath.leave();if(typeof fox!=='undefined')fox.leave();stopZap();stopRace();lnStopLoop();abStopLoop();stopHide();mode='home';show('home');renderBuddyHome();tracker?.setBlocked(false);save();}
   $('adventureRest').onclick=home;$('adventureFinish').onclick=home;
+  $('readingBreakHome').onclick=home;
+  $('readingBreakContinue').onclick=()=>{shutUp();readingBreak.hidden=true;modal=false;tracker.resume();tracker.setBlocked(blocked());save();render();};
   $('adventureBonus').onclick=()=>{bonusDay=today();modal=false;goal.hidden=true;tracker.resume();tracker.setBlocked(false);save();render();};
   $('goalMinutes').onchange=()=>{settings.goalMinutes=Number($('goalMinutes').value);saveSettings();};
   $('enableBonus').onchange=()=>{settings.bonusEnabled=$('enableBonus').checked;saveSettings();};
@@ -217,7 +232,7 @@ function createAdventure() {
   window.addEventListener('pagehide',()=>{tracker?.setVisible(false);releaseLease();save();});
   window.addEventListener('online',()=>getSyncCfg().then(sync));
   // Merge other tabs' snapshots before writing the shared local journal.
-  window.addEventListener('storage',ev=>{if(ev.key===KEY && ev.newValue){try{const v=JSON.parse(ev.newValue);tracker?.merge(v.sessions);for(const id of v.dirty || [])dirty.add(id);goalShown={...goalShown,...v.goalShown};}catch(e){}}});
+  window.addEventListener('storage',ev=>{if(ev.key===KEY && ev.newValue){try{const v=JSON.parse(ev.newValue);tracker?.merge(v.sessions);for(const id of v.dirty || [])dirty.add(id);goalShown={...goalShown,...v.goalShown};breakShown={...breakShown,...v.breakShown};}catch(e){}}});
   setInterval(()=>{
     if(!loaded)return;updateLease();tracker.setBlocked(blocked());tracker.tick();
     if(tracker.idle && tracker.current && !document.hidden && !blocked()){idle.hidden=false;tracker.setBlocked(true);$('adventureResume').focus();}

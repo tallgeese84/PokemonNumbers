@@ -64,3 +64,17 @@ test('daily metadata and active day splits survive tracker and mirror; page taps
  const backup=require('../drive-mirror.js').backup({sessions:t.sessions,settings:{goalMinutes:12}});assert.equal(backup.settings.goalMinutes,12);
  assert.equal(Daily.progress(backup.sessions,day).stages[3].ms,2000);assert.match(Daily.report(backup.sessions,day),/not proof of reading aloud/);
 });
+test('two sittings share one target and the rest point requires completed sounds and words',()=>{
+ const qs=[daily('sounds',{activeMs:120000}),daily('sounds'),daily('words',{activeMs:240000,completedAt:null,responses:[]})];
+ let p=Daily.progress(sessions(qs),day);assert.equal(Daily.sitting(p).breakReady,false,'time alone never offers a midpoint break');
+ qs.push(daily('words'),daily('words'));p=Daily.progress(sessions(qs),day);
+ assert.equal(p.stage.id,'actions');assert.deepEqual(Daily.sitting(p),{part:2,breakReady:true,remainingMs:360000});
+ const restored=JSON.parse(JSON.stringify(sessions(qs)));assert.deepEqual(Daily.sitting(Daily.progress(restored,day)),Daily.sitting(p));
+ const tomorrow=Daily.progress(restored,'2026-10-04');assert.equal(Daily.sitting(tomorrow).part,1);assert.equal(tomorrow.ms,0);
+ assert.equal(Daily.progress(restored,day,1).ms,0,'only an explicit new cycle starts another target');
+});
+test('daily story report keeps supported first-response comprehension separate from independent reading',()=>{
+ const qs=[daily('story',{kind:'dailyStory',storyId:'one',teach:true,activeMs:180000}),daily('story',{kind:'dailyQuiz',storyId:'one',helped:true,support:'listening/supported comprehension'})];
+ const stage=Daily.progress(sessions(qs),day).stages[3];assert.equal(stage.independent,0);assert.equal(stage.supportedFirstTry,1);
+ assert.match(Daily.report(sessions(qs),day),/Supported story comprehension: 1\/1 correct/);
+});

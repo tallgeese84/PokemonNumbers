@@ -13,10 +13,16 @@ function progress(sessions,day=C.dayKey(Date.now()),cycle){
   const ms=items.reduce((n,q)=>n+(q.activeByDay?.[day]??q.activeMs??0),0),target=s.minutes*60000;
   const lastStory=items.filter(q=>q.kind==='dailyStory').sort((a,b)=>a.startedAt-b.startedAt).at(-1);
   const practiced=s.id==='story'?!!lastStory?.completedAt&&finished.some(q=>q.kind==='dailyQuiz'&&q.storyId===lastStory.storyId&&q.startedAt>=lastStory.startedAt):finished.filter(q=>q.responses?.length).length>=2;
-  return {...s,ms,target,complete:ms>=target&&practiced,attempts:items.filter(q=>!q.teach&&q.responses?.length).length,independent:checks.filter(C.independent).length,helped:items.filter(q=>q.helped).length};
+  const supported=checks.filter(q=>q.support==='listening/supported comprehension');
+  return {...s,ms,target,complete:ms>=target&&practiced,attempts:items.filter(q=>!q.teach&&q.responses?.length).length,independent:checks.filter(C.independent).length,helped:items.filter(q=>q.helped).length,supported:supported.length,supportedFirstTry:supported.filter(q=>q.responses[0].correct).length};
  });
  const index=stages.findIndex(s=>!s.complete);
  return {day,cycle,stages,index,stage:index<0?null:stages[index],complete:index<0,ms:stages.reduce((n,s)=>n+s.ms,0),creditedMs:stages.reduce((n,s)=>n+Math.min(s.ms,s.target),0),target:720000};
+}
+// Two sittings share the same routine; the midpoint is a completed stage boundary.
+function sitting(status){
+ const firstDone=status.stages.slice(0,2).every(s=>s.complete);
+ return {part:firstDone?2:1,breakReady:firstDone&&!status.complete,remainingMs:Math.max(0,status.target-status.creditedMs)};
 }
 const shuffle=(xs,rnd=Math.random)=>{const a=[...xs];for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
 const parts=(w,n)=>P.annotate(R.clean(w),R.splitWord(w,n));
@@ -99,13 +105,13 @@ function report(sessions,day){
  const all=events(sessions,day);if(!all.length)return 'Daily reading routine: no activity recorded for this date.';
  const cycles=[...new Set(all.map(q=>q.dailyCycle||0))];
  const lines=['Daily reading routine (about 12 active minutes; finish each task):'];
- for(const cycle of cycles){const p=progress(sessions,day,cycle);lines.push('Run '+(cycle+1)+': '+(p.complete?'all four stages complete':'next: '+p.stage.label));for(const s of p.stages)lines.push(s.label+': '+(s.ms/60000).toFixed(1)+' / '+s.minutes+' active min; '+s.independent+'/'+s.attempts+' first-try without help; '+s.helped+' helped steps.');}
+ for(const cycle of cycles){const p=progress(sessions,day,cycle);lines.push('Run '+(cycle+1)+': '+(p.complete?'all four stages complete':'next: '+p.stage.label));for(const s of p.stages)lines.push(s.label+': '+(s.ms/60000).toFixed(1)+' / '+s.minutes+' active min; '+s.independent+'/'+s.attempts+' first-try without help; '+s.helped+' helped steps.'+(s.supported?' Supported story comprehension: '+s.supportedFirstTry+'/'+s.supported+' correct on the first response with supplied words or read-aloud help.':''));}
  lines.push('Story page completion is practice, not proof of reading aloud. Questions after supplied words or read-aloud help are labelled listening/supported comprehension. Timing does not prove mastery.');
  return lines.join('\n');
 }
 function guidance(sessions,day){
  const p=progress(sessions,day);
- return {focus:p.complete?'Today’s four reading stages are complete. Next time, start with sound recall.':'Follow the reading path. Next stage: '+p.stage.label+'.',duration:'About 12 active minutes: sounds 2, blend and build 4, read and act 3, tiny story 3. Finish the current task; pause when needed.',offline:'Read one short page together. Let Jonah try, help with a word when needed, then ask what happened.'};
+ return {focus:p.complete?'Today’s four reading stages are complete. Next time, start with sound recall.':'Follow the reading path. Next stage: '+p.stage.label+'.',duration:'Keep the 12-active-minute goal. Two shorter sittings can share it: sounds 2 + blend and build 4, then read and act 3 + tiny story 3. Finish each task and resume the saved stage after a break.',offline:'Read one short page together. Let Jonah try, help with a word when needed, then ask what happened.'};
 }
-return {VERSION,STAGES,ACTIONS,STORIES,progress,round,report,guidance,taughtWord};
+return {VERSION,STAGES,ACTIONS,STORIES,progress,sitting,round,report,guidance,taughtWord};
 });

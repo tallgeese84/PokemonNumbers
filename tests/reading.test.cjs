@@ -102,6 +102,13 @@ test('readiness reports honest denominators and pace against the P1 timeline',()
  assert.equal(r.rows.find(x=>x.key==='dolch').target,92);assert.equal(r.rows.find(x=>x.key==='cvc').value,null);
  assert.match(R.report({},{},day),/count as helped, not independent/);
 });
+test('current daily story quizzes count as supported comprehension without becoming independent reading',()=>{
+ const qs=[q('book','daily-understand:one',true,{kind:'dailyQuiz',support:'listening/supported comprehension',helped:true}),q('book','daily-understand:two',false,{kind:'dailyQuiz',support:'listening/supported comprehension',helped:true})];
+ const r=R.readiness(sess(qs),{},T0),independent=r.rows.find(x=>x.key==='comp'),supported=r.rows.find(x=>x.key==='supportedComp');
+ assert.equal(independent.value,null);assert.equal(independent.n,0);assert.equal(supported.value,50);assert.equal(supported.n,2);
+ qs.push(q('book','b:1:q',true,{kind:'quiz',support:'independent'}));
+ const later=R.readiness(sess(qs),{},T0).rows.find(x=>x.key==='comp');assert.equal(later.value,100);assert.equal(later.n,1);
+});
 
 /* ---------- the real UI with a small fake DOM ---------- */
 function harness({teaching=false,audioMocks=false,gainMocks=false,audioDuration=200,recordings={}}={}){
@@ -392,4 +399,12 @@ test('tiny story page completion is teaching and read-aloud support follows its 
  for(let i=0;i<3;i++){h.acts().find(b=>['Next story page','Answer the story question'].includes(b.attrs['aria-label'])).click();h.flush(3000);}
  const quiz=h.t.question();assert.equal(quiz.kind,'dailyQuiz');assert.equal(quiz.helped,true);assert.equal(quiz.support,'listening/supported comprehension');assert.equal(C.independent(book),false);
  const it=h.ui._current().item;h.opts().find(b=>Number(b.dataset.k)===it.answer).click();h.flush(3000);assert.equal(C.independent(quiz),false);
+});
+test('optional brief read-aloud observation uses two pages and never changes daily question evidence',()=>{
+ const h=harness();h.ui.renderPanel();
+ const get=id=>h.ctx.document.getElementById(id);
+ get('rdBriefAloud').click();get('rdOk').click();get('rdNo').click();
+ assert.equal(h.ui.state.aloud[1].total,2);assert.equal(h.ui.state.aloud[1].ok,1);assert.equal(h.ui.state.aloud[1].observer,'grown-up');
+ assert.equal(h.answers.length,0);assert.equal(C.allQuestions(h.t.sessions).length,0);
+ h.ui.renderPanel();get('rdBriefAloud').click();get('rdCancelAloud').click();assert.equal(h.ui.state.aloud[1].total,2,'cancel does not write a partial result');
 });

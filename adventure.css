@@ -7,3 +7,7 @@
 @media(prefers-reduced-motion:reduce){.goal-pokemon{animation:none}.goal-sparkles{animation:none}}
 
 .adventure-mission-note{text-align:center;font-size:13px;color:#294c65;margin:-4px 0 18px}
+.daily-reading-note{max-width:440px;margin:12px auto 0;padding:0 12px;line-height:1.5;color:#315c89;font-size:14px}
+.reading-break-dialog{background:#f0f7ff}.reading-break-dialog .adventure-hero{font-size:52px}
+
+#readingBreak{background:#183e6cbc}#readingBreak .reading-break-dialog{background:#f0f7ff;border-color:#c2d9ef;color:#203e63}#readingBreak h2{color:#235d9e}

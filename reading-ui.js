@@ -697,7 +697,8 @@ function createReading(){
   ${profileHTML(s.profile)}
   <details class="assess-box"><summary>Pokémon sound buddies · ${Object.values(bp).filter(x=>x.badge).length}/26 remembered</summary><p class="muted">A badge requires at least five no-picture checks, 80% first-try success across the latest eight, two everyday words, an isolated sound check, and success across days including a later-day check before teaching. This is recognition, not a test of saying the sound aloud.</p><table><tbody>${B.ALL.filter(b=>bp[b.letter].met).map(b=>{const x=bp[b.letter];return `<tr><td>${b.letter.toUpperCase()} · ${b.name}<small>${x.cued} teaching/helped steps</small></td><td>${x.independent}/${x.n} without picture help<small>${x.status}</small></td></tr>`;}).join('')||'<tr><td>No sound-buddy practice yet.</td></tr>'}</tbody></table></details>
   <table class="journal-table"><tbody>${rows}</tbody></table>
-  <div class="pprow reading-tools"><button class="btn" id="rdRecall">Check spoken letter sounds</button><button class="btn" id="rdAloud">Listen to ${esc(childName||'Jonah')} read</button><button class="btn" id="rdPlace">Redo English check</button>
+  <p class="muted">Optional grown-up observation: listen to two short pages without playing the words first. Mark help honestly; this does not change the daily routine or its time target.</p>
+  <div class="pprow reading-tools"><button class="btn" id="rdBriefAloud">Quick read-aloud check (2 pages)</button><button class="btn" id="rdRecall">Check spoken letter sounds</button><button class="btn" id="rdAloud">Listen to ${esc(childName||'Jonah')} read</button><button class="btn" id="rdPlace">Redo English check</button>
   <label>Letter names <select id="rdNames"><option value="auto">On from the start (default)</option><option value="on">On</option><option value="off">Off</option></select></label>
   <label>Move to route <select id="rdMove">${D.ROUTES.map(x=>`<option value="${x.n}" ${x.n===r.route?'selected':''}>${x.n} · ${esc(x.name)}</option>`).join('')}</select></label></div>
   ${state.legacy?`<p class="muted">Imported from the old Poké Reading app: it had reached route ${state.legacy.at} and ${state.legacy.caught.length} Pokémon (added to his collection). Its routes opened on completion rather than mastery, so the reading check decides the starting route.</p>`:''}
@@ -708,7 +709,7 @@ function createReading(){
    for(let n=1;n<=R.LAST;n++){if(n<to)state.passed[n]=state.passed[n]||Date.now();else delete state.passed[n];}
    state.overrideAt=Date.now();save();renderPanel();};
   $('rdPlace').onclick=()=>{if(!confirm('Run the English check again next time he plays?'))return;state.redoCheckAt=Date.now();save();renderPanel();};
-  $('rdAloud').onclick=aloudCheck;$('rdRecall').onclick=recallCheck;
+  $('rdAloud').onclick=()=>aloudCheck();$('rdBriefAloud').onclick=()=>aloudCheck(2);$('rdRecall').onclick=recallCheck;
   renderRec();
  }
  function recallCheck(){
@@ -717,13 +718,15 @@ function createReading(){
    const g=gs[i];box.innerHTML='<p>Show the letter. Ask: “What sound does it make?” Listen before marking. Do not play the sound first.</p><div class="aloud-page" style="font-size:80px;text-align:center">'+g+'</div><div class="pprow"><button class="btn" id="rdRecallYes">Said sound unaided</button><button class="btn" id="rdRecallNo">Needed help</button><button class="btn" id="rdRecallSkip">Skip</button></div>';
    const mark=ok=>{state.recall||={};state.recall[g]={g,ok,at:Date.now(),observer:'grown-up'};save();i++;draw();};$('rdRecallYes').onclick=()=>mark(true);$('rdRecallNo').onclick=()=>mark(false);$('rdRecallSkip').onclick=()=>{i++;draw();};};draw();
  }
- function aloudCheck(){
+ function aloudCheck(limit){
   const s=st(),n=Math.max(1,Math.min(R.LAST,R.currentRoute(s)-(s.books[R.currentRoute(s)]?0:1)))||1;const L=R.route(n);
+  const pages=L.book.pages.slice(0,limit||L.book.pages.length);
   const box=$('readingBody');let p=0,ok=0;
   const draw=()=>{
-   if(p>=L.book.pages.length){state.aloud[n]={at:Date.now(),ok,total:L.book.pages.length,route:n};save();box.innerHTML=`<p><strong>${ok}/${L.book.pages.length} pages read accurately.</strong> Saved to his readiness checklist.</p><button class="btn" id="rdBack">Done</button>`;$('rdBack').onclick=renderPanel;return;}
-   box.innerHTML=`<p class="muted">Hand him the tablet open on “${esc(L.book.title)}” (Games → Books), or read from here together. Mark each page: read every word correctly without help?</p><div class="aloud-page">${esc(L.book.pages[p].t)}</div><div class="pprow"><button class="btn" id="rdOk">✓ Read it</button><button class="btn" id="rdNo">✗ Needed help</button></div><small>Page ${p+1} of ${L.book.pages.length}</small>`;
+   if(p>=pages.length){state.aloud||={};state.aloud[n]={at:Date.now(),ok,total:pages.length,route:n,observer:'grown-up'};save();box.innerHTML=`<p><strong>${ok}/${pages.length} pages read accurately without help.</strong> Saved as a grown-up observation, separate from app choices.</p><button class="btn" id="rdBack">Done</button>`;$('rdBack').onclick=renderPanel;return;}
+   box.innerHTML=`<p class="muted">Listen to “${esc(L.book.title)}” from here together. Mark each page: did he read every word correctly without help? Pause or help him whenever needed.</p><div class="aloud-page">${esc(pages[p].t)}</div><div class="pprow"><button class="btn" id="rdOk">✓ Read it without help</button><button class="btn" id="rdNo">Needed help</button><button class="btn secondary" id="rdCancelAloud">Close check</button></div><small>Page ${p+1} of ${pages.length}</small>`;
    $('rdOk').onclick=()=>{ok++;p++;draw();};$('rdNo').onclick=()=>{p++;draw();};
+   $('rdCancelAloud').onclick=renderPanel;
   };
   draw();
  }

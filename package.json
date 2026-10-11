@@ -1,10 +1,11 @@
 {
   "name": "pokemon-reading-math",
-  "version": "90.0.0",
+  "version": "91.0.0",
   "private": true,
   "scripts": {
     "test": "node --test tests/*.test.cjs",
     "test:nightly": "node tests/nightly-flow.cjs",
+    "test:sittings": "node tests/daily-sittings-flow.cjs",
     "test:relay": "node --test tools/family-relay-tests/family-relay.test.cjs"
   },
   "engines": {"node": ">=20"},

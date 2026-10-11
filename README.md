@@ -1,3 +1,11 @@
+## v91 · Two shorter reading sittings
+
+The daily goal remains **12 active minutes**, with the same four stages and task-completion conditions. After sounds (2 min) and blend/build (4 min) finish, an optional break offers **Take a break** or **Keep reading**. It appears between tasks, and the next sitting resumes the saved actions/story stages; home and reload retain the progress and break choice. A new day starts with sounds. Extra reading still requires the explicit **Read again** action after the routine is complete.
+
+Home shows one next reading action, the next stage and remaining pacing time. The grown-up readiness panel offers the existing read-aloud observation as a brief **two-page check**. Current tiny-story questions now appear in readiness and reports, with supported first-response comprehension shown separately from independent reading. Page taps and time do not establish reading aloud. Pokémon, buddy selection, phonics, blue theme, adaptive route and sync remain intact.
+
+Validation: 155 Node tests, the nightly-plan smoke test and the full-app sitting regression pass. Isolated Chromium checks cover both break choices, reload and same-cycle stage/time resume, pause and active-time accounting, a fresh next day, the optional grown-up check, Pokémon/shiny/buddy preservation and layouts at 320–1024 px without page script errors. The saved position is the current stage and credited task/time history; an unfinished question can be offered again after leaving.
+
 ## v90 · Safer 3D fox on iPad
 
 The 3D fox den now uses less graphics memory on retina tablets (at most 2× pixels, no extra antialiasing, a 1024 px shadow map); the fox model and its textures are unchanged. A crash guard records when the den starts. If Safari ends the page before the den settles, or drops its 3D context, the next visit shows Buddy's picture instead of retrying 3D, so the app cannot crash the same way twice. Treats, toys, leaves and tricks still work in picture mode. **Grown-ups → Jonah's fox → Try the 3D fox again** clears the guard on that device.
