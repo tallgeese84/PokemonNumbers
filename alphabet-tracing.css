@@ -6,9 +6,11 @@
 .trace-view .read-stage {width:100%;display:block}
 .trace-view .read-options:empty,.trace-view .read-feedback:empty {display:none}
 .trace-view .read-prompt {margin-bottom:12px}
-.trace-heading {display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:16px}
+.trace-heading {display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:16px;margin-bottom:16px}
 .trace-heading img {width:82px;height:82px;object-fit:contain}
 .trace-heading p {font-size:20px;margin:0;text-align:left}
+.trace-sound {display:inline-flex;align-items:center;justify-content:center;gap:10px;flex-shrink:0}
+.trace-sound svg {width:32px;height:32px;flex:0 0 32px}
 .trace-case-row {display:flex;justify-content:center;flex-wrap:wrap;gap:12px;margin-bottom:18px}
 #app .trace-case-button {min-width:170px;font-size:22px;padding:10px 18px}
 .trace-case-button b {font-size:38px;display:block;line-height:1.15}
