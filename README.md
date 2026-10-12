@@ -1,6 +1,10 @@
+## v96 · Alphabet practice on the home screen
+
+The large **Pokémon A–Z** button sits directly beneath **Read with a grown-up** on the front page. Jonah can open the sound cards and upper/lowercase tracing without entering the parent menu. Maths games remain in the grown-up choices.
+
 ## v95 · Trace the whole Pokémon alphabet
 
-**Grown-ups → Pokémon A–Z → Trace A a** opens a large stylus workspace for any of the 26 letters. Switch between uppercase and lowercase, hear the existing phonics recording, or watch the strokes. Numbered green starts, forward arrows, writing lines and short cues show the movement; each stroke finishes with a pen lift. Detected pens enable the finger lock, which can be turned off for passive styluses. Try again, Next letter and Back to A–Z are available.
+**Home → Pokémon A–Z → Trace A a** opens a large stylus workspace for any of the 26 letters. Switch between uppercase and lowercase, hear the existing phonics recording, or watch the strokes. Numbered green starts, forward arrows, writing lines and short cues show the movement; each stroke finishes with a pen lift. Detected pens enable the finger lock, which can be turned off for passive styluses. Try again, Next letter and Back to A–Z are available.
 
 All 52 original centre-line models share one print formation set, also used by the older guided writing lessons. See [formation choices and references](docs/letter-formation.md). Completed alphabet traces are guided practice, never independent handwriting mastery. Sound playback remains one recording per tap. The adult daily routine, freewriting, history and earned Pokémon remain intact; its schema stays at version 2.
 

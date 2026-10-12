@@ -23,6 +23,8 @@
 .daily-reading-path small,.daily-step-status {font-size:var(--child-label);line-height:1.4}
 .daily-step-status {grid-column:2;margin-left:0}
 .home-choices {max-width:480px;width:100%;gap:16px}
+.home-alphabet {max-width:480px;min-height:120px;margin:16px auto 20px}
+.home-alphabet-copy small {max-width:230px}
 .home-choices #teamBtn,.home-choices #foxBtn {min-height:112px;padding:16px 20px;gap:18px}
 .home-team-copy {min-width:0}
 .home-team-copy strong,.home-alphabet-copy strong {font-size:clamp(24px,3vw,28px);line-height:1.25}
