@@ -12,7 +12,9 @@
 #app .screen .btn.icon {min-width:60px;padding:12px}
 
 /* The daily path and the two familiar destinations on the home screen. */
+#missionSlot {width:min(100%,440px)}
 #startAdventure {font-size:clamp(30px,4.5vw,38px);line-height:1.25;width:min(440px,100%);min-height:100px;padding:20px 24px;white-space:normal}
+#startAdventure svg {flex:0 0 42px}
 .daily-reading-note {max-width:640px;font-size:var(--child-text);line-height:1.5;padding:0}
 .daily-reading-path {max-width:640px;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .daily-reading-path li {display:grid;grid-template-columns:40px minmax(0,1fr);gap:8px 12px;min-height:124px;padding:18px 16px;align-items:center}
