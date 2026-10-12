@@ -1,0 +1,40 @@
+/* v95: large, centre-line letter formation for a tablet and stylus. */
+.alphabet-letter-card {min-width:0;display:flex;flex-direction:column;gap:8px}
+.alphabet-letter-card .sound-buddy-card {width:100%;flex:1;min-height:210px}
+#app .alphabet-view .alphabet-trace-button {font-size:20px;min-height:56px;padding:10px 8px;width:100%}
+.trace-view .read-card {max-width:780px}
+.trace-view .read-stage {width:100%;display:block}
+.trace-view .read-options:empty,.trace-view .read-feedback:empty {display:none}
+.trace-view .read-prompt {margin-bottom:12px}
+.trace-heading {display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:16px}
+.trace-heading img {width:82px;height:82px;object-fit:contain}
+.trace-heading p {font-size:20px;margin:0;text-align:left}
+.trace-case-row {display:flex;justify-content:center;flex-wrap:wrap;gap:12px;margin-bottom:18px}
+#app .trace-case-button {min-width:170px;font-size:22px;padding:10px 18px}
+.trace-case-button b {font-size:38px;display:block;line-height:1.15}
+.trace-case-button[aria-pressed="true"] {background:#1858a8;color:#fff;border-color:#164b8e}
+.alphabet-tracer {width:100%;max-width:620px;margin:0 auto}
+.trace-steps {display:flex;gap:10px;justify-content:center}
+.trace-steps span {border:2px solid #a2bdd9;border-radius:50%;width:36px;height:36px;display:grid;place-items:center;font-size:22px;font-weight:800;color:#54708a}
+.trace-steps .current {border-color:#147644;background:#e1f8e9;color:#115b36}
+.trace-steps .done {border-color:#147644;background:#147644;color:white}
+.trace-status {font-size:clamp(22px,3vw,26px);font-weight:800;margin:12px 0 4px;color:#174373;line-height:1.35}
+.trace-cue {font-size:var(--child-text);margin:0 0 14px;line-height:1.4;min-height:1.4em}
+.trace-board {display:block;width:100%;height:auto;aspect-ratio:400 / 440;border:3px solid #91b7dc;border-radius:22px;background:white;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;cursor:crosshair;box-sizing:border-box}
+.trace-line {stroke:#d2e1ef;stroke-width:1.5}.trace-middle {stroke-dasharray:7 7}.trace-baseline {stroke:#86a8c7;stroke-width:2}.trace-descender {stroke:#e0e9f2;stroke-dasharray:3 8}
+.trace-ghost {fill:none;stroke:#e2e9f0;stroke-width:24;stroke-linecap:round;stroke-linejoin:round}
+circle.trace-ghost {fill:#e2e9f0;stroke:none}
+.trace-active {fill:none;stroke:#b9d9f8;stroke-width:24;stroke-linecap:round;stroke-linejoin:round}
+circle.trace-active {fill:#b9d9f8;stroke:none}
+.trace-finished {fill:none;stroke:#21936a;stroke-width:9;stroke-linecap:round;stroke-linejoin:round}
+circle.trace-finished {fill:#21936a;stroke:none}
+.trace-arrow {fill:none;stroke:#1d568c;stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round}
+.trace-ink,.trace-demo-ink {fill:none;stroke:#175fbb;stroke-width:7;stroke-linecap:round;stroke-linejoin:round}
+.trace-ink-dot {fill:#175fbb}.trace-start {fill:#167443;stroke:white;stroke-width:2}.trace-demo-dot {fill:#175fbb;stroke:white;stroke-width:2}
+.trace-start-number {font:800 15px system-ui,sans-serif;fill:white;pointer-events:none}
+.trace-tools {display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+.trace-pen-lock {font-size:18px;line-height:1.4;display:flex;align-items:center;justify-content:center;gap:12px;min-height:56px;margin:14px 0}
+.trace-pen-lock input {width:26px;height:26px;flex-shrink:0}
+.trace-view .read-actions {margin-top:16px}
+.trace-parent-note {font-size:18px;line-height:1.5;text-align:left;margin:20px 0 0}
+@media(max-width:420px){.trace-heading {gap:10px;flex-wrap:wrap}.trace-case-row {gap:8px}#app .trace-case-button {min-width:0;flex:1;padding:10px;font-size:20px}.trace-pen-lock {justify-content:flex-start}.trace-status {font-size:22px}.trace-cue {min-height:2.8em}}

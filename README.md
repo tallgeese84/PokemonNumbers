@@ -1,3 +1,11 @@
+## v95 · Trace the whole Pokémon alphabet
+
+**Grown-ups → Pokémon A–Z → Trace A a** opens a large stylus workspace for any of the 26 letters. Switch between uppercase and lowercase, hear the existing phonics recording, or watch the strokes. Numbered green starts, forward arrows, writing lines and short cues show the movement; each stroke finishes with a pen lift. Detected pens enable the finger lock, which can be turned off for passive styluses. Try again, Next letter and Back to A–Z are available.
+
+All 52 original centre-line models share one print formation set, also used by the older guided writing lessons. See [formation choices and references](docs/letter-formation.md). Completed alphabet traces are guided practice, never independent handwriting mastery. Sound playback remains one recording per tap. The adult daily routine, freewriting, history and earned Pokémon remain intact; its schema stays at version 2.
+
+Validation: 173 Node checks and the full adult-session DOM flow, now including upper/lowercase tracing and guided-only trace records. Actual tablet/stylus hardware was not available for a physical-device check.
+
 ## v94 · Larger print for Jonah
 
 Daily instructions and controls now use 20–24 px text, with 30–40 px practice prompts and larger letters, words and writing models. The home path, Pokémon names and writing-pad controls also have larger labels. Cards and buttons grow with the text; the daily path and collection controls stack on smaller screens. The blue theme and existing learning flow are retained.

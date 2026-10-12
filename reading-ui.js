@@ -122,11 +122,13 @@ function createReading(){
  let run=null;            // {round, i, onDone, item, meta, wrong, help, ref}
  let writingPad=null,writingSurface='tablet';
  function closeWritingPad(){writingPad?.destroy();writingPad=null;}
+ let tracingPad=null,tracingPenOnly=false;
+ function closeTracing(){if(tracingPad)tracingPenOnly=tracingPad.penOnly;tracingPad?.destroy();tracingPad=null;root.classList.remove('trace-view');}
  const recent=[];
  const TITLE={actions:'Read and act',buddies:'Sound buddies',reteach:'Sounds again',meet:'New sounds',write:'Writing letters',shapes:'Letter shapes',hunt:'Sound hunt',read:'Read it',build:'Build it',heart:'Tricky words',sentence:'Read and tap',ears:'Sound ears',book:'Book time',name:'Name catch',review:'Remember these',caps:'Capital letters',placement:'Reading check',spell:'Spell it'};
  const INTRO={actions:'Read the word. Choose its action.',buddies:'Let us learn with our sound buddies.',reteach:'Let us look at these sounds again.',meet:'Meet a new letter and its sound.',write:'Trace the letter. Start on the green dot.',shapes:'Find the letter that looks the same.',hunt:'Listen. Find the sound.',read:'Tap each sound. Say them fast. Then find the picture.',build:'Listen, then build the word.',heart:'Tricky words. Learn them by heart.',sentence:'Read it, then tap the right picture.',ears:'Listen with your ears.',book:'Let us read a book.',name:'Read the name to catch the Pokémon!',review:'Do you remember these?',caps:'Find the one written the right way.',placement:'Show me what you can read!',spell:'Listen to the word. Find the letter for the sound.'};
  function setHeader(act,n){$('rdTitle').textContent=TITLE[act]||'Reading';const L=R.route(n);$('rdRoute').innerHTML='';const chip=el('span','route-chip','Route '+n);chip.style.setProperty('--route',L.colour);$('rdRoute').append(chip);}
- function enter(){root.classList.remove('alphabet-view');shutUp();mode='read';show('read');}
+ function enter(){closeTracing();closeWritingPad();root.classList.remove('alphabet-view','daily-reading-view');$('rdOptions').classList.remove('adult-observations');shutUp();mode='read';show('read');}
  function startRound(round,onDone){
   stop();closeWritingPad();
   round=PokeReadingTutor.prepare(round,sessions());
@@ -142,7 +144,7 @@ function createReading(){
  }
  function nextItem(){
   if(!run)return;
-  closeWritingPad();
+  closeWritingPad();closeTracing();
   if(run.round.lazy&&run.i>=run.round.items.length){const nx=run.round.lazy.next();if(nx)run.round.items.push(nx);}
   if(run.i>=run.round.items.length){finishRound();return;}
   const upcoming=run.round.items[run.i];
@@ -183,7 +185,7 @@ function createReading(){
  }
  function advance(){if(!run)return;run.i++;waitReady(nextItem);}
  function finishRound(){
-  closeWritingPad();const r=run;run=null;if(!r)return;
+  closeWritingPad();closeTracing();const r=run;run=null;if(!r)return;
   const done=r.onDone;feedback('');
   waitReady2(()=>done?.());
  }
@@ -541,33 +543,17 @@ function createReading(){
  };
  function recordAction(kind,value){const q=adventure.tracker.question();if(!q)return;q.actions||=[];q.actions.push({kind,value,at:Date.now(),activeMs:q.activeMs});adventure.tracker.changed(run.ref.sid);}
 
- /* ---------- writing (stroke order, generous tolerance) ---------- */
- const NS='http://www.w3.org/2000/svg',TOL=17,SAMPLES=64;
- function svgEl(tag,attrs){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e;}
+ /* ---------- guided manuscript tracing ---------- */
+ function mountTrace(letter,onComplete,onDemonstrate){
+  root.classList.add('trace-view');
+  tracingPad=PokeAlphabetTracing.create($('rdStage'),letter,{active,penOnly:tracingPenOnly,
+   onPenOnly:value=>{tracingPenOnly=value;},onInteract:()=>adventure.tracker?.interact(),onComplete,onDemonstrate});
+ }
  RENDER.write=it=>{
-  const svg=svgEl('svg',{viewBox:'0 0 100 140',class:'write-svg'});$('rdStage').append(svg);
-  const hint=el('div','write-hint');$('rdStage').append(hint);
-  const strokes=D.WRITE[it.letter];let k=0,W=null;
-  replay=()=>sound(it.letter);
-  const draw=()=>{
-   svg.replaceChildren(svgEl('line',{x1:5,y1:56,x2:95,y2:56,class:'wguide'}),svgEl('line',{x1:5,y1:112,x2:95,y2:112,class:'wbase'}));
-   strokes.forEach(d=>svg.append(svgEl('path',{d,class:'wghost'})));for(let i=0;i<k;i++)svg.append(svgEl('path',{d:strokes[i],class:'wdone'}));
-   if(k>=strokes.length){sndGood();addStar(1);hint.textContent='';sound(it.letter,()=>setTimeout(()=>{if(run?.item===it)teachDone();},350));return;}
-   const guide=svgEl('path',{d:strokes[k],class:'wnext'});svg.append(guide);const ink=svgEl('path',{d:'',class:'wink'});svg.append(ink);
-   const len=guide.getTotalLength?guide.getTotalLength():0;const pts=[];for(let i=0;i<SAMPLES;i++){const p=guide.getPointAtLength?guide.getPointAtLength(len*i/(SAMPLES-1)):{x:0,y:0};pts.push({x:p.x,y:p.y});}
-   svg.append(svgEl('circle',{cx:pts[0].x,cy:pts[0].y,r:7,class:'wstart'}));
-   W={pts,ink,reached:0,trail:[],drawing:false,guide};hint.textContent=strokes.length>1?'Stroke '+(k+1)+' of '+strokes.length:'';
-  };
-  const pt=e=>{const r=svg.getBoundingClientRect(),s=Math.min(r.width/100,r.height/140),ox=(r.width-100*s)/2,oy=(r.height-140*s)/2;return {x:(e.clientX-r.left-ox)/s,y:(e.clientY-r.top-oy)/s};};
-  const d2=(a,b)=>(a.x-b.x)**2+(a.y-b.y)**2;
-  svg.addEventListener('pointerdown',e=>{if(!W||!active())return;const p=pt(e);if(d2(p,W.pts[0])>(TOL*1.7)**2&&d2(p,W.pts[W.reached])>(TOL*1.7)**2){hint.textContent='Start on the green dot';return;}W.drawing=true;svg.setPointerCapture?.(e.pointerId);move(e);});
-  const move=e=>{if(!W?.drawing)return;e.preventDefault();const p=pt(e);W.trail.push(p);W.ink.setAttribute('d','M '+W.trail.map(q=>q.x.toFixed(1)+' '+q.y.toFixed(1)).join(' L '));for(let j=W.reached;j<=Math.min(SAMPLES-1,W.reached+12);j++)if(d2(p,W.pts[j])<TOL*TOL)W.reached=j;if(W.reached>=SAMPLES-6){W.drawing=false;k++;W=null;setTimeout(draw,220);}};
-  svg.addEventListener('pointermove',move);
-  const up=()=>{if(!W?.drawing)return;W.drawing=false;if(W.reached<=4){W.trail=[];W.ink.setAttribute('d','');hint.textContent='Start on the green dot';}else hint.textContent='Keep going';};
-  ['pointerup','pointercancel','pointerleave'].forEach(t=>svg.addEventListener(t,up));
-  svg.addEventListener('touchstart',e=>e.preventDefault(),{passive:false});
-  $('rdActions').append(btn('btn read-help','Show me',()=>{if(!W)return;help('stroke shown');const dot=svgEl('circle',{r:6,class:'wdot',cx:W.pts[0].x,cy:W.pts[0].y});svg.append(dot);let i=0;const t=setInterval(()=>{i+=1.4;if(i>=SAMPLES-1||!W){clearInterval(t);dot.remove();return;}const p=W.pts[Math.floor(i)];dot.setAttribute('cx',p.x);dot.setAttribute('cy',p.y);},26);},'👀'));
-  draw();setTimeout(replay,300);
+  let finished=false;
+  replay=()=>{stop();sound(it.letter==='q'?'qu':it.letter);};
+  mountTrace(it.letter,()=>{if(finished)return;finished=true;sndGood();addStar(1);sound(it.letter==='q'?'qu':it.letter,()=>setTimeout(()=>{if(run?.item===it)teachDone();},350));},()=>help('stroke shown'));
+  setTimeout(()=>{if(run?.item===it)replay();},300);
  };
 
  /* ---------- adult-guided daily practice ---------- */
@@ -735,7 +721,7 @@ function createReading(){
   $('rdTitle').textContent='Pokémon alphabet';$('rdPrompt').textContent='My Pokémon alphabet';
   $('rdStage').replaceChildren();$('rdOptions').replaceChildren();$('rdActions').replaceChildren();$('rdPips').replaceChildren();feedback('');
   const ps=B.progress(sessions()),badges=Object.values(ps).filter(x=>x.badge).length;
-  $('rdStage').append(el('p','buddy-collection-note','Tap a letter. Listen, then say the sound.'));
+  $('rdStage').append(el('p','buddy-collection-note','Tap a Pokémon to hear its sound. Tap Trace to write.'));
   const grid=el('div','sound-buddy-grid');grid.setAttribute('aria-label','All 26 letter sounds');
   let selected=null;
   const learn=btn('btn read-next','Choose a letter, then practise together',()=>{if(selected)startBuddies([selected.letter]);},'Practise together');learn.disabled=true;
@@ -753,10 +739,30 @@ function createReading(){
   };
   for(const b of B.ALL){const card=btn('sound-buddy-card'+(ps[b.letter].badge?' remembered':''),'Hear '+b.letter.toUpperCase()+', '+b.name,card=>playBuddy(b,card),'');
    card.dataset.letter=b.letter;card.setAttribute('aria-pressed','false');
-   card.append(el('span','buddy-card-letter',b.letter.toUpperCase()+' '+b.letter),buddyImage(b,'buddy-card-mon'),el('span','buddy-card-name',b.name),el('span','buddy-card-status',b.letter==='x'?'box · end sounds':b.letter==='q'?'qu · queen':b.keyword));grid.append(card);}
+   card.append(el('span','buddy-card-letter',b.letter.toUpperCase()+' '+b.letter),buddyImage(b,'buddy-card-mon'),el('span','buddy-card-name',b.name),el('span','buddy-card-status',b.letter==='x'?'box · end sounds':b.letter==='q'?'qu · queen':b.keyword));
+   const pair=el('div','alphabet-letter-card');pair.append(card,btn('btn alphabet-trace-button','Trace '+b.letter.toUpperCase()+' and '+b.letter,()=>openAlphabetTrace(b.letter,'upper'),'Trace '+b.letter.toUpperCase()+' '+b.letter));grid.append(pair);}
   $('rdOptions').append(grid);
   $('rdActions').append(learn,btn('btn','Letter writing and other sounds',()=>{stop();openLetterTiles();},'Write & sounds'),el('p','buddy-collection-note',badges+' / 26 remembered in practice'));
   replay=()=>speak('Tap a letter. Listen, then say the sound.',{rate:.8});
+ }
+ function openAlphabetTrace(letter,letterCase='upper'){
+  const buddy=B.ALL.find(b=>b.letter===letter);if(!buddy)return;
+  stop();enter();run=null;adventure.section?.('cards');setHeader('write',R.currentRoute(st()));
+  const upper=letterCase==='upper',glyph=upper?letter.toUpperCase():letter;
+  $('rdTitle').textContent='Trace '+glyph;$('rdRoute').textContent='Pokémon A–Z · '+(B.ALL.indexOf(buddy)+1)+' of 26';
+  $('rdPrompt').textContent='Trace '+glyph;
+  for(const id of ['rdStage','rdOptions','rdActions','rdPips'])$(id).replaceChildren();feedback('');
+  const heading=el('div','trace-heading');heading.append(buddyImage(buddy,'trace-buddy'),el('p','',buddy.name+' · '+(letter==='x'?'end of box':letter==='q'?'qu as in queen':buddy.keyword)));
+  const hear=()=>{stop();shutUp();audio();if(!soundOn)$('soundBtn').click();adventure.recordListening?.({section:'read',skill:'buddies',kind:'buddyListen',phase:'trace',item:'g:'+buddy.g,buddyLetter:letter,buddyCue:true});sound(buddy.g);};
+  heading.append(btn('btn trace-sound','Hear the sound for '+glyph,hear,PokeVisuals.icon('listen')+' Hear sound'));$('rdStage').append(heading);replay=hear;
+  const cases=el('div','trace-case-row');cases.setAttribute('aria-label','Choose uppercase or lowercase');
+  for(const [value,label,g]of [['upper','Uppercase',letter.toUpperCase()],['lower','Lowercase',letter]]){const b=btn('btn trace-case-button','Trace '+label.toLowerCase()+' '+g,()=>{if(value!==letterCase)openAlphabetTrace(letter,value);},'<b>'+g+'</b>'+label);b.setAttribute('aria-pressed',String(value===letterCase));cases.append(b);}
+  $('rdStage').append(cases);let saved=false;
+  mountTrace(glyph,()=>{feedback('Well done tracing '+glyph+'!');sndGood();if(saved)return;saved=true;
+   adventure.recordListening?.({section:'read',skill:'write',kind:'alphabetTrace',phase:'guided',item:'trace:'+glyph,letter,letterCase,formationVersion:PokeLetterFormation.VERSION,traceCompleted:true,strokeCount:PokeLetterFormation.DATA[glyph].length});
+  });
+  $('rdActions').append(btn('btn','Back to Pokémon A to Z',openLetters,'Back to A–Z'),btn('btn read-next','Next letter',()=>openAlphabetTrace(B.ALL[(B.ALL.indexOf(buddy)+1)%26].letter,letterCase),'Next letter →'));
+  const note=el('details','trace-parent-note');note.append(el('summary','','For grown-ups'),el('p','','These are print letter guides, with single-storey a and g. Trace a few letters together. School handwriting styles can differ; use the school’s model if its strokes differ. Tracing practice is recorded separately from writing on his own.'));$('rdActions').append(note);
  }
  function esc(x){return String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
@@ -850,7 +856,7 @@ function createReading(){
   catch(e){alert('Microphone not available on this device.');}
  }
 
- function leave(){stop();closeWritingPad();run=null;root.classList.remove('daily-reading-view');$('rdOptions').classList.remove('adult-observations');}
+ function leave(){stop();closeWritingPad();closeTracing();run=null;root.classList.remove('daily-reading-view');$('rdOptions').classList.remove('adult-observations');}
  // read-only hook for the browser regression script; children never see it
  const _current=()=>run&&{item:run.item,act:run.round.act,i:run.i,placement:!!run.round.placement};
  const _round=(act,n)=>startRound(R.makeRound(act,n,sessions(),st()),()=>{});

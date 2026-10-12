@@ -67,5 +67,17 @@ async function until(fn,label){const start=Date.now();while(Date.now()-start<100
  assert.equal(w.localStorage.getItem('cubs_caught'),'25,151,382');assert.equal(w.localStorage.getItem('cubs_pbuddy'),'151');assert.equal(w.localStorage.getItem('cubs_shiny'),'151');
  assert.equal(w.eval('adventure.tracker.sessions["sittings-synthetic"].rev'),old.rev,'old history unchanged');
  now=Date.parse('2026-10-12T15:00:00Z');assert.equal(w.eval('adventure.dailyStatus().stage.id'),'sounds');assert.equal(w.eval('adventure.dailyStatus().creditedMs'),0);
- assert.deepEqual(errors,[]);w.close();server.close();console.log('PASS: adult start, all four stages, stylus writing, blank memory pad, saved ink, honest helped/not-yet outcomes, paper option, midpoint break, reload/resume, pause, completion without forced minutes, next day, old history and Pokémon preserved.');
+ // The actual alphabet screen mounts the same tested stylus component. It
+ // records guided tracing only, and never changes the next adult sitting.
+ const nextStage=w.eval('adventure.dailyStatus().stage.id');w.eval('reading.openLetters()');
+ assert.equal(d.querySelectorAll('.alphabet-trace-button').length,26);click(d.querySelector('[aria-label="Trace A and a"]'));
+ assert(d.querySelector('.trace-board'));assert.equal($('rdPrompt').textContent,'Trace A');click(d.querySelector('[aria-label="Trace lowercase a"]'));
+ assert.equal($('rdPrompt').textContent,'Trace a');const board=d.querySelector('.trace-board');board.getBoundingClientRect=()=>({left:0,top:0,width:400,height:440});
+ const traceEvent=(name,p)=>{const e=new w.Event(name,{bubbles:true,cancelable:true});Object.assign(e,{pointerId:3,pointerType:'pen',button:0,clientX:p.x,clientY:p.y});board.dispatchEvent(e);};
+ for(const stroke of w.PokeLetterFormation.DATA.a){traceEvent('pointerdown',stroke.points[0]);for(let i=6;i<stroke.points.length;i+=6)traceEvent('pointermove',stroke.points[i]);traceEvent('pointerup',stroke.points.at(-1));}
+ assert.match(d.querySelector('.trace-status').textContent,/You traced a/);
+ const traceRecords=w.eval('Object.values(adventure.tracker.sessions).flatMap(s=>Object.values(s.questions)).filter(q=>q.kind==="alphabetTrace")');assert.equal(traceRecords.length,1);assert.equal(traceRecords[0].teach,true);assert.equal(traceRecords[0].letterCase,'lower');assert.equal(traceRecords[0].responses.length,0);assert.equal(w.PokeLearning.independent(traceRecords[0]),false);
+ click(d.querySelector('[aria-label="Next letter"]'));assert.equal($('rdPrompt').textContent,'Trace b');assert(d.querySelector('.trace-pen-lock input').checked);click(d.querySelector('[aria-label="Back to Pokémon A to Z"]'));assert.equal(d.querySelector('.trace-board'),null);
+ assert.equal(w.eval('adventure.dailyStatus().stage.id'),nextStage);assert.equal(w.localStorage.getItem('cubs_caught'),'25,151,382');assert.equal(w.eval('adventure.tracker.sessions["sittings-synthetic"].rev'),old.rev);
+ assert.deepEqual(errors,[]);w.close();server.close();console.log('PASS: adult start, all four stages, stylus writing, blank memory pad, saved ink, honest helped/not-yet outcomes, paper option, midpoint break, reload/resume, pause, completion without forced minutes, next day, old history and Pokémon preserved, all 26 alphabet choices, uppercase/lowercase tracing, pen lock across letters and guided-only trace records.');
 })().catch(e=>{console.error(e);process.exit(1);});

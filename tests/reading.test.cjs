@@ -124,9 +124,9 @@ function harness({teaching=false,audioMocks=false,gainMocks=false,audioDuration=
   click(){if(!this.disabled)this.onclick?.();}addEventListener(){}
   all(){return [this,...this.children.flatMap(c=>c.all())];}
   querySelectorAll(sel){return this.all().slice(1).filter(e=>sel.startsWith('.')?e._cls.has(sel.slice(1)):e.tag===sel);}querySelector(sel){return this.querySelectorAll(sel)[0]||null;}}
- const els={},data={...recordings},spoken=[],utterances=[],played=[],players=[],listened=[],t=new C.Tracker({now:()=>now}),helps=[],answers=[];
+ const els={},data={...recordings},traces=[],spoken=[],utterances=[],played=[],players=[],listened=[],t=new C.Tracker({now:()=>now}),helps=[],answers=[];
  const adventure={dailyStatus:()=>require('../reading-daily.js').progress(t.sessions,C.dayKey(now)),recordState(){},recordListening:meta=>listened.push(meta),get tracker(){return t;},begin:meta=>t.begin(meta),respond:(v,c)=>{answers.push({v,c});t.answer(v,c);},help:k=>{helps.push(k);t.help(k);},isPaused:()=>false,beforeQuestion:()=>true};
- const ctx={PokeReadingDaily:require('../reading-daily.js'),PokeSoundBuddies:require('../reading-buddies.js'),PokePhonics:require('../reading-phonics.js'),PokeReadingTutor:teaching?require('../reading-tutor.js'):{prepare:r=>r},PokeReadingCore:R,PokeReadingData:D,PokeLearning:C,PokeReadingAssess:require('../reading-assess.js'),adventure,screens:{},mode:'home',soundOn:true,childName:'Jonah',caught:[],stars:0,
+ const ctx={PokeLetterFormation:require('../letter-formation.js'),PokeAlphabetTracing:{create:(host,letter,options)=>{const pad={host,letter,options,penOnly:false,destroy(){this.destroyed=true;}};traces.push(pad);return pad;}},PokeReadingDaily:require('../reading-daily.js'),PokeSoundBuddies:require('../reading-buddies.js'),PokePhonics:require('../reading-phonics.js'),PokeReadingTutor:teaching?require('../reading-tutor.js'):{prepare:r=>r},PokeReadingCore:R,PokeReadingData:D,PokeLearning:C,PokeReadingAssess:require('../reading-assess.js'),adventure,screens:{},mode:'home',soundOn:true,childName:'Jonah',caught:[],stars:0,
   document:{createElement:tag=>new El(tag),createElementNS:(_,tag)=>new El(tag),createTextNode:s=>{const e=new El('#text');e._text=s;return e;},getElementById:id=>els[id]||=new El(),body:{dataset:{}}},
   window:{speechSynthesis:{getVoices:()=>[],speak:u=>{spoken.push(u.text);utterances.push(u);timers.push({at:now+20,f:()=>u.onend?.()});},cancel(){}}},
   SpeechSynthesisUtterance:function(text){this.text=text;},
@@ -141,7 +141,7 @@ function harness({teaching=false,audioMocks=false,gainMocks=false,audioDuration=
  vm.createContext(ctx);vm.runInContext(fs.readFileSync(require.resolve('../reading-art.js'),'utf8'),ctx);vm.runInContext(fs.readFileSync(require.resolve('../reading-ui.js'),'utf8')+'\nvar ui=createReading();',ctx);
  const flush=(ms=5000)=>{const end=now+ms;for(let guard=0;guard<5000;guard++){timers.sort((a,b)=>a.at-b.at);const t0=timers[0];if(!t0||t0.at>end)break;timers.shift();now=Math.max(now,t0.at);t0.f();}now=end;};
  const opts=()=>els.rdOptions.children,acts=()=>els.rdActions.children;
- return {ctx,ui:ctx.ui,t,spoken,utterances,played,players,listened,ramps,helps,answers,flush,opts,acts,data};
+ return {ctx,ui:ctx.ui,t,traces,spoken,utterances,played,players,listened,ramps,helps,answers,flush,opts,acts,data};
 }
 test('Read it never says the word before he answers; the app sounds out only on request or after a miss',()=>{
  const h=harness();h.ui._round('read',1);h.flush();
@@ -313,7 +313,7 @@ test('asking for a buddy in a no-picture check saves help and cannot earn indepe
 test('one alphabet page shows all 26 Pokémon; each tap plays once without an automatic repeat',()=>{
  const h=harness({audioMocks:true});h.ui.openLetters();h.flush();
  assert.equal(h.spoken.length,0,'poster opens quietly without narration to interrupt');
- const cards=h.opts()[0].children,names=cards.flatMap(c=>c.all().filter(x=>x.tag==='img').map(x=>x.alt));
+ const cards=h.opts()[0].querySelectorAll('.sound-buddy-card'),names=cards.flatMap(c=>c.all().filter(x=>x.tag==='img').map(x=>x.alt));
  assert.equal(cards.length,26);assert.equal(names.length,26);assert.equal(new Set(names).size,26);
  assert.equal(cards.map(c=>c.dataset.letter).join(''),'abcdefghijklmnopqrstuvwxyz');
  h.ctx.document.getElementById('rdListen').click();h.flush();assert.ok(h.utterances[0].rate<=.7,'slower spoken instructions on request');
@@ -327,7 +327,7 @@ test('one alphabet page shows all 26 Pokémon; each tap plays once without an au
  h.acts().find(b=>b.attrs['aria-label']==='Practise P together').click();h.flush(18000);assert.equal(h.ui._current().item.kind,'buddyMeet');
 });
 test('each new tap on the same letter plays once and records listening only',()=>{
- const h=harness({audioMocks:true});h.ui.openLetters();const p=h.opts()[0].children.find(c=>c.dataset.letter==='p');
+ const h=harness({audioMocks:true});h.ui.openLetters();const p=h.opts()[0].querySelectorAll('.sound-buddy-card').find(c=>c.dataset.letter==='p');
  p.click();h.flush(40);p.click();h.flush(40);p.click();
  assert.equal(h.played.length,3);assert.equal(h.listened.length,3);
  h.flush(2200);assert.equal(h.played.length,3);assert.equal(p.classList.contains('playing'),false);assert.ok(h.players.every(p=>p.paused));
@@ -335,7 +335,7 @@ test('each new tap on the same letter plays once and records listening only',()=
 });
 test('switching letters releases the playing clip over 75ms, then stops it without interrupting the next clip',()=>{
  for(const gainMocks of [false,true]){
-  const h=harness({audioMocks:true,gainMocks});h.ui.openLetters();const cards=h.opts()[0].children;
+  const h=harness({audioMocks:true,gainMocks});h.ui.openLetters();const cards=h.opts()[0].querySelectorAll('.sound-buddy-card');
   cards[0].click();h.flush(40);const old=h.players[0];cards[1].click();
   assert.equal(old.paused,undefined,'no immediate hard stop');assert.equal(old.onended,null,'cancelled completion cannot change the new playback');
   if(gainMocks){assert.equal(h.ramps.length,1);assert.equal(h.ramps[0].value,0);assert.ok(Math.abs(h.ramps[0].at-h.ramps[0].started-.075)<.001);}
@@ -345,7 +345,7 @@ test('switching letters releases the playing clip over 75ms, then stops it witho
  }
 });
 test('new taps and leaving cancel old audio; Q and X each play one complete recording',()=>{
- const h=harness({audioMocks:true});h.ui.openLetters();h.flush();const cards=h.opts()[0].children;
+ const h=harness({audioMocks:true});h.ui.openLetters();h.flush();const cards=h.opts()[0].querySelectorAll('.sound-buddy-card');
  cards.find(c=>c.dataset.letter==='p').click();h.flush(220);
  cards.find(c=>c.dataset.letter==='s').click();h.flush(2200);
  assert.deepEqual(h.played.map(x=>x.src.split('/').at(-1)),['p.wav','s.wav']);assert.ok(h.players[0].paused);
@@ -356,7 +356,7 @@ test('new taps and leaving cancel old audio; Q and X each play one complete reco
  h.played.length=0;cards[0].click();h.ui.leave();h.flush(5000);assert.equal(h.played.length,1);assert.ok(h.players.at(-1).paused);
 });
 test('a natural recording finishes once at its original speed and can be replayed by tapping',()=>{
- const h=harness({audioMocks:true,audioDuration:1942});h.ui.openLetters();const m=h.opts()[0].children.find(c=>c.dataset.letter==='m');m.click();
+ const h=harness({audioMocks:true,audioDuration:1942});h.ui.openLetters();const m=h.opts()[0].querySelectorAll('.sound-buddy-card').find(c=>c.dataset.letter==='m');m.click();
  h.flush(1941);assert.equal(h.played.length,1);assert.equal(h.players[0].paused,undefined);assert.equal(m.classList.contains('playing'),true);
  h.flush(1);assert.equal(h.players[0].paused,true);assert.equal(m.classList.contains('playing'),false);
  h.flush(5000);assert.equal(h.played.length,1);m.click();assert.equal(h.played.length,2);
@@ -368,7 +368,7 @@ test('letter tile names wait for the full recording, and parent recordings still
  h.opts()[0].children.find(b=>b.attrs['aria-label']==='Sound s').click();
  h.flush(900);assert.ok(!h.spoken.includes('the letter S'));h.flush(1010);assert.ok(h.spoken.includes('the letter S'));
  const custom='data:audio/webm;base64,parent-recording';
- const parent=harness({audioMocks:true,recordings:{poke_reading_rec_p:custom}});parent.ui.openLetters();parent.opts()[0].children.find(c=>c.dataset.letter==='p').click();assert.equal(parent.played[0].src,custom);
+ const parent=harness({audioMocks:true,recordings:{poke_reading_rec_p:custom}});parent.ui.openLetters();parent.opts()[0].querySelectorAll('.sound-buddy-card').find(c=>c.dataset.letter==='p').click();assert.equal(parent.played[0].src,custom);
 });
 
 function seedDailyStages(h,count){
@@ -407,4 +407,20 @@ test('optional brief read-aloud observation uses two pages and never changes dai
  assert.equal(h.ui.state.aloud[1].total,2);assert.equal(h.ui.state.aloud[1].ok,1);assert.equal(h.ui.state.aloud[1].observer,'grown-up');
  assert.equal(h.answers.length,0);assert.equal(C.allQuestions(h.t.sessions).length,0);
  h.ui.renderPanel();get('rdBriefAloud').click();get('rdCancelAloud').click();assert.equal(h.ui.state.aloud[1].total,2,'cancel does not write a partial result');
+});
+
+
+test('A–Z offers all 52 trace forms, preserves one sound per tap, and cleans up when switching',()=>{
+ const h=harness({audioMocks:true}),stage=()=>h.ctx.document.getElementById('rdStage'),buttons=()=>stage().all().filter(x=>x.tag==='button');
+ for(const letter of 'abcdefghijklmnopqrstuvwxyz'){
+  h.ui.openLetters();const trace=h.opts()[0].querySelectorAll('.alphabet-trace-button').find(b=>b.attrs['aria-label']==='Trace '+letter.toUpperCase()+' and '+letter);assert(trace);trace.click();
+  assert.equal(h.traces.at(-1).letter,letter.toUpperCase());assert.equal(h.ui._current(),null);
+  const upper=h.traces.at(-1);buttons().find(b=>b.attrs['aria-label']==='Trace uppercase '+letter.toUpperCase()).click();assert.equal(h.traces.at(-1),upper,'same-case button keeps the current trace');
+  buttons().find(b=>b.attrs['aria-label']==='Trace lowercase '+letter).click();assert(upper.destroyed);assert.equal(h.traces.at(-1).letter,letter);
+  const before=h.played.length;buttons().find(b=>b.attrs['aria-label']==='Hear the sound for '+letter).click();h.flush(5000);assert.equal(h.played.length,before+1);
+  if(letter==='q')assert.match(h.played.at(-1).src,/qu.wav$/);if(letter==='x')assert.match(h.played.at(-1).src,/x.wav$/);
+ }
+ const pad=h.traces.at(-1);pad.options.onComplete();pad.options.onComplete();const marks=h.listened.filter(x=>x.kind==='alphabetTrace');assert.equal(marks.length,1);assert.equal(marks[0].letterCase,'lower');assert.equal(marks[0].strokeCount,1);assert.equal(marks[0].item,'trace:z');assert.equal(h.answers.length,0);assert.equal(h.ctx.stars,0);
+ h.acts().find(b=>b.attrs['aria-label']==='Next letter').click();assert(pad.destroyed);assert.equal(h.traces.at(-1).letter,'a','next preserves lowercase and wraps Z to A');
+ const last=h.traces.at(-1);h.acts().find(b=>b.attrs['aria-label']==='Back to Pokémon A to Z').click();assert(last.destroyed);assert.equal(h.opts()[0].querySelectorAll('.sound-buddy-card').length,26);
 });

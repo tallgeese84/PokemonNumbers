@@ -1,0 +1,11 @@
+# Print letter formation, version 1
+
+The 52 models in `letter-formation.js` are original centre-line SVG paths. They are not font outlines. The same models drive the alphabet workspace and the older guided writing lessons. The old `reading-data.js` WRITE roster remains for route selection only.
+
+Formation was checked against [Reading Universe's Recognizing and Forming Letters chart](https://readinguniverse.org/resources/pdf/handwriting-spelling-typing/letter-formation-cards) and the [University of Utah Reading Clinic's letter-formation guidance](https://uurc.utah.edu/general/letterformation.php). These sources include legitimate differences in pen lifts and order; this app teaches one consistent print set, not a claim that every school uses an identical method.
+
+Choices include single-storey a/g, plain l, crossed capital I, and a right-hooked q. The a/d/g/q family closes an anticlockwise bowl before a separate downward stem. The b/h/m/n/p/r family retraces its stem without a pen lift. Crossbars go left to right. Dots on i/j are separate final touches. Capitals I/T use the main downward stroke before their bars; H uses both stems before its bar. Each M command is a lift; L/C commands remain one stroke. Short cues, numbered starts, moving arrows, and the animation all follow this same data.
+
+The writing area uses top/middle/base/descender lines at 60/180/300/390 within a 400×440 coordinate system, scaled uniformly on the tablet. Tracking uses ordered local path projections with an 18-unit tolerance and requires a pen lift between strokes. It is a generous tracing guide, not a handwriting assessment. A completed alphabet trace is saved as a guided teaching record with no scored responses; animation and sound taps cannot complete a trace. The adult writing-from-memory stage remains a blank freewriting pad with an adult observation.
+
+Validation covers every forward path at multiple pointer-event spacings, wrong starts, reverse circles, curve/corner shortcuts, partial resumption, dots, stroke order/lifts, resizing, pen/palm handling, pause/cancel, animation cleanup, both cases for every alphabet choice, Q/X recordings, and a full-app trace with preserved adult routine and existing Pokémon.
