@@ -27,6 +27,7 @@ async function until(fn,label){const start=Date.now();while(Date.now()-start<100
  w.eval('addStar=()=>{}');
  const start=async()=>{click($('startAdventure'));await until(()=>!$('adultReady').hidden,'adult preparation');assert.equal(w.eval('adventure.tracker.current'),null);click($('adultReadyStart'));await until(()=>w.eval('adventure.tracker.question()')?.observer==='grown-up','adult task');};
  const observe=async(outcome='independent')=>{const id=w.eval('adventure.tracker.question().id');click(d.querySelector('[data-outcome="'+outcome+'"]'));assert.equal(w.eval('adventure.tracker.current'),null);click(d.querySelector('#rdActions .read-next'));await until(()=>w.eval('adventure.tracker.question()')?.id!==id&&w.eval('adventure.tracker.question()'),'next task');};
+ const draw=()=>{const canvas=d.querySelector('.adult-writing-canvas');assert(canvas);canvas.getBoundingClientRect=()=>({left:0,top:0,width:400,height:250});for(const [name,x,y] of [['pointerdown',100,70],['pointermove',130,170],['pointerup',180,170]]){const e=new w.Event(name,{bubbles:true,cancelable:true});Object.assign(e,{pointerId:1,pointerType:'pen',button:0,clientX:x,clientY:y});canvas.dispatchEvent(e);}};
  const finishPart=async()=>{assert.equal(w.eval('adventure.tracker.question().kind'),'adultStageEnd');click(d.querySelector('#rdActions .read-next'));await sleep(40);};
  assert.equal(w.eval('adventure.dailyStatus().stage.id'),'sounds','old choice routine does not count as an adult observation');
  assert.match($('startAdventure').textContent,/grown-up/);await start();
@@ -44,10 +45,20 @@ async function until(fn,label){const start=Date.now();while(Date.now()-start<100
  dom=await load();w=dom.window;d=w.document;$=id=>d.getElementById(id);w.eval('addStar=()=>{}');
  assert.equal(w.eval('adventure.dailyStatus().cycle'),0);assert.equal(w.eval('adventure.dailyStatus().stage.id'),'writing');assert.equal(w.eval('adventure.dailyStatus().creditedMs'),minutes);
  await start();assert.equal(w.eval('adventure.tracker.question().writingMode'),'copy');
+ assert.equal(w.eval('adventure.tracker.question().writingSurface'),'tablet');
+ click(d.querySelector('[data-outcome="independent"]'));assert(w.eval('adventure.tracker.current'),'a blank pad cannot be marked as written');assert.match($('rdFeedback').textContent,/writing in the box/);
  click($('adventurePause'));assert.equal($('adventureIdle').hidden,false);const active=w.eval('adventure.tracker.question().activeMs');now+=3000;w.eval('adventure.tracker.tick()');assert.equal(w.eval('adventure.tracker.question().activeMs'),active);
+ draw();assert.equal(w.eval('adventure.tracker.question().writingSample.strokes.length'),0,'paused drawing is ignored');
  click($('adventureResume'));now+=1000;w.eval('adventure.tracker.tick()');assert(w.eval('adventure.tracker.question().activeMs')>active);
+ draw();assert.equal(w.eval('adventure.tracker.question().writingSample.strokes.length'),1);assert(d.querySelector('.adult-pen-option input').checked);
+ const copyRef=w.eval('JSON.parse(JSON.stringify(adventure.tracker.current))');
  await observe();assert.equal(w.eval('adventure.tracker.question().writingMode'),'memory');assert.equal(d.querySelector('.adult-letter').textContent,'?');
- click([...d.querySelectorAll('#rdActions button')].find(b=>b.textContent==='Show the letter'));await observe('independent');
+ assert.equal(w.eval('adventure.tracker.question().writingSample.strokes.length'),0,'memory turn starts with a blank pad');
+ assert.equal(w.eval('adventure.tracker.sessions["'+copyRef.sid+'"].questions["'+copyRef.qid+'"].writingSample.strokes.length'),1,'copy sample stays in history');
+ const memoryRef=w.eval('JSON.parse(JSON.stringify(adventure.tracker.current))');
+ click([...d.querySelectorAll('#rdActions button')].find(b=>b.textContent==='Show the letter'));draw();await observe('independent');
+ assert.equal(w.eval('adventure.tracker.sessions["'+memoryRef.sid+'"].questions["'+memoryRef.qid+'"].adultOutcome'),'helped','revealing the model prevents an unaided mark');
+ click(d.querySelector('[aria-label="Write on paper"]'));assert.equal(w.eval('adventure.tracker.question().writingSurface'),'paper');assert.equal(d.querySelector('.adult-writing-pad').hidden,true);await observe('helped');
  while(w.eval('adventure.tracker.question().kind')!=='adultStageEnd')await observe('not-yet');
  await finishPart();await until(()=>w.eval('adventure.tracker.question()')?.dailyStage==='story','supported reading');
  while(w.eval('adventure.tracker.question().kind')!=='adultStageEnd')await observe('helped');
@@ -56,5 +67,5 @@ async function until(fn,label){const start=Date.now();while(Date.now()-start<100
  assert.equal(w.localStorage.getItem('cubs_caught'),'25,151,382');assert.equal(w.localStorage.getItem('cubs_pbuddy'),'151');assert.equal(w.localStorage.getItem('cubs_shiny'),'151');
  assert.equal(w.eval('adventure.tracker.sessions["sittings-synthetic"].rev'),old.rev,'old history unchanged');
  now=Date.parse('2026-10-12T15:00:00Z');assert.equal(w.eval('adventure.dailyStatus().stage.id'),'sounds');assert.equal(w.eval('adventure.dailyStatus().creditedMs'),0);
- assert.deepEqual(errors,[]);w.close();server.close();console.log('PASS: adult start, all four stages, honest helped/not-yet outcomes, paper copying vs memory, midpoint break, reload/resume, pause, completion without forced minutes, next day, old history and Pokémon preserved.');
+ assert.deepEqual(errors,[]);w.close();server.close();console.log('PASS: adult start, all four stages, stylus writing, blank memory pad, saved ink, honest helped/not-yet outcomes, paper option, midpoint break, reload/resume, pause, completion without forced minutes, next day, old history and Pokémon preserved.');
 })().catch(e=>{console.error(e);process.exit(1);});

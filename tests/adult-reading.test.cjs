@@ -38,9 +38,10 @@ test('helped and not-yet outcomes finish an observation honestly; models cannot 
  const t=new C.Tracker({now:()=>at});t.begin({section:'read',observer:'grown-up',item:'adult:sound:s'});const q=t.question();t.observe('independent');assert(C.independent(q));assert.equal(R.itemStats(t.sessions)['g:s'],undefined);
 });
 test('adult evidence survives merge/export and reports copying separately from memory',()=>{
- const sessions=wrap([{kind:'adultWrite',dailyStage:'writing',word:'s',writingMode:'copy',adultOutcome:'independent'},{kind:'adultWrite',dailyStage:'writing',word:'s',writingMode:'memory',adultOutcome:'helped'}]);
+ const ink={version:1,strokes:[[[20,30],[40,50]]],inputs:['pen']};
+ const sessions=wrap([{kind:'adultWrite',dailyStage:'writing',word:'s',writingMode:'copy',adultOutcome:'independent'},{kind:'adultWrite',dailyStage:'writing',word:'s',writingMode:'memory',writingSurface:'tablet',writingSample:ink,adultOutcome:'helped'}]);
  sessions.legacy={id:'legacy',rev:8,days:{},questions:{q:{id:'q',word:'pin',dailyVersion:1}}};const before=JSON.stringify(sessions.legacy);
  const exported=M.backup({sessions,settings:{goalMinutes:12}}),t=new C.Tracker();t.merge(exported.sessions);assert.equal(JSON.stringify(t.sessions.legacy),before);
- const report=A.report(t.sessions,day);assert.match(report,/s \(copy\): independent/);assert.match(report,/s \(memory\): helped/);assert.equal(exported.build,92);
+ const report=A.report(t.sessions,day);assert.match(report,/s \(copy, paper\): independent/);assert.match(report,/s \(memory, tablet\): helped/);assert.equal(exported.build,93);assert.deepEqual(t.sessions.s.questions[1].writingSample,ink);
  assert.match(require('../scripts/daily-report.cjs').report(t.sessions,{},day).text,/Adult-guided literacy/);
 });

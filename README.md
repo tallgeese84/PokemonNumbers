@@ -1,3 +1,9 @@
+## v93 · Write with a stylus
+
+The adult-guided writing stage now opens a lined tablet pad, first for copying and then a blank attempt from memory. Blue ink supports pen, touch and mouse; a detected pen enables a finger lock, with an option to turn it off for passive styluses. Undo, Clear and a paper option are available. The pad preserves ink on resize and saves compact writing samples alongside the adult's observation. It does not grade handwriting. Showing a model on a memory turn remains recorded as help.
+
+Today's routine, existing observations, Pokémon, buddy and older learning history continue unchanged. This release keeps the adult routine schema at version 2.
+
 ## v92 · Read together with a grown-up
 
 The main home button starts a guided 10–12 minute session: sounds (2), blend/build (4), paper writing (3), and supported reading (3). A preparation screen asks an adult to join with paper and a pencil; optional school letters keep practice aligned with class.

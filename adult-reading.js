@@ -3,7 +3,7 @@
 (function(root,factory){if(typeof module==='object'&&module.exports)module.exports=factory(require('./learning-core.js'),require('./reading-core.js'),require('./reading-data.js'),require('./reading-phonics.js'));else root.PokeAdultReading=factory(root.PokeLearning,root.PokeReadingCore,root.PokeReadingData,root.PokePhonics);})(typeof globalThis!=='undefined'?globalThis:this,function(C,R,D,P){
 'use strict';
 const VERSION=2;
-const STAGES=[{id:'sounds',label:'Say the sounds',minutes:2},{id:'words',label:'Blend & build',minutes:4},{id:'writing',label:'Write on paper',minutes:3},{id:'story',label:'Read together',minutes:3}];
+const STAGES=[{id:'sounds',label:'Say the sounds',minutes:2},{id:'words',label:'Blend & build',minutes:4},{id:'writing',label:'Write letters',minutes:3},{id:'story',label:'Read together',minutes:3}];
 const OUTCOMES=['independent','helped','not-yet'];
 const events=(sessions,day)=>C.allQuestions(sessions||{}).filter(q=>q.section==='read'&&q.dailyVersion===VERSION&&(!day||q.dailyDay===day));
 function progress(sessions,day=C.dayKey(Date.now()),cycle){
@@ -72,11 +72,11 @@ function report(sessions,day){
  for(const cycle of [...new Set(all.map(q=>q.dailyCycle||0))]){
   const p=progress(sessions,day,cycle);lines.push('Run '+(cycle+1)+': '+(p.complete?'all four parts practised':'next: '+p.stage.label));
   for(const s of p.stages){lines.push(s.label+': '+(s.ms/60000).toFixed(1)+' active min; '+s.independent+' unaided, '+s.helped+' with help, '+s.notYet+' not yet (adult observed).');
-   const qs=all.filter(q=>(q.dailyCycle||0)===cycle&&q.dailyStage===s.id&&q.adultOutcome);for(const q of qs)lines.push('  '+q.word+(q.writingMode?' ('+q.writingMode+')':'')+': '+q.adultOutcome+(q.helped?' [support used]':''));}
+   const qs=all.filter(q=>(q.dailyCycle||0)===cycle&&q.dailyStage===s.id&&q.adultOutcome);for(const q of qs)lines.push('  '+q.word+(q.writingMode?' ('+q.writingMode+', '+(q.writingSurface||'paper')+')':'')+': '+q.adultOutcome+(q.helped?' [support used]':''));}
  }
  lines.push('These are grown-up observations, not automated grading or a diagnosis. Copying, writing from memory, oral reading and tapping choices are separate evidence. Timers estimate foreground practice and may pause during paper work.');
  return lines.join('\n');
 }
-function guidance(sessions,day){const p=progress(sessions,day);return {focus:p.complete?'Today’s grown-up session is complete.':'Sit together. Next: '+p.stage.label+'.',duration:'Aim for 10–12 minutes together: sounds 2, blend and build 4, paper writing 3, supported reading 3. Take a break or finish a part sooner when needed.',offline:'Bring paper and a pencil. Model, try together, then let Jonah try. Record help honestly; keep stories read aloud enjoyable.'};}
+function guidance(sessions,day){const p=progress(sessions,day);return {focus:p.complete?'Today’s grown-up session is complete.':'Sit together. Next: '+p.stage.label+'.',duration:'Aim for 10–12 minutes together: sounds 2, blend and build 4, writing 3, supported reading 3. Take a break or finish a part sooner when needed.',offline:'Use a tablet and stylus, or paper and pencil. Model, try together, then let Jonah try. Record help honestly; keep stories read aloud enjoyable.'};}
 return {VERSION,STAGES,OUTCOMES,events,progress,sitting,normalizeLetters,focus,materials,round,report,guidance};
 });

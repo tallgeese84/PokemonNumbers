@@ -120,13 +120,15 @@ function createReading(){
  /* ---------- round runner ---------- */
  let lastDailyStage=null;
  let run=null;            // {round, i, onDone, item, meta, wrong, help, ref}
+ let writingPad=null,writingSurface='tablet';
+ function closeWritingPad(){writingPad?.destroy();writingPad=null;}
  const recent=[];
  const TITLE={actions:'Read and act',buddies:'Sound buddies',reteach:'Sounds again',meet:'New sounds',write:'Writing letters',shapes:'Letter shapes',hunt:'Sound hunt',read:'Read it',build:'Build it',heart:'Tricky words',sentence:'Read and tap',ears:'Sound ears',book:'Book time',name:'Name catch',review:'Remember these',caps:'Capital letters',placement:'Reading check',spell:'Spell it'};
  const INTRO={actions:'Read the word. Choose its action.',buddies:'Let us learn with our sound buddies.',reteach:'Let us look at these sounds again.',meet:'Meet a new letter and its sound.',write:'Trace the letter. Start on the green dot.',shapes:'Find the letter that looks the same.',hunt:'Listen. Find the sound.',read:'Tap each sound. Say them fast. Then find the picture.',build:'Listen, then build the word.',heart:'Tricky words. Learn them by heart.',sentence:'Read it, then tap the right picture.',ears:'Listen with your ears.',book:'Let us read a book.',name:'Read the name to catch the Pokémon!',review:'Do you remember these?',caps:'Find the one written the right way.',placement:'Show me what you can read!',spell:'Listen to the word. Find the letter for the sound.'};
  function setHeader(act,n){$('rdTitle').textContent=TITLE[act]||'Reading';const L=R.route(n);$('rdRoute').innerHTML='';const chip=el('span','route-chip','Route '+n);chip.style.setProperty('--route',L.colour);$('rdRoute').append(chip);}
  function enter(){root.classList.remove('alphabet-view');shutUp();mode='read';show('read');}
  function startRound(round,onDone){
-  stop();
+  stop();closeWritingPad();
   round=PokeReadingTutor.prepare(round,sessions());
   run={round,i:0,onDone};recent.push(round.act);while(recent.length>8)recent.shift();
   enter();setHeader(round.act,round.route);feedback('');
@@ -140,6 +142,7 @@ function createReading(){
  }
  function nextItem(){
   if(!run)return;
+  closeWritingPad();
   if(run.round.lazy&&run.i>=run.round.items.length){const nx=run.round.lazy.next();if(nx)run.round.items.push(nx);}
   if(run.i>=run.round.items.length){finishRound();return;}
   const upcoming=run.round.items[run.i];
@@ -180,7 +183,7 @@ function createReading(){
  }
  function advance(){if(!run)return;run.i++;waitReady(nextItem);}
  function finishRound(){
-  const r=run;run=null;if(!r)return;
+  closeWritingPad();const r=run;run=null;if(!r)return;
   const done=r.onDone;feedback('');
   waitReady2(()=>done?.());
  }
@@ -576,7 +579,10 @@ function createReading(){
   const labels=it.writingMode==='copy'?['Copied without extra help','Copied with help','Not yet']:it.writingMode==='memory'?['Wrote it from memory','Needed a model or help','Not yet']:['Said it on his own','Said it with help','Not yet'];
   PokeAdultReading.OUTCOMES.forEach((outcome,i)=>{
    const b=btn('btn adult-result adult-result-'+outcome,labels[i],()=>{
-    if(run.done)return;stop();const result=adventure.observe(outcome);if(!result)return;run.done=true;
+    if(run.done)return;
+    if(it.kind==='adultWrite'&&writingSurface==='tablet'&&outcome!=='not-yet'&&!writingPad?.hasInk){feedback('Try writing in the box first. For a paper attempt, choose Paper below the box. You can also mark “Not yet”.');return;}
+    writingPad?.freeze();stop();const result=adventure.observe(outcome);if(!result)return;run.done=true;
+    $('rdStage').querySelectorAll('.adult-writing button,.adult-writing input').forEach(b=>b.disabled=true);
     host.querySelectorAll('button').forEach(b=>b.disabled=true);
     if(it.kind==='adultSound'){state.recall[it.g]={at:Date.now(),ok:result==='independent',observer:'grown-up'};save();}
     // Acknowledge effort equally; a reward never turns a helped try into mastery.
@@ -609,18 +615,42 @@ function createReading(){
   adultHelp('Read it together',()=>speak(it.word,{rate:.75}));adultMarks(it);
  };
  RENDER.adultWrite=it=>{
-  const memory=it.writingMode==='memory';$('rdPrompt').textContent=memory?'Write it from memory':'Paper and pencil time';
-  const target=el('div','adult-letter'+(memory?' adult-hidden-letter':''),memory?'?':it.g);$('rdStage').append(target);
+  const memory=it.writingMode==='memory';$('rdPrompt').textContent=memory?'Write it from memory':'Copy the letter';
+  const target=el('div','adult-letter adult-writing-model'+(memory?' adult-hidden-letter':''),memory?'?':it.g);$('rdStage').append(target);
   if(memory){
    // The prompt intentionally supplies the sound; it does not reveal the written letter.
-   adultNote('Grown-up: say the sound, then ask Jonah to write its letter on paper. Keep the model covered. If you show the shape or guide his hand, choose “needed a model or help”.');
+   adultNote('Grown-up: say the sound, then let Jonah write its letter in the box. Keep the model hidden. If you show the letter or guide his hand, mark “needed a model or help”.');
    replay=()=>sound(it.g==='q'?'qu':it.g);$('rdActions').append(btn('btn read-help','Hear the sound to write',()=>{stop();sound(it.g==='q'?'qu':it.g);},'Hear the sound'));
    adultHelp('Show the letter',()=>{target.textContent=it.g;target.classList.remove('adult-hidden-letter');});
   }else{
-   adultNote('On paper: you write this letter and say its sound. Jonah copies it once or twice. Use the letter formation taught at school. Copying is recorded separately from writing from memory.');
+   adultNote('Say the sound together. Jonah copies the letter in the box with his stylus. Use the letter formation taught at school. Copying is recorded separately from writing from memory.');
    replay=()=>sound(it.g==='q'?'qu':it.g);$('rdActions').append(btn('btn read-help','Hear the letter sound',()=>sound(it.g==='q'?'qu':it.g),'Hear the sound'));
   }
-  adultNote('Keep the screen open. If the clock pauses while you write, tap Resume. There is no need to make up extra minutes.');adultMarks(it);
+  const box=el('div','adult-writing'),canvas=el('canvas','adult-writing-canvas'),padHost=el('div','adult-writing-pad'),tools=el('div','adult-writing-tools'),note=el('p','adult-writing-note');
+  canvas.setAttribute('aria-label','Writing box. Draw with a stylus or finger.');canvas.textContent='Use paper and a pencil if this writing box is unavailable.';
+  padHost.append(canvas);box.append(padHost,tools,note);$('rdStage').append(box);
+  const ref=run.ref,q=adventure.tracker.sessions[ref.sid].questions[ref.qid];
+  const remember=()=>{if(q.completedAt)return;q.writingSurface=writingSurface;if(writingSurface==='tablet')q.writingSample=writingPad?.snapshot();else delete q.writingSample;adventure.tracker.changed(ref.sid);};
+  const undo=btn('btn secondary','Undo the last stroke',()=>writingPad.undo(),'Undo'),clear=btn('btn secondary','Clear the writing box',()=>writingPad.clear(),'Clear');tools.append(undo,clear);
+  const penLabel=el('label','adult-pen-option'),pen=el('input');pen.type='checkbox';penLabel.append(pen,document.createTextNode('Stylus only · ignore fingers'));box.append(penLabel);
+  const surfaces=el('div','adult-writing-surfaces'),tablet=btn('btn secondary','Write on the tablet',()=>setSurface('tablet'),'Tablet'),paper=btn('btn secondary','Write on paper',()=>setSurface('paper'),'Paper');
+  surfaces.append(el('span','','Write on:'),tablet,paper);box.append(surfaces);
+  writingPad=PokeWritingPad.create(canvas,{
+   active:()=>active()&&!run?.done&&writingSurface==='tablet',
+   onInteract:()=>adventure.tracker.interact(),
+   onChange:()=>{undo.disabled=clear.disabled=!writingPad?.hasInk;remember();},
+   onPenOnly:value=>{pen.checked=value;},
+   onLimit:()=>feedback('The box is full. Use Undo or Clear to make room for another try.')
+  });
+  pen.onchange=()=>writingPad.setPenOnly(pen.checked);
+  function setSurface(surface){
+   writingPad.finish();writingSurface=surface;
+   padHost.hidden=tools.hidden=penLabel.hidden=surface!=='tablet';tablet.setAttribute('aria-pressed',String(surface==='tablet'));paper.setAttribute('aria-pressed',String(surface==='paper'));
+   note.textContent=surface==='tablet'?'Write freely; there is no automatic score. Stylus only turns on when a pen is detected. Turn it off if your stylus does not draw.':'Write on paper with a pencil. The grown-up records the result below. Keep the screen open and tap Resume if the clock pauses.';
+   undo.disabled=clear.disabled=!writingPad.hasInk;remember();if(surface==='tablet')writingPad.render();
+  }
+  if(!writingPad.supported){writingSurface='paper';tablet.disabled=true;}
+  setSurface(writingSurface);adultMarks(it);
  };
  RENDER.adultStageEnd=it=>{
   const status=adventure.dailyStatus(),stage=status.stages.find(s=>s.id===run.round.daily.stage),enough=stage.attempts>=2;
@@ -820,7 +850,7 @@ function createReading(){
   catch(e){alert('Microphone not available on this device.');}
  }
 
- function leave(){stop();run=null;root.classList.remove('daily-reading-view');$('rdOptions').classList.remove('adult-observations');}
+ function leave(){stop();closeWritingPad();run=null;root.classList.remove('daily-reading-view');$('rdOptions').classList.remove('adult-observations');}
  // read-only hook for the browser regression script; children never see it
  const _current=()=>run&&{item:run.item,act:run.round.act,i:run.i,placement:!!run.round.placement};
  const _round=(act,n)=>startRound(R.makeRound(act,n,sessions(),st()),()=>{});
