@@ -1,0 +1,116 @@
+/* v94: readable at a child's tablet distance, with room for larger labels. */
+:root {
+  --child-text:clamp(20px,2.7vw,24px);
+  --child-label:clamp(18px,2.5vw,20px);
+  --child-prompt:clamp(30px,5vw,40px);
+}
+#app,body:not([data-screen="home"]) #app,body[data-screen="quiz"] #app {max-width:840px}
+#app .screen .btn,.adventure-dialog .btn {
+  font-size:var(--child-text);line-height:1.35;min-height:60px;
+  padding:14px 20px;white-space:normal;max-width:100%;
+}
+#app .screen .btn.icon {min-width:60px;padding:12px}
+
+/* The daily path and the two familiar destinations on the home screen. */
+#startAdventure {font-size:clamp(30px,4.5vw,38px);line-height:1.25;width:min(440px,100%);min-height:100px;padding:20px 24px;white-space:normal}
+.daily-reading-note {max-width:640px;font-size:var(--child-text);line-height:1.5;padding:0}
+.daily-reading-path {max-width:640px;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.daily-reading-path li {display:grid;grid-template-columns:40px minmax(0,1fr);gap:8px 12px;min-height:124px;padding:18px 16px;align-items:center}
+.daily-step-number {width:40px;height:40px;font-size:24px;grid-row:1 / 3}
+.daily-reading-path b {font-size:var(--child-text);line-height:1.3}
+.daily-reading-path small,.daily-step-status {font-size:var(--child-label);line-height:1.4}
+.daily-step-status {grid-column:2;margin-left:0}
+.home-choices {max-width:480px;width:100%;gap:16px}
+.home-choices #teamBtn,.home-choices #foxBtn {min-height:112px;padding:16px 20px;gap:18px}
+.home-team-copy {min-width:0}
+.home-team-copy strong,.home-alphabet-copy strong {font-size:clamp(24px,3vw,28px);line-height:1.25}
+.home-team-copy small,.home-alphabet-copy small {font-size:var(--child-label);line-height:1.4}
+.home-footer {max-width:480px}
+.home-footer .build-label {font-size:14px}
+
+/* One prominent question, large print to read, and clear feedback. */
+.read-card {max-width:760px;padding:24px}
+.read-prompt {font-size:var(--child-prompt);line-height:1.25;letter-spacing:0;margin-bottom:16px}
+.read-feedback,.mp-feedback,#foundationFeedback {font-size:var(--child-text);line-height:1.5;min-height:1.5em}
+.daily-reading-view .read-route,.route-chip {font-size:var(--child-label);line-height:1.4}
+.read-actions {gap:14px}
+.adult-instruction {font-size:var(--child-text);line-height:1.5;max-width:660px}
+.adult-mark-label {font-size:var(--child-label);line-height:1.5}
+.adult-letter {font-size:clamp(96px,20vw,144px)}
+.adult-word {font-size:clamp(72px,16vw,128px);max-width:100%;overflow-wrap:anywhere}
+.adult-writing-model {font-size:clamp(88px,17vw,116px)}
+.adult-sound-boxes {flex-wrap:wrap}
+.adult-sound-boxes span {font-size:44px;min-width:64px;padding:10px 16px}
+.adult-observations .adult-result {flex:1 1 200px;max-width:none}
+.adult-writing-note,.adult-pen-option,.adult-writing-surfaces {font-size:var(--child-label);line-height:1.5}
+.adult-pen-option {min-height:52px;gap:12px}
+.adult-pen-option input {flex-shrink:0;width:26px;height:26px}
+.adult-writing-tools,.adult-writing-surfaces {gap:12px}
+.read-sentence,.book-text {font-size:clamp(34px,6vw,48px);line-height:1.6;max-width:100%}
+.wchoice {font-size:38px;min-height:78px;max-width:100%;white-space:normal}
+.wchoice.punct {font-size:var(--child-text);line-height:1.5}
+.pic small {font-size:var(--child-label);line-height:1.3;max-width:150px}
+.write-hint,.buddy-note,.buddy-collection-note,.alphabet-view .read-actions .buddy-collection-note {font-size:var(--child-label);line-height:1.5}
+.sound-buddy-grid,.alphabet-view .sound-buddy-grid {grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px}
+.buddy-card-letter,.alphabet-view .buddy-card-letter {font-size:44px}
+.buddy-card-name,.alphabet-view .buddy-card-name {font-size:20px;line-height:1.3;overflow-wrap:anywhere}
+.buddy-card-status,.alphabet-view .buddy-card-status {font-size:18px;line-height:1.3}
+.sound-buddy-name,.sound-buddy-keyword {font-size:24px;line-height:1.3;overflow-wrap:anywhere}
+.shelf {grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.shelf-book {font-size:22px;line-height:1.4}.shelf-book.read::after {font-size:18px}
+
+/* Preparation, breaks and finish messages are read together. */
+.adventure-dialog {max-width:640px}
+.adventure-dialog h2 {font-size:clamp(30px,4.5vw,38px);line-height:1.25}
+.adventure-dialog p,.adult-ready-steps {font-size:var(--child-text);line-height:1.5}
+.adult-ready-dialog small,.adult-ready-dialog label,.adult-ready-dialog summary {font-size:var(--child-label);line-height:1.5}
+.adult-ready-steps li {margin-bottom:12px}.adult-ready-steps b {min-width:75px}
+.adult-ready-dialog input {font-size:24px;min-height:56px}
+
+/* Pokémon names and collection controls deserve readable print too. */
+.collection-heading {flex-wrap:wrap}
+.collection-heading h1 {font-size:clamp(32px,4.5vw,42px)}
+#teamHead.collection-total,.collection-section-heading>span,.collection-eyebrow,.collection-hero .collection-eyebrow {font-size:var(--child-label);line-height:1.4;letter-spacing:.4px}
+.collection-hero h2,.pokemon-details h2 {font-size:clamp(32px,4vw,40px);line-height:1.2}
+.collection-hero-copy>p:not(.collection-eyebrow) {font-size:var(--child-label);max-width:260px}
+.collection-primary,.collection-secondary,#scr-team .collection-shortcuts strong {font-size:var(--child-text);line-height:1.35;min-height:60px;white-space:normal}
+.collection-filters button {min-height:96px;padding:10px 6px}
+.collection-filters button>span:last-child {font-size:20px;white-space:normal;line-height:1.35}
+.collection-filters b {font-size:18px}
+.collection-tools {flex-wrap:wrap}
+.collection-tools input,.collection-tools select {font-size:20px;min-height:56px}
+.collection-mon strong {font-size:24px;line-height:1.3}
+.collection-mon small,.collection-buddy-tag {font-size:18px;line-height:1.3;letter-spacing:0}
+.collection-card-top {min-height:32px}.collection-buddy-tag {padding:4px 8px}
+.collection-section-heading h2,.collection-next h2,.collection-empty-filter h3 {font-size:28px;line-height:1.3}
+.collection-next p,.collection-empty-filter p,.collection-feedback {font-size:var(--child-text);line-height:1.5}
+.pokemon-details .collection-eyebrow,.pokemon-paging {font-size:18px;line-height:1.4}
+.pokemon-speak {font-size:22px!important;line-height:1.4;min-height:56px}
+
+/* Optional maths and fox activities share the same readable captions. */
+.foundation-caption,.mp-story,.mp-hint {font-size:var(--child-text);line-height:1.5}
+.mp-gym-chip,.fox-item small {font-size:var(--child-label);line-height:1.4}
+.fox-shop {grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}
+.foundation-pad button,.mp-pad button,.mp-keys button {font-size:32px;min-height:64px}
+
+@media(max-width:600px){
+  .daily-reading-path {grid-template-columns:1fr;max-width:480px}
+  .daily-reading-path li {min-height:104px;grid-template-columns:40px minmax(0,1fr) auto}
+  .daily-step-number {grid-row:auto}.daily-step-status {grid-column:auto}
+  .collection-filters {grid-template-columns:repeat(2,minmax(0,1fr))}
+  .collection-hero {grid-template-columns:1fr;gap:10px;text-align:center}
+  .collection-hero-copy>p:not(.collection-eyebrow) {max-width:100%}
+  .collection-hero-art {grid-row:1;min-height:170px}.collection-hero-art>img {width:100%;max-width:240px;height:190px}
+  #scr-team .collection-shortcuts {grid-template-columns:1fr}
+  .collection-tools {flex-direction:column}.collection-tools select {width:100%}
+}
+@media(max-width:420px){
+  #app,body:not([data-screen="home"]) #app,body[data-screen="quiz"] #app {padding:16px 12px 24px}
+  .read-card {padding:18px 12px}
+  .daily-reading-path li {gap:8px;padding:14px 12px}
+  .daily-step-status {grid-column:2}
+  .adult-observations .adult-result {flex-basis:100%}
+  .sound-buddy-grid,.alphabet-view .sound-buddy-grid {grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .collection-mon strong {font-size:21px}.collection-mon small,.collection-buddy-tag {font-size:16px}
+  .home-choices #teamBtn,.home-choices #foxBtn {padding:14px;gap:12px}
+}

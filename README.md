@@ -1,3 +1,7 @@
+## v94 · Larger print for Jonah
+
+Daily instructions and controls now use 20–24 px text, with 30–40 px practice prompts and larger letters, words and writing models. The home path, Pokémon names and writing-pad controls also have larger labels. Cards and buttons grow with the text; the daily path and collection controls stack on smaller screens. The blue theme and existing learning flow are retained.
+
 ## v93 · Write with a stylus
 
 The adult-guided writing stage now opens a lined tablet pad, first for copying and then a blank attempt from memory. Blue ink supports pen, touch and mouse; a detected pen enables a finger lock, with an option to turn it off for passive styluses. Undo, Clear and a paper option are available. The pad preserves ink on resize and saves compact writing samples alongside the adult's observation. It does not grade handwriting. Showing a model on a memory turn remains recorded as help.
