@@ -76,7 +76,7 @@
       this.now=now; this.id=id; this.sessions=sessions; this.onChange=onChange;
       this.sessionId=String(now())+'_'+id(); this.current=null; this.visible=true; this.blocked=false;
       this.section='home'; this.lastTick=now(); this.lastInteraction=now(); this.idle=false;
-      this.sessions[this.sessionId]={id:this.sessionId,startedAt:now(),updatedAt:now(),rev:0,days:{},questions:{},build:91};
+      this.sessions[this.sessionId]={id:this.sessionId,startedAt:now(),updatedAt:now(),rev:0,days:{},questions:{},build:92};
     }
     changed(sid=this.sessionId) { const s=this.sessions[sid]; s.rev++; s.updatedAt=this.now(); this.onChange(sid); }
     tick() {
@@ -119,7 +119,7 @@
       if(this.lastPracticeAt && this.now()-this.lastPracticeAt>300000){
         const deviceId=this.sessions[this.sessionId].deviceId;
         this.sessionId=String(this.now())+'_'+this.id();
-        this.sessions[this.sessionId]={id:this.sessionId,deviceId,startedAt:this.now(),updatedAt:this.now(),rev:0,days:{},questions:{},build:91};
+        this.sessions[this.sessionId]={id:this.sessionId,deviceId,startedAt:this.now(),updatedAt:this.now(),rev:0,days:{},questions:{},build:92};
         this.lastPracticeAt=this.now();
       }
       if (ref && this.sessions[ref.sid]?.questions?.[ref.qid] && !this.sessions[ref.sid].questions[ref.qid].completedAt) this.current=ref;
@@ -139,6 +139,16 @@
       if(correct) q.completedAt=this.now();
       this.changed(this.current.sid); if(correct)this.current=null;
     }
+    observe(outcome) {
+      this.tick();const q=this.question();
+      if(!q||q.observer!=='grown-up'||!['independent','helped','not-yet'].includes(outcome))return null;
+      // Playing a model or revealing an answer invalidates an unaided mark.
+      if(outcome==='independent'&&q.helped)outcome='helped';
+      q.adultOutcome=outcome;q.helped=q.helped||outcome==='helped';
+      q.responses.push({value:outcome,correct:outcome==='independent',activeMs:q.activeMs,at:this.now()});
+      q.firstResponseMs=q.activeMs;q.completedAt=this.now();
+      this.changed(this.current.sid);this.current=null;return outcome;
+    }
     merge(remote) {
       for(const [id,s] of Object.entries(remote || {})) {
         if (!s || s.id!==id || !s.days || !Number.isFinite(s.rev)) continue;
@@ -151,9 +161,9 @@
     const history=allQuestions(sessions);
     const qs=history.filter(q=>q.day>=from && q.day<=to);
     // Teaching steps (new sounds, book pages) count as active time but not as answers.
-    const attempted=qs.filter(q=>q.responses?.length && !q.teach), completed=attempted.filter(q=>q.completedAt);
+    const attempted=qs.filter(q=>q.responses?.length && !q.teach && q.observer!=='grown-up'), completed=attempted.filter(q=>q.completedAt);
     const independentQs=attempted.filter(independent);
-    const summary={from,to,practiceMs:0,foregroundMs:0,collectionMs:0,sections:{},attempted:attempted.length,started:qs.filter(q=>!q.teach).length,teaching:qs.filter(q=>q.teach&&q.completedAt).length,
+    const summary={from,to,practiceMs:0,foregroundMs:0,collectionMs:0,sections:{},attempted:attempted.length,started:qs.filter(q=>!q.teach && q.observer!=='grown-up').length,teaching:qs.filter(q=>q.teach&&q.completedAt).length,
       completed:completed.length,independent:independentQs.length,helped:attempted.filter(q=>q.helped).length,
       accuracy:attempted.length ? independentQs.length/attempted.length : null,
       medianMs:median(independentQs.map(q=>q.firstResponseMs)),groups:{},mistakes:[],retention:{checked:0,independent:0},fatigue:{sessions:0,early:null,late:null}};
@@ -171,7 +181,7 @@
     for(const g of values(summary.groups)){g.accuracy=g.independent/g.n;g.medianMs=median(g.times);delete g.times;}
     let early=0,late=0;
     for(const s of values(sessions)) {
-      const list=values(s.questions).filter(q=>q.day>=from && q.day<=to && q.responses?.length && !q.teach).sort((a,b)=>a.startedAt-b.startedAt);
+      const list=values(s.questions).filter(q=>q.day>=from && q.day<=to && q.responses?.length && !q.teach && q.observer!=='grown-up').sort((a,b)=>a.startedAt-b.startedAt);
       if(list.length<10)continue;
       const first=list.slice(0,5), last=list.slice(-5);
       // Only compare sessions with a consistent task mix; changing difficulty is not fatigue.

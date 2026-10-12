@@ -9,16 +9,16 @@ function report(sessions,devices,date){
   const week=C.summarize(sessions,C.shiftDay(date,-6),date);
   const previous=C.summarize(sessions,C.shiftDay(date,-13),C.shiftDay(date,-7));
   const previousDays=C.summarize(sessions,C.shiftDay(date,-7),C.shiftDay(date,-1));
-  const advice=require('../reading-daily.js').guidance(sessions,date);
+  const advice=require('../adult-reading.js').guidance(sessions,date);
   const deviceTimes=Object.values(devices || {}).map(d=>d.lastSeenAt || 0);
   const lastSync=Math.max(0,...deviceTimes);
   const syncLine=lastSync ? new Date(lastSync).toLocaleString('en-US',{timeZone:C.ZONE})+' Madison time' : 'No device heartbeat received';
   const lines=[`PokéMath — ${date}`, '',
     `Estimated active practice: ${mins(daily.practiceMs)} minutes. Foreground app time: ${mins(daily.foregroundMs)} minutes. Collection browsing: ${mins(daily.collectionMs)} minutes.`,
     `Questions: ${daily.attempted} attempted, ${daily.completed} completed, ${daily.started-daily.completed} unfinished.`,
-    `Independent first-response accuracy: ${pct(daily.accuracy)} (${daily.independent}/${daily.attempted}). Extra help used on ${daily.helped} questions.`,
+    `App-choice independent first-response accuracy: ${pct(daily.accuracy)} (${daily.independent}/${daily.attempted}). Extra help used on ${daily.helped} questions.`,
     `Previous 7 days: ${(previousDays.practiceMs/60000/7).toFixed(1)} active minutes/day; ${pct(previousDays.accuracy)} independent (${previousDays.attempted} attempts).`,
-    '', 'Sections worked on:',...Object.entries(daily.sections).map(([k,v])=>`• ${C.LABELS[k] || k}: ${mins(v)} active minutes.`),
+    '', 'Adult observations are reported separately below.', 'Sections worked on:',...Object.entries(daily.sections).map(([k,v])=>`• ${C.LABELS[k] || k}: ${mins(v)} active minutes.`),
     '', 'Skill detail (built-in supports kept separate):',
     ...Object.values(daily.groups).map(g=>`• ${C.LABELS[g.section]} / ${g.skill}, within ${g.range}, ${g.support}, ${g.format}: ${g.independent}/${g.n} independent; ${g.helped} helped; median independent response ${g.medianMs===null?'not available':(g.medianMs/1000).toFixed(1)+' seconds'}.`),
     '', 'Last 7 days vs previous 7 days (matching tasks only):',
@@ -37,7 +37,7 @@ function report(sessions,devices,date){
     'Offline activity appears in later reports and rolling weekly totals after upload. Already-sent daily emails are not revised.',
     '', 'Timing counts visible questions and thinking, pauses after 60 seconds without interaction, and excludes rewards and collection browsing. It estimates activity, not attention. Independent means no extra help; built-in pictures and manipulatives are compared separately. Guided tracing completion is not freehand handwriting mastery.',
     'Difficulty thresholds are adjustable design rules (8/10 across varied questions plus 3 independent, varied later-day checks), not validated diagnostic cutoffs.');
-  lines.push('',require('../reading-daily.js').report(sessions,date),'',require('../reading-buddies.js').report(sessions,date));
+  lines.push('',require('../adult-reading.js').report(sessions,date),'',require('../reading-daily.js').report(sessions,date),'',require('../reading-buddies.js').report(sessions,date));
   const text=lines.join('\n');
   return {subject:`PokéMath daily adventure · ${date}`,text,html:`<!doctype html><html><body style="font:16px/1.6 system-ui,sans-serif;color:#253858;max-width:720px;margin:auto;padding:24px"><h1 style="font-size:25px">PokéMath learning journal</h1><div style="white-space:pre-wrap">${esc(text)}</div></body></html>`};
 }

@@ -1,3 +1,13 @@
+## v92 · Read together with a grown-up
+
+The main home button starts a guided 10–12 minute session: sounds (2), blend/build (4), paper writing (3), and supported reading (3). A preparation screen asks an adult to join with paper and a pencil; optional school letters keep practice aligned with class.
+
+Adults record **on his own**, **with help**, or **not yet**. Playing a model or revealing the written letter prevents an unaided mark. Copying and writing from memory have separate records. The adult chooses when a part is practised after at least two observations; time is a pacing guide, not a gate. The optional halfway break, pause, reload, and same-day resume remain available.
+
+New routine records use `dailyVersion: 2`, `observer: grown-up`, and separate `adult:*` item keys. Historical app-choice records, route passes, Pokémon, shiny collection, and buddy selection are retained. Adult observations do not automatically unlock app mastery. Existing exports and the family mirror carry the new session fields; reports show adult outcomes separately. The new routine starts fresh once after this update, without deleting earlier practice time or achievements.
+
+The active clock still pauses after 60 seconds without interaction and when hidden. Offscreen writing can therefore be undercounted; parents can complete the part without adding extra work to satisfy a timer.
+
 ## v91 · Two shorter reading sittings
 
 The daily goal remains **12 active minutes**, with the same four stages and task-completion conditions. After sounds (2 min) and blend/build (4 min) finish, an optional break offers **Take a break** or **Keep reading**. It appears between tasks, and the next sitting resumes the saved actions/story stages; home and reload retain the progress and break choice. A new day starts with sounds. Extra reading still requires the explicit **Read again** action after the routine is complete.

@@ -131,10 +131,11 @@ function createReading(){
   run={round,i:0,onDone};recent.push(round.act);while(recent.length>8)recent.shift();
   enter();setHeader(round.act,round.route);feedback('');
   root.classList.toggle('daily-reading-view',!!round.daily);
-  if(round.daily){const stage=PokeReadingDaily.STAGES.find(x=>x.id===round.daily.stage),i=PokeReadingDaily.STAGES.indexOf(stage);$('rdRoute').textContent=(i+1)+' of 4 · '+stage.label;}
+  if(round.daily){const stages=round.daily.adult?PokeAdultReading.STAGES:PokeReadingDaily.STAGES,stage=stages.find(x=>x.id===round.daily.stage),i=stages.indexOf(stage);$('rdRoute').textContent=(i+1)+' of 4 · '+stage.label+' · about '+stage.minutes+' min';}
   if(!round.items.length){finishRound();return;}
   const dailyKey=round.daily&&[round.daily.day,round.daily.cycle,round.daily.stage].join(':');
   if(dailyKey&&dailyKey===lastDailyStage){nextItem();return;}lastDailyStage=dailyKey;
+  if(round.daily?.adult){nextItem();return;}
   speak(INTRO[round.act],{rate:.85,done:()=>nextItem()});
  }
  function nextItem(){
@@ -147,14 +148,14 @@ function createReading(){
    speak(upcoming.intro,{rate:.85,done:()=>setTimeout(nextItem,250)});return;}
   if(!adventure.beforeQuestion()){waitReady(nextItem);return;}
   const it=run.round.items[run.i];run.item=it;run.wrong=0;run.helped=false;run.done=false;
-  if(run.round.lazy){const pr=run.round.lazy.progress();pips(pr.sections,pr.section);}else pips(run.round.items.length,run.i);feedback('');$('rdOptions').replaceChildren();$('rdActions').replaceChildren();$('rdStage').replaceChildren();$('rdPrompt').replaceChildren();
-  run.ref=adventure.begin({...(it.nightlyPlan?{nightlyPlan:it.nightlyPlan,nightlyTarget:it.nightlyTarget}:{}),section:'read',skill:run.round.placement?'placement':run.round.act,kind:it.kind,item:it.item,route:it.route,range:it.route,support:it.buddyLetter?(it.buddyCue?'Pokémon picture help':'no picture help'):(it.phase||'independent'),word:it.word||it.target||it.item,phase:it.phase||'independent',format:it.kind,level:it.route,teach:!!it.teach,...(it.buddyLetter?{buddyLetter:it.buddyLetter,buddyCue:!!it.buddyCue}:{}),...(run.round.daily?{dailyVersion:1,dailyDay:run.round.daily.day,dailyCycle:run.round.daily.cycle,dailyStage:run.round.daily.stage}:{}),...(it.storyId?{storyId:it.storyId}:{}),...(it.storyHelped?{support:'listening/supported comprehension'}:{}),a:it.route,b:0,expected:String(it.answer??it.item)});
+  if(run.round.lazy){const pr=run.round.lazy.progress();pips(pr.sections,pr.section);}else pips(run.round.items.length,run.i);feedback('');$('rdOptions').replaceChildren();$('rdOptions').classList.remove('adult-observations');$('rdActions').replaceChildren();$('rdStage').replaceChildren();$('rdPrompt').replaceChildren();
+  run.ref=adventure.begin({...(it.nightlyPlan?{nightlyPlan:it.nightlyPlan,nightlyTarget:it.nightlyTarget}:{}),section:'read',skill:run.round.placement?'placement':run.round.act,kind:it.kind,item:it.item,route:it.route,range:it.route,support:it.buddyLetter?(it.buddyCue?'Pokémon picture help':'no picture help'):(it.phase||'independent'),word:it.word||it.target||it.item,phase:it.phase||'independent',format:it.kind,level:it.route,teach:!!it.teach,...(it.buddyLetter?{buddyLetter:it.buddyLetter,buddyCue:!!it.buddyCue}:{}),...(run.round.daily?{dailyVersion:run.round.daily.version||1,dailyDay:run.round.daily.day,dailyCycle:run.round.daily.cycle,dailyStage:run.round.daily.stage}:{}),...(it.adultSession?{observer:'grown-up',evidence:'adult-observation',adultLetters:it.adultLetters,g:it.g,writingMode:it.writingMode,support:'adult-observed '+(it.writingMode||'spoken attempt')}:{}),...(it.storyId?{storyId:it.storyId}:{}),...(it.storyHelped?{support:'listening/supported comprehension'}:{}),a:it.route,b:0,expected:String(it.answer??it.item)});
   if(it.nightlyPlan)window.JonahNightly?.started(it.nightlyPlan);
   if(it.storyHelped)help('story words supplied or read aloud');
   if(it.phase==='model'){renderModel(it);return;}
   if(it.phase==='guided'){run.helped=true;adventure.help('guided practice');}
   (RENDER[it.kind]||RENDER.unknown)(it);
-  if(!run.round.placement){const phase=el('div','tutor-phase',it.phase==='buddy-model'?'Meet your buddy':it.phase==='guided'?'Together':it.phase==='retention'?'Remember it':'Your turn');$('rdStage').prepend(phase);if(it.phase==='guided'){run.helped=true;highlightGuide(it);}}
+  if(!run.round.placement&&!run.round.daily?.adult){const phase=el('div','tutor-phase',it.phase==='buddy-model'?'Meet your buddy':it.phase==='guided'?'Together':it.phase==='retention'?'Remember it':'Your turn');$('rdStage').prepend(phase);if(it.phase==='guided'){run.helped=true;highlightGuide(it);}}
  }
  function respond(value,correct){adventure.respond(value,correct);}
  function help(kind){if(!run.helped)run.helped=true;adventure.help(kind);}
@@ -566,11 +567,80 @@ function createReading(){
   draw();setTimeout(replay,300);
  };
 
+ /* ---------- adult-guided daily practice ---------- */
+ function adultNote(text){$('rdStage').append(el('p','adult-instruction',text));}
+ function adultHelp(label,fn){$('rdActions').append(btn('btn read-help',label,()=>{help('adult model or answer supplied');stop();fn();},esc(label)));}
+ function adultMarks(it){
+  const host=$('rdOptions');host.classList.add('adult-observations');
+  host.append(el('p','adult-mark-label','Grown-up: record what you observed'));
+  const labels=it.writingMode==='copy'?['Copied without extra help','Copied with help','Not yet']:it.writingMode==='memory'?['Wrote it from memory','Needed a model or help','Not yet']:['Said it on his own','Said it with help','Not yet'];
+  PokeAdultReading.OUTCOMES.forEach((outcome,i)=>{
+   const b=btn('btn adult-result adult-result-'+outcome,labels[i],()=>{
+    if(run.done)return;stop();const result=adventure.observe(outcome);if(!result)return;run.done=true;
+    host.querySelectorAll('button').forEach(b=>b.disabled=true);
+    if(it.kind==='adultSound'){state.recall[it.g]={at:Date.now(),ok:result==='independent',observer:'grown-up'};save();}
+    // Acknowledge effort equally; a reward never turns a helped try into mastery.
+    addStar(1);feedback(result==='not-yet'?'Good trying. We can practise this again.':result==='helped'?'We practised together.':'You tried it on your own!');
+    $('rdActions').replaceChildren(btn('btn read-next','Next practice',()=>advance(),'Next'));
+   },esc(labels[i]));b.dataset.outcome=outcome;host.append(b);
+  });
+ }
+ RENDER.adultSound=it=>{
+  $('rdPrompt').textContent='What sound does this make?';
+  $('rdStage').append(el('div','adult-letter',it.g));
+  adultNote(it.fallback?'These letters do not make a suitable word yet. Practise their sounds together.':'Ask for the sound before playing it. If needed, say it, say it together, then let Jonah try. Mark a modelled attempt as “with help”.');
+  replay=()=>{help('sound played before adult observation');sound(it.g==='q'?'qu':it.g);};
+  adultHelp('Model this sound',()=>sound(it.g==='q'?'qu':it.g));adultMarks(it);
+ };
+ RENDER.adultBlend=it=>{
+  $('rdPrompt').textContent=it.build?'Build it, then say it':'Say the sounds. Blend them.';
+  $('rdStage').append(el('div','adult-word',it.word));
+  const boxes=el('div','adult-sound-boxes');it.parts.forEach(p=>boxes.append(el('span','',p.g)));$('rdStage').append(boxes);
+  adultNote(it.build?'Write these letters on small pieces of paper. Say the word, mix the letters, and help Jonah put them in order. Then ask him to say the word. This check records the spoken word, not spelling mastery.':'Point under each letter. Let Jonah try first. If he needs help: model the sounds, blend together, then let him try. Keep sounds short—avoid adding “uh”.');
+  replay=()=>{help('word model played');speak(it.word,{rate:.75});};
+  adultHelp('Hear the sounds',()=>chain(it.parts.map(p=>next=>sound(p,next)),180));
+  adultHelp('Hear the word',()=>speak(it.word,{rate:.75}));adultMarks(it);
+ };
+ RENDER.adultRead=it=>{
+  $('rdPrompt').textContent='Read this to your grown-up';$('rdStage').append(el('div','adult-word',it.word));
+  adultNote('Listen before helping. Point to the sounds if needed, blend together, then let him try. Familiar words are practice; this is not proof he can read a new book.');
+  replay=()=>{help('reading word supplied');speak(it.word,{rate:.75});};
+  adultHelp('Help us sound it out',()=>chain(it.parts.map(p=>next=>sound(p,next)),180));
+  adultHelp('Read it together',()=>speak(it.word,{rate:.75}));adultMarks(it);
+ };
+ RENDER.adultWrite=it=>{
+  const memory=it.writingMode==='memory';$('rdPrompt').textContent=memory?'Write it from memory':'Paper and pencil time';
+  const target=el('div','adult-letter'+(memory?' adult-hidden-letter':''),memory?'?':it.g);$('rdStage').append(target);
+  if(memory){
+   // The prompt intentionally supplies the sound; it does not reveal the written letter.
+   adultNote('Grown-up: say the sound, then ask Jonah to write its letter on paper. Keep the model covered. If you show the shape or guide his hand, choose “needed a model or help”.');
+   replay=()=>sound(it.g==='q'?'qu':it.g);$('rdActions').append(btn('btn read-help','Hear the sound to write',()=>{stop();sound(it.g==='q'?'qu':it.g);},'Hear the sound'));
+   adultHelp('Show the letter',()=>{target.textContent=it.g;target.classList.remove('adult-hidden-letter');});
+  }else{
+   adultNote('On paper: you write this letter and say its sound. Jonah copies it once or twice. Use the letter formation taught at school. Copying is recorded separately from writing from memory.');
+   replay=()=>sound(it.g==='q'?'qu':it.g);$('rdActions').append(btn('btn read-help','Hear the letter sound',()=>sound(it.g==='q'?'qu':it.g),'Hear the sound'));
+  }
+  adultNote('Keep the screen open. If the clock pauses while you write, tap Resume. There is no need to make up extra minutes.');adultMarks(it);
+ };
+ RENDER.adultStageEnd=it=>{
+  const status=adventure.dailyStatus(),stage=status.stages.find(s=>s.id===run.round.daily.stage),enough=stage.attempts>=2;
+  $('rdPrompt').textContent='A good place to check in';
+  $('rdStage').append(monImg(pkBuddy||25,'adult-session-buddy'));
+  adultNote(stage.label+': '+(stage.ms/60000).toFixed(1)+' minutes recorded. Aim for about '+stage.minutes+' minutes, but a shorter, happy practice is fine.');
+  adultNote(stage.independent+' on his own · '+stage.helped+' with help · '+stage.notYet+' not yet. These are your observations.');
+  replay=()=>speak('Good trying. Practise a little more, or move to the next part.');
+  const next=btn('btn read-next','Grown-up confirms this part is practised',()=>teachDone(),stage.id==='story'?'Finish our session':'This part is practised · next');next.disabled=!enough;$('rdActions').append(next);
+  $('rdActions').append(btn('btn secondary','Practise this part again',()=>{const q=adventure.tracker.question();q.kind='adultPracticeMore';adventure.respond('more practice',true);run.done=true;finishRound();},'Practise a little more'));
+  if(!enough)adultNote('Try at least two short attempts together before finishing this part.');
+ };
+
  /* ---------- blocks, placement and routes ---------- */
  function startDailyBlock(status,onDone){
   const s=st(),n=R.currentRoute(s);
-  if(R.gate(n,R.itemStats(sessions()),s).met&&!R.allPassed(s)){passRoute(n,onDone);return;}
-  const plan=window.JonahNightly?.adopt();startRound(window.JonahNightly?JonahNightly.readingRound(sessions(),s,status,plan,PokeReadingDaily):PokeReadingDaily.round(sessions(),s,status),onDone);
+  const adult=status.version===2,routine=adult?PokeAdultReading:PokeReadingDaily;
+  if(!adult&&R.gate(n,R.itemStats(sessions()),s).met&&!R.allPassed(s)){passRoute(n,onDone);return;}
+  const stateForRound=adult?{...s,adultLetters:adventure.adultLetters}:s;
+  const plan=window.JonahNightly?.adopt();startRound(window.JonahNightly?JonahNightly.readingRound(sessions(),stateForRound,status,plan,routine):routine.round(sessions(),stateForRound,status),onDone);
  }
  function startBlock(onDone){
   const s=st(),plan=R.nextActivity(sessions(),s,recent);
@@ -750,7 +820,7 @@ function createReading(){
   catch(e){alert('Microphone not available on this device.');}
  }
 
- function leave(){stop();run=null;root.classList.remove('daily-reading-view');}
+ function leave(){stop();run=null;root.classList.remove('daily-reading-view');$('rdOptions').classList.remove('adult-observations');}
  // read-only hook for the browser regression script; children never see it
  const _current=()=>run&&{item:run.item,act:run.round.act,i:run.i,placement:!!run.round.placement};
  const _round=(act,n)=>startRound(R.makeRound(act,n,sessions(),st()),()=>{});
