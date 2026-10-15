@@ -1,3 +1,7 @@
+## v97.1 · Faster repeated sound and picture loading
+
+Saved phonics clips, pictures and versioned scripts now load directly from the device cache. The previous worker tried the network before returning these saved files, which could delay every sound tap. Entry pages still check online for app updates, and the saved page works offline. This worker update reuses existing v97 downloads instead of downloading all 26 illustrations again. A first visit or a cleared/evicted browser cache still needs a download; browser speech recognition is separate and may need internet.
+
 ## v97 · Everyday pictures, spoken answers, names and sounds
 
 **Home → Everyday A–Z** opens a second alphabet chart with 26 newly generated picture-book illustrations. Each card has **Hear name**, **Hear sound**, **Hear word**, and **Trace**. Pokémon A–Z remains on the home screen. Both charts use the same large, directional uppercase/lowercase tracing guides. Q is shown with u for /kw/; X uses the end of box; O uses octopus for its short vowel. [Artwork and generation prompts](assets/everyday/README.md).

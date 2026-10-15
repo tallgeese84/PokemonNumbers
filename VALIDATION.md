@@ -1,3 +1,8 @@
+# v97.1 cache-first playback
+
+- Added regression coverage for cached audio/images/scripts without network access, one download across repeated sound requests, online entry-page updates, offline home fallback, and reuse of existing media during this worker update.
+- Audio content and playback behavior are unchanged; this corrects the resource-loading delay.
+
 # v97 everyday alphabet and spoken practice
 
 - 185 Node tests pass, including separate recall for all 104 letter/skill/case combinations, later-day memory checks, progression through all 26 letters, explicit school selection, and saved routine resumption.
