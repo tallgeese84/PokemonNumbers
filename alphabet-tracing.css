@@ -1,5 +1,41 @@
 /* v95: large, centre-line letter formation for a tablet and stylus. */
 .alphabet-letter-card {min-width:0;display:flex;flex-direction:column;gap:8px}
+.alphabet-hearing {display:flex;gap:8px;flex-wrap:wrap}
+#app .alphabet-hearing .btn {flex:1 1 110px;font-size:20px;min-height:56px;padding:10px 8px}
+.alphabet-daily-start {margin:8px auto 16px;min-height:64px}
+.alphabet-memory-progress {width:100%;max-width:720px;margin:0 auto 20px;text-align:left;font-size:18px;line-height:1.5}
+.alphabet-memory-progress summary {cursor:pointer;font-size:22px;font-weight:800;padding:14px;border-radius:16px;background:#e5f0ff;color:#174373}
+.alphabet-memory-progress table {width:100%;border-collapse:collapse;table-layout:fixed}
+.alphabet-memory-progress th,.alphabet-memory-progress td {padding:10px 6px;border-bottom:1px solid #cbdcf0;overflow-wrap:anywhere;vertical-align:top}
+.alphabet-memory-progress th:first-child {width:15%}
+.adult-recall-kind {font-size:24px;font-weight:900;letter-spacing:.12em;color:#174373;margin:6px}
+.adult-recall-case {font-size:22px;color:#35577c;margin:0 0 12px}
+#app .adult-recall-letter {font-size:clamp(120px,28vw,200px);line-height:1.15;margin:10px auto}
+.adult-memory-model {font-size:26px;font-weight:750;padding:16px;border-radius:16px;background:#e5f0ff;color:#174373}
+.voice-answer {display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;max-width:500px;margin:14px auto}
+#app .voice-hold {min-height:84px;width:100%;font-size:clamp(24px,5vw,30px);border-radius:28px;background:#1858a8;color:white;border:3px solid #114786;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+#app .is-recording .voice-hold {background:#a13245;border-color:#802039;box-shadow:0 0 0 8px #fae4e8}
+.voice-status {font-size:20px;line-height:1.4;margin:4px 0;min-height:2.8em;color:#35577c}
+#app .voice-tap,#app .voice-play {font-size:22px;min-height:56px}
+.voice-answer-audio {display:block;width:100%;max-width:480px;margin:8px auto}
+.voice-answer-audio[hidden],.voice-play[hidden] {display:none!important}
+.voice-review {width:100%;max-width:720px;margin:0 auto 20px;text-align:left;font-size:18px;line-height:1.5}
+.voice-review summary {cursor:pointer;font-size:22px;font-weight:750;padding:12px}
+.voice-review-answer {display:block;width:100%;min-height:56px;margin:8px 0;text-align:left}
+.voice-settings {font-size:17px;line-height:1.5;text-align:left;width:100%;color:#35577c}
+.voice-settings summary {cursor:pointer;padding:12px;font-weight:750}
+.voice-settings label {display:flex;gap:12px;align-items:center;padding:10px 0}
+.voice-settings input {width:26px;height:26px;flex:none}
+.alphabet-games {display:flex;justify-content:center;flex-wrap:wrap;gap:12px;margin:0 auto 20px}
+#app .alphabet-games .btn {font-size:22px;min-height:60px}
+#app .everyday-card {background:#fff;border-color:#a5c6df;min-height:280px}
+#app .everyday-card .everyday-picture {width:100%;height:160px;max-width:210px;object-fit:contain;mix-blend-mode:multiply}
+#app .everyday-card .buddy-card-name {font-size:28px;color:#183c63}
+#app .everyday-card .buddy-card-status:empty {display:none}
+#app .everyday-alphabet-view .sound-buddy-grid {grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:18px}
+.home-everyday {margin-bottom:12px}
+.home-everyday img {object-fit:contain;border-radius:12px}
+.sound-game-picture {display:block;width:150px;height:150px;object-fit:contain;margin:10px auto}
 .alphabet-letter-card .sound-buddy-card {width:100%;flex:1;min-height:210px}
 #app .alphabet-view .alphabet-trace-button {font-size:20px;min-height:56px;padding:10px 8px;width:100%}
 .trace-view .read-card {max-width:780px}

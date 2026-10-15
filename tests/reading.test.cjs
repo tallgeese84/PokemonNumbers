@@ -126,7 +126,7 @@ function harness({teaching=false,audioMocks=false,gainMocks=false,audioDuration=
   querySelectorAll(sel){return this.all().slice(1).filter(e=>sel.startsWith('.')?e._cls.has(sel.slice(1)):e.tag===sel);}querySelector(sel){return this.querySelectorAll(sel)[0]||null;}}
  const els={},data={...recordings},traces=[],spoken=[],utterances=[],played=[],players=[],listened=[],t=new C.Tracker({now:()=>now}),helps=[],answers=[];
  const adventure={dailyStatus:()=>require('../reading-daily.js').progress(t.sessions,C.dayKey(now)),recordState(){},recordListening:meta=>listened.push(meta),get tracker(){return t;},begin:meta=>t.begin(meta),respond:(v,c)=>{answers.push({v,c});t.answer(v,c);},help:k=>{helps.push(k);t.help(k);},isPaused:()=>false,beforeQuestion:()=>true};
- const ctx={PokeLetterFormation:require('../letter-formation.js'),PokeAlphabetTracing:{create:(host,letter,options)=>{const pad={host,letter,options,penOnly:false,destroy(){this.destroyed=true;}};traces.push(pad);return pad;}},PokeReadingDaily:require('../reading-daily.js'),PokeSoundBuddies:require('../reading-buddies.js'),PokePhonics:require('../reading-phonics.js'),PokeReadingTutor:teaching?require('../reading-tutor.js'):{prepare:r=>r},PokeReadingCore:R,PokeReadingData:D,PokeLearning:C,PokeReadingAssess:require('../reading-assess.js'),adventure,screens:{},mode:'home',soundOn:true,childName:'Jonah',caught:[],stars:0,
+ const ctx={PokeLetterMemory:require('../letter-memory.js'),PokeEverydayAlphabet:require('../everyday-alphabet.js'),PokeVoiceAnswer:{review:()=>({destroy(){}})},PokeLetterFormation:require('../letter-formation.js'),PokeAlphabetTracing:{create:(host,letter,options)=>{const pad={host,letter,options,penOnly:false,destroy(){this.destroyed=true;}};traces.push(pad);return pad;}},PokeReadingDaily:require('../reading-daily.js'),PokeSoundBuddies:require('../reading-buddies.js'),PokePhonics:require('../reading-phonics.js'),PokeReadingTutor:teaching?require('../reading-tutor.js'):{prepare:r=>r},PokeReadingCore:R,PokeReadingData:D,PokeLearning:C,PokeReadingAssess:require('../reading-assess.js'),adventure,screens:{},mode:'home',soundOn:true,childName:'Jonah',caught:[],stars:0,
   document:{createElement:tag=>new El(tag),createElementNS:(_,tag)=>new El(tag),createTextNode:s=>{const e=new El('#text');e._text=s;return e;},getElementById:id=>els[id]||=new El(),body:{dataset:{}}},
   window:{speechSynthesis:{getVoices:()=>[],speak:u=>{spoken.push(u.text);utterances.push(u);timers.push({at:now+20,f:()=>u.onend?.()});},cancel(){}}},
   SpeechSynthesisUtterance:function(text){this.text=text;},
@@ -329,9 +329,9 @@ test('one alphabet page shows all 26 Pokémon; each tap plays once without an au
 test('each new tap on the same letter plays once and records listening only',()=>{
  const h=harness({audioMocks:true});h.ui.openLetters();const p=h.opts()[0].querySelectorAll('.sound-buddy-card').find(c=>c.dataset.letter==='p');
  p.click();h.flush(40);p.click();h.flush(40);p.click();
- assert.equal(h.played.length,3);assert.equal(h.listened.length,3);
+ assert.equal(h.played.length,3);assert.equal(h.listened.filter(q=>q.kind==='buddyListen').length,3);
  h.flush(2200);assert.equal(h.played.length,3);assert.equal(p.classList.contains('playing'),false);assert.ok(h.players.every(p=>p.paused));
- p.click();assert.equal(h.played.length,4);assert.equal(h.listened.length,4);assert.equal(h.answers.length,0);
+ p.click();assert.equal(h.played.length,4);assert.equal(h.listened.filter(q=>q.kind==='buddyListen').length,4);assert.equal(h.answers.length,0);
 });
 test('switching letters releases the playing clip over 75ms, then stops it without interrupting the next clip',()=>{
  for(const gainMocks of [false,true]){

@@ -777,47 +777,51 @@
     .pad button{ font-size:18px; min-height:42px; }
   }
 </style>
-<link rel="stylesheet" href="adventure.css?v=96">
-<link rel="stylesheet" href="visuals.css?v=96">
-<script src="grownup-gate.js?v=96"></script>
-<script src="visuals.js?v=96"></script>
-<script src="collection.js?v=96"></script>
-<script src="assets/pokemon-catalog.js?v=96"></script>
-<script src="learning-core.js?v=96"></script>
-<script src="drive-mirror.js?v=96"></script>
-<script src="adventure.js?v=96"></script>
-<script src="foundations.js?v=96"></script>
-<script src="foundation-ui.js?v=96"></script>
-<script src="reading-data.js?v=96"></script>
-<script src="reading-phonics.js?v=96"></script>
-<script src="reading-art.js?v=96"></script>
-<script src="reading-tutor.js?v=96"></script>
-<script src="reading-buddies.js?v=96"></script>
-<script src="reading-core.js?v=96"></script>
-<script src="reading-daily.js?v=96"></script>
-<script src="adult-reading.js?v=96"></script>
-<script src="reading-assess.js?v=96"></script>
-<script src="writing-pad.js?v=96"></script>
-<script src="letter-formation.js?v=96"></script>
-<script src="alphabet-tracing.js?v=96"></script>
-<script src="reading-ui.js?v=96"></script>
-<script src="math-path-core.js?v=96"></script>
-<script src="math-tutor.js?v=96"></script>
-<script src="math-path-ui.js?v=96"></script>
-<script src="fox-core.js?v=96"></script>
-<script src="fox-model.js?v=96"></script>
-<script src="fox-ui.js?v=96"></script>
-<script src="nightly-priority-core.js?v=96"></script>
-<script src="nightly-plan.js?v=96"></script>
-<link rel="stylesheet" href="foundations.css?v=96">
-<link rel="stylesheet" href="reading.css?v=96">
-<link rel="stylesheet" href="reading-art.css?v=96">
-<link rel="stylesheet" href="math-path.css?v=96">
-<link rel="stylesheet" href="fox.css?v=96">
-<link rel="stylesheet" href="collection.css?v=96">
-<link rel="stylesheet" href="theme-blue.css?v=96">
-<link rel="stylesheet" href="large-type.css?v=96">
-<link rel="stylesheet" href="alphabet-tracing.css?v=96">
+<link rel="stylesheet" href="adventure.css?v=97">
+<link rel="stylesheet" href="visuals.css?v=97">
+<script src="grownup-gate.js?v=97"></script>
+<script src="visuals.js?v=97"></script>
+<script src="collection.js?v=97"></script>
+<script src="assets/pokemon-catalog.js?v=97"></script>
+<script src="learning-core.js?v=97"></script>
+<script src="drive-mirror.js?v=97"></script>
+<script src="adventure.js?v=97"></script>
+<script src="foundations.js?v=97"></script>
+<script src="foundation-ui.js?v=97"></script>
+<script src="reading-data.js?v=97"></script>
+<script src="reading-phonics.js?v=97"></script>
+<script src="reading-art.js?v=97"></script>
+<script src="reading-tutor.js?v=97"></script>
+<script src="reading-buddies.js?v=97"></script>
+<script src="reading-core.js?v=97"></script>
+<script src="reading-daily.js?v=97"></script>
+<script src="letter-memory.js?v=97"></script>
+<script src="voice-feedback.js?v=97"></script>
+<script src="voice-answer.js?v=97"></script>
+<script src="everyday-alphabet.js?v=97"></script>
+<script src="adult-reading.js?v=97"></script>
+<script src="reading-assess.js?v=97"></script>
+<script src="writing-pad.js?v=97"></script>
+<script src="letter-formation.js?v=97"></script>
+<script src="alphabet-tracing.js?v=97"></script>
+<script src="reading-ui.js?v=97"></script>
+<script src="math-path-core.js?v=97"></script>
+<script src="math-tutor.js?v=97"></script>
+<script src="math-path-ui.js?v=97"></script>
+<script src="fox-core.js?v=97"></script>
+<script src="fox-model.js?v=97"></script>
+<script src="fox-ui.js?v=97"></script>
+<script src="nightly-priority-core.js?v=97"></script>
+<script src="nightly-plan.js?v=97"></script>
+<link rel="stylesheet" href="foundations.css?v=97">
+<link rel="stylesheet" href="reading.css?v=97">
+<link rel="stylesheet" href="reading-art.css?v=97">
+<link rel="stylesheet" href="math-path.css?v=97">
+<link rel="stylesheet" href="fox.css?v=97">
+<link rel="stylesheet" href="collection.css?v=97">
+<link rel="stylesheet" href="theme-blue.css?v=97">
+<link rel="stylesheet" href="large-type.css?v=97">
+<link rel="stylesheet" href="alphabet-tracing.css?v=97">
 </head>
 <body data-screen="home">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
@@ -915,8 +919,16 @@
       <div id="buddyBox"></div>
       <div id="missionSlot"></div>
     </section>
-    <button class="home-alphabet" id="alphabetBtn" aria-label="Open Pokémon A to Z sounds and tracing">
-      <span class="home-alphabet-copy"><strong>Pokémon A–Z</strong><small>Hear sounds. Trace letters.</small></span>
+    <button class="home-alphabet home-everyday" id="everydayAlphabetBtn" aria-label="Open Everyday A to Z names, sounds, words and tracing">
+      <span class="home-alphabet-copy"><strong>Everyday A–Z</strong><small>Say · listen · trace</small></span>
+      <span class="home-alphabet-preview" aria-hidden="true">
+        <span><b>A a</b><img src="assets/everyday/a-apple.png" alt="" width="52" height="52"></span>
+        <span><b>B b</b><img src="assets/everyday/b-ball.png" alt="" width="52" height="52"></span>
+        <span><b>C c</b><img src="assets/everyday/c-cup.png" alt="" width="52" height="52"></span>
+      </span>
+    </button>
+    <button class="home-alphabet" id="alphabetBtn" aria-label="Open Pokémon A to Z names, sounds and tracing">
+      <span class="home-alphabet-copy"><strong>Pokémon A–Z</strong><small>Names · sounds · tracing</small></span>
       <span class="home-alphabet-preview" aria-hidden="true">
         <span><b>A a</b><img src="assets/sound-buddies/359.png" alt="" width="52" height="52"></span>
         <span><b>B b</b><img src="assets/sound-buddies/1.png" alt="" width="52" height="52"></span>
@@ -929,7 +941,7 @@
       <button class="quiet-choice home-art-choice" id="teamBtn" aria-label="My Pokémon"><img class="home-icon-art" src="assets/sound-buddies/25.png" alt="" width="112" height="88"><span class="home-team-copy"><strong>My Pokémon</strong><small>Browse &amp; choose your buddy</small></span><small id="teamTally" hidden></small></button>
       <button class="quiet-choice home-art-choice" id="foxBtn" aria-label="My fox"><img class="home-icon-art" src="assets/home/fox-v80.png" alt="" width="112" height="88"><span class="home-team-copy"><strong>My fox</strong><small>Play and teach tricks</small></span></button>
     </div>
-    <footer class="home-footer"><span id="parentEntry"></span><span class="build-label">v96</span></footer>
+    <footer class="home-footer"><span id="parentEntry"></span><span class="build-label">v97</span></footer>
   </div>
 
   <!-- The other activities stay available, three pictures at a time. -->
@@ -1762,6 +1774,7 @@ function show(name){
   window.scrollTo(0, 0);
 }
 document.getElementById('gamesBtn').addEventListener('click', () => { sndTap(); shutUp(); mode='games'; show('games'); say('Choose a game.'); });
+document.getElementById('everydayAlphabetBtn').addEventListener('click', () => { audio(); shutUp(); reading.openEverydayLetters(); });
 document.getElementById('alphabetBtn').addEventListener('click', () => { audio(); shutUp(); reading.openLetters(); });
 document.getElementById('backBtn').addEventListener('click', () => {
   sndTap(); shutUp(); reading.leave(); mathPath.leave(); fox.leave(); stopZap(); stopRace(); lnStopLoop(); abStopLoop(); stopHide(); mode = 'home'; renderBuddyHome(); show('home');

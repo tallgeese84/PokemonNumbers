@@ -24,12 +24,21 @@ async function until(fn,label,ms=10000){const t=Date.now();while(Date.now()-t<ms
  await until(()=>w.JonahNightly?.report().received,'receipt');await w.eval('adventure.ready');await until(()=>w.eval('collectionReady'),'collection loaded');
  assert.equal(w.JonahNightly.report().active,null);assert.equal(w.localStorage.getItem('cubs_caught'),'25,151,382');assert.equal(w.localStorage.getItem('cubs_pbuddy'),'151');
  click($('startAdventure'));
+ await until(()=>!$('adultReady').hidden,'adult preparation');click($('adultReadyStart'));w.eval('addStar=()=>{}');
+ await until(()=>w.eval('adventure.tracker.question()')?.kind==='adultLetterRecall','spoken recall starts');
+ // Name turns stay separate from the sound priority. Reach the actual sound
+ // target through the supported adult flow rather than treating a name as it.
+ for(let i=0;i<12&&w.eval('adventure.tracker.question()')?.nightlyTarget!=='sound:a';i++){
+  const id=w.eval('adventure.tracker.question().id');click(d.querySelector('[data-outcome="independent"]'));
+  await until(()=>w.eval('adventure.tracker.current')===null,'observation saved');click(d.querySelector('#rdActions .read-next'));
+  await until(()=>w.eval('adventure.tracker.question()')?.id!==id&&w.eval('adventure.tracker.question()'),'next recall');
+ }
  await until(()=>w.eval('adventure.tracker.question()')?.nightlyTarget==='sound:a','prioritised sound starts');
- const first=w.eval('adventure.tracker.question()');assert.equal(first.nightlyPlan.revision,1);assert.equal(first.dailyStage,'sounds');assert.equal(first.teach,true);const currentId=first.id;
+ const first=w.eval('adventure.tracker.question()');assert.equal(first.nightlyPlan.revision,1);assert.equal(first.dailyStage,'sounds');assert.equal(first.letterSkill,'sound');assert.equal(first.observer,'grown-up');const currentId=first.id;
  remote={...remote,revision:2,subjects:{...remote.subjects,reading:{...remote.subjects.reading,sounds:['t']}}};await w.JonahNightly.refresh(true);
  assert.equal(w.eval('adventure.tracker.question().id'),currentId);assert.equal(w.eval('adventure.tracker.question().nightlyPlan.revision'),1);
- click($('rdActions').querySelector('button'));
- await until(()=>w.eval('adventure.tracker.sessions[adventure.tracker.sessionId].questions')[currentId].completedAt,'model completion');
+ click(d.querySelector('[data-outcome="helped"]'));
+ await until(()=>w.eval('adventure.tracker.sessions[adventure.tracker.sessionId].questions')[currentId].completedAt,'observation completion');
  w.eval('adventure.cancelMission();reading.leave();mathPath.openGyms();');
  click(d.querySelector('.mp-gymbtn'));
  await until(()=>w.eval('mathPath._current()')?.item.skill==='compare10','prioritised real Gym task');

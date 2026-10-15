@@ -1,3 +1,15 @@
+## v97 · Everyday pictures, spoken answers, names and sounds
+
+**Home → Everyday A–Z** opens a second alphabet chart with 26 newly generated picture-book illustrations. Each card has **Hear name**, **Hear sound**, **Hear word**, and **Trace**. Pokémon A–Z remains on the home screen. Both charts use the same large, directional uppercase/lowercase tracing guides. Q is shown with u for /kw/; X uses the end of box; O uses octopus for its short vowel. [Artwork and generation prompts](assets/everyday/README.md).
+
+**Say the letters** offers a small set of separate name/sound turns, uppercase and lowercase, with hold-to-talk or tap-to-record, replay, and immediate spoken models. Enable **Automatic letter-name feedback** under Voice feedback settings for browser recognition: a clear matching letter earns encouragement, a different recognized letter gets the target name, and uncertain/unavailable recognition gets a model and retry. This is a practice hint, not a speech assessment. Isolated phonemes are not automatically scored. **Find the sound** gives automatic correction for letter choices.
+
+The microphone runs only after a deliberate press and stops on release, stop, timeout, pause, navigation, or backgrounding. Up to 100 recordings stay in this device's IndexedDB, with replay/delete from the alphabet screen; raw audio is excluded from learning-history sync. Optional speech recognition may send audio to the browser provider and may need internet. Browser support and performance vary; there is no secret key embedded in the app.
+
+Daily reading now prioritizes **names and sounds (4 min)**, followed by **blend/build (3)**, **writing (2)** and **supported reading (3)**. These are pacing guides. Practice reviews small sets, adds letters gradually, and allows school-selected letters. Name/sound and upper/lower recall are tracked separately using adult observations across different days. Models, tracing, microphone recording and automated feedback do not create independent recall credit. Existing daily schema version 2, saved history, collection, shinies and buddy selection are preserved.
+
+Validation: 185 Node tests and the complete daily-practice DOM integration, including synthetic microphone/recognition events, correct/incorrect name feedback, the everyday chart, sound-choice correction and tracing. Physical microphone, browser-service speech accuracy and stylus hardware were not tested.
+
 ## v96 · Alphabet practice on the home screen
 
 The large **Pokémon A–Z** button sits directly beneath **Read with a grown-up** on the front page. Jonah can open the sound cards and upper/lowercase tracing without entering the parent menu. Maths games remain in the grown-up choices.

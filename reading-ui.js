@@ -122,13 +122,15 @@ function createReading(){
  let run=null;            // {round, i, onDone, item, meta, wrong, help, ref}
  let writingPad=null,writingSurface='tablet';
  function closeWritingPad(){writingPad?.destroy();writingPad=null;}
+ let voiceAnswer=null,voiceReview=null,alphabetTheme='pokemon';
+ function closeVoice(){voiceAnswer?.destroy();voiceAnswer=null;voiceReview?.destroy();voiceReview=null;}
  let tracingPad=null,tracingPenOnly=false;
  function closeTracing(){if(tracingPad)tracingPenOnly=tracingPad.penOnly;tracingPad?.destroy();tracingPad=null;root.classList.remove('trace-view');}
  const recent=[];
  const TITLE={actions:'Read and act',buddies:'Sound buddies',reteach:'Sounds again',meet:'New sounds',write:'Writing letters',shapes:'Letter shapes',hunt:'Sound hunt',read:'Read it',build:'Build it',heart:'Tricky words',sentence:'Read and tap',ears:'Sound ears',book:'Book time',name:'Name catch',review:'Remember these',caps:'Capital letters',placement:'Reading check',spell:'Spell it'};
  const INTRO={actions:'Read the word. Choose its action.',buddies:'Let us learn with our sound buddies.',reteach:'Let us look at these sounds again.',meet:'Meet a new letter and its sound.',write:'Trace the letter. Start on the green dot.',shapes:'Find the letter that looks the same.',hunt:'Listen. Find the sound.',read:'Tap each sound. Say them fast. Then find the picture.',build:'Listen, then build the word.',heart:'Tricky words. Learn them by heart.',sentence:'Read it, then tap the right picture.',ears:'Listen with your ears.',book:'Let us read a book.',name:'Read the name to catch the Pokémon!',review:'Do you remember these?',caps:'Find the one written the right way.',placement:'Show me what you can read!',spell:'Listen to the word. Find the letter for the sound.'};
  function setHeader(act,n){$('rdTitle').textContent=TITLE[act]||'Reading';const L=R.route(n);$('rdRoute').innerHTML='';const chip=el('span','route-chip','Route '+n);chip.style.setProperty('--route',L.colour);$('rdRoute').append(chip);}
- function enter(){closeTracing();closeWritingPad();root.classList.remove('alphabet-view','daily-reading-view');$('rdOptions').classList.remove('adult-observations');shutUp();mode='read';show('read');}
+ function enter(){closeVoice();closeTracing();closeWritingPad();root.classList.remove('alphabet-view','everyday-alphabet-view','daily-reading-view');$('rdOptions').classList.remove('adult-observations');shutUp();mode='read';show('read');}
  function startRound(round,onDone){
   stop();closeWritingPad();
   round=PokeReadingTutor.prepare(round,sessions());
@@ -144,7 +146,7 @@ function createReading(){
  }
  function nextItem(){
   if(!run)return;
-  closeWritingPad();closeTracing();
+  closeVoice();closeWritingPad();closeTracing();
   if(run.round.lazy&&run.i>=run.round.items.length){const nx=run.round.lazy.next();if(nx)run.round.items.push(nx);}
   if(run.i>=run.round.items.length){finishRound();return;}
   const upcoming=run.round.items[run.i];
@@ -154,7 +156,7 @@ function createReading(){
   if(!adventure.beforeQuestion()){waitReady(nextItem);return;}
   const it=run.round.items[run.i];run.item=it;run.wrong=0;run.helped=false;run.done=false;
   if(run.round.lazy){const pr=run.round.lazy.progress();pips(pr.sections,pr.section);}else pips(run.round.items.length,run.i);feedback('');$('rdOptions').replaceChildren();$('rdOptions').classList.remove('adult-observations');$('rdActions').replaceChildren();$('rdStage').replaceChildren();$('rdPrompt').replaceChildren();
-  run.ref=adventure.begin({...(it.nightlyPlan?{nightlyPlan:it.nightlyPlan,nightlyTarget:it.nightlyTarget}:{}),section:'read',skill:run.round.placement?'placement':run.round.act,kind:it.kind,item:it.item,route:it.route,range:it.route,support:it.buddyLetter?(it.buddyCue?'Pokémon picture help':'no picture help'):(it.phase||'independent'),word:it.word||it.target||it.item,phase:it.phase||'independent',format:it.kind,level:it.route,teach:!!it.teach,...(it.buddyLetter?{buddyLetter:it.buddyLetter,buddyCue:!!it.buddyCue}:{}),...(run.round.daily?{dailyVersion:run.round.daily.version||1,dailyDay:run.round.daily.day,dailyCycle:run.round.daily.cycle,dailyStage:run.round.daily.stage}:{}),...(it.adultSession?{observer:'grown-up',evidence:'adult-observation',adultLetters:it.adultLetters,g:it.g,writingMode:it.writingMode,support:'adult-observed '+(it.writingMode||'spoken attempt')}:{}),...(it.storyId?{storyId:it.storyId}:{}),...(it.storyHelped?{support:'listening/supported comprehension'}:{}),a:it.route,b:0,expected:String(it.answer??it.item)});
+  run.ref=adventure.begin({...(it.nightlyPlan?{nightlyPlan:it.nightlyPlan,nightlyTarget:it.nightlyTarget}:{}),section:'read',skill:run.round.placement?'placement':run.round.act,kind:it.kind,item:it.item,route:it.route,range:it.route,support:it.buddyLetter?(it.buddyCue?'Pokémon picture help':'no picture help'):(it.phase||'independent'),word:it.word||it.target||it.item,phase:it.phase||'independent',format:it.kind,level:it.route,teach:!!it.teach,...(it.buddyLetter?{buddyLetter:it.buddyLetter,buddyCue:!!it.buddyCue}:{}),...(run.round.daily?{dailyVersion:run.round.daily.version||1,dailyDay:run.round.daily.day,dailyCycle:run.round.daily.cycle,dailyStage:run.round.daily.stage}:{}),...(it.adultSession?{observer:'grown-up',evidence:'adult-observation',adultLetters:it.adultLetters,g:it.g,writingMode:it.writingMode,support:'adult-observed '+(it.writingMode||'spoken attempt')}:{}),...(it.letterRecallVersion?{letterRecallVersion:it.letterRecallVersion,letter:it.letter,letterSkill:it.letterSkill,letterCase:it.letterCase,displayGlyph:it.displayGlyph}:{}),...(it.storyId?{storyId:it.storyId}:{}),...(it.storyHelped?{support:'listening/supported comprehension'}:{}),a:it.route,b:0,expected:String(it.answer??it.item)});
   if(it.nightlyPlan)window.JonahNightly?.started(it.nightlyPlan);
   if(it.storyHelped)help('story words supplied or read aloud');
   if(it.phase==='model'){renderModel(it);return;}
@@ -185,7 +187,7 @@ function createReading(){
  }
  function advance(){if(!run)return;run.i++;waitReady(nextItem);}
  function finishRound(){
-  closeWritingPad();closeTracing();const r=run;run=null;if(!r)return;
+  closeVoice();closeWritingPad();closeTracing();const r=run;run=null;if(!r)return;
   const done=r.onDone;feedback('');
   waitReady2(()=>done?.());
  }
@@ -558,22 +560,24 @@ function createReading(){
 
  /* ---------- adult-guided daily practice ---------- */
  function adultNote(text){$('rdStage').append(el('p','adult-instruction',text));}
- function adultHelp(label,fn){$('rdActions').append(btn('btn read-help',label,()=>{help('adult model or answer supplied');stop();fn();},esc(label)));}
+ function adultHelp(label,fn){$('rdActions').append(btn('btn read-help',label,()=>{voiceAnswer?.cancel();help('adult model or answer supplied');stop();fn();},esc(label)));}
  function adultMarks(it){
   const host=$('rdOptions');host.classList.add('adult-observations');
   host.append(el('p','adult-mark-label','Grown-up: record what you observed'));
   const labels=it.writingMode==='copy'?['Copied without extra help','Copied with help','Not yet']:it.writingMode==='memory'?['Wrote it from memory','Needed a model or help','Not yet']:['Said it on his own','Said it with help','Not yet'];
   PokeAdultReading.OUTCOMES.forEach((outcome,i)=>{
-   const b=btn('btn adult-result adult-result-'+outcome,labels[i],()=>{
-    if(run.done)return;
+   const b=btn('btn adult-result adult-result-'+outcome,labels[i],async()=>{
+    if(run.done||run.marking)return;
     if(it.kind==='adultWrite'&&writingSurface==='tablet'&&outcome!=='not-yet'&&!writingPad?.hasInk){feedback('Try writing in the box first. For a paper attempt, choose Paper below the box. You can also mark “Not yet”.');return;}
+    if(voiceAnswer){const current=run;run.marking=true;await voiceAnswer.finish();if(run!==current)return;run.marking=false;if(!active())return;voiceAnswer.freeze();}
     writingPad?.freeze();stop();const result=adventure.observe(outcome);if(!result)return;run.done=true;
     $('rdStage').querySelectorAll('.adult-writing button,.adult-writing input').forEach(b=>b.disabled=true);
     host.querySelectorAll('button').forEach(b=>b.disabled=true);
-    if(it.kind==='adultSound'){state.recall[it.g]={at:Date.now(),ok:result==='independent',observer:'grown-up'};save();}
+    if(it.kind==='adultSound'||(it.kind==='adultLetterRecall'&&it.letterSkill==='sound')){state.recall[it.g]={at:Date.now(),ok:result==='independent',observer:'grown-up'};save();}
     // Acknowledge effort equally; a reward never turns a helped try into mastery.
     addStar(1);feedback(result==='not-yet'?'Good trying. We can practise this again.':result==='helped'?'We practised together.':'You tried it on your own!');
     $('rdActions').replaceChildren(btn('btn read-next','Next practice',()=>advance(),'Next'));
+    if(it.kind==='adultLetterRecall'&&result!=='independent')$('rdActions').prepend(btn('btn read-help','Hear and say the '+it.letterSkill+' together',()=>{stop();recordLetterModel(it.letter,it.letterSkill);modelLetterRecall(it);},'Hear & say together'));
    },esc(labels[i]));b.dataset.outcome=outcome;host.append(b);
   });
  }
@@ -584,6 +588,37 @@ function createReading(){
   replay=()=>{help('sound played before adult observation');sound(it.g==='q'?'qu':it.g);};
   adultHelp('Model this sound',()=>sound(it.g==='q'?'qu':it.g));adultMarks(it);
  };
+ function recordLetterModel(letter,letterSkill){adventure.recordListening?.({section:'read',skill:'letters',kind:'letterModel',item:'letter:model:'+letter+':'+letterSkill,letterRecallVersion:PokeLetterMemory.VERSION,letter,letterSkill});}
+ function modelLetterRecall(it){
+  audio();if(!soundOn)$('soundBtn').click();
+  const b=B.get(it.letter),word=PokeEverydayAlphabet.get(it.letter).word,text=it.letterSkill==='name'?'Name: '+letterName(it.letter):it.letter==='q'?'Q usually works with u: qu as in quilt.':it.letter==='x'?'The end sounds in box.':'Sound as in '+word+'.';
+  let model=$('rdStage').querySelector('.adult-memory-model');if(!model){model=el('p','adult-memory-model');$('rdStage').append(model);}model.textContent=text;
+  if(it.letterSkill==='name')speak('The letter '+it.letter.toUpperCase()+'.',{rate:.8});else sound(b.g);
+ }
+ function renderLetterRecall(it,observed=true){
+  const name=it.letterSkill==='name',prompt=name?'Say the letter name':it.letter==='q'?'Say the sounds for q and u':'Say the letter sound';
+  $('rdPrompt').textContent=prompt;
+  $('rdStage').append(el('p','adult-recall-kind',name?'NAME':'SOUND'),el('div','adult-letter adult-recall-letter',it.displayGlyph),el('p','adult-recall-case',it.letterCase==='upper'?'Uppercase':'Lowercase'));
+  const voiceHost=el('div','adult-voice-host');$('rdStage').append(voiceHost);const ref=run.ref,q=adventure.tracker.sessions[ref.sid].questions[ref.qid];
+  voiceAnswer=PokeVoiceAnswer.create(voiceHost,{active,onStart:()=>{stop();shutUp();adventure.tracker.interact();},onPlayback:()=>{stop();shutUp();},prompt:{letter:it.letter,letterSkill:it.letterSkill,letterCase:it.letterCase,glyph:it.displayGlyph,questionId:ref.qid},onSave:meta=>{q.voiceAnswer=meta;adventure.tracker.changed(ref.sid);},onFeedback:result=>{
+   if(run?.item!==it||run.done||!active())return;
+   q.voiceFeedback={...result,at:Date.now()};adventure.tracker.changed(ref.sid);stop();shutUp();
+   if(result.verdict==='match'){
+    feedback('That matches!');audio();if(!soundOn)$('soundBtn').click();speak('Yes! You said the letter '+it.letter.toUpperCase()+'.',{rate:.8});recordLetterModel(it.letter,it.letterSkill);
+   }else{
+    help('automatic model after spoken attempt');recordLetterModel(it.letter,it.letterSkill);
+    feedback(result.verdict==='different'?'Good try. Listen to this name, then try again.':name?'Listen to the name, then try again.':'Listen to the sound, then say it again.');modelLetterRecall(it);
+   }
+  }});
+  adultNote(observed?'Let Jonah try first. Automatic name feedback can help him practise; you record what you actually hear. A supplied model counts as help.':'Say it, listen, and try again. Turn on automatic letter-name feedback in Voice feedback settings. Sound turns play a model to copy.');
+  // Replay repeats the question, not its answer. No picture or word gives the
+  // answer away before the first spoken attempt.
+  replay=()=>{stop();speak(prompt,{rate:.8});};
+  adultHelp('Hear '+it.letterSkill,()=>modelLetterRecall(it));if(observed)adultMarks(it);else $('rdActions').append(btn('btn read-next','Next letter practice',()=>{voiceAnswer?.cancel();teachDone();},'Next'));
+  const status=adventure.dailyStatus();if(observed&&status.stage?.id==='sounds'&&status.stage.attempts>=2)$('rdActions').append(btn('btn secondary','Finish names and sounds early',()=>{run.round.items=run.round.items.slice(0,run.i+1).concat(run.round.items.filter(x=>x.kind==='adultStageEnd'));run.i++;nextItem();},'Enough for now · next part'));
+ }
+ RENDER.adultLetterRecall=it=>renderLetterRecall(it,true);
+ RENDER.letterVoicePractice=it=>renderLetterRecall(it,false);
  RENDER.adultBlend=it=>{
   $('rdPrompt').textContent=it.build?'Build it, then say it':'Say the sounds. Blend them.';
   $('rdStage').append(el('div','adult-word',it.word));
@@ -715,13 +750,21 @@ function createReading(){
   const n=R.currentRoute(st()),pool=[...R.available(sessions(),n),...(R.nextBatch(sessions(),n)||[])];
   startRound(B.lesson(letters,sessions(),pool,Date.now()),openLetters);
  }
- function openLetters(){
+ function openLetters(theme='pokemon'){
+  alphabetTheme=theme==='everyday'?'everyday':'pokemon';const everyday=alphabetTheme==='everyday';
   stop();enter();run=null;adventure.section?.('cards');setHeader('buddies',R.currentRoute(st()));
-  root.classList.add('alphabet-view');
-  $('rdTitle').textContent='Pokémon alphabet';$('rdPrompt').textContent='My Pokémon alphabet';
+  root.classList.add('alphabet-view');root.classList.toggle('everyday-alphabet-view',everyday);
+  $('rdTitle').textContent=everyday?'Everyday A–Z':'Pokémon alphabet';$('rdPrompt').textContent=everyday?'Letters in my world':'My Pokémon alphabet';$('rdRoute').textContent='26 letters · uppercase & lowercase';
   $('rdStage').replaceChildren();$('rdOptions').replaceChildren();$('rdActions').replaceChildren();$('rdPips').replaceChildren();feedback('');
   const ps=B.progress(sessions()),badges=Object.values(ps).filter(x=>x.badge).length;
-  $('rdStage').append(el('p','buddy-collection-note','Tap a Pokémon to hear its sound. Tap Trace to write.'));
+  const memory=PokeLetterMemory.summary(sessions());
+  $('rdStage').append(el('p','buddy-collection-note',everyday?'Hear its name. Hear its sound. Learn the word.':'A letter has a name and a sound. Try both, then trace it.'),btn('btn read-next alphabet-daily-start','Practise names and sounds with a grown-up',()=>{stop();$('startAdventure').click();},'Practise names & sounds'));
+  const games=el('div','alphabet-games');games.append(btn('btn read-next','Play say the letters',()=>startLetterVoice(),'Say the letters'),btn('btn','Play find the sound',()=>startEverydaySoundGame(),'Find the sound'),btn('btn secondary','Switch alphabet chart',()=>openLetters(everyday?'pokemon':'everyday'),everyday?'Pokémon A–Z':'Everyday A–Z'));$('rdStage').append(games);
+  const detail=el('details','alphabet-memory-progress');detail.append(el('summary','','Names '+memory.names+'/26 · Sounds '+memory.sounds+'/26 remembered'));
+  detail.append(el('p','','Grown-up observations in both uppercase and lowercase, on different days. Hearing, tracing and tapping do not earn these checks. Start with common sounds; letters can have other sounds in words. Q is practised with u.'));
+  const table=el('table'),head=el('thead'),headRow=el('tr');['Letter','Name','Sound'].forEach(t=>headRow.append(el('th','',t)));head.append(headRow);table.append(head);const body=el('tbody'),memoryStats=PokeLetterMemory.progress(sessions());
+  for(const l of PokeLetterMemory.LETTERS){const row=el('tr');row.append(el('th','',l.toUpperCase()+' '+l));for(const skill of ['name','sound']){const s=memoryStats[l][skill];row.append(el('td','',s.secure?'Both remembered':'Upper: '+s.upper.status+' · lower: '+s.lower.status));}body.append(row);}table.append(body);detail.append(table);$('rdStage').append(detail);
+  voiceReview=PokeVoiceAnswer.review($('rdStage'),{active,onPlayback:()=>{stop();shutUp();}});
   const grid=el('div','sound-buddy-grid');grid.setAttribute('aria-label','All 26 letter sounds');
   let selected=null;
   const learn=btn('btn read-next','Choose a letter, then practise together',()=>{if(selected)startBuddies([selected.letter]);},'Practise together');learn.disabled=true;
@@ -731,37 +774,65 @@ function createReading(){
    grid.querySelectorAll('.sound-buddy-card').forEach(c=>{c.classList.remove('selected','playing');c.setAttribute('aria-pressed','false');});
    card.classList.add('selected','playing');card.setAttribute('aria-pressed','true');
    learn.disabled=false;learn.textContent='Practise '+b.letter.toUpperCase()+' together';learn.setAttribute('aria-label',learn.textContent);
-   feedback(b.letter==='x'?'X · hear the end of box. Xatu is our letter buddy.':b.letter==='q'?'Q · q and u work together, as in queen.':b.letter.toUpperCase()+' · '+b.keyword);
+   feedback(everyday?b.letter.toUpperCase()+' · '+PokeEverydayAlphabet.get(b.letter).note:b.letter==='x'?'X · hear the end of box. Xatu is our letter buddy.':b.letter==='q'?'Q · q and u work together, as in queen.':b.letter.toUpperCase()+' · '+b.keyword);
    // Exploration is listening, never an independent answer or badge check.
    adventure.recordListening?.({section:'read',skill:'buddies',kind:'buddyListen',phase:'explore',item:'g:'+b.g,buddyLetter:b.letter,buddyCue:true});
+   recordLetterModel(b.letter,'sound');
    sound(b.g,()=>{card.classList.remove('playing');card.setAttribute('aria-pressed','false');});
    replay=()=>playBuddy(b,card);
   };
-  for(const b of B.ALL){const card=btn('sound-buddy-card'+(ps[b.letter].badge?' remembered':''),'Hear '+b.letter.toUpperCase()+', '+b.name,card=>playBuddy(b,card),'');
+  for(const b of B.ALL){const obj=PokeEverydayAlphabet.get(b.letter),card=btn('sound-buddy-card'+(everyday?' everyday-card':'')+(ps[b.letter].badge?' remembered':''),'Hear '+b.letter.toUpperCase()+', '+(everyday?obj.word:b.name),card=>playBuddy(b,card),'');
    card.dataset.letter=b.letter;card.setAttribute('aria-pressed','false');
-   card.append(el('span','buddy-card-letter',b.letter.toUpperCase()+' '+b.letter),buddyImage(b,'buddy-card-mon'),el('span','buddy-card-name',b.name),el('span','buddy-card-status',b.letter==='x'?'box · end sounds':b.letter==='q'?'qu · queen':b.keyword));
-   const pair=el('div','alphabet-letter-card');pair.append(card,btn('btn alphabet-trace-button','Trace '+b.letter.toUpperCase()+' and '+b.letter,()=>openAlphabetTrace(b.letter,'upper'),'Trace '+b.letter.toUpperCase()+' '+b.letter));grid.append(pair);}
+   card.append(el('span','buddy-card-letter',b.letter.toUpperCase()+' '+b.letter),everyday?everydayImage(b.letter,'buddy-card-mon everyday-picture'):buddyImage(b,'buddy-card-mon'),el('span','buddy-card-name',everyday?obj.word:b.name),el('span','buddy-card-status',everyday?(b.letter==='q'?'q + u':b.letter==='x'?'x at the end':''):(b.letter==='x'?'box · end sounds':b.letter==='q'?'qu · queen':b.keyword)));
+   const pair=el('div','alphabet-letter-card'),hearing=el('div','alphabet-hearing');
+   hearing.append(btn('btn','Hear the name of '+b.letter.toUpperCase(),()=>{stop();shutUp();audio();if(!soundOn)$('soundBtn').click();recordLetterModel(b.letter,'name');feedback('Name: '+letterName(b.letter));speak('The letter '+b.letter.toUpperCase()+'.',{rate:.8});},'Hear name'),btn('btn','Hear the sound of '+b.letter.toUpperCase(),()=>playBuddy(b,card),'Hear sound'));
+   if(everyday)hearing.append(btn('btn','Hear the word '+obj.word,()=>{stop();shutUp();audio();if(!soundOn)$('soundBtn').click();speak(obj.word,{rate:.8});},'Hear word'));
+   pair.append(card,hearing,btn('btn alphabet-trace-button','Trace '+b.letter.toUpperCase()+' and '+b.letter,()=>openAlphabetTrace(b.letter,'upper'),'Trace '+b.letter.toUpperCase()+' '+b.letter));grid.append(pair);}
   $('rdOptions').append(grid);
-  $('rdActions').append(learn,btn('btn','Letter writing and other sounds',()=>{stop();openLetterTiles();},'Write & sounds'),el('p','buddy-collection-note',badges+' / 26 remembered in practice'));
-  replay=()=>speak('Tap a letter. Listen, then say the sound.',{rate:.8});
+  if(!everyday)$('rdActions').append(learn);
+  $('rdActions').append(btn('btn','Letter writing and other sounds',()=>{stop();openLetterTiles();},'Write & sounds'),el('p','buddy-collection-note',badges+' / 26 remembered in practice'));
+  replay=()=>speak('Hear the name. Hear the sound. Say them, then trace the letter.',{rate:.8});
  }
+ function everydayImage(letter,cls){const item=PokeEverydayAlphabet.get(letter),img=el('img',cls);img.src=item.image;img.alt=item.word;img.loading='lazy';img.width=160;img.height=160;return img;}
+ function startLetterVoice(){
+  const letters=PokeLetterMemory.select(sessions()),items=PokeLetterMemory.checks(letters,{},PokeLearning.dayKey(Date.now())).map(it=>({...it,kind:'letterVoicePractice',item:'voice-practice:'+it.item,teach:true}));
+  startRound({act:'letters',route:R.currentRoute(st()),items},()=>openLetters(alphabetTheme));
+ }
+ function startEverydaySoundGame(){
+  const letters=PokeLetterMemory.select(sessions()),items=letters.map((letter,i)=>({kind:'everydaySoundPick',item:'everyday:sound:'+letter,answer:letter,letter,options:[...letters.slice(i),...letters.slice(0,i)].sort(()=>Math.random()-.5)}));
+  startRound({act:'hunt',route:R.currentRoute(st()),items},()=>openLetters(alphabetTheme));
+ }
+ RENDER.everydaySoundPick=it=>{
+  $('rdPrompt').textContent='Listen. Find the letter.';const obj=PokeEverydayAlphabet.get(it.letter);
+  replay=()=>{stop();shutUp();audio();if(!soundOn)$('soundBtn').click();sound(obj.g);};
+  $('rdStage').append(btn('btn read-next','Hear the sound to find',replay,'Hear the sound'));
+  it.options.forEach(letter=>{const b=btn('ltile','Choose '+letter.toUpperCase()+' '+letter,b=>{
+   if(run.done)return;stop();
+   if(letter===it.answer){right(b,letter,go=>sound(obj.g,go));return;}
+   wrong(b,letter);help('correct sound and letter shown');recordLetterModel(it.letter,'sound');feedback('This sound goes with '+it.letter.toUpperCase()+' '+it.letter+'. Try that letter.');
+   $('rdStage').append(everydayImage(it.letter,'sound-game-picture'));
+   for(const choice of $('rdOptions').querySelectorAll('button'))if(choice.dataset.letter===it.letter)choice.classList.add('tutor-guided');
+   speak('Listen. This is the letter '+it.letter.toUpperCase()+'.',{rate:.8,done:()=>sound(obj.g)});
+  },esc(letter.toUpperCase()+' '+letter));b.dataset.letter=letter;$('rdOptions').append(b);});
+  setTimeout(()=>{if(run?.item===it&&active())replay();},300);
+ };
  function openAlphabetTrace(letter,letterCase='upper'){
   const buddy=B.ALL.find(b=>b.letter===letter);if(!buddy)return;
   stop();enter();run=null;adventure.section?.('cards');setHeader('write',R.currentRoute(st()));
   const upper=letterCase==='upper',glyph=upper?letter.toUpperCase():letter;
-  $('rdTitle').textContent='Trace '+glyph;$('rdRoute').textContent='Pokémon A–Z · '+(B.ALL.indexOf(buddy)+1)+' of 26';
+  $('rdTitle').textContent='Trace '+glyph;$('rdRoute').textContent=(alphabetTheme==='everyday'?'Everyday A–Z · ':'Pokémon A–Z · ')+(B.ALL.indexOf(buddy)+1)+' of 26';
   $('rdPrompt').textContent='Trace '+glyph;
   for(const id of ['rdStage','rdOptions','rdActions','rdPips'])$(id).replaceChildren();feedback('');
-  const heading=el('div','trace-heading');heading.append(buddyImage(buddy,'trace-buddy'),el('p','',buddy.name+' · '+(letter==='x'?'end of box':letter==='q'?'qu as in queen':buddy.keyword)));
-  const hear=()=>{stop();shutUp();audio();if(!soundOn)$('soundBtn').click();adventure.recordListening?.({section:'read',skill:'buddies',kind:'buddyListen',phase:'trace',item:'g:'+buddy.g,buddyLetter:letter,buddyCue:true});sound(buddy.g);};
-  heading.append(btn('btn trace-sound','Hear the sound for '+glyph,hear,PokeVisuals.icon('listen')+' Hear sound'));$('rdStage').append(heading);replay=hear;
+  const everyday=alphabetTheme==='everyday',heading=el('div','trace-heading');heading.append(everyday?everydayImage(letter,'trace-buddy'):buddyImage(buddy,'trace-buddy'),el('p','',everyday?PokeEverydayAlphabet.get(letter).note:buddy.name+' · '+(letter==='x'?'end of box':letter==='q'?'qu as in queen':buddy.keyword)));
+  const hear=()=>{stop();shutUp();audio();if(!soundOn)$('soundBtn').click();adventure.recordListening?.({section:'read',skill:'buddies',kind:'buddyListen',phase:'trace',item:'g:'+buddy.g,buddyLetter:letter,buddyCue:true});recordLetterModel(letter,'sound');sound(buddy.g);};
+  heading.append(btn('btn trace-sound','Hear the name for '+glyph,()=>{stop();shutUp();audio();if(!soundOn)$('soundBtn').click();recordLetterModel(letter,'name');speak('The letter '+letter.toUpperCase()+'.',{rate:.8});},'Hear name'),btn('btn trace-sound','Hear the sound for '+glyph,hear,PokeVisuals.icon('listen')+' Hear sound'));$('rdStage').append(heading);replay=hear;
   const cases=el('div','trace-case-row');cases.setAttribute('aria-label','Choose uppercase or lowercase');
   for(const [value,label,g]of [['upper','Uppercase',letter.toUpperCase()],['lower','Lowercase',letter]]){const b=btn('btn trace-case-button','Trace '+label.toLowerCase()+' '+g,()=>{if(value!==letterCase)openAlphabetTrace(letter,value);},'<b>'+g+'</b>'+label);b.setAttribute('aria-pressed',String(value===letterCase));cases.append(b);}
   $('rdStage').append(cases);let saved=false;
   mountTrace(glyph,()=>{feedback('Well done tracing '+glyph+'!');sndGood();if(saved)return;saved=true;
    adventure.recordListening?.({section:'read',skill:'write',kind:'alphabetTrace',phase:'guided',item:'trace:'+glyph,letter,letterCase,formationVersion:PokeLetterFormation.VERSION,traceCompleted:true,strokeCount:PokeLetterFormation.DATA[glyph].length});
   });
-  $('rdActions').append(btn('btn','Back to Pokémon A to Z',openLetters,'Back to A–Z'),btn('btn read-next','Next letter',()=>openAlphabetTrace(B.ALL[(B.ALL.indexOf(buddy)+1)%26].letter,letterCase),'Next letter →'));
+  $('rdActions').append(btn('btn',everyday?'Back to Everyday A to Z':'Back to Pokémon A to Z',()=>openLetters(alphabetTheme),'Back to A–Z'),btn('btn read-next','Next letter',()=>openAlphabetTrace(B.ALL[(B.ALL.indexOf(buddy)+1)%26].letter,letterCase),'Next letter →'));
   const note=el('details','trace-parent-note');note.append(el('summary','','For grown-ups'),el('p','','These are print letter guides, with single-storey a and g. Trace a few letters together. School handwriting styles can differ; use the school’s model if its strokes differ. Tracing practice is recorded separately from writing on his own.'));$('rdActions').append(note);
  }
  function esc(x){return String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -856,11 +927,11 @@ function createReading(){
   catch(e){alert('Microphone not available on this device.');}
  }
 
- function leave(){stop();closeWritingPad();closeTracing();run=null;root.classList.remove('daily-reading-view');$('rdOptions').classList.remove('adult-observations');}
+ function leave(){stop();closeVoice();closeWritingPad();closeTracing();run=null;root.classList.remove('daily-reading-view');$('rdOptions').classList.remove('adult-observations');}
  // read-only hook for the browser regression script; children never see it
  const _current=()=>run&&{item:run.item,act:run.round.act,i:run.i,placement:!!run.round.placement};
  const _round=(act,n)=>startRound(R.makeRound(act,n,sessions(),st()),()=>{});
- return {_current,_round,startBuddies,startDailyBlock,startBlock,startFree,openShelf,openLetters,leave,importLegacy,renderPanel,
+ return {_current,_round,startBuddies,startDailyBlock,startBlock,startFree,openShelf,openLetters,openEverydayLetters:()=>openLetters('everyday'),leave,importLegacy,renderPanel,
   get state(){return state;},applyState(m){if(!m)return;state=R.mergeState(state,m);save();},
   payload:()=>state,isReading:()=>mode==='read'};
 }

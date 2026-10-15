@@ -26,7 +26,7 @@ async function until(fn,label){const start=Date.now();while(Date.now()-start<100
  // Rewards have their own regression coverage; avoid interrupting this guided session with a catch modal.
  w.eval('addStar=()=>{}');
  const start=async()=>{click($('startAdventure'));await until(()=>!$('adultReady').hidden,'adult preparation');assert.equal(w.eval('adventure.tracker.current'),null);click($('adultReadyStart'));await until(()=>w.eval('adventure.tracker.question()')?.observer==='grown-up','adult task');};
- const observe=async(outcome='independent')=>{const id=w.eval('adventure.tracker.question().id');click(d.querySelector('[data-outcome="'+outcome+'"]'));assert.equal(w.eval('adventure.tracker.current'),null);click(d.querySelector('#rdActions .read-next'));await until(()=>w.eval('adventure.tracker.question()')?.id!==id&&w.eval('adventure.tracker.question()'),'next task');};
+ const observe=async(outcome='independent')=>{const id=w.eval('adventure.tracker.question().id');click(d.querySelector('[data-outcome="'+outcome+'"]'));await until(()=>w.eval('adventure.tracker.current')===null,'observation saved');click(d.querySelector('#rdActions .read-next'));await until(()=>w.eval('adventure.tracker.question()')?.id!==id&&w.eval('adventure.tracker.question()'),'next task');};
  const draw=()=>{const canvas=d.querySelector('.adult-writing-canvas');assert(canvas);canvas.getBoundingClientRect=()=>({left:0,top:0,width:400,height:250});for(const [name,x,y] of [['pointerdown',100,70],['pointermove',130,170],['pointerup',180,170]]){const e=new w.Event(name,{bubbles:true,cancelable:true});Object.assign(e,{pointerId:1,pointerType:'pen',button:0,clientX:x,clientY:y});canvas.dispatchEvent(e);}};
  const finishPart=async()=>{assert.equal(w.eval('adventure.tracker.question().kind'),'adultStageEnd');click(d.querySelector('#rdActions .read-next'));await sleep(40);};
  assert.equal(w.eval('adventure.dailyStatus().stage.id'),'sounds','old choice routine does not count as an adult observation');
@@ -35,8 +35,8 @@ async function until(fn,label){const start=Date.now();while(Date.now()-start<100
  // Help is sticky even when the observer clicks the unaided button afterward.
  const ref=w.eval('JSON.parse(JSON.stringify(adventure.tracker.current))');click(d.querySelector('#rdActions .read-help'));await observe('independent');
  assert.equal(w.eval('adventure.tracker.sessions["'+ref.sid+'"].questions["'+ref.qid+'"].adultOutcome'),'helped');
- await observe('not-yet');await observe();await finishPart();await until(()=>w.eval('adventure.tracker.question()')?.dailyStage==='words','word stage');
- assert.equal(w.eval('adventure.dailyStatus().stages[0].independent'),1);
+ await observe('not-yet');while(w.eval('adventure.tracker.question().kind')!=='adultStageEnd')await observe();await finishPart();await until(()=>w.eval('adventure.tracker.question()')?.dailyStage==='words','word stage');
+ assert.equal(w.eval('adventure.dailyStatus().stages[0].independent'),10);
  while(w.eval('adventure.tracker.question().kind')!=='adultStageEnd')await observe('helped');
  await finishPart();await until(()=>!$('readingBreak').hidden,'midpoint break');
  const minutes=w.eval('adventure.dailyStatus().creditedMs');now+=3000;w.eval('adventure.tracker.tick()');assert.equal(w.eval('adventure.dailyStatus().creditedMs'),minutes);
@@ -79,5 +79,30 @@ async function until(fn,label){const start=Date.now();while(Date.now()-start<100
  const traceRecords=w.eval('Object.values(adventure.tracker.sessions).flatMap(s=>Object.values(s.questions)).filter(q=>q.kind==="alphabetTrace")');assert.equal(traceRecords.length,1);assert.equal(traceRecords[0].teach,true);assert.equal(traceRecords[0].letterCase,'lower');assert.equal(traceRecords[0].responses.length,0);assert.equal(w.PokeLearning.independent(traceRecords[0]),false);
  click(d.querySelector('[aria-label="Next letter"]'));assert.equal($('rdPrompt').textContent,'Trace b');assert(d.querySelector('.trace-pen-lock input').checked);click(d.querySelector('[aria-label="Back to Pokémon A to Z"]'));assert.equal(d.querySelector('.trace-board'),null);
  assert.equal(w.eval('adventure.dailyStatus().stage.id'),nextStage);assert.equal(w.localStorage.getItem('cubs_caught'),'25,151,382');assert.equal(w.eval('adventure.tracker.sessions["sittings-synthetic"].rev'),old.rev);
+ // A separate front-page chart uses 26 real image files, keeping the same trace guides.
+ click($('backBtn'));click($('everydayAlphabetBtn'));assert.equal($('rdTitle').textContent,'Everyday A–Z');
+ const illustrations=[...d.querySelectorAll('.everyday-picture')];assert.equal(illustrations.length,26);assert.equal(new Set(illustrations.map(i=>i.src)).size,26);
+ for(const img of illustrations)assert(fs.existsSync(path.join(root,new URL(img.src).pathname)),'illustration exists: '+img.alt);
+ assert.equal(d.querySelector('[data-letter="o"] .buddy-card-name').textContent,'octopus');assert.match(d.querySelector('[data-letter="x"]').textContent,/x at the end/);
+ assert.equal(d.querySelectorAll('.alphabet-hearing button').length,78);
+ click(d.querySelector('[aria-label="Trace Q and q"]'));assert.match($('rdRoute').textContent,/Everyday/);assert.match(d.querySelector('.trace-heading img').src,/q-quilt/);
+ click(d.querySelector('[aria-label="Back to Everyday A to Z"]'));assert.equal(d.querySelectorAll('.everyday-picture').length,26);
+ // Exercise the actual app with synthetic microphone/recognition APIs. This
+ // verifies wiring, not how accurately a browser understands a real child.
+ w.Blob=Blob;w.indexedDB=new (require('fake-indexeddb').IDBFactory)();w.URL.createObjectURL=()=> 'blob:test-answer';w.URL.revokeObjectURL=()=>{};
+ w.HTMLMediaElement.prototype.pause=function(){};w.HTMLMediaElement.prototype.play=()=>Promise.resolve();let stopped=0,recognized='';
+ Object.defineProperty(w.navigator,'mediaDevices',{value:{getUserMedia:async()=>({getTracks:()=>[{stop(){stopped++;}}]})}});
+ w.MediaRecorder=class{static isTypeSupported=()=>true;constructor(){this.state='inactive';this.mimeType='audio/webm';}start(){this.state='recording';}stop(){this.state='inactive';this.ondataavailable({data:new Blob(['test voice'],{type:'audio/webm'})});queueMicrotask(()=>this.onstop());}};
+ w.SpeechRecognition=class{start(){this.onaudiostart?.();}stop(){const r=Object.assign([{transcript:recognized,confidence:.96}],{isFinal:true});this.onresult?.({results:[r]});this.onend?.();}abort(){}};
+ click(d.querySelector('[aria-label="Play say the letters"]'));await until(()=>w.eval('adventure.tracker.question()')?.kind==='letterVoicePractice','voice game');
+ let vq=w.eval('adventure.tracker.question()');assert.equal(vq.letterSkill,'name');assert.equal(vq.observer,undefined);
+ const toggle=d.querySelector('.voice-settings input');toggle.checked=true;toggle.dispatchEvent(new w.Event('change'));assert.equal(w.localStorage.getItem('pokemath_auto_letter_names_v1'),'on');
+ recognized=vq.letter==='m'?'n':'m';click(d.querySelector('.voice-tap'));await until(()=>d.querySelector('.voice-answer').classList.contains('is-recording'),'microphone recording');now+=700;click(d.querySelector('.voice-tap'));
+ await until(()=>vq.voiceFeedback,'automatic correction');assert.equal(vq.voiceFeedback.verdict,'different');assert(vq.helped);assert.equal(vq.adultOutcome,undefined);assert(d.querySelector('.adult-memory-model'));assert(vq.voiceAnswer.saved);assert(stopped>0);
+ click(d.querySelector('[aria-label="Next letter practice"]'));await until(()=>w.eval('adventure.tracker.question()')?.id!==vq.id,'next voice turn');
+ vq=w.eval('adventure.tracker.question()');recognized=vq.letter;click(d.querySelector('.voice-tap'));await until(()=>d.querySelector('.voice-answer').classList.contains('is-recording'),'second recording');now+=700;click(d.querySelector('.voice-tap'));await until(()=>vq.voiceFeedback,'matching name');assert.equal(vq.voiceFeedback.verdict,'match');assert.equal(vq.adultOutcome,undefined);
+ click($('backBtn'));click($('everydayAlphabetBtn'));click(d.querySelector('[aria-label="Play find the sound"]'));await until(()=>w.eval('adventure.tracker.question()')?.kind==='everydaySoundPick','sound game');
+ const sq=w.eval('adventure.tracker.question()');click([...d.querySelectorAll('#rdOptions button')].find(b=>b.dataset.letter!==sq.expected));assert(sq.helped);assert.match($('rdFeedback').textContent,/This sound goes with/);assert(d.querySelector('#rdOptions .tutor-guided'));assert.equal(sq.adultOutcome,undefined);
+ assert.equal(w.eval('adventure.dailyStatus().stage.id'),nextStage);assert.equal(w.localStorage.getItem('cubs_caught'),'25,151,382');
  assert.deepEqual(errors,[]);w.close();server.close();console.log('PASS: adult start, all four stages, stylus writing, blank memory pad, saved ink, honest helped/not-yet outcomes, paper option, midpoint break, reload/resume, pause, completion without forced minutes, next day, old history and Pokémon preserved, all 26 alphabet choices, uppercase/lowercase tracing, pen lock across letters and guided-only trace records.');
 })().catch(e=>{console.error(e);process.exit(1);});

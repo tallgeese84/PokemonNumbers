@@ -1,3 +1,11 @@
+# v97 everyday alphabet and spoken practice
+
+- 185 Node tests pass, including separate recall for all 104 letter/skill/case combinations, later-day memory checks, progression through all 26 letters, explicit school selection, and saved routine resumption.
+- Recording tests cover intentional activation, pending permission cancellation, background stop, denial, replay metadata, bounded local storage/deletion, recognition ambiguity and late-event cancellation. Speech transcripts never become adult observations.
+- Full app DOM integration passes: all four adult stages; tablet writing; halfway break; reload/resume; 26 original everyday illustrations; Q/quilt and X/box handling; chart-specific tracing/back navigation; wrong-name model; matching-name encouragement; sound-choice correction; collection, shinies, buddy and old history preservation.
+- All 26 final generated PNGs were visually inspected. They are original picture-book illustrations, not emoji. Every service-worker resource is present.
+- These automated microphone and speech inputs are synthetic. No claim is made about accuracy on Jonah's voice, physical stylus behavior, or speech-service availability on his tablet. The app degrades to recording/model/retry without assigning a false speech score.
+
 # v76 school reading plan
 
 - 93 Node tests pass. New: ladder opens in order and each step needs the one before; every listening item has distinct pictures and exactly one right answer; take-away pairs really leave the named word; letter names on by default and in hunts; spelling uses only known sounds and moves from first sound to first-and-last.

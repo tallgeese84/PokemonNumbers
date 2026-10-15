@@ -1,9 +1,9 @@
 /* Adult-led practice. Observations are separate from app-choice mastery.
    Version 1 daily records and every existing reward remain untouched. */
-(function(root,factory){if(typeof module==='object'&&module.exports)module.exports=factory(require('./learning-core.js'),require('./reading-core.js'),require('./reading-data.js'),require('./reading-phonics.js'));else root.PokeAdultReading=factory(root.PokeLearning,root.PokeReadingCore,root.PokeReadingData,root.PokePhonics);})(typeof globalThis!=='undefined'?globalThis:this,function(C,R,D,P){
+(function(root,factory){if(typeof module==='object'&&module.exports)module.exports=factory(require('./learning-core.js'),require('./reading-core.js'),require('./reading-data.js'),require('./reading-phonics.js'),require('./letter-memory.js'));else root.PokeAdultReading=factory(root.PokeLearning,root.PokeReadingCore,root.PokeReadingData,root.PokePhonics,root.PokeLetterMemory);})(typeof globalThis!=='undefined'?globalThis:this,function(C,R,D,P,L){
 'use strict';
 const VERSION=2;
-const STAGES=[{id:'sounds',label:'Say the sounds',minutes:2},{id:'words',label:'Blend & build',minutes:4},{id:'writing',label:'Write letters',minutes:3},{id:'story',label:'Read together',minutes:3}];
+const STAGES=[{id:'sounds',label:'Names & sounds',minutes:4},{id:'words',label:'Blend & build',minutes:3},{id:'writing',label:'Write letters',minutes:2},{id:'story',label:'Read together',minutes:3}];
 const OUTCOMES=['independent','helped','not-yet'];
 const events=(sessions,day)=>C.allQuestions(sessions||{}).filter(q=>q.section==='read'&&q.dailyVersion===VERSION&&(!day||q.dailyDay===day));
 function progress(sessions,day=C.dayKey(Date.now()),cycle){
@@ -21,27 +21,14 @@ function progress(sessions,day=C.dayKey(Date.now()),cycle){
 function sitting(status){const firstDone=status.stages.slice(0,2).every(s=>s.complete);return {part:firstDone?2:1,breakReady:firstDone&&!status.complete,remainingMs:status.stages.filter(s=>!s.complete).reduce((n,s)=>n+Math.max(0,s.target-s.ms),0)};}
 function normalizeLetters(value){return [...new Set((Array.isArray(value)?value.join(' '):String(value||'')).toLowerCase().split(/[\s,]+/).filter(g=>/^[a-z]$/.test(g)&&(D.G[g]||g==='q')))].slice(0,6);}
 function focus(sessions,state,status,priorities){
- // Reuse the selected set across stages, breaks and devices for this day/cycle.
- const saved=events(sessions,status.day).find(q=>(q.dailyCycle||0)===status.cycle&&Array.isArray(q.adultLetters)&&q.adultLetters.length);
- if(saved)return saved.adultLetters.filter(g=>D.G[g]||g==='q');
- const custom=normalizeLetters(state.adultLetters);if(custom.length>=2)return custom;
- const n=R.currentRoute(state),history=events(sessions).filter(q=>q.kind==='adultSound'&&q.completedAt),last={};
- history.forEach(q=>last[q.g]=q);
- const curriculum=R.graphemesUpTo(R.LAST),met=new Set([...R.available(sessions,n),...history.map(q=>q.g)]);
- const secure=g=>{const qs=history.filter(q=>q.g===g&&q.adultOutcome==='independent'&&!q.helped);return new Set(qs.map(q=>q.dailyDay)).size>=2&&last[g]?.adultOutcome==='independent';};
- let pool=curriculum.filter(g=>met.has(g));
- // Start with just three sounds; add one at a time after later-day recall.
- if(!pool.length)pool=R.route(n).add.slice(0,3);
- else if(pool.every(secure)){const next=curriculum.find(g=>!met.has(g));if(next)pool.push(next);}
- while(pool.length<3){const next=curriculum.find(g=>!pool.includes(g));if(!next)break;pool.push(next);}
- const wanted=new Set(priorities?.sounds||[]);
- return pool.sort((a,b)=>Number(secure(a))-Number(secure(b))||Number(wanted.has(b))-Number(wanted.has(a))||(last[a]?.completedAt||0)-(last[b]?.completedAt||0)).slice(0,3);
+ return L.select(sessions,{schoolLetters:normalizeLetters(state.adultLetters),day:status.day,cycle:status.cycle,priorities:priorities?.sounds});
 }
 function wordParts(word,n){return P.annotate(R.clean(word),R.splitWord(word,n));}
 function materials(sessions,state,status,priorities){
  const letters=focus(sessions,state,status,priorities),n=Math.max(R.currentRoute(state),...letters.map(g=>R.itemRoute('g:'+g))),allowed=new Set(letters);
  // Previously recalled sounds may be reused, but no unintroduced sound is smuggled into a word.
- events(sessions).filter(q=>q.kind==='adultSound'&&q.adultOutcome==='independent'&&!q.helped).forEach(q=>allowed.add(q.g));
+ events(sessions).filter(q=>(q.kind==='adultSound'||(q.kind==='adultLetterRecall'&&q.letterSkill==='sound'))&&q.adultOutcome==='independent'&&!q.helped).forEach(q=>allowed.add(q.g));
+ if(allowed.has('q'))allowed.add('qu');
  const candidates=[...new Set(['at','am','in','it','an','on','up',...D.ROUTES.slice(0,n).flatMap(r=>[...r.blend,...r.build]),'mat','sat','Sam','tap','pat','map'].map(R.clean))];
  const words=candidates.filter(w=>wordParts(w,n).every(p=>p.cls!=='silent'&&allowed.has(p.play||p.g)));
  const recent=events(sessions,status.day).filter(q=>q.dailyCycle===status.cycle&&q.adultOutcome).map(q=>q.word),wanted=new Set(priorities?.words||[]);
@@ -53,14 +40,14 @@ function round(sessions,state,status,rnd=Math.random,priorities=null){
  const used=new Set(events(sessions,status.day).map(q=>q.nightlyTarget).filter(Boolean));
  const targets=words.length?words:letters.slice(0,2);
  let items;
- if(stage==='sounds')items=letters.map(g=>({kind:'adultSound',item:'adult:sound:'+g,g,word:g,answer:g}));
+ if(stage==='sounds')items=L.checks(letters,sessions,status.day,status.cycle);
  else if(stage==='writing'){
   const singles=[...new Set(letters.flatMap(g=>g.split('')).filter(g=>D.WRITE[g]))].slice(0,2);
   items=singles.flatMap(g=>[{kind:'adultWrite',item:'adult:copy:'+g,g,word:g,answer:g,writingMode:'copy'},{kind:'adultWrite',item:'adult:memory:'+g,g,word:g,answer:g,writingMode:'memory'}]);
  }else items=targets.map((word,i)=>({kind:words.length?(stage==='words'?'adultBlend':'adultRead'):'adultSound',item:'adult:'+(stage==='words'?'blend:':'read:')+word,word,g:words.length?undefined:word,answer:word,parts:wordParts(word,n),fallback:!words.length,build:i%2===1}));
  const base={route:n,observer:'grown-up',adultLetters:letters,adultSession:true};
  items=items.map(it=>{
-  const target=it.g&&priorities?.sounds?.includes(it.g)?'sound:'+it.g:it.word&&priorities?.words?.includes(it.word)?'word:'+it.word:null;
+  const target=it.letterSkill!=='name'&&it.g&&priorities?.sounds?.includes(it.g)?'sound:'+it.g:it.word&&priorities?.words?.includes(it.word)?'word:'+it.word:null;
   return {...base,...it,...(target&&!used.has(target)?{nightlyTarget:target}:{})};
  });
  items.push({...base,kind:'adultStageEnd',item:'adult:end:'+stage,teach:true});
@@ -68,15 +55,15 @@ function round(sessions,state,status,rnd=Math.random,priorities=null){
 }
 function report(sessions,day){
  const all=events(sessions,day);if(!all.length)return 'Read together with a grown-up: no session recorded for this date.';
- const lines=['Adult-guided literacy (2 + 4 + 3 + 3 minute pacing guide; shorter practice is allowed):'];
+ const lines=['Adult-guided literacy (4 + 3 + 2 + 3 minute pacing guide; shorter practice is allowed):'];
  for(const cycle of [...new Set(all.map(q=>q.dailyCycle||0))]){
   const p=progress(sessions,day,cycle);lines.push('Run '+(cycle+1)+': '+(p.complete?'all four parts practised':'next: '+p.stage.label));
   for(const s of p.stages){lines.push(s.label+': '+(s.ms/60000).toFixed(1)+' active min; '+s.independent+' unaided, '+s.helped+' with help, '+s.notYet+' not yet (adult observed).');
-   const qs=all.filter(q=>(q.dailyCycle||0)===cycle&&q.dailyStage===s.id&&q.adultOutcome);for(const q of qs)lines.push('  '+q.word+(q.writingMode?' ('+q.writingMode+', '+(q.writingSurface||'paper')+')':'')+': '+q.adultOutcome+(q.helped?' [support used]':''));}
+   const qs=all.filter(q=>(q.dailyCycle||0)===cycle&&q.dailyStage===s.id&&q.adultOutcome);for(const q of qs)lines.push('  '+q.word+(q.letterSkill?' ('+q.letterSkill+', '+q.letterCase+')':'')+(q.writingMode?' ('+q.writingMode+', '+(q.writingSurface||'paper')+')':'')+': '+q.adultOutcome+(q.helped?' [support used]':''));}
  }
  lines.push('These are grown-up observations, not automated grading or a diagnosis. Copying, writing from memory, oral reading and tapping choices are separate evidence. Timers estimate foreground practice and may pause during paper work.');
- return lines.join('\n');
+ lines.push('',L.report(sessions));return lines.join('\n');
 }
-function guidance(sessions,day){const p=progress(sessions,day);return {focus:p.complete?'Today’s grown-up session is complete.':'Sit together. Next: '+p.stage.label+'.',duration:'Aim for 10–12 minutes together: sounds 2, blend and build 4, writing 3, supported reading 3. Take a break or finish a part sooner when needed.',offline:'Use a tablet and stylus, or paper and pencil. Model, try together, then let Jonah try. Record help honestly; keep stories read aloud enjoyable.'};}
+function guidance(sessions,day){const p=progress(sessions,day);return {focus:p.complete?'Today’s grown-up session is complete.':'Sit together. Next: '+p.stage.label+'.',duration:'Aim for 10–12 minutes together: letter names and sounds 4, blend and build 3, writing 2, supported reading 3. Take a break or finish a part sooner when needed.',offline:'Use a tablet and stylus, or paper and pencil. Ask for the name and sound separately. Model when needed, try together, then let Jonah try. Record help honestly; keep stories read aloud enjoyable.'};}
 return {VERSION,STAGES,OUTCOMES,events,progress,sitting,normalizeLetters,focus,materials,round,report,guidance};
 });
