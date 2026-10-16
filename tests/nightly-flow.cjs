@@ -28,12 +28,12 @@ async function until(fn,label,ms=10000){const t=Date.now();while(Date.now()-t<ms
  await until(()=>w.eval('adventure.tracker.question()')?.kind==='adultLetterRecall','spoken recall starts');
  // Name turns stay separate from the sound priority. Reach the actual sound
  // target through the supported adult flow rather than treating a name as it.
- for(let i=0;i<12&&w.eval('adventure.tracker.question()')?.nightlyTarget!=='sound:a';i++){
+ for(let i=0;i<12&&!w.eval('adventure.tracker.question()')?.nightlyTarget?.startsWith('letter:a:sound:');i++){
   const id=w.eval('adventure.tracker.question().id');click(d.querySelector('[data-outcome="independent"]'));
   await until(()=>w.eval('adventure.tracker.current')===null,'observation saved');click(d.querySelector('#rdActions .read-next'));
   await until(()=>w.eval('adventure.tracker.question()')?.id!==id&&w.eval('adventure.tracker.question()'),'next recall');
  }
- await until(()=>w.eval('adventure.tracker.question()')?.nightlyTarget==='sound:a','prioritised sound starts');
+ await until(()=>w.eval('adventure.tracker.question()')?.nightlyTarget?.startsWith('letter:a:sound:'),'prioritised sound starts');
  const first=w.eval('adventure.tracker.question()');assert.equal(first.nightlyPlan.revision,1);assert.equal(first.dailyStage,'sounds');assert.equal(first.letterSkill,'sound');assert.equal(first.observer,'grown-up');const currentId=first.id;
  remote={...remote,revision:2,subjects:{...remote.subjects,reading:{...remote.subjects.reading,sounds:['t']}}};await w.JonahNightly.refresh(true);
  assert.equal(w.eval('adventure.tracker.question().id'),currentId);assert.equal(w.eval('adventure.tracker.question().nightlyPlan.revision'),1);

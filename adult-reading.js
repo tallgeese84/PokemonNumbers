@@ -40,14 +40,14 @@ function round(sessions,state,status,rnd=Math.random,priorities=null){
  const used=new Set(events(sessions,status.day).map(q=>q.nightlyTarget).filter(Boolean));
  const targets=words.length?words:letters.slice(0,2);
  let items;
- if(stage==='sounds')items=L.checks(letters,sessions,status.day,status.cycle);
+ if(stage==='sounds')items=L.checks(letters,sessions,status.day,status.cycle,priorities?.sounds);
  else if(stage==='writing'){
   const singles=[...new Set(letters.flatMap(g=>g.split('')).filter(g=>D.WRITE[g]))].slice(0,2);
   items=singles.flatMap(g=>[{kind:'adultWrite',item:'adult:copy:'+g,g,word:g,answer:g,writingMode:'copy'},{kind:'adultWrite',item:'adult:memory:'+g,g,word:g,answer:g,writingMode:'memory'}]);
  }else items=targets.map((word,i)=>({kind:words.length?(stage==='words'?'adultBlend':'adultRead'):'adultSound',item:'adult:'+(stage==='words'?'blend:':'read:')+word,word,g:words.length?undefined:word,answer:word,parts:wordParts(word,n),fallback:!words.length,build:i%2===1}));
  const base={route:n,observer:'grown-up',adultLetters:letters,adultSession:true};
  items=items.map(it=>{
-  const target=it.letterSkill!=='name'&&it.g&&priorities?.sounds?.includes(it.g)?'sound:'+it.g:it.word&&priorities?.words?.includes(it.word)?'word:'+it.word:null;
+  const target=it.kind==='adultLetterRecall'&&priorities?.sounds?.includes(it.g)?'letter:'+it.letter+':'+it.letterSkill+':'+it.letterCase:it.g&&priorities?.sounds?.includes(it.g)?'sound:'+it.g:it.word&&priorities?.words?.includes(it.word)?'word:'+it.word:null;
   return {...base,...it,...(target&&!used.has(target)?{nightlyTarget:target}:{})};
  });
  items.push({...base,kind:'adultStageEnd',item:'adult:end:'+stage,teach:true});

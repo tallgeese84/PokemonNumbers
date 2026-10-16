@@ -21,9 +21,9 @@ if(typeof window!=='undefined'){
  const config=()=>{try{return JSON.parse(localStorage.getItem('pokemath_drive_mirror_v1')||'{}');}catch(_){return {};}};
  const words=new Set(PokeReadingData.ROUTES.flatMap(r=>[...r.blend,...r.build]).concat(PokeReadingDaily.ACTIONS).map(PokeReadingCore.clean).filter(PokeReadingArt.has));
  const hash=async text=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text))),b=>b.toString(16).padStart(2,'0')).join('');
- const client=Core.create({student:'Jonah',catalog:{maths:id=>!!PokeMathPath.BY[id]&&!PokeMathPath.BY[id].delegate,sound:id=>!!PokeReadingData.G[id],word:id=>words.has(id)},config,storage:localStorage,key:'jonah_nightly_priorities_v1',request:(...args)=>fetch(...args),hash,online:()=>navigator.onLine!==false,onChange:report=>{paint();recordReceipt(report);}});
+ const client=Core.create({student:'Jonah',catalog:{maths:id=>!!PokeMathPath.BY[id]&&!PokeMathPath.BY[id].delegate,sound:id=>!!PokeReadingData.G[id],word:id=>words.has(id)},config,storage:localStorage,key:'jonah_nightly_priorities_v1',request:(...args)=>fetch(...args),hash,online:()=>navigator.onLine!==false,visible:()=>document.visibilityState==='visible',onChange:report=>{paint();recordReceipt(report);}});
  Object.assign(api,client);
- function paint(){const el=document.getElementById('jonahNightlyStatus');if(el){const r=client.report();el.textContent=r.status+(r.received?' Plan '+r.received.sessionDate+', revision '+r.received.revision+'.':'');}}
+ function paint(){const el=document.getElementById('jonahNightlyStatus');if(el){const r=client.report();el.textContent=r.status+' ['+r.diagnostics.reasonCode+']'+(r.received?' Plan '+r.received.sessionDate+', revision '+r.received.revision+'.':'');}}
  api.mount=async record=>{
   recordReceipt=record;
   const host=document.getElementById('learningDashboard');
@@ -34,6 +34,13 @@ if(typeof window!=='undefined'){
  window.addEventListener('online',()=>client.refresh(true));
  window.addEventListener('storage',e=>{if(e.key==='pokemath_drive_mirror_v1'){client.invalidate();client.refresh(true);}});
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')client.refresh();});
+ // Poll only while this page is visible. Never change an in-progress question.
+ let foregroundTimer=null;
+ const stopForeground=()=>{if(foregroundTimer!==null){clearInterval(foregroundTimer);foregroundTimer=null;}};
+ const startForeground=()=>{stopForeground();foregroundTimer=setInterval(()=>{if(document.visibilityState==='visible')client.refresh();},300000);};
+ window.addEventListener('pagehide',stopForeground);
+ window.addEventListener('pageshow',()=>{startForeground();client.refresh();});
+ startForeground();
 }
 return api;
 });

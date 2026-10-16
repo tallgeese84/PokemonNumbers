@@ -45,7 +45,7 @@ function select(sessions,{schoolLetters=[],day:today=C.dayKey(Date.now()),cycle=
  for(const g of ORDER){if(learning.length>=3)break;if(!learning.includes(g))learning.push(g);}
  return learning;
 }
-function checks(letters,sessions,today,cycle=0){
+function checks(letters,sessions,today,cycle=0,priorities=[]){
  const qs=C.allQuestions(sessions||{}).filter(q=>q.dailyVersion===2&&q.dailyDay===today&&(q.dailyCycle||0)===cycle&&q.dailyStage==='sounds');
  const repeated=qs.filter(q=>q.kind==='adultPracticeMore'&&q.completedAt).at(-1)?.startedAt??-1;
  const done=new Set(qs.filter(q=>isCheck(q)&&q.startedAt>repeated).map(q=>key(q.letter,q.letterSkill,q.letterCase)));
@@ -59,6 +59,13 @@ function checks(letters,sessions,today,cycle=0){
   const glyph=letterCase==='upper'?letter.toUpperCase():letter;
   items.push({kind:'adultLetterRecall',item:'adult:letter:'+id,letterRecallVersion:VERSION,letterSkill,letterCase,letter,g:letter,word:glyph,answer:letter,displayGlyph:letter==='q'&&letterSkill==='sound'?glyph+'u':glyph});
  }
+ // Same letters, separate weak name/sound/case checks. Saved completed checks
+ // are never repeated just because a plan arrives. No lesson or promotion is forced.
+ const wanted=new Set(normalize(priorities)),ps=progress(sessions);
+ if(wanted.size)items.sort((a,b)=>{
+  const af=ps[a.letter][a.letterSkill][a.letterCase],bf=ps[b.letter][b.letterSkill][b.letterCase];
+  return Number(wanted.has(b.letter))-Number(wanted.has(a.letter))||Number(af.secure)-Number(bf.secure)||af.attempts-bf.attempts||af.lastAt-bf.lastAt;
+ });
  return items;
 }
 function summary(sessions){const ps=Object.values(progress(sessions));return {names:ps.filter(p=>p.name.secure).length,sounds:ps.filter(p=>p.sound.secure).length,both:ps.filter(p=>p.secure).length,total:26};}
