@@ -1,0 +1,91 @@
+name: Validate feedback repair
+on:
+  push:
+    branches: ['feature/feedback-loop-20261016']
+permissions:
+  contents: write
+concurrency:
+  group: feedback-repair-${{ github.repository }}
+  cancel-in-progress: false
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      BUNDLE_REF: local
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify and apply exact reviewed patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,json,lzma,os,pathlib,re,subprocess,urllib.request
+          repo=os.environ['GITHUB_REPOSITORY'].split('/')[-1]
+          assert repo in ['Mochi_MathP4-6','HanaP3Math','PokemonNumbers']
+          ref=os.environ['BUNDLE_REF']
+          if ref=='local':
+              encoded=''.join(pathlib.Path(f'.feedback-repair/part{i}.b64').read_text() for i in (1,2,3))
+          else:
+              assert re.fullmatch(r'[a-f0-9]{40}',ref)
+              encoded=''.join(urllib.request.urlopen(f'https://raw.githubusercontent.com/tallgeese84/PokemonNumbers/{ref}/.feedback-repair/part{i}.b64',timeout=30).read().decode('ascii') for i in (1,2,3))
+          raw=lzma.decompress(base64.b64decode(encoded))
+          assert hashlib.sha256(raw).hexdigest()=='4bb0bed8e919250ce80a84a5f9f959a54dcda4fc14c69cc1dc26927a8b0a1346','Bundle integrity failed'
+          payload=json.loads(raw)[repo]
+          paths=[]
+          for f in payload['files']:
+              p=pathlib.PurePosixPath(f['path'])
+              assert not p.is_absolute() and '..' not in p.parts and not str(p).startswith('.git/')
+              paths.append(str(p))
+              found=subprocess.run(['git','rev-parse','HEAD:'+str(p)],capture_output=True,text=True)
+              assert (found.stdout.strip() if found.returncode==0 else None)==f['before'],f'Concurrent source change: {p}'
+          patch=pathlib.Path('/tmp/feedback.patch');patch.write_text(payload['patch'])
+          subprocess.run(['git','apply','--check','--unidiff-zero',str(patch)],check=True)
+          subprocess.run(['git','apply','--unidiff-zero',str(patch)],check=True)
+          for f in payload['files']:
+              assert hashlib.sha256(pathlib.Path(f['path']).read_bytes()).hexdigest()==f['after'],f['path']
+          pathlib.Path('/tmp/feedback-paths').write_text('\n'.join(paths)+'\n')
+          print('Verified exact before/after hashes for',len(paths),'files in',repo)
+          PY
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm test
+      - name: Exercise complete app flows
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "${GITHUB_REPOSITORY##*/}" in
+            Mochi_MathP4-6) npm run check:release; npm run check:course ;;
+            HanaP3Math) npm run test:flow; npm run test:nightly ;;
+            PokemonNumbers) npm run test:nightly; npm run test:sittings ;;
+          esac
+      - name: Run real browser scaffold and mobile checks
+        if: github.event.repository.name == 'HanaP3Math'
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --prefix /tmp/feedback-browser-runtime --ignore-scripts --no-audit --no-fund playwright
+          node /tmp/feedback-browser-runtime/node_modules/playwright/cli.js install chromium
+          PLAYWRIGHT_MODULE=/tmp/feedback-browser-runtime/node_modules/playwright FEEDBACK_SCREENSHOT=/tmp/feedback-mobile.png node tests/feedback-browser-flow.cjs
+      - uses: actions/upload-artifact@v4
+        if: github.event.repository.name == 'HanaP3Math'
+        with:
+          name: feedback-mobile-check
+          path: /tmp/feedback-mobile.png
+          retention-days: 7
+          if-no-files-found: error
+      - name: Commit tested app files to repair branch only
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = feature/feedback-loop-20261016
+          git add --pathspec-from-file=/tmp/feedback-paths
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Repair verified nightly feedback delivery and evidence-driven practice'
+          git push origin HEAD:refs/heads/feature/feedback-loop-20261016
+          git rev-parse HEAD
