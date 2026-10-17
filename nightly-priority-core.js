@@ -81,7 +81,7 @@ function create({student,catalog,config,storage,key,request,hash,now=()=>Date.no
   if(!c){notify();return false;}
   if(inflight)return inflight;
   if(!online()){cancelRetry();reason('OFFLINE');status='Offline: saved priorities for this date or built-in learning.';notify();return false;}
-  if(!force&&now()-lastAttempt<300000)return false;
+  if(!force&&day(now())===day(lastAttempt)&&now()-lastAttempt<300000)return false;
   const g=generation;cancelRetry();lastAttempt=now();health.lastAttemptAt=new Date(lastAttempt).toISOString();reason('CHECKING');status='Checking priorities…';notify();
   const run=(async()=>{
    const controller=new AbortController();let timer;
@@ -119,7 +119,9 @@ function create({student,catalog,config,storage,key,request,hash,now=()=>Date.no
  function report(){
   const connected=connectionMatches(),e=connected?entries[day(now())]:null,p=connected&&active&&usable(active.plan,now())?active:null;
   const receipt=x=>x?{...identity(x.plan),sourceExportedAt:x.plan.sourceExportedAt,receivedAt:x.receivedAt,adoptedAt:x.adoptedAt,startedAt:x.startedAt}:null;
-  return {schema:1,student,status,lastCheckedAt,received:receipt(e),active:receipt(p),diagnostics:copy(health),capabilities:{receiptDiagnostics:1,letterNameSoundChecks:student==='Jonah'?1:0}};
+  const future=connected?Object.values(entries).filter(x=>x.plan.sessionDate>day(now())).sort((a,b)=>a.plan.sessionDate.localeCompare(b.plan.sessionDate))[0]:null;
+  const delivery={localDate:day(now()),timeZone:ZONE,stage:p?(p.startedAt?'work-started':'adopted-awaiting-task'):e?'received-awaiting-boundary':future?'future-plan-cached':'built-in',nextSession:receipt(future)};
+  return {schema:1,student,status,lastCheckedAt,received:receipt(e),active:receipt(p),delivery,diagnostics:copy(health),capabilities:{receiptDiagnostics:1,letterNameSoundChecks:student==='Jonah'?1:0}};
  }
  return {refresh,adopt,plan,started,report,invalidate,preview:()=>connectionMatches()&&entries[day(now())]&&usable(entries[day(now())].plan,now())?copy(entries[day(now())].plan):null,initialize:async()=>{try{await syncConfig();notify();}catch(_){reason('CACHE_UNAVAILABLE');status='Private plan cache unavailable; built-in learning continues.';notify();}}};
 }
