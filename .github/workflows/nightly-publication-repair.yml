@@ -1,0 +1,72 @@
+name: Validate nightly publication repair
+on:
+  push:
+    branches: ['repair/nightly-publish-20261017']
+permissions:
+  contents: write
+concurrency:
+  group: nightly-publication-repair-${{ github.repository }}
+  cancel-in-progress: false
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Apply the reviewed source with before and after hash checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,json,lzma,os,pathlib,subprocess,urllib.request
+          repo=os.environ['GITHUB_REPOSITORY'].split('/')[-1]
+          assert repo in ['PokemonNumbers','HanaP3Math','Mochi_MathP4-6']
+          ref='e92639e0c65b3fa88f9890129b833106ab97c6e1'
+          encoded=''.join(urllib.request.urlopen(f'https://raw.githubusercontent.com/tallgeese84/PokemonNumbers/{ref}/.nightly-repair/part{i}.b64',timeout=30).read().decode('ascii') for i in (1,2))
+          raw=lzma.decompress(base64.b64decode(encoded))
+          assert hashlib.sha256(raw).hexdigest()=='dca20f8e3086857bec4825a0b1aff8800662383bc324daeed7b156b0620d1f4a','Transport integrity failure'
+          payload=json.loads(raw)[repo]
+          paths=[]
+          for f in payload['files']:
+              p=pathlib.Path(f['path'])
+              assert not p.is_absolute() and '..' not in p.parts and '.git' not in p.parts
+              before=subprocess.run(['git','rev-parse','HEAD:'+str(p)],capture_output=True,text=True)
+              assert (before.stdout.strip() if before.returncode==0 else None)==f['before'],f'Concurrent change: {p}'
+              text=p.read_text() if f['before'] else ''
+              for start,end,new in reversed(f['edits']):
+                  assert 0<=start<=end<=len(text)
+                  text=text[:start]+new+text[end:]
+              assert hashlib.sha256(text.encode()).hexdigest()==f['after'],f'Output mismatch: {p}'
+              p.parent.mkdir(parents=True,exist_ok=True)
+              p.write_text(text)
+              paths.append(str(p))
+          pathlib.Path('/tmp/nightly-repair-paths').write_text('\n'.join(paths)+'\n')
+          print('Verified',len(paths),'source files in',repo)
+          PY
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm test
+      - name: Verify complete app flows
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "${GITHUB_REPOSITORY##*/}" in
+            PokemonNumbers) npm run test:nightly; npm run test:sittings ;;
+            HanaP3Math) npm run test:flow; npm run test:nightly ;;
+            Mochi_MathP4-6) npm run check:release; npm run check:course ;;
+          esac
+      - name: Commit tested files on the repair branch only
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = repair/nightly-publish-20261017
+          git add --pathspec-from-file=/tmp/nightly-repair-paths
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Repair Chicago publication dates, guarded writeback and device evidence'
+          git push origin HEAD:refs/heads/repair/nightly-publish-20261017
+          git rev-parse HEAD
