@@ -1,0 +1,32 @@
+name: Feedback source snapshot
+on:
+  push:
+    branches: ['feature/feedback-reliability-20261017']
+    paths: ['.github/workflows/feedback-source-snapshot.yml']
+permissions:
+  contents: read
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Read pinned public app sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/family-current
+          for entry in PokemonNumbers:e66e9bff7d258034a04a65e185a14e2a93b8b2e3 HanaP3Math:bd1361135e4b93b6a3ff379fad0768715f0f9701 Mochi_MathP4-6:8738caddfb569236da02aba6ee24eb8b2e813354; do
+            repo=${entry%%:*}; sha=${entry#*:}
+            git clone --depth 12 https://github.com/tallgeese84/$repo.git /tmp/repo-$repo
+            mkdir /tmp/family-current/$repo
+            git -C /tmp/repo-$repo archive "$sha" | tar -x -C /tmp/family-current/$repo
+            git -C /tmp/repo-$repo ls-tree -r "$sha" > /tmp/family-current/$repo.tree.txt
+            echo "$sha" > /tmp/family-current/$repo.sha.txt
+          done
+          tar -czf /tmp/family-current.tar.gz -C /tmp family-current
+      - uses: actions/upload-artifact@v4
+        with:
+          name: family-current
+          path: /tmp/family-current.tar.gz
+          retention-days: 2
+          if-no-files-found: error
