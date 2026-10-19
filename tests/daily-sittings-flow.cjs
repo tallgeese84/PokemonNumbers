@@ -25,6 +25,29 @@ async function until(fn,label){const start=Date.now();while(Date.now()-start<100
  let dom=await load(),w=dom.window,d=w.document,$=id=>d.getElementById(id),click=el=>{assert(el,'button exists');el.dispatchEvent(new w.MouseEvent('click',{bubbles:true}));};
  // Rewards have their own regression coverage; avoid interrupting this guided session with a catch modal.
  w.eval('addStar=()=>{}');
+ // Direct maths learning must remain visible after all runtime UI initialization.
+ const mathStartStatus=w.eval('JSON.stringify(adventure.dailyStatus())');
+ for(const [id,go] of [['homeCountBtn','count'],['homeAddBtn','add'],['homeSubBtn','sub']]){
+  const button=$(id);assert.equal(button.closest('.screen').id,'scr-home');
+  assert.equal(button.hidden,false);assert.notEqual(w.getComputedStyle(button).display,'none');
+  click(button);await until(()=>w.eval('adventure.tracker.question()')?.section===go,'direct '+go+' lesson');
+  assert.equal(w.eval('mode'),go);assert($('scr-quiz').classList.contains('on'));
+  assert.notEqual($('parentPanel').style.display,'flex');assert($('adultReady').hidden);
+  assert($('qtext').textContent.trim(),'original lesson prompt is rendered');
+  const expected=w.eval('adventure.tracker.question().expected');
+  assert([...d.querySelectorAll('#pad button')].some(b=>Number(b.textContent)===expected),'original answer pad includes the answer');
+  click($('backBtn'));assert.equal(w.eval('mode'),'home');
+ }
+ click($('homeMathWriteBtn'));assert.equal(w.eval('mode'),'trace');assert($('traceCanvas'));click($('backBtn'));
+ click($('homeMathPathBtn'));assert.equal(w.eval('mode'),'path');assert(d.querySelector('.mp-gyms'));click($('backBtn'));
+ click($('gamesBtn'));click($('gamesNext'));click($('backBtn'));
+ for(const id of ['homeCountBtn','homeAddBtn','homeSubBtn']){assert.equal($(id).hidden,false);assert.notEqual(w.getComputedStyle($(id)).display,'none');}
+ assert.equal(w.eval('JSON.stringify(adventure.dailyStatus())'),mathStartStatus,'maths does not complete or change reading stages');
+ assert.equal(w.localStorage.getItem('cubs_caught'),'25,151,382');
+ assert.equal(w.localStorage.getItem('cubs_pbuddy'),'151');
+ assert.equal(w.localStorage.getItem('cubs_shiny'),'151');
+ assert.equal(w.eval('adventure.tracker.sessions["sittings-synthetic"].rev'),old.rev);
+ console.log('Direct counting, addition, subtraction, number writing and maths path verified; saved reading and rewards retained.');
  const start=async()=>{click($('startAdventure'));await until(()=>!$('adultReady').hidden,'adult preparation');assert.equal(w.eval('adventure.tracker.current'),null);click($('adultReadyStart'));await until(()=>w.eval('adventure.tracker.question()')?.observer==='grown-up','adult task');};
  const observe=async(outcome='independent')=>{const id=w.eval('adventure.tracker.question().id');click(d.querySelector('[data-outcome="'+outcome+'"]'));await until(()=>w.eval('adventure.tracker.current')===null,'observation saved');click(d.querySelector('#rdActions .read-next'));await until(()=>w.eval('adventure.tracker.question()')?.id!==id&&w.eval('adventure.tracker.question()'),'next task');};
  const draw=()=>{const canvas=d.querySelector('.adult-writing-canvas');assert(canvas);canvas.getBoundingClientRect=()=>({left:0,top:0,width:400,height:250});for(const [name,x,y] of [['pointerdown',100,70],['pointermove',130,170],['pointerup',180,170]]){const e=new w.Event(name,{bubbles:true,cancelable:true});Object.assign(e,{pointerId:1,pointerType:'pen',button:0,clientX:x,clientY:y});canvas.dispatchEvent(e);}};

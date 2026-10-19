@@ -1,3 +1,7 @@
+## v97.5 · Direct counting, addition and subtraction lessons
+
+**Math learning** is now on the home screen immediately below reading and before the A–Z charts. **Counting**, **Addition** and **Subtraction** each open the original lesson directly, with its existing pictures, spoken questions, number-pad answers, help and adaptive progress. No Games carousel or Grown-ups check is required. **Write numbers** and **Maths path** are also available in that section. The old Games menu remains separate. Reading stages, stored progress, rewards, collections, selected buddy, sync and lesson engines are unchanged. The worker refreshes the home page while reusing the v97 sound and picture cache.
+
 ## v97.4 · Maths open on Jonah’s home screen
 
 The original **Games** button is again available directly on Jonah’s home screen, beside **My Pokémon** and **My fox**. Maths remains optional and does not replace or alter the daily reading path. Existing progress, earned Pokémon, Buddy selection and learning records are unchanged. Installed copies refresh the changed app code while reusing their saved sound and picture downloads.
