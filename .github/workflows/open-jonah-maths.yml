@@ -19,10 +19,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Use Node 20
+      - name: Use Node 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
 
       - name: Apply home maths change
@@ -31,8 +31,9 @@ jobs:
       - name: Validate app
         run: |
           node --check adventure.js
-          npm ci
+          npm ci --ignore-scripts --no-audit --no-fund
           npm test
+          npm run test:sittings
 
       - name: Publish app
         run: |
