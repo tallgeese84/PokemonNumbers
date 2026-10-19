@@ -1,3 +1,7 @@
+## v97.4 · Maths open on Jonah’s home screen
+
+The original **Games** button is again available directly on Jonah’s home screen, beside **My Pokémon** and **My fox**. Maths remains optional and does not replace or alter the daily reading path. Existing progress, earned Pokémon, Buddy selection and learning records are unchanged. Installed copies refresh the changed app code while reusing their saved sound and picture downloads.
+
 ## v97.1 · Faster repeated sound and picture loading
 
 Saved phonics clips, pictures and versioned scripts now load directly from the device cache. The previous worker tried the network before returning these saved files, which could delay every sound tap. Entry pages still check online for app updates, and the saved page works offline. This worker update reuses existing v97 downloads instead of downloading all 26 illustrations again. A first visit or a cleared/evicted browser cache still needs a download; browser speech recognition is separate and may need internet.

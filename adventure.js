@@ -55,11 +55,7 @@ function createAdventure() {
   const dashboard=document.createElement('section');dashboard.id='learningDashboard';dashboard.className='learning-dashboard';
   dashboard.innerHTML='<h2>Learning journal</h2><p class="muted">Small steps, seen over time · Madison time</p><p>Read together with a grown-up for about 10–12 minutes: names and sounds 4 + blend/build 3, then writing 2 + supported reading 3. A grown-up records each attempt and finishes each part. Shorter practice is fine. Pause and resume later today; old app-choice history stays separate.</p><div hidden><select id="goalMinutes"><option value="12">12 minutes</option></select><input id="enableBonus" type="checkbox"></div><div class="journal-controls"><label>View <select id="journalPeriod"><option value="today">Today</option><option value="yesterday">Yesterday</option><option value="week">Last 7 days</option></select></label><button class="btn" id="exportLearning">Export history</button><button class="btn" id="exportDailyReport">Save daily report</button></div><div id="journalBody"></div><p id="journalSync" class="muted"></p><p class="muted">The clock estimates practice while the screen is open. It pauses after 60 seconds without interaction, during rewards, in other tabs and in parent settings. Paper work can continue during a pause; do not add extra work just to fill the timer. Adult observations are saved separately from app-choice answers.</p><hr></section>';
   document.querySelector('#parentPanel .parent-head').after(dashboard);
-  const extras=document.createElement('details');extras.className='parent-practice-tools';
-  extras.innerHTML='<summary>Grown-up choice: maths games</summary><p>These activities are outside the daily reading routine.</p><div id="parentPracticeTools"></div>';
-  dashboard.after(extras);
-  $('parentPracticeTools').append($('gamesBtn'));
-  extras.addEventListener('click',e=>{if(e.target.closest('button'))$('ppClose').click();},true);
+  // Maths stays in Jonah's existing home choices. It is optional and outside the daily reading path.
   const path=document.createElement('ol');path.id='dailyReadingPath';path.className='daily-reading-path';path.setAttribute('aria-label','Today’s reading path');
   for(const [i,stage] of PokeAdultReading.STAGES.entries()){
     const li=document.createElement('li');li.dataset.stage=stage.id;
