@@ -11,7 +11,6 @@ permissions:
 
 jobs:
   publish:
-    if: ${{ !contains(github.event.head_commit.message, '[open-maths-done]') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -38,7 +37,6 @@ jobs:
             $('parentPracticeTools').append($('gamesBtn'));
             extras.addEventListener('click',e=>{if(e.target.closest('button'))$('ppClose').click();},true);
           '''
-          # Preserve the exact two-space indentation used in the source.
           old = old.replace('\n            ', '\n  ')
           new = "  // Maths stays in Jonah's existing home choices. It is optional and outside the daily reading path.\n"
           if adventure.count(old) != 1:
