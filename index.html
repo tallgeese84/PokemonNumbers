@@ -822,6 +822,23 @@
 <link rel="stylesheet" href="theme-blue.css?v=97">
 <link rel="stylesheet" href="large-type.css?v=97">
 <link rel="stylesheet" href="alphabet-tracing.css?v=97">
+<style id="homeMathStyles">
+/* Direct lesson choices are separate from the paginated Games menu. */
+#homeMathLearning{margin:20px 0;padding:20px;border:1px solid #b8d3f1;border-radius:26px;background:#f5faff;color:#173b67;text-align:left}
+#homeMathLearning h2{display:block;font-size:clamp(25px,3vw,32px);line-height:1.2;margin:0 0 6px;font-weight:800;color:#173b67}
+#homeMathLearning .home-math-note{font-size:18px;line-height:1.4;margin:0 0 16px;color:#3b5d84}
+#homeMathLearning .home-math-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+#homeMathLearning .home-math-choice{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;width:100%;height:auto;min-height:138px;margin:0;padding:15px 8px;gap:8px;overflow:visible;border:2px solid #a5c9ef;border-radius:20px;background:#fff!important;color:#194b88!important;box-shadow:0 4px 0 #cee0f4;text-align:center;font-size:22px;line-height:1.2}
+#homeMathLearning .home-math-symbol{display:flex;align-items:center;justify-content:center;min-height:52px;font-size:44px;font-weight:800;line-height:1;color:#2466bd;white-space:nowrap}
+#homeMathLearning #homeCountBtn .home-math-symbol{font-size:30px;letter-spacing:2px}
+#homeMathLearning .home-math-label{display:block;font-weight:800;font-size:clamp(18px,2.6vw,24px);line-height:1.2;overflow-wrap:anywhere}
+#homeMathLearning .home-math-more{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:15px}
+#homeMathLearning .home-math-link{display:flex;align-items:center;justify-content:center;min-width:0;width:100%;height:auto;min-height:58px;margin:0;padding:12px 8px;border:1px solid #bad5f2;border-radius:16px;background:#e8f2ff!important;color:#194b88!important;box-shadow:0 2px 0 #d5e5f7;font-size:18px;line-height:1.25;text-align:center}
+#homeMathLearning button:focus-visible{outline:3px solid #174f9b;outline-offset:4px}
+#homeMathLearning button:active{transform:translateY(2px)}
+@media(max-width:540px){#homeMathLearning{padding:16px}#homeMathLearning .home-math-grid{grid-template-columns:1fr;gap:10px}#homeMathLearning .home-math-choice{flex-direction:row;justify-content:flex-start;min-height:74px;padding:10px 16px;gap:16px}#homeMathLearning .home-math-symbol{width:76px;flex:0 0 76px;min-height:44px}#homeMathLearning .home-math-label{font-size:24px;overflow-wrap:normal}}
+@media(prefers-reduced-motion:reduce){#homeMathLearning button{transition:none!important}}
+</style>
 </head>
 <body data-screen="home">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
@@ -919,6 +936,25 @@
       <div id="buddyBox"></div>
       <div id="missionSlot"></div>
     </section>
+    <section id="homeMathLearning" aria-labelledby="homeMathTitle">
+      <h2 id="homeMathTitle">Math learning</h2>
+      <p class="home-math-note">Count, add and take away.</p>
+      <div class="home-math-grid" aria-label="Choose a maths lesson">
+        <button type="button" class="mode home-math-choice" id="homeCountBtn" data-go="count" aria-label="Counting lesson">
+          <span class="home-math-symbol" aria-hidden="true">1 2 3</span><span class="home-math-label">Counting</span>
+        </button>
+        <button type="button" class="mode home-math-choice" id="homeAddBtn" data-go="add" aria-label="Addition lesson">
+          <span class="home-math-symbol" aria-hidden="true">+</span><span class="home-math-label">Addition</span>
+        </button>
+        <button type="button" class="mode home-math-choice" id="homeSubBtn" data-go="sub" aria-label="Subtraction lesson">
+          <span class="home-math-symbol" aria-hidden="true">−</span><span class="home-math-label">Subtraction</span>
+        </button>
+      </div>
+      <div class="home-math-more" aria-label="More maths learning">
+        <button type="button" class="mode home-math-link" id="homeMathWriteBtn" data-go="trace" aria-label="Write numbers">Write numbers</button>
+        <button type="button" class="mode home-math-link" id="homeMathPathBtn" data-go="gyms" aria-label="Open the maths learning path">Maths path</button>
+      </div>
+    </section>
     <button class="home-alphabet home-everyday" id="everydayAlphabetBtn" aria-label="Open Everyday A to Z names, sounds, words and tracing">
       <span class="home-alphabet-copy"><strong>Everyday A–Z</strong><small>Say · listen · trace</small></span>
       <span class="home-alphabet-preview" aria-hidden="true">
@@ -941,7 +977,7 @@
       <button class="quiet-choice home-art-choice" id="teamBtn" aria-label="My Pokémon"><img class="home-icon-art" src="assets/sound-buddies/25.png" alt="" width="112" height="88"><span class="home-team-copy"><strong>My Pokémon</strong><small>Browse &amp; choose your buddy</small></span><small id="teamTally" hidden></small></button>
       <button class="quiet-choice home-art-choice" id="foxBtn" aria-label="My fox"><img class="home-icon-art" src="assets/home/fox-v80.png" alt="" width="112" height="88"><span class="home-team-copy"><strong>My fox</strong><small>Play and teach tricks</small></span></button>
     </div>
-    <footer class="home-footer"><span id="parentEntry"></span><span class="build-label">v97.4</span></footer>
+    <footer class="home-footer"><span id="parentEntry"></span><span class="build-label">v97.5</span></footer>
   </div>
 
   <!-- The other activities stay available, three pictures at a time. -->
