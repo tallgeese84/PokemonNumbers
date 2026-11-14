@@ -197,6 +197,12 @@
   .tfcover .covertxt{ font-size:16px; font-weight:bold; color:#fff; text-shadow:0 1px 0 rgba(0,0,0,.3); }
   .pad.locked button{ opacity:.45; }
   .pad button:disabled{ opacity:.25; text-decoration:line-through; }
+  .pad button.show-me{ outline:4px solid var(--mint); animation:showme 1s ease-in-out infinite; }
+  @keyframes showme{ 50%{ transform:scale(1.12); } }
+  .guided-frames .missing-part{ opacity:.25; filter:grayscale(1); transition:opacity .3s, filter .3s; }
+  .guided-frames .missing-part.counted{ opacity:1; filter:none; }
+  .guided-frames .missing-part.taken{ opacity:.35; filter:grayscale(1); outline:3px dashed var(--coral); border-radius:10px; }
+  @media (prefers-reduced-motion: reduce){ .pad button.show-me{ animation:none; } }
   .tfcell .obj.leaving{ animation:flyaway .75s ease-in forwards; }
   @keyframes flyaway{
     0%{ transform:translateY(0) scale(1); opacity:1 }
@@ -783,7 +789,7 @@
 <script src="visuals.js?v=97"></script>
 <script src="collection.js?v=97"></script>
 <script src="assets/pokemon-catalog.js?v=97"></script>
-<script src="learning-core.js?v=97"></script>
+<script src="learning-core.js?v=98"></script>
 <script src="drive-mirror.js?v=97"></script>
 <script src="adventure.js?v=97.4"></script>
 <script src="foundations.js?v=97"></script>
@@ -793,7 +799,7 @@
 <script src="reading-art.js?v=97"></script>
 <script src="reading-tutor.js?v=97"></script>
 <script src="reading-buddies.js?v=97"></script>
-<script src="reading-core.js?v=97"></script>
+<script src="reading-core.js?v=98"></script>
 <script src="reading-daily.js?v=97"></script>
 <script src="letter-memory.js?v=97.3"></script>
 <script src="voice-feedback.js?v=97"></script>
@@ -805,7 +811,7 @@
 <script src="letter-formation.js?v=97"></script>
 <script src="alphabet-tracing.js?v=97"></script>
 <script src="reading-ui.js?v=97"></script>
-<script src="math-path-core.js?v=97"></script>
+<script src="math-path-core.js?v=98"></script>
 <script src="math-tutor.js?v=97"></script>
 <script src="math-path-ui.js?v=97"></script>
 <script src="fox-core.js?v=97"></script>
@@ -838,6 +844,22 @@
 #homeMathLearning button:active{transform:translateY(2px)}
 @media(max-width:540px){#homeMathLearning{padding:16px}#homeMathLearning .home-math-grid{grid-template-columns:1fr;gap:10px}#homeMathLearning .home-math-choice{flex-direction:row;justify-content:flex-start;min-height:74px;padding:10px 16px;gap:16px}#homeMathLearning .home-math-symbol{width:76px;flex:0 0 76px;min-height:44px}#homeMathLearning .home-math-label{font-size:24px;overflow-wrap:normal}}
 @media(prefers-reduced-motion:reduce){#homeMathLearning button{transition:none!important}}
+/* Earned steps: how far each lesson has climbed, and the letter sounds found so far. */
+#homeMathLearning .home-math-step{display:block;width:100%;font-size:15px;font-weight:700;color:#3b5d84;line-height:1.3}
+#homeMathLearning .home-math-step i{display:block;height:8px;margin:6px 8px 0;border-radius:6px;background:#dbe8f7;overflow:hidden}
+#homeMathLearning .home-math-step i b{display:block;height:100%;border-radius:6px;background:#2f9e6e}
+#homeSoundQuest{margin:20px 0;padding:20px;border:1px solid #b8d3f1;border-radius:26px;background:#f5faff;color:#173b67;text-align:left}
+#homeSoundQuest h2{display:block;font-size:clamp(25px,3vw,32px);line-height:1.2;margin:0 0 6px;font-weight:800;color:#173b67}
+#homeSoundQuest .home-quest-note{font-size:18px;line-height:1.4;margin:0 0 14px;color:#3b5d84}
+#homeSoundQuest .home-quest-play{display:flex;align-items:center;justify-content:center;gap:14px;width:100%;height:auto;min-height:84px;margin:0;padding:14px 18px;border:2px solid #1d55a5;border-radius:22px;background:#2466bd!important;color:#fff!important;box-shadow:0 5px 0 #17447f;font-size:clamp(24px,3.4vw,30px);font-weight:800;line-height:1.2}
+#homeSoundQuest .home-quest-ear{display:inline-flex;width:44px;height:44px}#homeSoundQuest .home-quest-ear svg{width:100%;height:100%;stroke:#fff}
+#homeSoundQuest .home-quest-play:active{transform:translateY(2px)}#homeSoundQuest .home-quest-play:focus-visible{outline:3px solid #174f9b;outline-offset:4px}
+#homeSoundQuest .home-quest-trail{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+#homeSoundQuest .quest-letter{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:64px;padding:8px 10px;border:2px solid #a5c9ef;border-radius:16px;background:#fff;font-weight:800}
+#homeSoundQuest .quest-letter b{font-size:34px;line-height:1.1;color:#173b67}
+#homeSoundQuest .quest-letter span{font-size:15px;letter-spacing:1px;color:#c7d5e6}#homeSoundQuest .quest-letter span em{font-style:normal;color:#e0a400}
+#homeSoundQuest .quest-letter.next{border-style:dashed;background:#eef4fb}#homeSoundQuest .quest-letter.next b{color:#9db3cc}
+#homeSoundQuest .home-quest-step{font-size:17px;line-height:1.4;margin:12px 0 0;color:#3b5d84}
 </style>
 </head>
 <body data-screen="home">
@@ -936,18 +958,27 @@
       <div id="buddyBox"></div>
       <div id="missionSlot"></div>
     </section>
+    <section id="homeSoundQuest" aria-labelledby="homeSoundTitle">
+      <h2 id="homeSoundTitle">Sound quest</h2>
+      <p class="home-quest-note">Play by yourself. Find the sounds to earn stars and new letters.</p>
+      <button type="button" class="mode home-quest-play" id="homeSoundQuestBtn" data-go="read" aria-label="Play Sound quest by yourself">
+        <span class="home-quest-ear" data-illustration="listen" aria-hidden="true"></span><span class="home-quest-label">Play Sound quest</span>
+      </button>
+      <div class="home-quest-trail" id="homeSoundTrail" aria-label="Letter sounds earned so far"></div>
+      <p class="home-quest-step" id="homeSoundStep"></p>
+    </section>
     <section id="homeMathLearning" aria-labelledby="homeMathTitle">
       <h2 id="homeMathTitle">Math learning</h2>
-      <p class="home-math-note">Count, add and take away.</p>
+      <p class="home-math-note">Count, add and take away. Each step is earned by getting 5 of 6 right without help.</p>
       <div class="home-math-grid" aria-label="Choose a maths lesson">
         <button type="button" class="mode home-math-choice" id="homeCountBtn" data-go="count" aria-label="Counting lesson">
-          <span class="home-math-symbol" aria-hidden="true">1 2 3</span><span class="home-math-label">Counting</span>
+          <span class="home-math-symbol" aria-hidden="true">1 2 3</span><span class="home-math-label">Counting</span><span class="home-math-step" id="homeCountStep" aria-live="off"></span>
         </button>
         <button type="button" class="mode home-math-choice" id="homeAddBtn" data-go="add" aria-label="Addition lesson">
-          <span class="home-math-symbol" aria-hidden="true">+</span><span class="home-math-label">Addition</span>
+          <span class="home-math-symbol" aria-hidden="true">+</span><span class="home-math-label">Addition</span><span class="home-math-step" id="homeAddStep" aria-live="off"></span>
         </button>
         <button type="button" class="mode home-math-choice" id="homeSubBtn" data-go="sub" aria-label="Subtraction lesson">
-          <span class="home-math-symbol" aria-hidden="true">−</span><span class="home-math-label">Subtraction</span>
+          <span class="home-math-symbol" aria-hidden="true">−</span><span class="home-math-label">Subtraction</span><span class="home-math-step" id="homeSubStep" aria-live="off"></span>
         </button>
       </div>
       <div class="home-math-more" aria-label="More maths learning">
@@ -977,7 +1008,7 @@
       <button class="quiet-choice home-art-choice" id="teamBtn" aria-label="My Pokémon"><img class="home-icon-art" src="assets/sound-buddies/25.png" alt="" width="112" height="88"><span class="home-team-copy"><strong>My Pokémon</strong><small>Browse &amp; choose your buddy</small></span><small id="teamTally" hidden></small></button>
       <button class="quiet-choice home-art-choice" id="foxBtn" aria-label="My fox"><img class="home-icon-art" src="assets/home/fox-v80.png" alt="" width="112" height="88"><span class="home-team-copy"><strong>My fox</strong><small>Play and teach tricks</small></span></button>
     </div>
-    <footer class="home-footer"><span id="parentEntry"></span><span class="build-label">v97.5</span></footer>
+    <footer class="home-footer"><span id="parentEntry"></span><span class="build-label">v98</span></footer>
   </div>
 
   <!-- The other activities stay available, three pictures at a time. -->
@@ -1350,6 +1381,7 @@ let stars = 0;
 const starEl = document.getElementById('starCount');
 async function loadStars(){
   await adventure.ready;
+  renderEarnedSteps();
   const v = await store.get('cubs_stars');
   stars = parseInt(v || '0', 10) || 0;
   starEl.textContent = stars;
@@ -1807,7 +1839,33 @@ function show(name){
   document.getElementById(screens[name]).classList.add('on');
   document.getElementById('backBtn').style.display = (name === 'home') ? 'none' : 'block';
   PokeVisuals.screen(name, mode);
+  if (name === 'home') renderEarnedSteps();
   window.scrollTo(0, 0);
+}
+/* Earned steps on the home screen: each maths lesson shows its step, and the Sound quest shows
+   the letter sounds found so far with stars. Read from the same history the lessons use. */
+function renderEarnedSteps(){
+  try{
+    if (!adventure.tracker) return;
+    for (const [m, id] of [['count','homeCountStep'],['add','homeAddStep'],['sub','homeSubStep']]){
+      const p = adventure.plan(m), el = document.getElementById(id); if (!el || !p) continue;
+      const steps = p.steps || 1, part = Math.min(1, (p.successes || 0) / 5);
+      el.innerHTML = 'Step ' + (p.level + 1) + ' of ' + steps + '<i><b style="width:' + Math.round(100 * Math.min(1, (p.level + part) / steps)) + '%"></b></i>';
+      el.title = p.label || ('numbers to ' + p.range);
+    }
+    const trail = document.getElementById('homeSoundTrail'), step = document.getElementById('homeSoundStep');
+    if (trail && typeof reading !== 'undefined'){
+      const sessions = adventure.tracker.sessions, e = PokeReadingCore.earned(sessions, PokeReadingCore.withSessions(reading.state, sessions));
+      trail.replaceChildren();
+      const chip = (g, stars, next) => { const d = document.createElement('div'); d.className = 'quest-letter' + (next ? ' next' : ''); const b = document.createElement('b'); b.textContent = g; const s = document.createElement('span');
+        s.innerHTML = next ? 'next' : '<em>' + '★'.repeat(stars) + '</em>' + '★'.repeat(3 - stars); d.setAttribute('aria-label', next ? 'Letter ' + g + ', coming next' : 'Letter ' + g + ', ' + stars + ' of 3 stars'); d.append(b, s); return d; };
+      e.letters.forEach(l => trail.append(chip(l.g, l.stars, false)));
+      e.next.forEach(g => trail.append(chip(g, 0, true)));
+      step.textContent = e.letters.length
+        ? 'Stars: 1 found once · 2 found twice · 3 remembered on another day. New letters open when all but one have 2 stars.' + (e.listening.working ? ' Listening game: ' + e.listening.working + '.' : '')
+        : 'Start here: the first letters are s, a and t.';
+    }
+  }catch(err){}
 }
 document.getElementById('gamesBtn').addEventListener('click', () => { sndTap(); shutUp(); mode='games'; show('games'); say('Choose a game.'); });
 document.getElementById('everydayAlphabetBtn').addEventListener('click', () => { audio(); shutUp(); reading.openEverydayLetters(); });
@@ -2635,7 +2693,9 @@ function newQuestion(){
   else if (mode === 'add'){
     if (echo){ q.a = echo.a; q.b = echo.b; q.ans = echo.a + echo.b; }
     else {
-      q.ans = pend ? pend.n : 2 + rnd(max - 1);
+      // From 10 upward, lean towards the bigger sums: those are the facts this step is about.
+      const bigSum = max >= 10 && Math.random() < 0.6 ? Math.floor(max / 2) + 1 + rnd(max - Math.floor(max / 2)) : 2 + rnd(max - 1);
+      q.ans = pend ? pend.n : bigSum;
       if (pend){ q.a = pend.a; q.b = pend.b; }
       else { q.a = 1 + rnd(q.ans - 1); q.b = q.ans - q.a; }
     }
@@ -2650,7 +2710,7 @@ function newQuestion(){
   else { // sub
     if (echo){ q.a = echo.a; q.b = echo.b; }
     else if (pend){ q.a = pend.a; q.b = pend.b; }
-    else { q.a = 2 + rnd(max - 1); q.b = 1 + rnd(q.a - 1); }
+    else { q.a = max >= 10 && Math.random() < 0.6 ? Math.floor(max / 2) + 1 + rnd(max - Math.floor(max / 2)) : 2 + rnd(max - 1); q.b = 1 + rnd(q.a - 1); }
     q.ans = q.a - q.b;
     qt.textContent = 'How many left?';
     q.phrase = 'What is ' + NUM_WORDS[q.a] + ' take away ' + NUM_WORDS[q.b] + '?';
@@ -2723,6 +2783,8 @@ function newQuestion(){
     }
   }
   q.form = (q.isEcho || mode === 'count') ? 'result' : (pend ? (pend.f || 'result') : questionForm(mode));
+  // A missing part is first met with pictures above the known numbers (earned step before bare numbers).
+  q.annotate = picMode === 'above' || (q.form !== 'result' && (pend ? !!pend.an : picMode === 'auto' && ['pictures','covered pictures'].includes(plan.support)));
   if (q.form !== 'result'){
     q.stage = 2;
     const shown = (mode === 'add')
@@ -2830,7 +2892,7 @@ function newQuestion(){
     const slots = (q.form === 'missingA') ? [null, q.b, q.ans]
                 : (q.form === 'missingB') ? [q.a, null, q.ans]
                 :                           [q.a, q.b, null];
-    if (picMode === 'above'){
+    if (q.annotate){
       // Pokémon stand above their own number, so the numeral MEANS that many.
       // The unknown has nothing above it — there is nothing to count for the answer.
       box.classList.add('annotated');
@@ -2902,9 +2964,9 @@ function newQuestion(){
     }
   }
   if (mode === 'sub' && q.stage === 3) buildSubtractionStory(monId, alive);
-  const ref = adventure.begin({section:mode,skill:mode,a:q.a,b:q.b,expected:q.form==='missingA'?q.a:q.form==='missingB'?q.b:q.ans,range:max,format:q.form,support:q.subScene?'covered pictures':q.stage===3?'pictures':q.stage===2?(picMode==='above'?'pictures':'numbers'):'pictures'}, pend?.learning);
+  const ref = adventure.begin({section:mode,skill:mode,a:q.a,b:q.b,expected:q.form==='missingA'?q.a:q.form==='missingB'?q.b:q.ans,range:max,format:q.form,support:q.subScene?'covered pictures':q.stage===3?'pictures':q.stage===2?(q.annotate?'pictures':'numbers'):'pictures'}, pend?.learning);
   if (pend && !pend.learning) adventure.help('resumed legacy question');
-  savePending(mode, {a:q.a,b:q.b,n:q.ans,e:emoji,m:monId,x:max,s:q.stage,t:q.tries,f:q.form,help:q.usedHelp,learning:ref});
+  savePending(mode, {a:q.a,b:q.b,n:q.ans,e:emoji,m:monId,x:max,s:q.stage,t:q.tries,f:q.form,an:q.annotate,help:q.usedHelp,learning:ref});
   say(q.phrase);
   buildPad();
   // patience beat: look at the picture before the buttons wake up
@@ -3087,6 +3149,11 @@ function answer(n, btn){
       uncover();
       document.getElementById('quizSpeech').textContent = 'Let\u2019s count together — you\u2019ve got this!';
       setTimeout(() => { if (!alive()) return; pad.classList.remove('locked'); countHint(); }, lockMs);
+      // Three misses: stop the guessing. Only the answer stays lit, so he finishes by
+      // tapping it after the worked example (recorded as helped, and it comes back later).
+      if (q.tries >= 3){
+        [...pad.children].forEach(b => { if (Number(b.textContent) === want) b.classList.add('show-me'); else b.disabled = true; });
+      }
     }
   }
 }
@@ -3099,6 +3166,25 @@ function countHint(){
   padLocked=true;
   const sp=document.getElementById('quizSpeech');
   const bub=document.getElementById('bubbles');
+  if(q.form === 'missingB' && (mode==='add' || mode==='sub')){
+    // Worked example: start from what we know and count the missing part one at a time.
+    const old=bub.querySelector('.guided-frames');if(old)old.remove();
+    const holder=document.createElement('div');holder.className='guided-frames';
+    const p=pending[mode], whole=mode==='add'?q.ans:q.a, known=mode==='add'?q.a:q.ans, part=q.b;
+    holder.appendChild(buildFrames(whole,(cell,i)=>{const o=objSpan(p?.m || 25,'⭐',i<known?'grpA':'grpB',0);if(i>=known)o.classList.add('missing-part');cell.appendChild(o);}));
+    bub.appendChild(holder);
+    const extra=[...holder.querySelectorAll('.missing-part')];
+    const lead=mode==='add'
+      ? 'Start with '+NUM_WORDS[q.a]+'. Count on until we have '+NUM_WORDS[q.ans]+'.'
+      : 'Start with '+NUM_WORDS[q.a]+'. Take some away until '+NUM_WORDS[q.ans]+(q.ans===1?' is':' are')+' left.';
+    sp.textContent=lead;say(lead,true);
+    const t0=2600;
+    extra.forEach((o,i)=>setTimeout(()=>{if(!alive())return;o.classList.add('hintpop','counted');if(mode==='sub')o.classList.add('taken');sp.textContent=String(i+1);speakNumber(i+1);},t0+i*700));
+    setTimeout(()=>{if(!alive())return;padLocked=false;document.getElementById('pad').classList.remove('locked');
+      const end=mode==='add'?'That is '+NUM_WORDS[part]+' more. Tap '+NUM_WORDS[part]+'.':'We took away '+NUM_WORDS[part]+'. Tap '+NUM_WORDS[part]+'.';
+      sp.textContent=end;say(end);},t0+extra.length*700+300);
+    return;
+  }
   if(q.form !== 'result'){
     sp.textContent='Think about the whole and the missing part. Take your time.';
     setTimeout(()=>{if(alive())padLocked=false;},700);return;

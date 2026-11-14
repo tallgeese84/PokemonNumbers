@@ -1,3 +1,10 @@
+# v98 earned steps
+
+- 219 Node tests pass, plus the sittings and nightly flow checks. New tests: nine-step ladder changes one thing per step; replay by question shape; help with bare numbers does not demote a picture step; tiny facts cannot earn a step at 10; letter choices 2→3→4 with a look-alike only after two finds; new letters need all-but-one found twice; home summary.
+- A history shaped like Jonah's (strong within 10 with numbers, guessing at missing parts) lands on "missing part within 5 with pictures" for adding and "within 5 with covered pictures" for taking away.
+- Browser, tablet and phone widths: home, Counting, Addition, Subtraction, Maths path, Sound quest, Read with a grown-up, Everyday A–Z and Grown-ups open with no page errors and no sideways scroll. Three wrong answers on a missing-part sum leave only the answer enabled.
+- Not checked on Jonah's tablet. The picture-supported missing-part layout was seen in a headless browser only.
+
 # v97.1 cache-first playback
 
 - Added regression coverage for cached audio/images/scripts without network access, one download across repeated sound requests, online entry-page updates, offline home fallback, and reuse of existing media during this worker update.

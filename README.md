@@ -1,3 +1,16 @@
+## v98 · Earned steps in maths and a solo Sound quest
+
+Based on Jonah's history from 18 Oct to 13 Nov: reading practice was listening-only (hundreds of A–Z taps, no answers, no grown-up sessions), bare-number missing-part sums were being guessed, and graded practice was a few minutes a week.
+
+- **Adding and taking away now climb nine small steps** instead of five. Each step changes one thing. Pictures come back at 10, and a missing part is met with pictures within 5, then within 10, before bare numbers. Old history is replayed by what was asked, so nobody restarts from the beginning.
+- **A step from 10 upward needs bigger facts** among its 5-of-6: 1 + 1 and 2 + 2 alone cannot open the next step. Bigger sums also come up more often.
+- **Missing-part questions are taught**: after two misses the app counts on (or takes away) one at a time on a ten-frame. After three misses only the answer stays lit, so guessing ends; the question is recorded as helped and comes back later.
+- **Sound quest on the home screen**: the app-graded reading game he can play alone (it was under Games → Read). Letters met so far show 0–3 stars, with the next letters greyed out.
+- **Letter choices are earned per letter**: two clearly different letters first, three after one clean find, four with a look-alike after two. A miss steps that letter back.
+- **New letters need more evidence**: every letter met has been found once and all but one found twice.
+- **Listening games** lead with the earliest step not yet earned (rhymes, then first sounds, then blending), start first-sound and blending questions with two pictures, and never show the same picture twice.
+- Each maths lesson button shows its step.
+
 ## v97.5 · Direct counting, addition and subtraction lessons
 
 **Math learning** is now on the home screen immediately below reading and before the A–Z charts. **Counting**, **Addition** and **Subtraction** each open the original lesson directly, with its existing pictures, spoken questions, number-pad answers, help and adaptive progress. No Games carousel or Grown-ups check is required. **Write numbers** and **Maths path** are also available in that section. The old Games menu remains separate. Reading stages, stored progress, rewards, collections, selected buddy, sync and lesson engines are unchanged. The worker refreshes the home page while reusing the v97 sound and picture cache.

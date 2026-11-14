@@ -217,7 +217,10 @@ function available(sessions,n){return [...new Set([...graphemesUpTo(n-1),...intr
 function nextBatch(sessions,n,stats=itemStats(sessions)){
   const L=route(n),intro=introduced(sessions,n),left=L.add.filter(g=>!intro.includes(g));
   if(!left.length)return null;
-  const ready=intro.filter(g=>!DOUBLES.includes(g)).every(g=>(stats[gKey(g)]?.box||0)>=1);
+  /* New letters are earned: every sound met so far has been found at least once, and all but
+     one have been found twice without help (the second time among more choices). */
+  const singles=intro.filter(g=>!DOUBLES.includes(g)),box=g=>stats[gKey(g)]?.box||0;
+  const ready=singles.every(g=>box(g)>=1)&&singles.filter(g=>box(g)>=2).length>=singles.length-1;
   return ready?left.slice(0,3):null;
 }
 /* Words are offered only from sounds he has already shown he knows (a clean success), not merely met. */
@@ -249,7 +252,7 @@ function kindStats(sessions,kinds){const by={};for(const q of readQuestions(sess
   const out={};for(const k of kinds){const all=by[k]||[],xs=all.slice(-8),ok=xs.filter(indep),acc=xs.length?ok.length/xs.length:null;
     const words=new Set(ok.map(q=>q.word||q.target||q.item).filter(x=>x&&!String(x).startsWith('pa:'))).size,days=new Set(ok.map(q=>q.day)).size;
     const provisional=xs.length>=5&&acc>=.8&&words>=3;
-    out[k]={n:all.length,acc,words,days,provisional,secure:provisional&&days>=2};}return out;}
+    const l4=all.slice(-4);out[k]={n:all.length,acc,recent:l4.length?l4.filter(indep).length/l4.length:null,words,days,provisional,secure:provisional&&days>=2};}return out;}
 
 function ladder(sessions){
   const st=kindStats(sessions,LADDER);let open=3;
@@ -286,6 +289,16 @@ function spellStage(sessions,n){
   const st=kindStats(sessions,SPELL),two=spellWords(sessions,n,2);
   if(st.spell1.provisional&&two.length>=4)return 2;
   return spellWords(sessions,n,1).length>=3?1:0;
+}
+/* What he has earned so far, for the home screen: a star for each letter sound found
+   (1 found once, 2 found twice, 3 kept on a later day), what is coming next, and the listening step. */
+function earned(sessions,state){
+  const n=currentRoute(state),stats=itemStats(sessions),order=D.ROUTES.slice(0,Math.min(n,6)).flatMap(r=>r.add).filter(g=>g.length===1);
+  const met=new Set(order.filter(g=>touched(sessions).has(gKey(g))));
+  const letters=order.filter(g=>met.has(g)).map(g=>{const box=stats[gKey(g)]?.box||0;return {g,stars:Math.min(3,box),name:(stats['ln:'+g]?.box||0)>=2};});
+  const lad=ladder(sessions);
+  return {route:n,letters,next:route(n).add.filter(g=>g.length===1&&!met.has(g)).slice(0,3),stars:letters.reduce((a,l)=>a+l.stars,0),
+    listening:{secure:LADDER.filter(f=>lad.stats[f].secure).length,total:LADDER.length,working:lad.frontier[0]?PA_LABEL[lad.frontier[0]]:null}};
 }
 const needsCheck=(state,sessions)=>state.assessV!==2||(state.redoCheckAt||0)>(state.profile?.at||0);
 /* recent: activities of the last few blocks, newest last */
@@ -386,9 +399,17 @@ function makeRound(act,n,sessions,state={},rnd=Math.random){
     });
     return {act,route:n,items};
   }
-  // Few sounds known: two big choices; more choices as his set grows
-  const hc=pre||av.length<=6?2:av.length<=12?3:c;
-  const huntItem=(g,from)=>{const others=shuffle(av.filter(x=>x!==g&&!DOUBLES.includes(x)),rnd).slice(0,hc-1);return {...base,route:from||n,kind:'hunt',item:gKey(g),target:g,options:shuffle([g,...others],rnd),answer:g};};
+  /* Choices are earned letter by letter. A sound he has not yet found starts with two
+     clearly different letters; each clean success adds a choice, and once he has found it
+     twice a look-alike (b/d, n/u, i/l) joins in. A miss drops that letter back a step. */
+  const huntChoices=(g,key)=>{
+    const box=stats[key]?.box||0,pool=av.filter(x=>x!==g&&!DOUBLES.includes(x)&&x.length===1),alike=(D.CONFUSE[g]||[]).filter(x=>pool.includes(x));
+    const want=Math.min(Math.max(c,4),2+Math.min(box,2));
+    const plain=shuffle(pool.filter(x=>!alike.includes(x)),rnd),near=shuffle(alike,rnd);
+    const others=box>=2?[...near.slice(0,1),...plain,...near.slice(1)]:[...plain,...near];
+    return others.slice(0,want-1);
+  };
+  const huntItem=(g,from,key=gKey(g))=>{const others=huntChoices(g,key);return {...base,route:from||n,kind:'hunt',item:gKey(g),target:g,options:shuffle([g,...others],rnd),answer:g,choices:others.length+1};};
   const readItem=(w,from)=>{const ws=nearWords(w,Math.max(n,from||n),2,rnd);return {...base,route:from||n,kind:'read',item:wKey(w),word:w,parts:P.annotate(clean(w),splitWord(w,n)),options:shuffle([w,...ws],rnd).map(x=>({w:x,e:ART[clean(x)]})),answer:clean(w)};};
   const heartItem=w=>({...base,kind:'heart',item:hKey(w),word:w,options:wordChoices(w,heartPool(n),Math.max(1,c-1),rnd),answer:w});
   if(act==='hunt'){
@@ -398,7 +419,7 @@ function makeRound(act,n,sessions,state={},rnd=Math.random){
     const pick=[];for(let i=0;i<5;i++){const useOld=old.length&&(i%3===2||!cur.length);pick.push(useOld?old.shift():cur[i%Math.max(1,cur.length)]);}
     pick.filter(Boolean).forEach((g,i)=>{const it=huntItem(g,itemRoute(gKey(g)));
       // Letter names alongside sounds: "Find the letter M" in two of the five
-      if(namesOn(state)&&g.length===1&&(i===1||i===3))items.push({...it,kind:'lname',item:'ln:'+g});else items.push(it);});
+      if(namesOn(state)&&g.length===1&&(i===1||i===3))items.push({...huntItem(g,itemRoute(gKey(g)),'ln:'+g),kind:'lname',item:'ln:'+g});else items.push(it);});
   }
   if(act==='read'){
     const rw=readableWords(sessions,n);
@@ -438,8 +459,10 @@ function makeRound(act,n,sessions,state={},rnd=Math.random){
   if(act==='ears'){
     const pool=[...new Set(D.EARS)].filter(w=>ART[w]&&P.has(w)&&(!pre||P.parts(w).length<=3));
     const lad=ladder(sessions),front=lad.frontier.length?lad.frontier:lad.unlocked,review=lad.unlocked.filter(f=>!front.includes(f));
-    // newest step most often, with earlier steps mixed in for review
-    const order=[...front].reverse();const fmts=[];
+    // The earliest step he has not yet secured leads (rhymes before first sounds before blending),
+    // the later open steps take turns behind it; steps waiting to be confirmed on another day
+    // and secure steps come back for review.
+    const order=[...front.filter(f=>!lad.stats[f].provisional),...front.filter(f=>lad.stats[f].provisional)];const fmts=[];
     for(let i=0;i<5;i++)fmts.push(i%2===1&&review.length?review[Math.floor(rnd()*review.length)]:order[(i>>1)%order.length]);
     const used=new Set();
     const pick=list=>{const p=shuffle(list.filter(w=>!used.has(w)),rnd);const w=p[0]??list[0];used.add(w);return w;};
@@ -450,7 +473,10 @@ function makeRound(act,n,sessions,state={},rnd=Math.random){
         return {...base,kind:'rhyme',item:'pa:rhyme',word:t,e:ART[t],options:pics([m,...others]),answer:m};}
       if(fmt==='count'){const w=pick(pool);const parts=P.parts(w);return {...base,kind:'count',item:'pa:count',word:w,answer:parts.length,options:[1,2,3,4,5].filter(x=>x<=Math.max(4,parts.length))};}
       if(fmt==='first'||fmt==='blend'){const w=pick(pool),parts=P.parts(w);
-        const others=shuffle(pool.filter(x=>x!==w&&ART[x]!==ART[w]&&(fmt!=='first'||P.parts(x)[0].g!==parts[0].g)),rnd).slice(0,2);
+        // Two pictures while the step is new; the third is earned once he is getting it right
+        // (at least 4 tries with 3 of the last 4 right first time). No picture appears twice.
+        const stf=lad.stats[fmt],early=!(stf.n>=4&&stf.recent>=.75);
+        const others=shuffle(pool.filter(x=>x!==w&&ART[x]!==ART[w]&&(fmt!=='first'||P.parts(x)[0].g!==parts[0].g)),rnd).filter((x,i,a)=>a.findIndex(y=>ART[y]===ART[x])===i).slice(0,early?1:2);
         return {...base,kind:fmt,item:'pa:'+fmt,word:w,parts,options:pics([w,...others]),answer:w};}
       if(fmt==='last'){const lp=pool.filter(w=>CONS_END(lastSound(w).g));const w=pick(lp),end=lastSound(w);
         const others=shuffle(lp.filter(x=>x!==w&&ART[x]!==ART[w]&&lastSound(x).g!==end.g&&P.parts(x)[0].g!==end.g),rnd).filter((x,i,a)=>a.findIndex(y=>lastSound(y).g===lastSound(x).g)===i).slice(0,2);
@@ -592,7 +618,7 @@ function report(sessions,state,day){
   return lines.join('\n\n');
 }
 
-return {LADDER,PA_LABEL,ladder,kindStats,swaps,namesOn,spellWords,spellStage,LAST,route,clean,withSessions,knownSounds,introduced,available,nextBatch,readableWords,preReading,pendingTeach,blendAccuracy,graphemesUpTo,heartUpTo,singleLetters,splitWord,missing,tokenOK,validate,dolchRoute,
+return {earned,LADDER,PA_LABEL,ladder,kindStats,swaps,namesOn,spellWords,spellStage,LAST,route,clean,withSessions,knownSounds,introduced,available,nextBatch,readableWords,preReading,pendingTeach,blendAccuracy,graphemesUpTo,heartUpTo,singleLetters,splitWord,missing,tokenOK,validate,dolchRoute,
   itemStats,due,gate,currentRoute,allPassed,nextActivity,makeRound,applies,writeSet,doneActs,dueReviews,itemRoute,nearWords,heartPool,
   placementProbe,placementResult,PROBE_COUNT,freshState,mergeState,importLegacy,readiness,expectedRoute,report,choiceCount,
   keys:{gKey,wKey,hKey,uKey}};

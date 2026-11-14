@@ -56,9 +56,15 @@ test('the English check runs first (and again for children placed by the old che
  assert.equal(R.nextActivity(sess(met),st).act,'shapes');
  const marks=['s','a','t'].flatMap(g=>[q('shapes','s:'+g,true),q('write','l:'+g,true)]);
  assert.notEqual(R.nextActivity(sess([...met,...marks]),st).act,'meet');
+ // new letters are earned: found once each is not enough; all but one must be found twice
  const ok=['s','a','t'].map(g=>q('hunt','g:'+g,true));
- assert.equal(R.nextActivity(sess([...met,...marks,...ok]),st).act,'meet');
- assert.deepEqual(R.makeRound('meet',1,sess([...met,...marks,...ok]),st).items.map(i=>i.g),['p','i','n']);
+ assert.notEqual(R.nextActivity(sess([...met,...marks,...ok]),st).act,'meet');
+ assert.equal(R.nextBatch(sess([...met,...marks,...ok]),1),null);
+ const twice=[...ok,q('hunt','g:s',true),q('hunt','g:a',true)];
+ assert.equal(R.nextActivity(sess([...met,...marks,...twice]),st).act,'meet');
+ assert.deepEqual(R.makeRound('meet',1,sess([...met,...marks,...twice]),st).items.map(i=>i.g),['p','i','n']);
+ // a miss takes that letter back a step, so the next set waits again
+ assert.equal(R.nextBatch(sess([...met,...marks,...twice,q('hunt','g:s',false),q('hunt','g:a',false)]),1),null);
 });
 test('a Sound explorer gets listening and letter-sound games, not words, until blending and four sounds are secure',()=>{
  const st={assessV:2,profile:{pre:true}};
@@ -230,9 +236,11 @@ test('listening steps open after varied practice, with retention tracked separat
  assert.deepEqual(R.ladder(sess(ok('blend',5))).unlocked,['rhyme','first','blend','last']);
  const all=['blend','last','count','middle','delete'].flatMap(k=>ok(k,6));
  assert.deepEqual(R.ladder(sess(all)).unlocked,R.LADDER);
- // the newest open step leads the round, earlier secure steps come back for review
+ // the earliest step not yet secure leads the round; later open steps and secure ones follow
  const round=R.makeRound('ears',1,sess(all),st);
- assert.equal(round.items[0].kind,'swap');
+ assert.equal(round.items[0].kind,'rhyme');assert.ok(round.items.some(i=>i.kind==='swap'));
+ const rest=['rhyme','first'].flatMap(k=>ok(k,6));
+ assert.equal(R.makeRound('ears',1,sess([...all,...rest]),st).items[0].kind,'swap');
  assert.ok(round.items.every(i=>R.LADDER.includes(i.kind)));
  for(let t=0;t<30;t++){const r=R.makeRound('ears',1,sess(all),{},Math.random);
   for(const it of r.items){assert.ok(it.options.some(o=>o.w===it.answer||it.kind==='count'),it.kind);
@@ -423,4 +431,32 @@ test('A–Z offers all 52 trace forms, preserves one sound per tap, and cleans u
  const pad=h.traces.at(-1);pad.options.onComplete();pad.options.onComplete();const marks=h.listened.filter(x=>x.kind==='alphabetTrace');assert.equal(marks.length,1);assert.equal(marks[0].letterCase,'lower');assert.equal(marks[0].strokeCount,1);assert.equal(marks[0].item,'trace:z');assert.equal(h.answers.length,0);assert.equal(h.ctx.stars,0);
  h.acts().find(b=>b.attrs['aria-label']==='Next letter').click();assert(pad.destroyed);assert.equal(h.traces.at(-1).letter,'a','next preserves lowercase and wraps Z to A');
  const last=h.traces.at(-1);h.acts().find(b=>b.attrs['aria-label']==='Back to Pokémon A to Z').click();assert(last.destroyed);assert.equal(h.opts()[0].querySelectorAll('.sound-buddy-card').length,26);
+});
+
+/* ---------- v98: letter choices and new letters are earned ---------- */
+test('a letter starts with two clear choices and earns more, with a look-alike only after two finds',()=>{
+ const st={assessV:2,profile:{pre:true},namesAt:1,names:false};
+ const met=['s','a','t','p','i','n','m','d'].flatMap(g=>[{...q('meet','g:'+g,true),teach:true},q('shapes','s:'+g,true),q('write','l:'+g,true)]);
+ const find=(g,n)=>Array.from({length:n},()=>q('hunt','g:'+g,true));
+ for(let t=0;t<40;t++){
+  const hist=sess([...met,...find('n',1),...find('d',2)]);
+  const round=R.makeRound('hunt',1,hist,st,Math.random);
+  for(const it of round.items){
+   assert.ok(it.options.includes(it.answer));assert.equal(new Set(it.options).size,it.options.length);
+   const want={n:3,d:4}[it.target]||2;assert.equal(it.options.length,want,it.target+' has '+it.options.length);
+   const alike=D.CONFUSE[it.target]||[];
+   if(it.options.length===2)assert.ok(!alike.includes(it.options.find(o=>o!==it.answer)),'first choice must look different: '+it.options.join(''));
+   if(it.target==='d')assert.ok(it.options.some(o=>alike.includes(o)),'a look-alike joins once d is found twice: '+it.options.join(''));
+  }
+ }
+ // a miss takes the letter back to fewer choices
+ const slip=sess([...met,...find('d',2),q('hunt','g:d',false)]);
+ for(const it of R.makeRound('hunt',1,slip,st).items.filter(i=>i.target==='d'))assert.ok(it.options.length<=3);
+});
+test('the home screen summary shows stars per letter, what is next and the listening step',()=>{
+ const met=['s','a','t'].flatMap(g=>[{...q('meet','g:'+g,true),teach:true}]);
+ const e=R.earned(sess([...met,q('hunt','g:s',true),q('hunt','g:s',true),q('hunt','g:a',true)]),{assessV:2});
+ assert.deepEqual(e.letters.map(l=>l.g+l.stars),['s2','a1','t0']);assert.deepEqual(e.next,['p','i','n']);
+ assert.equal(e.listening.working,'rhymes');assert.equal(e.listening.total,R.LADDER.length);
+ assert.deepEqual(R.earned({},{}).letters,[]);
 });

@@ -67,3 +67,46 @@ test('counting a visible remainder cannot promote the new covered subtraction st
   qs[5].helped=true;
   assert.equal(C.planFor('sub','sub',sessions(qs)).level,0);
 });
+
+/* ---------- v98: adding and taking away climb in small earned steps ---------- */
+function facts(stage,pairs,extra={}){let i=facts.n=(facts.n||1000);return pairs.map(([a,b,ok=true,sec='add'])=>{i++;facts.n=i;return {section:sec,skill:sec,id:'f'+i,a,b,expected:stage.format==='result'?(sec==='sub'?a-b:a+b):b,range:stage.range,support:stage.support,format:stage.format,level:99,day:'2026-11-01',startedAt:1.8e12+i*2000,completedAt:1.8e12+i*2000+900,responses:ok?[{value:1,correct:true}]:[{value:0,correct:false},{value:1,correct:true}],helped:false,...extra};});}
+const SMALL=[[1,1],[1,2],[2,1],[2,2],[1,3],[3,1]],BIG=[[4,3],[5,2],[6,3],[2,7],[4,4],[3,5]];
+test('each step changes one thing, and a missing part is met with pictures before bare numbers',()=>{
+  const S=C.ARITHMETIC;assert.equal(S.length,9);
+  for(let i=1;i<S.length;i++){const a=S[i-1],b=S[i];assert.ok(b.range!==a.range||b.support!==a.support||b.format!==a.format);}
+  const m=S.findIndex(s=>s.format==='missingB');
+  assert.deepEqual([S[m].range,S[m].support],[5,'pictures']);
+  assert.ok(S.findIndex(s=>s.id==='m10-num')>S.findIndex(s=>s.id==='m10-pic'));
+  assert.ok(S.findIndex(s=>s.id==='r10-num')>S.findIndex(s=>s.id==='r10-pic'),'pictures come back when the numbers grow');
+  assert.equal(C.stagesFor('sub')[0].support,'covered pictures');assert.equal(C.stagesFor('sub')[4].support,'pictures');
+});
+test('old history is replayed by what was asked, not by its old level number',()=>{
+  const S=C.ARITHMETIC,by=id=>S.find(s=>s.id===id);
+  // passed within 5 (pictures, then numbers), then strong with bare numbers within 10
+  const qs=[...facts(by('r5-pic'),SMALL),...facts(by('r5-num'),SMALL),...facts(by('r10-num'),BIG),...facts(by('r10-num'),BIG)];
+  const p=C.planFor('add','add',sessions(qs));
+  assert.equal(p.id,'m5-pic','bare-number successes also earn the picture step, then the bare-number step');
+  assert.equal(p.steps,9);assert.equal(p.next.id,'m10-pic');
+  // guessing at bare-number missing parts within 10 neither earns nor loses the gentler picture step
+  const guesses=facts(by('m10-num'),[[1,4,false],[6,3,false],[1,4,false],[2,1,false],[6,3,false]],{helped:true});
+  assert.equal(C.planFor('add','add',sessions([...qs,...guesses])).id,'m5-pic');
+});
+test('needing help with bare numbers does not push a child off the picture step',()=>{
+  const S=C.ARITHMETIC,by=id=>S.find(s=>s.id===id);
+  const qs=[...facts(by('r5-pic'),SMALL),...facts(by('r5-num'),SMALL),...facts(by('r10-num'),[[7,1,false],[4,4,false],[3,7,false],[6,4,false]],{helped:true})];
+  assert.equal(C.planFor('add','add',sessions(qs)).id,'r10-pic');
+});
+test('from 10 upward a step cannot be earned on tiny facts alone',()=>{
+  const S=C.ARITHMETIC,by=id=>S.find(s=>s.id===id);
+  const base=[...facts(by('r5-pic'),SMALL),...facts(by('r5-num'),SMALL)];
+  assert.equal(C.planFor('add','add',sessions([...base,...facts(by('r10-pic'),SMALL),...facts(by('r10-pic'),SMALL)])).id,'r10-pic');
+  assert.equal(C.planFor('add','add',sessions([...base,...facts(by('r10-pic'),[...SMALL.slice(0,4),[4,3],[5,4]])])).id,'r10-num');
+});
+test('take-away keeps covered pictures as its own evidence and steps down after repeated difficulty',()=>{
+  const S=C.stagesFor('sub'),by=id=>S.find(s=>s.id===id);
+  const sub=p=>p.map(([a,b,ok=true])=>[a,b,ok,'sub']);
+  const up=[...facts(by('r5-pic'),sub([[2,1],[3,1],[4,2],[5,3],[5,1],[4,1]]))];
+  assert.equal(C.planFor('sub','sub',sessions(up)).id,'r5-num');
+  const hard=facts(by('r5-num'),sub([[5,4,false],[2,1,false],[3,2,false],[5,4],[3,2]]),{});
+  assert.equal(C.planFor('sub','sub',sessions([...up,...hard])).id,'r5-pic');
+});

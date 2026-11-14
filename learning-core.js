@@ -7,13 +7,33 @@
   const ZONE = 'America/Chicago';
   const IDLE_MS = 60000;
   const LABELS = {foundation:'Number foundations',count:'Counting', add:'Adding', sub:'Taking away', zap:'Wild Catch', hide:'Hide and Seek', abacus:'Bead Counter', line:'Number Line', trace:'Number writing', tower:'Number Race', read:'Reading', path:'Maths path'};
+  /* Adding and taking away climb in small earned steps. Each step changes ONE thing:
+     the size of the numbers, the picture support, or what is unknown.
+     Pictures come back whenever the numbers get bigger or the question changes shape,
+     and a missing part is met with pictures within 5 before it is asked with bare numbers. */
   const ARITHMETIC = [
-    {range:5, support:'pictures', format:'result'},
-    {range:5, support:'numbers', format:'result'},
-    {range:10, support:'numbers', format:'result'},
-    {range:10, support:'numbers', format:'missingB'},
-    {range:20, support:'numbers', format:'missingB'}
+    {id:'r5-pic',     range:5,  support:'pictures', format:'result',   label:'within 5 with pictures'},
+    {id:'r5-num',     range:5,  support:'numbers',  format:'result',   label:'within 5 with numbers'},
+    {id:'r10-pic',    range:10, support:'pictures', format:'result',   label:'within 10 with pictures'},
+    {id:'r10-num',    range:10, support:'numbers',  format:'result',   label:'within 10 with numbers'},
+    {id:'m5-pic',     range:5,  support:'pictures', format:'missingB', label:'missing part within 5 with pictures'},
+    {id:'m10-pic',    range:10, support:'pictures', format:'missingB', label:'missing part within 10 with pictures'},
+    {id:'m10-num',    range:10, support:'numbers',  format:'missingB', label:'missing part within 10 with numbers'},
+    {id:'r20-num',    range:20, support:'numbers',  format:'result',   label:'within 20 with numbers'},
+    {id:'m20-num',    range:20, support:'numbers',  format:'missingB', label:'missing part within 20 with numbers'}
   ];
+  const PICTORIAL = ['pictures','covered pictures'];
+  const stagesFor = section => section==='sub' ? ARITHMETIC.map(st=>st.format==='result'&&st.support==='pictures'?{...st,support:'covered pictures'}:st) : ARITHMETIC;
+  const stageIndex = (section, id) => stagesFor(section).findIndex(st=>st.id===id);
+  /* Evidence for a step: the same numbers and question shape, with the same support or with LESS
+     (an unaided answer with bare numbers also shows he can do it with pictures).
+     A different kind of picture is different evidence: counting a visible remainder does not
+     earn the covered take-away step. */
+  const fitsStage = (q, st) => q.range===st.range && q.format===st.format &&
+    (q.support===st.support || (PICTORIAL.includes(st.support) && q.support==='numbers'));
+  /* A step is earned on facts that belong to it: from 10 upward at least two of the successes
+     must use the bigger numbers, so 1 + 1 and 2 + 2 alone cannot open the next step. */
+  const bigFact = q => { const whole = q.section==='sub' ? q.a : q.a + q.b; return whole > q.range/2; };
   // Six subtraction questions, one addition and one counting question per cycle.
   const missionSection = answered => ['sub','sub','sub','sub','sub','sub','add','count'][answered % 8];
   const RANGES = [5,10,20];
@@ -41,13 +61,14 @@
   function groupKey(q) { return [q.section,q.skill,q.range,q.support,q.format].join('|'); }
   function planFor(section, skill, sessions) {
     const arithmetic = section === 'add' || section === 'sub';
-    const stages = arithmetic ? (section==='sub' ? ARITHMETIC.map((stage,i)=>i===0?{...stage,support:'covered pictures'}:stage) : ARITHMETIC) : (section==='hide'?[5,10]:RANGES).map(range=>({range,support:'built-in',format:'result'}));
+    const stages = arithmetic ? stagesFor(section) : (section==='hide'?[5,10]:RANGES).map(range=>({range,support:'built-in',format:'result'}));
     let level=0, window=[], changes=[];
     const qs = allQuestions(sessions).filter(q=>q.section===section && q.skill===skill && q.completedAt && !q.echo && !q.manual);
     for (const q of qs) {
       // Old easier questions and parent-capped ranges cannot prove a harder step.
-      if (q.level !== level || q.range !== stages[level].range) continue;
-      if (arithmetic && (q.support !== stages[level].support || q.format !== stages[level].format)) continue;
+      if (arithmetic ? !fitsStage(q, stages[level]) : (q.level !== level || q.range !== stages[level].range)) continue;
+      // Needing help with bare numbers says nothing about the picture step, so only successes carry down.
+      if (arithmetic && q.support !== stages[level].support && !independent(q)) continue;
       window.push(q); window = window.slice(-6);
       const recent=window.slice(-5);
       if (level > 0 && recent.length===5 && recent.filter(x=>!independent(x)).length>=3) {
@@ -55,8 +76,9 @@
         level--; window=[]; continue;
       }
       const successes=window.filter(independent);
+      const bigEnough = !arithmetic || stages[level].range < 10 || successes.filter(bigFact).length >= 2;
       if (window.length===6 && successes.length>=5 && window.slice(-3).every(independent) &&
-          new Set(successes.map(factKey)).size>=4 && level < stages.length-1) {
+          new Set(successes.map(factKey)).size>=4 && bigEnough && level < stages.length-1) {
         changes.push({at:q.completedAt,from:level,to:level+1,reason:'At least 5 of 6 independently correct across 4 facts, with the latest 3 correct'});
         level++; window=[];
       }
@@ -66,7 +88,7 @@
     const review=qs.slice(-30).reverse().find(q=> !independent(q) && q.range===stages[level].range && q.format===stages[level].format &&
       (qs.indexOf(q)<qs.length-2 || q.day<dayKey(Date.now())) &&
       !qs.some(x=>x.startedAt>q.startedAt && factKey(x)===factKey(q) && independent(x)));
-    return {...stages[level], level, samples:window.length, successes:window.filter(independent).length,
+    return {...stages[level], level, steps:stages.length, next:stages[level+1]||null, samples:window.length, successes:window.filter(independent).length,
       recentAnswers:qs.slice(-3).map(q=>q.expected),
       changes, review:review ? {a:review.a,b:review.b,expected:review.expected} : null,
       needsSupport:!!last && !independent(last)};
@@ -76,7 +98,7 @@
       this.now=now; this.id=id; this.sessions=sessions; this.onChange=onChange;
       this.sessionId=String(now())+'_'+id(); this.current=null; this.visible=true; this.blocked=false;
       this.section='home'; this.lastTick=now(); this.lastInteraction=now(); this.idle=false;
-      this.sessions[this.sessionId]={id:this.sessionId,startedAt:now(),updatedAt:now(),rev:0,days:{},questions:{},build:97};
+      this.sessions[this.sessionId]={id:this.sessionId,startedAt:now(),updatedAt:now(),rev:0,days:{},questions:{},build:98};
     }
     changed(sid=this.sessionId) { const s=this.sessions[sid]; s.rev++; s.updatedAt=this.now(); this.onChange(sid); }
     tick() {
@@ -119,7 +141,7 @@
       if(this.lastPracticeAt && this.now()-this.lastPracticeAt>300000){
         const deviceId=this.sessions[this.sessionId].deviceId;
         this.sessionId=String(this.now())+'_'+this.id();
-        this.sessions[this.sessionId]={id:this.sessionId,deviceId,startedAt:this.now(),updatedAt:this.now(),rev:0,days:{},questions:{},build:97};
+        this.sessions[this.sessionId]={id:this.sessionId,deviceId,startedAt:this.now(),updatedAt:this.now(),rev:0,days:{},questions:{},build:98};
         this.lastPracticeAt=this.now();
       }
       if (ref && this.sessions[ref.sid]?.questions?.[ref.qid] && !this.sessions[ref.sid].questions[ref.qid].completedAt) this.current=ref;
@@ -207,5 +229,5 @@
       offline:weak?.skill==='sub' ? 'Use five toys: hide some and ask how many are hidden.' : 'Use five toys: make two groups and ask how many altogether.'
     };
   }
-  return {missionSection,ZONE,IDLE_MS,LABELS,dayKey,shiftDay,median,Tracker,planFor,summarize,comparisons,guidance,allQuestions,independent,factKey,groupKey};
+  return {ARITHMETIC,stagesFor,stageIndex,fitsStage,missionSection,ZONE,IDLE_MS,LABELS,dayKey,shiftDay,median,Tracker,planFor,summarize,comparisons,guidance,allQuestions,independent,factKey,groupKey};
 });

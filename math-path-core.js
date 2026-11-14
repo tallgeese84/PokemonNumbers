@@ -178,7 +178,7 @@ function delegatedStatus(id,sessions){
  if(id==='bond5'){const ok=['split','patterns','missing'].filter(s=>F.plan(s,sessions).level>=1).length;const qs=all.filter(q=>q.section==='foundation'&&q.range===5);return {secure:ok>=2,mastered:ok>=3,lastInd:lastInd(qs),n:qs.length,level:ok};}
  if(id==='bond10'){const qs=all.filter(q=>q.section==='foundation'&&['split','patterns','missing','undo','take','predict'].includes(q.skill)&&q.range===10);const sec=windowOK(qs.slice(-6));
   return {secure:sec||(qs.length>=6&&windowOK(qs.slice(-6))),mastered:sec&&days(qs.slice(-12))>=2,lastInd:lastInd(qs),n:qs.length,level:0};}
- if(id==='addsub10'){const a=C.planFor('add','add',sessions).level,s=C.planFor('sub','sub',sessions).level;const qs=all.filter(q=>(q.section==='add'||q.section==='sub')&&q.range>=10);return {secure:a>=2&&s>=2,mastered:a>=3&&s>=3,lastInd:lastInd(qs),n:qs.length,level:Math.min(a,s)};}
+ if(id==='addsub10'){const a=C.planFor('add','add',sessions).level,s=C.planFor('sub','sub',sessions).level;const qs=all.filter(q=>(q.section==='add'||q.section==='sub')&&q.range>=10);/* reached bare numbers within 10 / earned them */const R10=C.stageIndex('add','r10-num');return {secure:a>=R10&&s>=R10,mastered:a>R10&&s>R10,lastInd:lastInd(qs),n:qs.length,level:Math.min(a,s)};}
  if(id==='groups'){const p=F.plan('groups',sessions);const qs=all.filter(q=>q.section==='foundation'&&q.skill==='groups');return {secure:p.level>=1,mastered:p.level>=1&&days(qs)>=2,lastInd:lastInd(qs),n:qs.length,level:p.level};}
  return {secure:false,mastered:false,lastInd:0,n:0,level:0};
 }
